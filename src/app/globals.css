@@ -1,0 +1,225 @@
+:root {
+  /* Colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f7f9fa;
+  --bg-tertiary: #eef2f5;
+  
+  --text-primary: #3c3c3c;
+  --text-secondary: #777777;
+  --text-light: #afafaf;
+  
+  /* Duolingo Brand Palette */
+  --color-green: #58cc02;
+  --color-green-shadow: #46a302;
+  --color-blue: #1cb0f6;
+  --color-blue-shadow: #1899d6;
+  --color-orange: #ff9600;
+  --color-orange-shadow: #e27d00;
+  --color-yellow: #ffc800;
+  --color-yellow-shadow: #e6a800;
+  --color-red: #ea2b2b;
+  --color-red-shadow: #c61d1d;
+  
+  /* Borders */
+  --border-color: #e5e5e5;
+  --border-width: 2px;
+  --border-radius-sm: 12px;
+  --border-radius-md: 16px;
+  --border-radius-lg: 24px;
+  
+  /* Shadow depth for 3D buttons */
+  --btn-shadow-depth: 4px;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  font-family: var(--font-nunito), system-ui, -apple-system, sans-serif;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Friendly 3D Button - Duolingo/IKEA style */
+.btn-3d {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 12px 24px;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  border: var(--border-width) solid var(--border-color);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  box-shadow: 0 var(--btn-shadow-depth) 0 var(--border-color);
+  transition: all 0.1s ease;
+  user-select: none;
+}
+
+.btn-3d:active {
+  transform: translateY(var(--btn-shadow-depth));
+  box-shadow: 0 0 0 var(--border-color);
+}
+
+.btn-3d.btn-green {
+  background-color: var(--color-green);
+  color: #ffffff;
+  border-color: var(--color-green);
+  box-shadow: 0 var(--btn-shadow-depth) 0 var(--color-green-shadow);
+}
+.btn-3d.btn-green:active {
+  box-shadow: 0 0 0 var(--color-green-shadow);
+}
+
+.btn-3d.btn-blue {
+  background-color: var(--color-blue);
+  color: #ffffff;
+  border-color: var(--color-blue);
+  box-shadow: 0 var(--btn-shadow-depth) 0 var(--color-blue-shadow);
+}
+.btn-3d.btn-blue:active {
+  box-shadow: 0 0 0 var(--color-blue-shadow);
+}
+
+.btn-3d.btn-orange {
+  background-color: var(--color-orange);
+  color: #ffffff;
+  border-color: var(--color-orange);
+  box-shadow: 0 var(--btn-shadow-depth) 0 var(--color-orange-shadow);
+}
+.btn-3d.btn-orange:active {
+  box-shadow: 0 0 0 var(--color-orange-shadow);
+}
+
+.btn-3d:disabled {
+  background-color: var(--border-color) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-light) !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Friendly Cards */
+.card-friendly {
+  background: var(--bg-primary);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 24px;
+  box-shadow: 0 4px 0 var(--border-color);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Soft inputs */
+.input-friendly {
+  width: 100%;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 12px 16px;
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.input-friendly:focus {
+  border-color: var(--color-blue);
+  background-color: var(--bg-primary);
+}
+
+/* Header Navbar */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  background-color: var(--bg-primary);
+  border-bottom: var(--border-width) solid var(--border-color);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-text {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-green);
+  letter-spacing: -0.5px;
+}
+
+.logo-sub {
+  color: var(--color-blue);
+}
+
+/* Badges for active learning levels */
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  border: var(--border-width) solid transparent;
+}
+
+.badge-status.badge-learning {
+  background-color: #ffeeb3;
+  color: #b37400;
+  border-color: #ffe066;
+}
+
+.badge-status.badge-review {
+  background-color: #d1f2ff;
+  color: #0077a8;
+  border-color: #a3e2ff;
+}
+
+.badge-status.badge-mature {
+  background-color: #d8f5d0;
+  color: #2b7a1d;
+  border-color: #bbf0ae;
+}
+
+.badge-status.badge-new {
+  background-color: #ffdcdc;
+  color: #b31c1c;
+  border-color: #ffb8b8;
+}
+
+/* Ruby/Furigana typography styling */
+ruby {
+  ruby-position: over;
+  ruby-align: center;
+}
+
+rt {
+  font-size: 0.55em;
+  color: var(--text-secondary);
+  user-select: none; /* Предотвращает выделение и копирование фуриганы при копировании текста */
+  padding-bottom: 0.1em;
+}
