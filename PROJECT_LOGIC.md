@@ -104,6 +104,8 @@ src/
 | `lib/anki/client.ts` | `AnkiConnectClient`: `checkConnection()`, `getDeckNames()`, `findCards()`, `getCardsInfo()`, `getReviewsOfCards()` |
 | `lib/anki/filter.ts` | `filterAndClassifyCards()` — maps raw Anki card data to `AnkiWord[]` with status |
 | `lib/anki/fsrs.ts` | FSRS mathematical scheduler wrapper around `ts-fsrs` with day boundary alignment to 4:00 AM local time |
+| `lib/deck/localDeckService.ts` | Offline local starter deck service: initial assessment import, active pool generation (due + new + mature fallback), and daily quota tracking |
+| `lib/deck/__tests__/localDeckService.test.ts` | Unit tests for localDeckService |
 | `lib/dict/jitendex.ts` | `lookupWord(word)` — offline SQLite JitenDex dictionary lookup |
 | `lib/dict/lookup.py` | Python script invoked via Node `execFile` to query SQLite dictionary database |
 | `lib/gemini/client.ts` | `GeminiClient.generateSessions(words)` — singleton `geminiClient` |
@@ -495,4 +497,4 @@ npm run test:integration # Integration tests (real Gemini API, needs GEMINI_API_
 
 ### [PL-9.4] Current Test Count
 
-116 unit tests across 19 test files. All passing.
+128 unit tests across 20 test files. All passing.

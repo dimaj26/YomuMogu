@@ -35,6 +35,7 @@ You are an expert **TypeScript / Next.js 15** developer. Your specialty is App R
 - **Testing**: Vitest unit tests (mocked) + separate integration config for real Gemini API.
 - **Session Completion & Audit**: Dialogue word/Anki auditor that runs a written translation Bonus Test for unused words, extracts key vocabulary with Gemini, looks up definitions offline in local JitenDex SQLite database (via Python script), and provides sync options to review due cards with manual review grading (Again, Hard, Good, Easy) or add new notes in Anki using Gemini AI note creation based on active model layout, including TTS and images.
 - **Local-First Database & Bilateral Synchronization**: Client-side IndexedDB database (via Dexie.js) cache for imported decks. Features a robust bilateral synchronization engine (`/api/anki/sync-db`) supporting: review log deduplication (idempotence to handle connection drops), bulk queries to eliminate connection bottlenecks, FSRS schedule parameter approximation (`stability = interval`, `difficulty = 5.0`, `reps = 1`) for pre-existing cards without review logs, and 4:00 AM local time daily boundary alignment.
+- **Offline Local Starter Deck & Diagnostic Assessment**: Supports completely offline practice without Anki. Includes a 500-word lazy-loaded starter list (`starter_deck.json`), a fullscreen diagnostic assessment grid (grouped by JLPT and part of speech) with additive progress protection (learning/review status is locked), and FSRS scheduling prioritizing due words, daily new limits (10/day), and mature fallbacks.
 
 ---
 

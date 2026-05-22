@@ -1,0 +1,4002 @@
+[
+  {
+    "id": 1,
+    "word": "水",
+    "reading": "みず",
+    "translation": "вода",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 2,
+    "word": "本",
+    "reading": "ほん",
+    "translation": "книга",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 3,
+    "word": "車",
+    "reading": "くるま",
+    "translation": "автомобиль",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 4,
+    "word": "友達",
+    "reading": "ともだち",
+    "translation": "друг",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 5,
+    "word": "先生",
+    "reading": "せんせい",
+    "translation": "учитель",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 6,
+    "word": "学生",
+    "reading": "がくせい",
+    "translation": "студент",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 7,
+    "word": "学校",
+    "reading": "がっこう",
+    "translation": "школа",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 8,
+    "word": "会社",
+    "reading": "かいしゃ",
+    "translation": "фирма",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 9,
+    "word": "電話",
+    "reading": "でんわ",
+    "translation": "телефон",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 10,
+    "word": "部屋",
+    "reading": "へや",
+    "translation": "комната",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 11,
+    "word": "家",
+    "reading": "いえ",
+    "translation": "дом",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 12,
+    "word": "庭",
+    "reading": "にわ",
+    "translation": "сад",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 13,
+    "word": "食堂",
+    "reading": "しょくどう",
+    "translation": "столовая",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 14,
+    "word": "教室",
+    "reading": "きょうしつ",
+    "translation": "класс",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 15,
+    "word": "駅",
+    "reading": "えき",
+    "translation": "станция",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 16,
+    "word": "空港",
+    "reading": "くうこう",
+    "translation": "аэропорт",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 17,
+    "word": "国",
+    "reading": "くに",
+    "translation": "страна",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 18,
+    "word": "日本",
+    "reading": "にほん",
+    "translation": "Япония",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 19,
+    "word": "英語",
+    "reading": "えいご",
+    "translation": "английский язык",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 20,
+    "word": "日本語",
+    "reading": "にほんご",
+    "translation": "японский язык",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 21,
+    "word": "時計",
+    "reading": "とけい",
+    "translation": "часы",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 22,
+    "word": "傘",
+    "reading": "かさ",
+    "translation": "зонт",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 23,
+    "word": "鞄",
+    "reading": "かばん",
+    "translation": "сумка",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 24,
+    "word": "靴",
+    "reading": "くつ",
+    "translation": "обувь",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 25,
+    "word": "服",
+    "reading": "ふく",
+    "translation": "одежда",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 26,
+    "word": "帽子",
+    "reading": "ぼうし",
+    "translation": "головной убор",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 27,
+    "word": "手紙",
+    "reading": "てがみ",
+    "translation": "письмо",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 28,
+    "word": "写真",
+    "reading": "しゃしん",
+    "translation": "фотография",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 29,
+    "word": "映画",
+    "reading": "えいが",
+    "translation": "фильм",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 30,
+    "word": "音楽",
+    "reading": "おんがく",
+    "translation": "музыка",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 31,
+    "word": "旅行",
+    "reading": "りょこう",
+    "translation": "путешествие",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 32,
+    "word": "勉強",
+    "reading": "べんきょう",
+    "translation": "учеба",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 33,
+    "word": "仕事",
+    "reading": "しごと",
+    "translation": "работа",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 34,
+    "word": "料理",
+    "reading": "りょうり",
+    "translation": "еда / кулинария",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 35,
+    "word": "買い物",
+    "reading": "かいもの",
+    "translation": "покупки",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 36,
+    "word": "猫",
+    "reading": "ねこ",
+    "translation": "кошка",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 37,
+    "word": "犬",
+    "reading": "いぬ",
+    "translation": "собака",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 38,
+    "word": "鳥",
+    "reading": "とり",
+    "translation": "птица",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 39,
+    "word": "魚",
+    "reading": "さかな",
+    "translation": "рыба",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 40,
+    "word": "花",
+    "reading": "はな",
+    "translation": "цветок",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 41,
+    "word": "木",
+    "reading": "き",
+    "translation": "дерево",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 42,
+    "word": "空",
+    "reading": "そら",
+    "translation": "небо",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 43,
+    "word": "海",
+    "reading": "うみ",
+    "translation": "море",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 44,
+    "word": "山",
+    "reading": "やま",
+    "translation": "гора",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 45,
+    "word": "川",
+    "reading": "かわ",
+    "translation": "река",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 46,
+    "word": "天気",
+    "reading": "てんき",
+    "translation": "погода",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 47,
+    "word": "雨",
+    "reading": "あめ",
+    "translation": "дождь",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 48,
+    "word": "雪",
+    "reading": "ゆき",
+    "translation": "снег",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 49,
+    "word": "風",
+    "reading": "かぜ",
+    "translation": "ветер",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 50,
+    "word": "今日",
+    "reading": "きょう",
+    "translation": "сегодня",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 51,
+    "word": "明日",
+    "reading": "あした",
+    "translation": "завтра",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 52,
+    "word": "昨日",
+    "reading": "きのう",
+    "translation": "вчера",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 53,
+    "word": "今週",
+    "reading": "こんしゅう",
+    "translation": "эта неделя",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 54,
+    "word": "来週",
+    "reading": "らいしゅう",
+    "translation": "следующая неделя",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 55,
+    "word": "先週",
+    "reading": "せんしゅう",
+    "translation": "прошлая неделя",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 56,
+    "word": "毎日",
+    "reading": "まいにち",
+    "translation": "каждый день",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 57,
+    "word": "朝",
+    "reading": "あさ",
+    "translation": "утро",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 58,
+    "word": "昼",
+    "reading": "ひる",
+    "translation": "день",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 59,
+    "word": "晩",
+    "reading": "ばん",
+    "translation": "вечер",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 60,
+    "word": "夜",
+    "reading": "よる",
+    "translation": "ночь",
+    "level": "N5",
+    "category": "Существительные"
+  },
+  {
+    "id": 61,
+    "word": "行く",
+    "reading": "いく",
+    "translation": "идти",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 62,
+    "word": "来る",
+    "reading": "くる",
+    "translation": "приходить",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 63,
+    "word": "帰る",
+    "reading": "かえる",
+    "translation": "возвращаться",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 64,
+    "word": "食べる",
+    "reading": "たべる",
+    "translation": "есть / кушать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 65,
+    "word": "飲む",
+    "reading": "のむ",
+    "translation": "пить",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 66,
+    "word": "見る",
+    "reading": "みる",
+    "translation": "смотреть",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 67,
+    "word": "聞く",
+    "reading": "きく",
+    "translation": "слушать / слышать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 68,
+    "word": "読む",
+    "reading": "よむ",
+    "translation": "читать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 69,
+    "word": "書く",
+    "reading": "かく",
+    "translation": "писать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 70,
+    "word": "話す",
+    "reading": "はなす",
+    "translation": "говорить",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 71,
+    "word": "買う",
+    "reading": "かう",
+    "translation": "покупать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 72,
+    "word": "する",
+    "reading": "する",
+    "translation": "делать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 73,
+    "word": "会う",
+    "reading": "あう",
+    "translation": "встречаться",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 74,
+    "word": "遊ぶ",
+    "reading": "あそぶ",
+    "translation": "играть / развлекаться",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 75,
+    "word": "泳ぐ",
+    "reading": "およぐ",
+    "translation": "плавать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 76,
+    "word": "歌う",
+    "reading": "うたう",
+    "translation": "петь",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 77,
+    "word": "走る",
+    "reading": "はしる",
+    "translation": "бежать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 78,
+    "word": "歩く",
+    "reading": "あるく",
+    "translation": "ходить пешком",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 79,
+    "word": "立つ",
+    "reading": "たつ",
+    "translation": "стоять",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 80,
+    "word": "座る",
+    "reading": "すわる",
+    "translation": "сидеть",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 81,
+    "word": "寝る",
+    "reading": "ねる",
+    "translation": "спать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 82,
+    "word": "起きる",
+    "reading": "おきる",
+    "translation": "просыпаться / вставать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 83,
+    "word": "乗る",
+    "reading": "のる",
+    "translation": "садиться (в транспорт)",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 84,
+    "word": "降りる",
+    "reading": "おりる",
+    "translation": "сходить (из транспорта)",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 85,
+    "word": "入る",
+    "reading": "はいる",
+    "translation": "входить",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 86,
+    "word": "出る",
+    "reading": "でる",
+    "translation": "выходить",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 87,
+    "word": "開ける",
+    "reading": "あける",
+    "translation": "открывать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 88,
+    "word": "閉める",
+    "reading": "しめる",
+    "translation": "закрывать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 89,
+    "word": "待つ",
+    "reading": "まつ",
+    "translation": "ждать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 90,
+    "word": "呼ぶ",
+    "reading": "よぶ",
+    "translation": "звать / вызывать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 91,
+    "word": "使う",
+    "reading": "つかう",
+    "translation": "использовать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 92,
+    "word": "作る",
+    "reading": "つくる",
+    "translation": "готовить / делать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 93,
+    "word": "撮る",
+    "reading": "とる",
+    "translation": "фотографировать / снимать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 94,
+    "word": "貸す",
+    "reading": "かす",
+    "translation": "давать взаймы",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 95,
+    "word": "借りる",
+    "reading": "かりる",
+    "translation": "брать взаймы",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 96,
+    "word": "教える",
+    "reading": "おしえる",
+    "translation": "обучать / объяснять",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 97,
+    "word": "習う",
+    "reading": "ならう",
+    "translation": "учиться / изучать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 98,
+    "word": "忘れる",
+    "reading": "わすれる",
+    "translation": "забывать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 99,
+    "word": "洗う",
+    "reading": "あらう",
+    "translation": "мыть / стирать",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 100,
+    "word": "引く",
+    "reading": "ひく",
+    "translation": "тянуть",
+    "level": "N5",
+    "category": "Глаголы"
+  },
+  {
+    "id": 101,
+    "word": "大きい",
+    "reading": "おおきい",
+    "translation": "большой",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 102,
+    "word": "小さい",
+    "reading": "ちいさい",
+    "translation": "маленький",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 103,
+    "word": "新しい",
+    "reading": "あたらしい",
+    "translation": "новый",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 104,
+    "word": "古い",
+    "reading": "ふるい",
+    "translation": "старый",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 105,
+    "word": "いい",
+    "reading": "いい",
+    "translation": "хороший",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 106,
+    "word": "悪い",
+    "reading": "わるい",
+    "translation": "плохой",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 107,
+    "word": "高い",
+    "reading": "たかい",
+    "translation": "высокий / дорогой",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 108,
+    "word": "安い",
+    "reading": "やすい",
+    "translation": "дешевый",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 109,
+    "word": "暑い",
+    "reading": "あつい",
+    "translation": "горячий / жаркий",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 110,
+    "word": "寒い",
+    "reading": "さむい",
+    "translation": "холодный (о погоде)",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 111,
+    "word": "暖かい",
+    "reading": "あたたかい",
+    "translation": "теплый",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 112,
+    "word": "涼しい",
+    "reading": "すずしい",
+    "translation": "прохладный",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 113,
+    "word": "面白い",
+    "reading": "おもしろい",
+    "translation": "интересный",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 114,
+    "word": "つまらない",
+    "reading": "つまらない",
+    "translation": "скучный",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 115,
+    "word": "忙しい",
+    "reading": "いそгаしい",
+    "translation": "занятой",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 116,
+    "word": "易しい",
+    "reading": "やさしい",
+    "translation": "легкий / простой",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 117,
+    "word": "難しい",
+    "reading": "むずかしい",
+    "translation": "трудный",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 118,
+    "word": "近い",
+    "reading": "ちかい",
+    "translation": "близкий",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 119,
+    "word": "遠い",
+    "reading": "とおい",
+    "translation": "далекий",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 120,
+    "word": "早い",
+    "reading": "はやい",
+    "translation": "ранний / быстрый",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 121,
+    "word": "遅い",
+    "reading": "おそい",
+    "translation": "поздний / медленный",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 122,
+    "word": "おいしい",
+    "reading": "おいしい",
+    "translation": "вкусный",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 123,
+    "word": "甘い",
+    "reading": "あまい",
+    "translation": "сладкий",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 124,
+    "word": "辛い",
+    "reading": "からい",
+    "translation": "острый",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 125,
+    "word": "静か",
+    "reading": "しずか",
+    "translation": "тихий / спокойный",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 126,
+    "word": "賑やか",
+    "reading": "にぎやか",
+    "translation": "оживленный / шумный",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 127,
+    "word": "親切",
+    "reading": "しんせつ",
+    "translation": "добрый / любезный",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 128,
+    "word": "元気",
+    "reading": "げんき",
+    "translation": "бодрый / здоровый",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 129,
+    "word": "好き",
+    "reading": "すき",
+    "translation": "любимый",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 130,
+    "word": "嫌い",
+    "reading": "きらい",
+    "translation": "нелюбимый",
+    "level": "N5",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 131,
+    "word": "はい",
+    "reading": "はい",
+    "translation": "да",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 132,
+    "word": "いいえ",
+    "reading": "いいえ",
+    "translation": "нет",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 133,
+    "word": "ありがとう",
+    "reading": "ありがとう",
+    "translation": "спасибо",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 134,
+    "word": "すみません",
+    "reading": "すみません",
+    "translation": "извините / прошу прощения",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 135,
+    "word": "おはよう",
+    "reading": "おはよう",
+    "translation": "доброе утро",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 136,
+    "word": "こんにちは",
+    "reading": "こんにちは",
+    "translation": "здравствуйте / добрый день",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 137,
+    "word": "こんばんは",
+    "reading": "こんばんは",
+    "translation": "добрый вечер",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 138,
+    "word": "さようなら",
+    "reading": "さようなら",
+    "translation": "до свидания",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 139,
+    "word": "はじめまして",
+    "reading": "はじめまして",
+    "translation": "приятно познакомиться",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 140,
+    "word": "よろしく",
+    "reading": "よろしく",
+    "translation": "приятно познакомиться / прошу любить и жаловать",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 141,
+    "word": "ただいま",
+    "reading": "ただいま",
+    "translation": "я дома",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 142,
+    "word": "おかえり",
+    "reading": "おかえり",
+    "translation": "с возвращением",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 143,
+    "word": "いただきます",
+    "reading": "いただきます",
+    "translation": "приятного аппетита (перед едой)",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 144,
+    "word": "ごちそうさま",
+    "reading": "ごちそうさま",
+    "translation": "спасибо за угощение (после еды)",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 145,
+    "word": "大丈夫",
+    "reading": "だいじょうぶ",
+    "translation": "все в порядке / окей",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 146,
+    "word": "いってきます",
+    "reading": "いってきます",
+    "translation": "я ушел (но вернусь)",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 147,
+    "word": "いってらっしゃい",
+    "reading": "いってらっしゃい",
+    "translation": "счастливого пути / возвращайся поскорее",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 148,
+    "word": "おめでとう",
+    "reading": "おめでとう",
+    "translation": "поздравляю",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 149,
+    "word": "失礼します",
+    "reading": "しつれいします",
+    "translation": "извините за беспокойство / до свидания",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 150,
+    "word": "お邪魔します",
+    "reading": "おじゃまします",
+    "translation": "извините за вторжение (при входе в гости)",
+    "level": "N5",
+    "category": "Выражения"
+  },
+  {
+    "id": 151,
+    "word": "辞書",
+    "reading": "じしょ",
+    "translation": "словарь",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 152,
+    "word": "地図",
+    "reading": "ちず",
+    "translation": "карта",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 153,
+    "word": "運転手",
+    "reading": "うんてんしゅ",
+    "translation": "водитель",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 154,
+    "word": "留学生",
+    "reading": "りゅうがくせい",
+    "translation": "иностранный студент",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 155,
+    "word": "公園",
+    "reading": "こうえん",
+    "translation": "парк",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 156,
+    "word": "図書館",
+    "reading": "としょかん",
+    "translation": "библиотека",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 157,
+    "word": "郵便局",
+    "reading": "ゆうびんきょく",
+    "translation": "почтовое отделение",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 158,
+    "word": "銀行",
+    "reading": "ぎんこう",
+    "translation": "банк",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 159,
+    "word": "病院",
+    "reading": "びょういん",
+    "translation": "больница",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 160,
+    "word": "警察",
+    "reading": "けいさつ",
+    "translation": "полиция",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 161,
+    "word": "美術館",
+    "reading": "びじゅつかん",
+    "translation": "музей искусств",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 162,
+    "word": "動物園",
+    "reading": "どうぶつえん",
+    "translation": "зоопарк",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 163,
+    "word": "科学",
+    "reading": "かがく",
+    "translation": "наука",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 164,
+    "word": "歴史",
+    "reading": "れきし",
+    "translation": "история",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 165,
+    "word": "文学",
+    "reading": "ぶんがく",
+    "translation": "литература",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 166,
+    "word": "地理",
+    "reading": "ちり",
+    "translation": "география",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 167,
+    "word": "社会",
+    "reading": "しゃかい",
+    "translation": "общество / мир",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 168,
+    "word": "法律",
+    "reading": "ほうりつ",
+    "translation": "закон",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 169,
+    "word": "経済",
+    "reading": "けいざい",
+    "translation": "экономика",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 170,
+    "word": "政治",
+    "reading": "せいじ",
+    "translation": "политика",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 171,
+    "word": "機械",
+    "reading": "きかい",
+    "translation": "машина / механизм",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 172,
+    "word": "道具",
+    "reading": "どうぐ",
+    "translation": "инструмент / орудие",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 173,
+    "word": "趣味",
+    "reading": "しゅみ",
+    "translation": "хобби",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 174,
+    "word": "運動",
+    "reading": "うんどう",
+    "translation": "физкультура / движение",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 175,
+    "word": "試合",
+    "reading": "しあい",
+    "translation": "матч / игра",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 176,
+    "word": "散歩",
+    "reading": "さんぽ",
+    "translation": "прогулка",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 177,
+    "word": "運転",
+    "reading": "うんてん",
+    "translation": "вождение",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 178,
+    "word": "用事",
+    "reading": "ようじ",
+    "translation": "дела",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 179,
+    "word": "約束",
+    "reading": "やくそく",
+    "translation": "обещание / встреча",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 180,
+    "word": "予定",
+    "reading": "よてい",
+    "translation": "план / расписание",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 181,
+    "word": "計画",
+    "reading": "けいかく",
+    "translation": "проект / план",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 182,
+    "word": "準備",
+    "reading": "じゅんび",
+    "translation": "подготовка",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 183,
+    "word": "案内",
+    "reading": "あんない",
+    "translation": "путеводитель / информация",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 184,
+    "word": "紹介",
+    "reading": "しょうかい",
+    "translation": "знакомство / представление",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 185,
+    "word": "相談",
+    "reading": "そうだん",
+    "translation": "совет / консультация",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 186,
+    "word": "連絡",
+    "reading": "れんらく",
+    "translation": "связь / контакт",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 187,
+    "word": "説明",
+    "reading": "せつめい",
+    "translation": "объяснение",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 188,
+    "word": "翻訳",
+    "reading": "ほんやく",
+    "translation": "письменный перевод",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 189,
+    "word": "通訳",
+    "reading": "つうやく",
+    "translation": "устный перевод",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 190,
+    "word": "授業",
+    "reading": "じゅぎょう",
+    "translation": "урок / занятие",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 191,
+    "word": "講義",
+    "reading": "こうぎ",
+    "translation": "лекция",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 192,
+    "word": "試験",
+    "reading": "しけん",
+    "translation": "экзамен",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 193,
+    "word": "宿題",
+    "reading": "しゅくだい",
+    "translation": "домашнее задание",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 194,
+    "word": "作文",
+    "reading": "さくぶん",
+    "translation": "сочинение",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 195,
+    "word": "発音",
+    "reading": "はつおん",
+    "translation": "произношение",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 196,
+    "word": "意味",
+    "reading": "いみ",
+    "translation": "смысл / значение",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 197,
+    "word": "意見",
+    "reading": "いけん",
+    "translation": "мнение",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 198,
+    "word": "理由",
+    "reading": "りゆう",
+    "translation": "причина",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 199,
+    "word": "原因",
+    "reading": "げんいん",
+    "translation": "причина / корень зла",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 200,
+    "word": "結果",
+    "reading": "けっか",
+    "translation": "результат",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 201,
+    "word": "秘密",
+    "reading": "ひみつ",
+    "translation": "секрет / тайна",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 202,
+    "word": "嘘",
+    "reading": "うそ",
+    "translation": "ложь",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 203,
+    "word": "泥棒",
+    "reading": "どろぼう",
+    "translation": "вор",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 204,
+    "word": "事故",
+    "reading": "じこ",
+    "translation": "авария / несчастный случай",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 205,
+    "word": "事件",
+    "reading": "じけん",
+    "translation": "инцидент / дело",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 206,
+    "word": "地震",
+    "reading": "じしん",
+    "translation": "землетрясение",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 207,
+    "word": "火事",
+    "reading": "かじ",
+    "translation": "пожар",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 208,
+    "word": "台風",
+    "reading": "たいふう",
+    "translation": "тайфун",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 209,
+    "word": "洪水",
+    "reading": "こうずい",
+    "translation": "наводнение",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 210,
+    "word": "雲",
+    "reading": "くも",
+    "translation": "облако",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 211,
+    "word": "霧",
+    "reading": "きり",
+    "translation": "туман",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 212,
+    "word": "氷",
+    "reading": "こおり",
+    "translation": "лед",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 213,
+    "word": "森",
+    "reading": "もり",
+    "translation": "лес",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 214,
+    "word": "林",
+    "reading": "はやし",
+    "translation": "роща",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 215,
+    "word": "畑",
+    "reading": "はたけ",
+    "translation": "поле / огород",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 216,
+    "word": "温泉",
+    "reading": "おんせん",
+    "translation": "горячий источник",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 217,
+    "word": "港",
+    "reading": "みなと",
+    "translation": "порт",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 218,
+    "word": "貿易",
+    "reading": "ぼうえき",
+    "translation": "внешняя торговля",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 219,
+    "word": "工場",
+    "reading": "こうじょう",
+    "translation": "фабрика / завод",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 220,
+    "word": "事務所",
+    "reading": "じむしょ",
+    "translation": "офис / контора",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 221,
+    "word": "会議",
+    "reading": "かいぎ",
+    "translation": "собрание / совещание",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 222,
+    "word": "社長",
+    "reading": "しゃちょう",
+    "translation": "президент компании",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 223,
+    "word": "規則",
+    "reading": "きそく",
+    "translation": "правила",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 224,
+    "word": "習慣",
+    "reading": "しゅうかん",
+    "translation": "привычка / обычай",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 225,
+    "word": "伝統",
+    "reading": "でんとう",
+    "translation": "традиция",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 226,
+    "word": "文化",
+    "reading": "ぶんか",
+    "translation": "культура",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 227,
+    "word": "芸術",
+    "reading": "げいじゅつ",
+    "translation": "искусство",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 228,
+    "word": "ガス",
+    "reading": "がす",
+    "translation": "газ",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 229,
+    "word": "電気",
+    "reading": "でんき",
+    "translation": "электричество",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 230,
+    "word": "水道",
+    "reading": "すいどう",
+    "translation": "водопровод",
+    "level": "N4",
+    "category": "Существительные"
+  },
+  {
+    "id": 231,
+    "word": "考える",
+    "reading": "かんがえる",
+    "translation": "думать / размышлять",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 232,
+    "word": "決める",
+    "reading": "きめる",
+    "translation": "решать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 233,
+    "word": "始める",
+    "reading": "はじめる",
+    "translation": "начинать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 234,
+    "word": "終わる",
+    "reading": "おわる",
+    "translation": "заканчиваться",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 235,
+    "word": "続ける",
+    "reading": "つづける",
+    "translation": "продолжать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 236,
+    "word": "送る",
+    "reading": "おくる",
+    "translation": "отправлять / посылать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 237,
+    "word": "届ける",
+    "reading": "とどける",
+    "translation": "доставлять",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 238,
+    "word": "運ぶ",
+    "reading": "はこぶ",
+    "translation": "переносить / перевозить",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 239,
+    "word": "動く",
+    "reading": "うごく",
+    "translation": "двигаться",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 240,
+    "word": "止める",
+    "reading": "とめる",
+    "translation": "останавливать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 241,
+    "word": "渡る",
+    "reading": "わたる",
+    "translation": "переходить (через)",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 242,
+    "word": "過ぎる",
+    "reading": "すぎる",
+    "translation": "проходить мимо / превышать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 243,
+    "word": "遅れる",
+    "reading": "おくれる",
+    "translation": "опаздывать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 244,
+    "word": "間に合う",
+    "reading": "まにあう",
+    "translation": "успевать вовремя",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 245,
+    "word": "急ぐ",
+    "reading": "いそぐ",
+    "translation": "спешить",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 246,
+    "word": "助ける",
+    "reading": "たすける",
+    "translation": "помогать / спасать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 247,
+    "word": "頼む",
+    "reading": "たのむ",
+    "translation": "просить / заказывать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 248,
+    "word": "祈る",
+    "reading": "いのる",
+    "translation": "молиться",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 249,
+    "word": "祝う",
+    "reading": "いわう",
+    "translation": "праздновать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 250,
+    "word": "片付ける",
+    "reading": "かたづける",
+    "translation": "прибираться",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 251,
+    "word": "汚す",
+    "reading": "よごす",
+    "translation": "пачкать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 252,
+    "word": "壊す",
+    "reading": "こわす",
+    "translation": "ломать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 253,
+    "word": "直す",
+    "reading": "なおす",
+    "translation": "чинить / исправлять",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 254,
+    "word": "治る",
+    "reading": "なおる",
+    "translation": "выздоравливать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 255,
+    "word": "包む",
+    "reading": "つつむ",
+    "translation": "заворачивать / оборачивать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 256,
+    "word": "貼る",
+    "reading": "はる",
+    "translation": "наклеивать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 257,
+    "word": "掛ける",
+    "reading": "かける",
+    "translation": "вешать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 258,
+    "word": "飾る",
+    "reading": "かざる",
+    "translation": "украшать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 259,
+    "word": "植える",
+    "reading": "うえる",
+    "translation": "сажать (растения)",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 260,
+    "word": "育てる",
+    "reading": "そだてる",
+    "translation": "выращивать / воспитывать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 261,
+    "word": "集める",
+    "reading": "あつめる",
+    "translation": "собирать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 262,
+    "word": "捨てる",
+    "reading": "すてる",
+    "translation": "выбрасывать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 263,
+    "word": "選ぶ",
+    "reading": "えらぶ",
+    "translation": "выбирать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 264,
+    "word": "比べる",
+    "reading": "くらべる",
+    "translation": "сравнивать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 265,
+    "word": "調べる",
+    "reading": "しらべる",
+    "translation": "расследовать / проверять",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 266,
+    "word": "確かめる",
+    "reading": "たしかめる",
+    "translation": "удостоверяться / подтверждать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 267,
+    "word": "覚える",
+    "reading": "おぼえる",
+    "translation": "запоминать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 268,
+    "word": "思い出す",
+    "reading": "おもいだす",
+    "translation": "вспоминать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 269,
+    "word": "伝える",
+    "reading": "つたえる",
+    "translation": "передавать (информацию)",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 270,
+    "word": "信じる",
+    "reading": "しんじる",
+    "translation": "верить",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 271,
+    "word": "怒る",
+    "reading": "おこる",
+    "translation": "злиться",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 272,
+    "word": "泣く",
+    "reading": "なく",
+    "translation": "плакать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 273,
+    "word": "笑う",
+    "reading": "わらう",
+    "translation": "смеяться / улыбаться",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 274,
+    "word": "驚く",
+    "reading": "おどろく",
+    "translation": "удивляться",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 275,
+    "word": "困る",
+    "reading": "こまる",
+    "translation": "находиться в затруднении",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 276,
+    "word": "慣れる",
+    "reading": "なれる",
+    "translation": "привыкать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 277,
+    "word": "諦める",
+    "reading": "あきらめる",
+    "translation": "сдаваться / отказываться",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 278,
+    "word": "頑張る",
+    "reading": "がんばる",
+    "translation": "стараться / упорствовать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 279,
+    "word": "払う",
+    "reading": "はらう",
+    "translation": "платить",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 280,
+    "word": "消す",
+    "reading": "けす",
+    "translation": "выключать / стирать",
+    "level": "N4",
+    "category": "Глаголы"
+  },
+  {
+    "id": 281,
+    "word": "広い",
+    "reading": "ひろい",
+    "translation": "широкий / просторный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 282,
+    "word": "狭い",
+    "reading": "せまい",
+    "translation": "узкий / тесный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 283,
+    "word": "深い",
+    "reading": "ふかい",
+    "translation": "глубокий",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 284,
+    "word": "浅い",
+    "reading": "あさい",
+    "translation": "мелкий",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 285,
+    "word": "太い",
+    "reading": "ふとい",
+    "translation": "толстый",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 286,
+    "word": "細い",
+    "reading": "ほそい",
+    "translation": "тонкий",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 287,
+    "word": "重い",
+    "reading": "おもい",
+    "translation": "тяжелый",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 288,
+    "word": "軽い",
+    "reading": "かるい",
+    "translation": "легкий",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 289,
+    "word": "強い",
+    "reading": "つよい",
+    "translation": "сильный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 290,
+    "word": "弱い",
+    "reading": "よわい",
+    "translation": "слабый",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 291,
+    "word": "暗い",
+    "reading": "くらい",
+    "translation": "темный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 292,
+    "word": "明るい",
+    "reading": "あかるい",
+    "translation": "светлый",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 293,
+    "word": "汚い",
+    "reading": "きたない",
+    "translation": "грязный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 294,
+    "word": "珍しい",
+    "reading": "めずらしい",
+    "translation": "редкий",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 295,
+    "word": "懐かしい",
+    "reading": "なつかしい",
+    "translation": "ностальгический",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 296,
+    "word": "恥ずかしい",
+    "reading": "はずかしい",
+    "translation": "стыдный / смущенный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 297,
+    "word": "怖い",
+    "reading": "こわい",
+    "translation": "страшный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 298,
+    "word": "悲しい",
+    "reading": "かなしい",
+    "translation": "грустный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 299,
+    "word": "嬉しい",
+    "reading": "うれしい",
+    "translation": "радостный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 300,
+    "word": "楽しい",
+    "reading": "たのしい",
+    "translation": "веселый / приятный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 301,
+    "word": "厳しい",
+    "reading": "きびしい",
+    "translation": "строгий",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 302,
+    "word": "正しい",
+    "reading": "ただしい",
+    "translation": "правильный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 303,
+    "word": "丁寧",
+    "reading": "ていねい",
+    "translation": "вежливый",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 304,
+    "word": "簡単",
+    "reading": "かんたん",
+    "translation": "простой / легкий",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 305,
+    "word": "複雑",
+    "reading": "ふくざつ",
+    "translation": "сложный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 306,
+    "word": "安全",
+    "reading": "あんぜん",
+    "translation": "безопасный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 307,
+    "word": "危険",
+    "reading": "きけん",
+    "translation": "опасный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 308,
+    "word": "必要",
+    "reading": "ひつよう",
+    "translation": "необходимый",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 309,
+    "word": "十分",
+    "reading": "じゅうぶん",
+    "translation": "достаточный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 310,
+    "word": "盛ん",
+    "reading": "さかん",
+    "translation": "популярный / процветающий",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 311,
+    "word": "邪魔",
+    "reading": "じゃま",
+    "translation": "помеха / мешающий",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 312,
+    "word": "残念",
+    "reading": "ざんねん",
+    "translation": "жаль / досадный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 313,
+    "word": "無理",
+    "reading": "むり",
+    "translation": "невозможный / чрезмерный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 314,
+    "word": "特別",
+    "reading": "とくべつ",
+    "translation": "особый",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 315,
+    "word": "適当",
+    "reading": "てきとう",
+    "translation": "подходящий / как попало",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 316,
+    "word": "自由",
+    "reading": "じゆう",
+    "translation": "свободный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 317,
+    "word": "不便",
+    "reading": "ふべん",
+    "translation": "неудобный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 318,
+    "word": "熱心",
+    "reading": "ねっしん",
+    "translation": "усердный / страстный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 319,
+    "word": "冷たい",
+    "reading": "つめたい",
+    "translation": "холодный (на ощупь)",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 320,
+    "word": "便利",
+    "reading": "べんり",
+    "translation": "удобный",
+    "level": "N4",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 321,
+    "word": "もちろん",
+    "reading": "もちろん",
+    "translation": "конечно",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 322,
+    "word": "やはり",
+    "reading": "やはり",
+    "translation": "все-таки / как и следовало ожидать",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 323,
+    "word": "例えば",
+    "reading": "たとえば",
+    "translation": "например",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 324,
+    "word": "特に",
+    "reading": "とくに",
+    "translation": "особенно",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 325,
+    "word": "実は",
+    "reading": "じつは",
+    "translation": "на самом деле",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 326,
+    "word": "絶対に",
+    "reading": "ぜったいに",
+    "translation": "абсолютно / категорически",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 327,
+    "word": "急に",
+    "reading": "きゅうに",
+    "translation": "вдруг / внезапно",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 328,
+    "word": "ずっと",
+    "reading": "ずっと",
+    "translation": "гораздо / все время",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 329,
+    "word": "ほとんど",
+    "reading": "ほとんど",
+    "translation": "почти",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 330,
+    "word": "ずいぶん",
+    "reading": "ずいぶん",
+    "translation": "порядочно / весьма",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 331,
+    "word": "とうとう",
+    "reading": "とうとう",
+    "translation": "в конце концов",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 332,
+    "word": "やっと",
+    "reading": "やっと",
+    "translation": "наконец-то",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 333,
+    "word": "ついに",
+    "reading": "ついに",
+    "translation": "в конце концов (окончательно)",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 334,
+    "word": "ようやく",
+    "reading": "ようやく",
+    "translation": "постепенно / наконец-то",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 335,
+    "word": "もしかしたら",
+    "reading": "もしかしたら",
+    "translation": "возможно / может быть",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 336,
+    "word": "もし",
+    "reading": "もし",
+    "translation": "если",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 337,
+    "word": "確かに",
+    "reading": "たしかに",
+    "translation": "определенно / точно",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 338,
+    "word": "なるほど",
+    "reading": "なるほど",
+    "translation": "действительно / понятно",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 339,
+    "word": "お疲れ様",
+    "reading": "おつかれさま",
+    "translation": "спасибо за работу / устали, небось",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 340,
+    "word": "お大事に",
+    "reading": "おだいじに",
+    "translation": "берегите себя / поправляйтесь",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 341,
+    "word": "気をつけて",
+    "reading": "きをつけて",
+    "translation": "будь осторожен",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 342,
+    "word": "かまいません",
+    "reading": "かまいません",
+    "translation": "ничего / неважно",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 343,
+    "word": "おかげさまで",
+    "reading": "おかげさまで",
+    "translation": "слава богу / вашими молитвами",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 344,
+    "word": "よろしくお伝えください",
+    "reading": "よろしくおつたえください",
+    "translation": "передавайте привет",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 345,
+    "word": "ごめんなさい",
+    "reading": "ごめんなさい",
+    "translation": "извини / прости",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 346,
+    "word": "申し訳ありません",
+    "reading": "もうしわけありません",
+    "translation": "прошу прощения",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 347,
+    "word": "しばらくです",
+    "reading": "しばらくです",
+    "translation": "давно не виделись",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 348,
+    "word": "お待たせしました",
+    "reading": "おまたせしました",
+    "translation": "извините, что заставил ждать",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 349,
+    "word": "お先に失礼します",
+    "reading": "おさきにしつれいします",
+    "translation": "извините, я пойду (раньше других)",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 350,
+    "word": "ご遠慮ください",
+    "reading": "ごえんりょください",
+    "translation": "пожалуйста, воздержитесь",
+    "level": "N4",
+    "category": "Выражения"
+  },
+  {
+    "id": 351,
+    "word": "スマホ",
+    "reading": "すまほ",
+    "translation": "смартфон",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 352,
+    "word": "ネット",
+    "reading": "ねっと",
+    "translation": "интернет",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 353,
+    "word": "アプリ",
+    "reading": "あぷり",
+    "translation": "приложение",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 354,
+    "word": "パスワード",
+    "reading": "ぱすわーど",
+    "translation": "пароль",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 355,
+    "word": "メール",
+    "reading": "めーる",
+    "translation": "электронное письмо",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 356,
+    "word": "メッセージ",
+    "reading": "めっせーじ",
+    "translation": "сообщение",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 357,
+    "word": "バイト",
+    "reading": "ばいと",
+    "translation": "подработка",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 358,
+    "word": "パート",
+    "reading": "ぱーと",
+    "translation": "неполный рабочий день",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 359,
+    "word": "コンビニ",
+    "reading": "こんびに",
+    "translation": "круглосуточный магазин",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 360,
+    "word": "スーパー",
+    "reading": "すーぱー",
+    "translation": "супермаркет",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 361,
+    "word": "レストラン",
+    "reading": "れすとらん",
+    "translation": "ресторан",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 362,
+    "word": "カフェ",
+    "reading": "かふぇ",
+    "translation": "кафе",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 363,
+    "word": "メニュー",
+    "reading": "めにゅー",
+    "translation": "меню",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 364,
+    "word": "ラーメン",
+    "reading": "らーめん",
+    "translation": "рамэн",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 365,
+    "word": "お茶",
+    "reading": "おちゃ",
+    "translation": "чай / зеленый чай",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 366,
+    "word": "ビール",
+    "reading": "びーる",
+    "translation": "пиво",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 367,
+    "word": "ワイン",
+    "reading": "わいん",
+    "translation": "вино",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 368,
+    "word": "コーヒー",
+    "reading": "こーひー",
+    "translation": "кофе",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 369,
+    "word": "パン",
+    "reading": "ぱん",
+    "translation": "хлеб",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 370,
+    "word": "ケーキ",
+    "reading": "けーき",
+    "translation": "торт / пирожное",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 371,
+    "word": "デザート",
+    "reading": "でざーと",
+    "translation": "десерт",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 372,
+    "word": "ランチ",
+    "reading": "らんち",
+    "translation": "обед",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 373,
+    "word": "ディナー",
+    "reading": "でぃなー",
+    "translation": "ужин",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 374,
+    "word": "イベント",
+    "reading": "いべんと",
+    "translation": "событие / мероприятие",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 375,
+    "word": "チケット",
+    "reading": "ちけっと",
+    "translation": "билет",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 376,
+    "word": "コンサート",
+    "reading": "こんさーと",
+    "translation": "концерт",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 377,
+    "word": "デート",
+    "reading": "でーと",
+    "translation": "свидание",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 378,
+    "word": "ライブ",
+    "reading": "らいぶ",
+    "translation": "живой концерт",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 379,
+    "word": "アニメ",
+    "reading": "あにめ",
+    "translation": "аниме",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 380,
+    "word": "漫画",
+    "reading": "まんが",
+    "translation": "манга",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 381,
+    "word": "ゲーム",
+    "reading": "げーむ",
+    "translation": "игра",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 382,
+    "word": "ユーチューブ",
+    "reading": "ゆーちゅーぶ",
+    "translation": "YouTube",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 383,
+    "word": "チャンネル",
+    "reading": "ちゃんねる",
+    "translation": "канал",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 384,
+    "word": "ログイン",
+    "reading": "ろぐいん",
+    "translation": "логин / вход",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 385,
+    "word": "シェア",
+    "reading": "しぇあ",
+    "translation": "репост / поделиться",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 386,
+    "word": "コメント",
+    "reading": "こめんと",
+    "translation": "комментарий",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 387,
+    "word": "グループ",
+    "reading": "ぐるーぷ",
+    "translation": "группа",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 388,
+    "word": "チャット",
+    "reading": "ちゃっと",
+    "translation": "чат",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 389,
+    "word": "グルメ",
+    "reading": "ぐるめ",
+    "translation": "гурман / изысканная еда",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 390,
+    "word": "ショッピング",
+    "reading": "しょっぴんぐ",
+    "translation": "покупки",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 391,
+    "word": "セール",
+    "reading": "せーる",
+    "translation": "распродажа",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 392,
+    "word": "プレゼント",
+    "reading": "ぷれぜんと",
+    "translation": "подарок",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 393,
+    "word": "ギフト",
+    "reading": "ぎふと",
+    "translation": "подарок (вещь)",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 394,
+    "word": "サプライズ",
+    "reading": "さぷらいず",
+    "translation": "сюрприз",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 395,
+    "word": "トラブル",
+    "reading": "とらぶる",
+    "translation": "неприятность / проблема",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 396,
+    "word": "キャンセル",
+    "reading": "きゃんせる",
+    "translation": "отмена",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 397,
+    "word": "キャッシュ",
+    "reading": "きゃっしゅ",
+    "translation": "наличные",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 398,
+    "word": "カード",
+    "reading": "かーど",
+    "translation": "карта (банковская)",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 399,
+    "word": "ポイント",
+    "reading": "ぽいんと",
+    "translation": "баллы / поинты",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 400,
+    "word": "レシート",
+    "reading": "れしーと",
+    "translation": "чек",
+    "level": "Conversational",
+    "category": "Существительные"
+  },
+  {
+    "id": 401,
+    "word": "ググる",
+    "reading": "ぐぐる",
+    "translation": "гуглить",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 402,
+    "word": "バズる",
+    "reading": "ばずる",
+    "translation": "хайпануть / стать вирусным",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 403,
+    "word": "シェアする",
+    "reading": "しぇあする",
+    "translation": "делиться",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 404,
+    "word": "コピペする",
+    "reading": "こぴぺする",
+    "translation": "копипастить",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 405,
+    "word": "スルーする",
+    "reading": "するーする",
+    "translation": "игнорировать / пропускать мимо ушей",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 406,
+    "word": "サボる",
+    "reading": "さぼる",
+    "translation": "прогуливать",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 407,
+    "word": "ハマる",
+    "reading": "はまる",
+    "translation": "увлекаться / подсесть (на что-то)",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 408,
+    "word": "ビビる",
+    "reading": "びびる",
+    "translation": "пугаться / трусить",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 409,
+    "word": "ウケる",
+    "reading": "うける",
+    "translation": "смешить / заходить (о шутке)",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 410,
+    "word": "テンパる",
+    "reading": "てんぱる",
+    "translation": "паниковать / терять голову",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 411,
+    "word": "ミスる",
+    "reading": "みする",
+    "translation": "совершать ошибку / косячить",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 412,
+    "word": "メモる",
+    "reading": "めもる",
+    "translation": "записывать / делать заметку",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 413,
+    "word": "コラボする",
+    "reading": "こらぼする",
+    "translation": "сотрудничать / делать коллаборацию",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 414,
+    "word": "ツイートする",
+    "reading": "ついーとする",
+    "translation": "твитнуть / писать пост",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 415,
+    "word": "アップする",
+    "reading": "あっぷする",
+    "translation": "загружать (в сеть)",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 416,
+    "word": "ダウンロードする",
+    "reading": "だうんろーどする",
+    "translation": "скачивать",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 417,
+    "word": "チェックする",
+    "reading": "ちぇっくする",
+    "translation": "проверять",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 418,
+    "word": "リセットする",
+    "reading": "りせっとする",
+    "translation": "сбрасывать",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 419,
+    "word": "スタートする",
+    "reading": "すたーとする",
+    "translation": "начинать / стартовать",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 420,
+    "word": "クリアする",
+    "reading": "くりあする",
+    "translation": "проходить (игру) / очищать",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 421,
+    "word": "キャンセルする",
+    "reading": "きゃんせるする",
+    "translation": "отменять",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 422,
+    "word": "パスする",
+    "reading": "ぱすする",
+    "translation": "передавать / пасовать",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 423,
+    "word": "キープする",
+    "reading": "きーぷする",
+    "translation": "сохранять / держать",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 424,
+    "word": "サポートする",
+    "reading": "さぽーとする",
+    "translation": "поддерживать",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 425,
+    "word": "アドバイスする",
+    "reading": "あどばいする",
+    "translation": "советовать",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 426,
+    "word": "リラックスする",
+    "reading": "りらっくすする",
+    "translation": "расслабляться",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 427,
+    "word": "イライラする",
+    "reading": "いらいらする",
+    "translation": "раздражаться",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 428,
+    "word": "ワクワクする",
+    "reading": "わくわくする",
+    "translation": "быть в предвкушении",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 429,
+    "word": "ドキドキする",
+    "reading": "どきどきする",
+    "translation": "волноваться (сердце бьется)",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 430,
+    "word": "ガッカリする",
+    "reading": "がっかりする",
+    "translation": "разочаровываться",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 431,
+    "word": "ホッとする",
+    "reading": "ほっとする",
+    "translation": "испытывать облегчение",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 432,
+    "word": "スッキリする",
+    "reading": "すっきりする",
+    "translation": "чувствовать освежение / ясность",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 433,
+    "word": "ノリノリになる",
+    "reading": "のりのりになる",
+    "translation": "быть в восторге / войти во вкус",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 434,
+    "word": "チャレンジする",
+    "reading": "ちゃれんじする",
+    "translation": "бросать вызов / пробовать",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 435,
+    "word": "カットする",
+    "reading": "かっとする",
+    "translation": "резать / стричь",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 436,
+    "word": "コピーする",
+    "reading": "こぴーする",
+    "translation": "копировать",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 437,
+    "word": "ペーストする",
+    "reading": "ぺーすとする",
+    "translation": "вставлять",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 438,
+    "word": "クリックする",
+    "reading": "くりっくする",
+    "translation": "кликать",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 439,
+    "word": "タップする",
+    "reading": "たっぷする",
+    "translation": "тапать",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 440,
+    "word": "スワイプする",
+    "reading": "すわいぷする",
+    "translation": "свайпать",
+    "level": "Conversational",
+    "category": "Глаголы"
+  },
+  {
+    "id": 441,
+    "word": "ヤバい",
+    "reading": "やばい",
+    "translation": "крутой / опасный / капец",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 442,
+    "word": "エモい",
+    "reading": "えもい",
+    "translation": "эмоциональный / трогательный",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 443,
+    "word": "ウザい",
+    "reading": "うざい",
+    "translation": "надоедливый / раздражающий",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 444,
+    "word": "キモい",
+    "reading": "きもい",
+    "translation": "мерзкий / противный",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 445,
+    "word": "ダサい",
+    "reading": "ださい",
+    "translation": "немодный / отстойный",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 446,
+    "word": "ムズい",
+    "reading": "むずい",
+    "translation": "сложный (сокр.)",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 447,
+    "word": "エグい",
+    "reading": "えぐい",
+    "translation": "жесткий / суровый",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 448,
+    "word": "リアル",
+    "reading": "りある",
+    "translation": "реальный",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 449,
+    "word": "ガチ",
+    "reading": "がち",
+    "translation": "серьезный / настоящий",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 450,
+    "word": "ラフ",
+    "reading": "らふ",
+    "translation": "небрежный / свободный",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 451,
+    "word": "シンプル",
+    "reading": "しんぷる",
+    "translation": "простой",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 452,
+    "word": "スマート",
+    "reading": "すまーと",
+    "translation": "умный / элегантный",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 453,
+    "word": "カジュアル",
+    "reading": "かじゅある",
+    "translation": "повседневный",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 454,
+    "word": "フレッシュ",
+    "reading": "ふれっしゅ",
+    "translation": "свежий",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 455,
+    "word": "ユニーク",
+    "reading": "ゆにーく",
+    "translation": "уникальный",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 456,
+    "word": "トレンディ",
+    "reading": "とれんでぃ",
+    "translation": "модный",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 457,
+    "word": "メンタル",
+    "reading": "めんたる",
+    "translation": "ментальный / психика",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 458,
+    "word": "ポジティブ",
+    "reading": "ぽじてぃぶ",
+    "translation": "позитивный",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 459,
+    "word": "ネガティブ",
+    "reading": "ねげてぃぶ",
+    "translation": "негативный",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 460,
+    "word": "アクティブ",
+    "reading": "あくてぃぶ",
+    "translation": "активный",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 461,
+    "word": "ロマンチック",
+    "reading": "ろまんちっく",
+    "translation": "романтичный",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 462,
+    "word": "クール",
+    "reading": "くーる",
+    "translation": "крутой / холодный",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 463,
+    "word": "ドライ",
+    "reading": "どらい",
+    "translation": "сухой / сдержанный",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 464,
+    "word": "ウェット",
+    "reading": "うぇっと",
+    "translation": "эмоциональный / сентиментальный",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 465,
+    "word": "ヘルシー",
+    "reading": "へるしー",
+    "translation": "здоровый (о еде)",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 466,
+    "word": "カラフル",
+    "reading": "からふる",
+    "translation": "разноцветный",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 467,
+    "word": "ファンシー",
+    "reading": "ふぁんしー",
+    "translation": "причудливый",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 468,
+    "word": "クラシック",
+    "reading": "くらしっく",
+    "translation": "классический",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 469,
+    "word": "モダン",
+    "reading": "もだん",
+    "translation": "современный",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 470,
+    "word": "ハッピー",
+    "reading": "はっぴー",
+    "translation": "счастливый",
+    "level": "Conversational",
+    "category": "Прилагательные"
+  },
+  {
+    "id": 471,
+    "word": "またね",
+    "reading": "またね",
+    "translation": "пока / до встречи",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 472,
+    "word": "バイバイ",
+    "reading": "ばいばい",
+    "translation": "пока-пока",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 473,
+    "word": "じゃあね",
+    "reading": "じゃあね",
+    "translation": "ну, пока",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 474,
+    "word": "そうだね",
+    "reading": "そうだね",
+    "translation": "верно / согласен",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 475,
+    "word": "本当に",
+    "reading": "ほんとうに",
+    "translation": "действительно / правда",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 476,
+    "word": "ガチで",
+    "reading": "がちで",
+    "translation": "реально / серьезно",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 477,
+    "word": "マジで",
+    "reading": "まじで",
+    "translation": "серьезно / жесть",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 478,
+    "word": "ちなみに",
+    "reading": "ちなみに",
+    "translation": "кстати / между прочим",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 479,
+    "word": "ところで",
+    "reading": "ところで",
+    "translation": "кстати / к слову",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 480,
+    "word": "だから",
+    "reading": "だから",
+    "translation": "поэтому",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 481,
+    "word": "でも",
+    "reading": "でも",
+    "translation": "но",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 482,
+    "word": "しかし",
+    "reading": "しかし",
+    "translation": "однако",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 483,
+    "word": "それから",
+    "reading": "それから",
+    "translation": "затем / после этого",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 484,
+    "word": "それで",
+    "reading": "それで",
+    "translation": "итак / поэтому",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 485,
+    "word": "要するに",
+    "reading": "ようするに",
+    "translation": "короче говоря / суть в том",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 486,
+    "word": "つまり",
+    "reading": "つまり",
+    "translation": "то есть / иными словами",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 487,
+    "word": "そういえば",
+    "reading": "そういえば",
+    "translation": "кстати, вспомнил",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 488,
+    "word": "どういたしまして",
+    "reading": "どういたしまして",
+    "translation": "не за что",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 489,
+    "word": "とりあえず",
+    "reading": "とりあえず",
+    "translation": "пока что / первым делом",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 490,
+    "word": "わかる",
+    "reading": "わかる",
+    "translation": "понимаю / жиза",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 491,
+    "word": "そうなんだ",
+    "reading": "そうなんだ",
+    "translation": "вот как / понятно",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 492,
+    "word": "そりゃそうだ",
+    "reading": "そりゃそうだ",
+    "translation": "ну еще бы / это само собой",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 493,
+    "word": "やっぱ",
+    "reading": "やっぱ",
+    "translation": "все-таки (разг.)",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 494,
+    "word": "やっぱり",
+    "reading": "やっぱり",
+    "translation": "как и думал",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 495,
+    "word": "ええと",
+    "reading": "ええと",
+    "translation": "ну / э-э-э",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 496,
+    "word": "あのう",
+    "reading": "あのう",
+    "translation": "послушайте / э-э",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 497,
+    "word": "たぶん",
+    "reading": "たぶん",
+    "translation": "наверное / может быть",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 498,
+    "word": "全然",
+    "reading": "ぜんぜん",
+    "translation": "совсем (не) / абсолютно",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 499,
+    "word": "まあまあ",
+    "reading": "まあまあ",
+    "translation": "так себе / нормально",
+    "level": "Conversational",
+    "category": "Выражения"
+  },
+  {
+    "id": 500,
+    "word": "おっけー",
+    "reading": "おっけー",
+    "translation": "окей",
+    "level": "Conversational",
+    "category": "Выражения"
+  }
+]

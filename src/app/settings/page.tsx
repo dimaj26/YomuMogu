@@ -8,6 +8,16 @@ import styles from './settings.module.css';
 import { AnkiWord } from '@/lib/anki/filter';
 import { useJapanification } from '@/hooks/useJapanification';
 import { getProfileItem, setProfileItem, removeProfileItem, getProfilesList, setActiveProfileId, getActiveProfileId, createProfile, deleteProfile, ProfileInfo } from '@/lib/profile';
+import { 
+  LOCAL_DECK_NAME,
+  isLocalDeckInitialized,
+  importStarterDeck,
+  getDailyNewWordsCount,
+  incrementDailyNewWordsCount,
+  getDailyActivePool,
+  getLocalDeckStats
+} from '@/lib/deck/localDeckService';
+import { db } from '@/lib/db';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -18,7 +28,7 @@ export default function SettingsPage() {
   const [backField, setBackField] = useState<string>('Back');
   const [audioField, setAudioField] = useState<string>('');
   const [imageField, setImageField] = useState<string>('');
-  const [deckMode, setDeckMode] = useState<'standard' | 'custom'>('standard');
+  const [deckMode, setDeckMode] = useState<'standard' | 'custom' | 'local'>('standard');
   const [words, setWords] = useState<AnkiWord[]>([]);
   
   const [isLoadingConnection, setIsLoadingConnection] = useState<boolean>(false);
@@ -29,6 +39,15 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [wordLoadSuccess, setWordLoadSuccess] = useState<boolean>(false);
   const [sessions, setSessions] = useState<any[]>([]);
+
+  // Локальный автономный режим
+  const [isLocalInitialized, setIsLocalInitialized] = useState<boolean>(false);
+  const [dailyNewWordsCount, setDailyNewWordsCount] = useState<number>(0);
+  const [isAssessmentOpen, setIsAssessmentOpen] = useState<boolean>(false);
+  const [checkedNewWordIds, setCheckedNewWordIds] = useState<Set<number>>(new Set());
+  const [localWordStates, setLocalWordStates] = useState<Record<number, string>>({});
+  const [currentLevelTab, setCurrentLevelTab] = useState<'N5' | 'N4' | 'Conversational'>('N5');
+  const [starterDeckData, setStarterDeckData] = useState<any[]>([]);
 
   const [hasLoaded, setHasLoaded] = useState(false);
   const { state: jState, setSpeed, setChatLevel, resetProgress } = useJapanification();
@@ -76,20 +95,43 @@ export default function SettingsPage() {
 
   // Сгенерировать темы диалогов при помощи Gemini
   const generateSessions = async () => {
-    if (words.length === 0) return;
     setIsLoadingSessions(true);
     setError(null);
     try {
+      let wordsToUse = words;
+      if (deckMode === 'local') {
+        wordsToUse = await getDailyActivePool(activeProfileId, LOCAL_DECK_NAME);
+      }
+
+      if (wordsToUse.length === 0) {
+        if (deckMode === 'local') {
+          setError('Колода не инициализирована или пуста. Пройдите оценку знаний.');
+        } else {
+          setError('Список слов пуст. Импортируйте слова.');
+        }
+        setIsLoadingSessions(false);
+        return;
+      }
+
       const response = await fetch('/api/gemini/sessions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ words }),
+        body: JSON.stringify({ words: wordsToUse }),
       });
       const data = await response.json();
       if (response.ok) {
         setSessions(data.sessions || []);
+        
+        // Если это локальный режим, увеличиваем квоту изученных слов сегодня
+        if (deckMode === 'local') {
+          const newWordsInPool = wordsToUse.filter(w => w.status === 'new').length;
+          if (newWordsInPool > 0) {
+            incrementDailyNewWordsCount(activeProfileId, newWordsInPool);
+            setDailyNewWordsCount(getDailyNewWordsCount(activeProfileId));
+          }
+        }
       } else {
         setError(data.error || 'Не удалось сгенерировать темы');
       }
@@ -191,6 +233,36 @@ export default function SettingsPage() {
 
   // Загрузить слова из колоды
   const loadWords = async () => {
+    if (deckMode === 'local') {
+      setIsLoadingWords(true);
+      setError(null);
+      setWordLoadSuccess(false);
+      try {
+        const localWords = await db.words
+          .where('profileId')
+          .equals(activeProfileId)
+          .filter(w => w.deckName === LOCAL_DECK_NAME)
+          .toArray();
+        const mapped = localWords.map(w => ({
+          id: w.id,
+          word: w.word,
+          translation: w.translation,
+          interval: w.interval,
+          status: w.status,
+          deckName: w.deckName,
+          rawFront: w.word,
+          rawBack: w.translation,
+          cardIds: [w.id]
+        }));
+        setWords(mapped);
+      } catch (err) {
+        setError('Не удалось загрузить локальные слова');
+      } finally {
+        setIsLoadingWords(false);
+      }
+      return;
+    }
+
     if (!selectedDeck) return;
     setIsLoadingWords(true);
     setError(null);
@@ -236,7 +308,7 @@ export default function SettingsPage() {
       if (savedImage) setImageField(savedImage);
 
       const savedMode = getProfileItem('deck_mode');
-      if (savedMode) setDeckMode(savedMode as 'standard' | 'custom');
+      if (savedMode) setDeckMode(savedMode as 'standard' | 'custom' | 'local');
       
       const savedWords = getProfileItem('words');
       if (savedWords) setWords(JSON.parse(savedWords));
@@ -276,6 +348,22 @@ export default function SettingsPage() {
     setProfileItem('image_field', imageField);
   }, [imageField, hasLoaded]);
 
+  // Проверяем статус инициализации локальной колоды
+  const checkLocalDeckStatus = async () => {
+    if (!activeProfileId) return;
+    const initialized = await isLocalDeckInitialized(activeProfileId);
+    setIsLocalInitialized(initialized);
+    if (initialized) {
+      setDailyNewWordsCount(getDailyNewWordsCount(activeProfileId));
+    }
+  };
+
+  useEffect(() => {
+    if (hasLoaded) {
+      checkLocalDeckStatus();
+    }
+  }, [activeProfileId, hasLoaded]);
+
   useEffect(() => {
     if (!hasLoaded) return;
     setProfileItem('deck_mode', deckMode);
@@ -283,7 +371,103 @@ export default function SettingsPage() {
     if (deckMode === 'standard' && isConnected) {
       setupStandardDeck();
     }
+    loadWords();
+    checkLocalDeckStatus();
   }, [deckMode, hasLoaded, isConnected]);
+
+  // Ленивая загрузка данных стартовой колоды для диагностического модального окна
+  useEffect(() => {
+    if (isAssessmentOpen && starterDeckData.length === 0) {
+      import('@/resources/starter_deck.json').then((module) => {
+        setStarterDeckData(module.default);
+      });
+    }
+  }, [isAssessmentOpen, starterDeckData.length]);
+
+  // Функции для диагностического модального окна
+  const openAssessmentModal = async () => {
+    try {
+      const existingWords = await db.words
+        .where('profileId')
+        .equals(activeProfileId)
+        .filter(w => w.deckName === LOCAL_DECK_NAME)
+        .toArray();
+
+      const states: Record<number, string> = {};
+      const checkedIds = new Set<number>();
+
+      existingWords.forEach(w => {
+        states[w.id] = w.status;
+        if (w.status === 'mature') {
+          checkedIds.add(w.id);
+        }
+      });
+
+      setLocalWordStates(states);
+      setCheckedNewWordIds(checkedIds);
+      setIsAssessmentOpen(true);
+    } catch (err) {
+      setError('Не удалось загрузить статус слов для диагностики');
+    }
+  };
+
+  const handleToggleWord = (wordId: number) => {
+    const status = localWordStates[wordId];
+    if (status && status !== 'new') return; // защищаем прогресс (learning, review, mature в БД)
+
+    setCheckedNewWordIds(prev => {
+      const next = new Set(prev);
+      if (next.has(wordId)) {
+        next.delete(wordId);
+      } else {
+        next.add(wordId);
+      }
+      return next;
+    });
+  };
+
+  const handleSelectAllForTab = () => {
+    const tabWords = starterDeckData.filter(w => w.level === currentLevelTab);
+    setCheckedNewWordIds(prev => {
+      const next = new Set(prev);
+      tabWords.forEach(w => {
+        const status = localWordStates[w.id];
+        if (!status || status === 'new') {
+          next.add(w.id);
+        }
+      });
+      return next;
+    });
+  };
+
+  const handleDeselectAllForTab = () => {
+    const tabWords = starterDeckData.filter(w => w.level === currentLevelTab);
+    setCheckedNewWordIds(prev => {
+      const next = new Set(prev);
+      tabWords.forEach(w => {
+        const status = localWordStates[w.id];
+        if (!status || status === 'new') {
+          next.delete(w.id);
+        }
+      });
+      return next;
+    });
+  };
+
+  const handleSaveAssessment = async () => {
+    setIsLoadingWords(true);
+    try {
+      await importStarterDeck(activeProfileId, checkedNewWordIds);
+      setIsLocalInitialized(true);
+      setIsAssessmentOpen(false);
+      await loadWords();
+      setDailyNewWordsCount(getDailyNewWordsCount(activeProfileId));
+    } catch (err) {
+      setError('Не удалось сохранить результаты диагностики');
+    } finally {
+      setIsLoadingWords(false);
+    }
+  };
 
   useEffect(() => {
     if (!hasLoaded) return;
@@ -551,87 +735,135 @@ export default function SettingsPage() {
             {/* Настройки подключения */}
             <div className="card-friendly" style={{ width: '100%' }}>
               <h2 className={styles.cardTitle}>
-                <SettingsIcon size={20} /> Подключение к Anki
+                <SettingsIcon size={20} /> Источник слов и режим обучения
               </h2>
-              
-              <div className={styles.statusBox}>
-                <span className={styles.statusLabel}>Статус:</span>
-                {isConnected === null ? (
-                  <span className={styles.statusValue}>Проверка...</span>
-                ) : isConnected ? (
-                  <span className={`${styles.statusValue} ${styles.connected}`}>
-                    <CheckCircle size={16} /> Подключено
-                  </span>
-                ) : (
-                  <span className={`${styles.statusValue} ${styles.disconnected}`}>
-                    <XCircle size={16} /> Нет связи
-                  </span>
-                )}
-                
-                <button 
-                  onClick={checkConnection} 
-                  disabled={isLoadingConnection}
-                  className="btn-3d" 
-                  style={{ padding: '6px 12px', minWidth: '40px', display: 'inline-flex', marginLeft: 'auto' }}
-                  title="Переподключиться"
+
+              {/* Переключатель режима колоды */}
+              <div className={styles.modeSelector}>
+                <button
+                  type="button"
+                  onClick={() => setDeckMode('standard')}
+                  className={`btn-3d ${deckMode === 'standard' ? 'btn-blue' : ''} ${styles.modeButton}`}
                 >
-                  <RefreshCw size={14} className={isLoadingConnection ? styles.spin : ''} />
+                  Стандартная Anki
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeckMode('custom')}
+                  className={`btn-3d ${deckMode === 'custom' ? 'btn-blue' : ''} ${styles.modeButton}`}
+                >
+                  Своя Anki
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeckMode('local')}
+                  className={`btn-3d ${deckMode === 'local' ? 'btn-blue' : ''} ${styles.modeButton}`}
+                >
+                  Локальная колода
                 </button>
               </div>
 
-              {error && (
-                <div className={styles.errorAlert}>
-                  <AlertCircle size={18} />
-                  <p>{error}</p>
-                </div>
-              )}
-
-              {isConnected && (
+              {deckMode === 'local' ? (
                 <div className={styles.form}>
-                  {/* Переключатель режима колоды */}
-                  <div className={styles.modeSelector}>
+                  <div className={styles.infoCard}>
+                    <strong>Локальный автономный режим.</strong> Изучение встроенного стартового списка из 500 японских слов офлайн через IndexedDB.
+                    <br />• Диагностика начальных знаний
+                    <br />• Интервальное повторение (FSRS)
+                    <br />• Дневной лимит новых слов: 10
+                  </div>
+
+                  <div className={styles.statusBox}>
+                    <span className={styles.statusLabel}>Статус:</span>
+                    {isLocalInitialized ? (
+                      <span className={`${styles.statusValue} ${styles.connected}`}>
+                        <CheckCircle size={16} /> Инициализирована
+                      </span>
+                    ) : (
+                      <span className={`${styles.statusValue} ${styles.disconnected}`}>
+                        <XCircle size={16} /> Требуется диагностика
+                      </span>
+                    )}
+                    
                     <button
-                      type="button"
-                      onClick={() => setDeckMode('standard')}
-                      className={`btn-3d ${deckMode === 'standard' ? 'btn-blue' : ''} ${styles.modeButton}`}
+                      onClick={openAssessmentModal}
+                      className="btn-3d btn-green"
+                      style={{ padding: '6px 12px', fontSize: '13px', marginLeft: 'auto' }}
                     >
-                      Стандартная колода
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeckMode('custom')}
-                      className={`btn-3d ${deckMode === 'custom' ? 'btn-blue' : ''} ${styles.modeButton}`}
-                    >
-                      Своя колода
+                      {isLocalInitialized ? 'Редактировать' : 'Пройти диагностику'}
                     </button>
                   </div>
 
-                  {deckMode === 'standard' ? (
-                    <div>
-                      <div className={styles.infoCard}>
-                        Будет автоматически создана колода <span className={styles.infoCardStrong}>YomuMogu</span> с оптимальным шаблоном карточек и преднастроенными полями: 
-                        <br />• <strong>Word</strong> (Кандзи/слово)
-                        <br />• <strong>Furigana</strong> (Чтение слов)
-                        <br />• <strong>Meaning</strong> (Перевод)
-                        <br />• <strong>Audio</strong> (Озвучка от ИИ)
-                        <br />• <strong>Image</strong> (Иллюстрации)
-                        <br />• <strong>Context</strong> (Контекстное предложение)
-                      </div>
-                      
-                      <button
-                        onClick={async () => {
-                          await setupStandardDeck();
-                          await loadWords();
-                        }}
-                        disabled={isLoadingDecks || isLoadingWords}
-                        className="btn-3d btn-green"
-                        style={{ width: '100%' }}
-                      >
-                        {isLoadingWords ? 'Загрузка слов...' : 'Настроить и импортировать слова'}
-                      </button>
+                  {isLocalInitialized && (
+                    <div className={styles.statusBox} style={{ marginTop: 0 }}>
+                      <span className={styles.statusLabel}>Новых слов сегодня:</span>
+                      <span className={styles.statusValue} style={{ color: 'var(--color-blue)' }}>
+                        {dailyNewWordsCount} / 10
+                      </span>
                     </div>
-                  ) : (
-                    <div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <div className={styles.statusBox}>
+                    <span className={styles.statusLabel}>Статус:</span>
+                    {isConnected === null ? (
+                      <span className={styles.statusValue}>Проверка...</span>
+                    ) : isConnected ? (
+                      <span className={`${styles.statusValue} ${styles.connected}`}>
+                        <CheckCircle size={16} /> Подключено
+                      </span>
+                    ) : (
+                      <span className={`${styles.statusValue} ${styles.disconnected}`}>
+                        <XCircle size={16} /> Нет связи
+                      </span>
+                    )}
+                    
+                    <button 
+                      onClick={checkConnection} 
+                      disabled={isLoadingConnection}
+                      className="btn-3d" 
+                      style={{ padding: '6px 12px', minWidth: '40px', display: 'inline-flex', marginLeft: 'auto' }}
+                      title="Переподключиться"
+                    >
+                      <RefreshCw size={14} className={isLoadingConnection ? styles.spin : ''} />
+                    </button>
+                  </div>
+
+                  {error && (
+                    <div className={styles.errorAlert}>
+                      <AlertCircle size={18} />
+                      <p>{error}</p>
+                    </div>
+                  )}
+
+                  {isConnected && (
+                    <div className={styles.form}>
+                      {deckMode === 'standard' ? (
+                        <div>
+                          <div className={styles.infoCard}>
+                            Будет автоматически создана колода <span className={styles.infoCardStrong}>YomuMogu</span> с оптимальным шаблоном карточек и преднастроенными полями: 
+                            <br />• <strong>Word</strong> (Кандзи/слово)
+                            <br />• <strong>Furigana</strong> (Чтение слов)
+                            <br />• <strong>Meaning</strong> (Перевод)
+                            <br />• <strong>Audio</strong> (Озвучка от ИИ)
+                            <br />• <strong>Image</strong> (Иллюстрации)
+                            <br />• <strong>Context</strong> (Контекстное предложение)
+                          </div>
+                          
+                          <button
+                            onClick={async () => {
+                              await setupStandardDeck();
+                              await loadWords();
+                            }}
+                            disabled={isLoadingDecks || isLoadingWords}
+                            className="btn-3d btn-green"
+                            style={{ width: '100%' }}
+                          >
+                            {isLoadingWords ? 'Загрузка слов...' : 'Настроить и импортировать слова'}
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
                       {/* Своя колода - Field Mapper UI */}
                       <div className={styles.formGroup} style={{ marginBottom: '16px' }}>
                         <label htmlFor="deck-select">Выберите колоду Anki</label>
@@ -717,7 +949,9 @@ export default function SettingsPage() {
                 </div>
               )}
             </div>
-          </div>
+          )}
+        </div>
+      </div>
 
           {/* Правая колонка: Статистика и список слов */}
           <div className="card-friendly">
@@ -728,7 +962,20 @@ export default function SettingsPage() {
             {words.length === 0 ? (
               <div className={styles.emptyState}>
                 <BookOpen size={48} className={styles.emptyIcon} />
-                <p>Слова еще не загружены. Выберите колоду и нажмите кнопку «Импортировать слова».</p>
+                {deckMode === 'local' ? (
+                  <>
+                    <p>Слова еще не загружены. Пожалуйста, пройдите диагностику знаний для инициализации локальной колоды.</p>
+                    <button
+                      onClick={openAssessmentModal}
+                      className="btn-3d btn-green"
+                      style={{ marginTop: '12px', padding: '8px 16px', fontSize: '14px' }}
+                    >
+                      Пройти диагностику
+                    </button>
+                  </>
+                ) : (
+                  <p>Слова еще не загружены. Выберите колоду и нажмите кнопку «Импортировать слова».</p>
+                )}
               </div>
             ) : (
               <div className={styles.wordListContainer}>
@@ -883,6 +1130,144 @@ export default function SettingsPage() {
           </div>
         </div>
       </main>
+
+      {isAssessmentOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <h2>Диагностика знаний</h2>
+              <button
+                type="button"
+                onClick={() => setIsAssessmentOpen(false)}
+                className="btn-3d btn-red"
+                style={{ padding: '6px 12px', fontSize: '13px' }}
+              >
+                Закрыть
+              </button>
+            </div>
+
+            <div className={styles.modalBody}>
+              <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                Отметьте слова, которые вы уже хорошо знаете. Они получат статус «Изучено» (mature) и будут отложены. 
+                Остальные слова будут появляться как новые карточки.
+              </p>
+
+              <div className={styles.tabsContainer}>
+                {(['N5', 'N4', 'Conversational'] as const).map((lvl) => (
+                  <button
+                    key={lvl}
+                    type="button"
+                    onClick={() => setCurrentLevelTab(lvl)}
+                    className={`${styles.tabButton} ${currentLevelTab === lvl ? styles.tabButtonActive : ''}`}
+                  >
+                    {lvl === 'Conversational' ? 'Разговорный слой' : lvl}
+                  </button>
+                ))}
+              </div>
+
+              {starterDeckData.length === 0 ? (
+                <div className={styles.loadingText}>Загрузка стартовой колоды...</div>
+              ) : (
+                <>
+                  <div className={styles.modalControls}>
+                    <button
+                      type="button"
+                      className="btn-3d btn-blue"
+                      onClick={handleSelectAllForTab}
+                      style={{ padding: '6px 12px', fontSize: '13px' }}
+                    >
+                      Выбрать все в {currentLevelTab === 'Conversational' ? 'разговорных' : currentLevelTab}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-3d"
+                      onClick={handleDeselectAllForTab}
+                      style={{ padding: '6px 12px', fontSize: '13px' }}
+                    >
+                      Снять все в {currentLevelTab === 'Conversational' ? 'разговорных' : currentLevelTab}
+                    </button>
+                  </div>
+
+                  {['Существительные', 'Глаголы', 'Прилагательные', 'Выражения'].map((cat) => {
+                    const catWords = starterDeckData.filter(
+                      w => w.level === currentLevelTab && w.category === cat
+                    );
+                    if (catWords.length === 0) return null;
+
+                    return (
+                      <div key={cat} className={styles.categorySection}>
+                        <div className={styles.categoryTitle}>{cat}</div>
+                        <div className={styles.wordGrid}>
+                          {catWords.map((w) => {
+                            const isChecked = checkedNewWordIds.has(w.id);
+                            const status = localWordStates[w.id];
+                            const isDisabled = !!(status && status !== 'new');
+
+                            return (
+                              <div
+                                key={w.id}
+                                onClick={() => !isDisabled && handleToggleWord(w.id)}
+                                className={`${styles.wordCard} ${
+                                  isChecked ? styles.wordCardSelected : ''
+                                } ${isDisabled ? styles.wordCardDisabled : ''}`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  disabled={isDisabled}
+                                  onChange={() => handleToggleWord(w.id)}
+                                  className={styles.wordCheckbox}
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                                <div className={styles.wordInfo}>
+                                  <div className={styles.wordText} title={w.word}>
+                                    {w.word}
+                                  </div>
+                                  <div className={styles.wordReading} title={w.reading}>
+                                    {w.reading}
+                                  </div>
+                                  <div className={styles.wordTranslation} title={w.translation}>
+                                    {w.translation}
+                                  </div>
+                                </div>
+                                {status && status !== 'new' && (
+                                  <span className={styles.progressBadge}>
+                                    {status === 'mature' ? 'Изучено' : 'В работе'}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </>
+              )}
+            </div>
+
+            <div className={styles.modalFooter}>
+              <button
+                type="button"
+                onClick={() => setIsAssessmentOpen(false)}
+                className="btn-3d"
+                style={{ padding: '8px 16px', fontSize: '14px' }}
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveAssessment}
+                disabled={starterDeckData.length === 0}
+                className="btn-3d btn-green"
+                style={{ padding: '8px 16px', fontSize: '14px' }}
+              >
+                Сохранить и начать
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
