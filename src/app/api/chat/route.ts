@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { scenario, targetWords, history, message, level, grammarInJapanese } = body;
+    const { scenario, targetWords, history, message, level, grammarInJapanese, collectedWords } = body;
 
     // 2. Валидация обязательных полей
     if (!scenario || typeof scenario !== 'string') {
@@ -51,11 +51,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (collectedWords !== undefined && !Array.isArray(collectedWords)) {
+      logger.warn('Запрос к /api/chat с некорректным полем collectedWords');
+      return NextResponse.json(
+        { error: 'Необходимо передать массив строк в поле "collectedWords"' },
+        { status: 400 }
+      );
+    }
+
     const chatLevel = typeof level === 'number' && level >= 1 && level <= 5 ? level : 1;
     const grammarInJa = typeof grammarInJapanese === 'boolean' ? grammarInJapanese : false;
 
     logger.info(`Запрос на отправку сообщения в чат (сложность: ${chatLevel}, сообщение: "${message.substring(0, 50)}...")`);
-    const chatResponse = await chatService.sendMessage(scenario, targetWords, history, message, chatLevel, grammarInJa);
+    const chatResponse = await chatService.sendMessage(scenario, targetWords, history, message, chatLevel, grammarInJa, collectedWords);
 
     return NextResponse.json(chatResponse);
   } catch (error: any) {

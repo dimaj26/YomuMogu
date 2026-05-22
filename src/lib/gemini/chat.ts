@@ -58,7 +58,8 @@ export class ChatService {
     history: ChatMessage[],
     message: string,
     level: number = 1,
-    grammarInJapanese: boolean = false
+    grammarInJapanese: boolean = false,
+    collectedWords?: string[]
   ): Promise<ChatResponse> {
     if (!this.ai) {
       const apiKey = process.env.GEMINI_API_KEY;
@@ -76,18 +77,25 @@ export class ChatService {
       .map(w => `${w.word} (${w.translation})`)
       .join(', ');
 
-    // Вычисляем использованные и неиспользованные целевые слова на основе полной истории сообщений пользователя
-    const usedWordsInHistory = history
-      .filter(msg => msg.role === 'user')
-      .map(msg => msg.text)
-      .join(' ');
+    // Вычисляем использованные и неиспользованные целевые слова
+    let usedWords: TargetWord[];
+    if (collectedWords && collectedWords.length > 0) {
+      // Приоритетно используем реально собранные/распознанные слова
+      usedWords = targetWords.filter(w => collectedWords.includes(w.word));
+    } else {
+      // Резервная эвристика по всей истории (для совместимости со старыми тестами)
+      const usedWordsInHistory = history
+        .filter(msg => msg.role === 'user')
+        .map(msg => msg.text)
+        .join(' ');
+      usedWords = targetWords.filter(w => usedWordsInHistory.includes(w.word));
+    }
 
-    const usedWords = targetWords.filter(w => usedWordsInHistory.includes(w.word));
     const usedWordsList = usedWords.length > 0
       ? usedWords.map(w => `${w.word} (${w.translation})`).join(', ')
       : 'no words used yet';
 
-    const unusedWords = targetWords.filter(w => !usedWordsInHistory.includes(w.word));
+    const unusedWords = targetWords.filter(w => !usedWords.some(uw => uw.word === w.word));
     const unusedWordsList = unusedWords.length > 0
       ? unusedWords.map(w => `${w.word} (${w.translation})`).join(', ')
       : 'all words have been used';

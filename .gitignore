@@ -56,3 +56,11 @@ next-env.d.ts
 
 # scratch files
 /scratch/
+
+# Local/Private Orchestration and Roadmaps
+/GEMINI.md
+/CLAUDE.md
+/CHANGELOG.md
+/AGENTS.md
+/ROADMAP.md
+

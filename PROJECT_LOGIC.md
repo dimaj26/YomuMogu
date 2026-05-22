@@ -71,7 +71,7 @@ src/
       client.ts           # GeminiClient — session generation (structured JSON output)
       chat.ts             # ChatService — sendMessage + generateHints
       retry.ts            # withRetry() — exponential backoff + model fallback
-      __tests__/client.test.ts, client.integration.test.ts, prompts.test.ts
+      __tests__/client.test.ts, client.integration.test.ts, prompts.test.ts, chat.integration.test.ts
 ```
 
 ### [PL-2.2] Module Registry
@@ -94,7 +94,7 @@ src/
 | `app/api/anki/setup-deck/route.ts` | `POST { deckName, modelName }` — checks/creates deck and note type structure in AnkiConnect |
 | `app/api/anki/add/route.ts` | `POST { deckName, frontField, backField, word, reading, translation, definitionHtml, history }` — adds new cards to Anki with Gemini-driven dynamic fields, audio TTS, and Unsplash images |
 | `app/api/gemini/sessions/route.ts` | `POST { words }` — generates 3 conversation sessions via Gemini |
-| `app/api/chat/route.ts` | `POST { scenario, targetWords, history, message, level, grammarInJapanese }` | `ChatResponse` |
+| `app/api/chat/route.ts` | `POST { scenario, targetWords, history, message, level, grammarInJapanese, collectedWords? }` | `ChatResponse` |
 | `app/api/chat/hint/route.ts` | `POST { scenario, targetWords, history, level }` — generates 3 hint variants |
 | `app/api/chat/analyze/route.ts` | `POST { history, deckName, frontField, backField }` — dialogue word/Anki auditor |
 | `hooks/useJapanification.ts` | `JapanificationState` hook: level (0–6), XP, speed, chatLevel (1–5), `t()`, `addPoints()`, `setChatLevel()`, etc. |
@@ -295,7 +295,7 @@ All Anki routes proxy requests to AnkiConnect at `http://localhost:8765`.
 | Route | Method | Input | Output |
 |---|---|---|---|
 | `/api/gemini/sessions` | POST | `{ words: AnkiWord[] }` | `{ sessions: GeneratedSession[] }` |
-| `/api/chat` | POST | `{ scenario, targetWords, history, message, level, grammarInJapanese }` | `ChatResponse` |
+| `/api/chat` | POST | `{ scenario, targetWords, history, message, level, grammarInJapanese, collectedWords? }` | `ChatResponse` |
 | `/api/chat/hint` | POST | `{ scenario, targetWords, history, level }` | `HintResponse` |
 | `/api/chat/analyze` | POST | `{ history, deckName, frontField, backField }` | `{ words: AnalyzedWord[] }` |
 

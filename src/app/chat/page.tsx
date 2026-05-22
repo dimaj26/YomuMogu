@@ -301,7 +301,8 @@ export default function ChatPage() {
           history: history.slice(0, -1), // История без текущего сообщения, оно передается отдельно
           message: userText,
           level: state.chatLevel,
-          grammarInJapanese: shouldGrammarBeJapanese()
+          grammarInJapanese: shouldGrammarBeJapanese(),
+          collectedWords: Array.from(collectedWords)
         })
       });
       const data = await res.json();
