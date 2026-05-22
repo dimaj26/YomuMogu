@@ -118,7 +118,7 @@ describe('Gemini API Real Integration Test', () => {
           });
           expect(response.text).toBeDefined();
           expect(typeof response.text).toBe('string');
-          expect(response.text.length).toBeGreaterThan(0);
+          expect(response.text?.length).toBeGreaterThan(0);
           console.log(`Модель ${model} успешно ответила.`);
           success = true;
           break;

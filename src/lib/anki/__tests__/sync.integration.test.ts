@@ -1,14 +1,13 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import fakeIndexedDB from 'fake-indexeddb';
-import fakeIDBKeyRange from 'fake-indexeddb/lib/FDBKeyRange';
+import fakeIndexedDB, { IDBKeyRange } from 'fake-indexeddb';
 import { ankiClient } from '../client';
 import { POST as syncDbPost } from '@/app/api/anki/sync-db/route';
 import { NextRequest } from 'next/server';
 
 // Настройка полифилла IndexedDB для Dexie в окружении Node/JSDOM ДО импорта Dexie
 globalThis.indexedDB = fakeIndexedDB;
-globalThis.IDBKeyRange = fakeIDBKeyRange;
+globalThis.IDBKeyRange = IDBKeyRange;
 
 // Перехватываем fetch для перенаправления запросов к /api/anki/sync-db в обработчик роута Next.js
 const originalFetch = globalThis.fetch;
@@ -34,11 +33,11 @@ describe.runIf(ankiConnected)('Anki Bilateral Sync Real Integration Test', () =>
 
   // Динамические импорты для гарантированного порядка загрузки после полифиллов
   let db: any;
-  let syncLocalDatabaseWithAnki: any;
-  let getLocalWords: any;
-  let addLocalReview: any;
-  let getUnsyncedReviews: any;
-  let setProfileItem: any;
+  let syncLocalDatabaseWithAnki: (profileId: string, deckName: string) => Promise<{ success: boolean; message: string }>;
+  let getLocalWords: (profileId: string, deckName: string) => Promise<import('../../db').LocalWord[]>;
+  let addLocalReview: (review: any) => Promise<void>;
+  let getUnsyncedReviews: (profileId: string) => Promise<any[]>;
+  let setProfileItem: (key: string, value: string, profileId?: string) => void;
 
   beforeAll(async () => {
     // Импортируем модули динамически, когда indexedDB уже есть в globalThis

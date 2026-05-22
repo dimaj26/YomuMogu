@@ -1,11 +1,10 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
-import fakeIndexedDB from 'fake-indexeddb';
-import fakeIDBKeyRange from 'fake-indexeddb/lib/FDBKeyRange';
+import fakeIndexedDB, { IDBKeyRange } from 'fake-indexeddb';
 
 // Инициализация глобального IndexedDB для jsdom-тестов
 globalThis.indexedDB = fakeIndexedDB;
-globalThis.IDBKeyRange = fakeIDBKeyRange;
+globalThis.IDBKeyRange = IDBKeyRange;
 import * as fs from 'fs';
 import * as path from 'path';
 

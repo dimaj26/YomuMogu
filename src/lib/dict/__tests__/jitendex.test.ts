@@ -37,8 +37,8 @@ describe('JitenDex wrapper', () => {
     expect(spy).toHaveBeenCalled();
     const [file, args, options] = spy.mock.calls[0];
     expect(file).toBe('python');
-    expect(args[0]).toContain('lookup.py');
-    expect(args[1]).toBe('相手');
+    expect(args?.[0]).toContain('lookup.py');
+    expect(args?.[1]).toBe('相手');
     expect(options).toEqual({ encoding: 'utf8' });
   });
 

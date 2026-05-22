@@ -89,7 +89,7 @@ describe('POST /api/anki/sync-db', () => {
     vi.mocked(ankiClient.getReviewsOfCards).mockImplementation(async (cardIds) => {
       // Если это дедупликация (запрос для карт 10001 и 10002)
       if (cardIds.includes(10001)) {
-        return {};
+        return {} as any;
       }
       // Если это запрос истории изменившихся карт (для карты 10002)
       return {
@@ -105,7 +105,7 @@ describe('POST /api/anki/sync-db', () => {
             type: 1,
           },
         ],
-      };
+      } as any;
     });
 
     vi.mocked(ankiClient.relearnCards).mockResolvedValue(true);

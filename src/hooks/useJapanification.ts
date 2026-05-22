@@ -71,26 +71,45 @@ export function useJapanification() {
     }
   }, []);
 
+  // Вычисляем виртуальные поля на лету
+  const thresholds = [0, 20, 50, 100, 170, 280, 420];
+  let level = 0;
+  for (let i = 0; i < thresholds.length; i++) {
+    if (state.points >= thresholds[i]) {
+      level = i;
+    }
+  }
+
   /**
    * Функция перевода для простых строк.
-   * Если режим 'ja' — переводит. В остальных режимах ('ru', 'smart') — возвращает русский текст.
+   * Если режим 'ja' — переводит. 
+   * Если режим 'ru' — не переводит.
+   * Если режим 'smart' — переводит, если виртуальный уровень японизации >= levelRequired.
    */
-  const t = useCallback((ruText: string, jaText: string): string => {
-    return state.uiMode === 'ja' ? jaText : ruText;
-  }, [state.uiMode]);
+  const t = useCallback((ruText: string, jaText: string, levelRequired: number = 6): string => {
+    if (state.uiMode === 'ja') return jaText;
+    if (state.uiMode === 'ru') return ruText;
+    return level >= levelRequired ? jaText : ruText;
+  }, [state.uiMode, level]);
 
   const shouldShowTranslation = useCallback((): boolean => {
     if (state.showTranslationsAlways) return true;
-    return state.uiMode !== 'ja';
-  }, [state.uiMode, state.showTranslationsAlways]);
+    if (state.uiMode === 'ja') return false;
+    if (state.uiMode === 'ru') return true;
+    return level < 1;
+  }, [state.uiMode, state.showTranslationsAlways, level]);
 
   const shouldGrammarBeJapanese = useCallback((): boolean => {
-    return state.uiMode === 'ja';
-  }, [state.uiMode]);
+    if (state.uiMode === 'ja') return true;
+    if (state.uiMode === 'ru') return false;
+    return level >= 5;
+  }, [state.uiMode, level]);
 
   const shouldHintsBeJapanese = useCallback((): boolean => {
-    return state.uiMode === 'ja';
-  }, [state.uiMode]);
+    if (state.uiMode === 'ja') return true;
+    if (state.uiMode === 'ru') return false;
+    return level >= 4;
+  }, [state.uiMode, level]);
 
   const addPoints = useCallback((n: number) => {
     setState(prev => {
@@ -163,15 +182,6 @@ export function useJapanification() {
   const resetProgress = useCallback(() => {
     persistState(DEFAULT_STATE);
   }, [persistState]);
-
-  // Вычисляем виртуальные поля на лету
-  const thresholds = [0, 20, 50, 100, 170, 280, 420];
-  let level = 0;
-  for (let i = 0; i < thresholds.length; i++) {
-    if (state.points >= thresholds[i]) {
-      level = i;
-    }
-  }
 
   let percentage = 0;
   if (level >= 6) {

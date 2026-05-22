@@ -43,6 +43,7 @@ export function mapLocalToFsrsCard(word: LocalWord): Card {
     difficulty: word.difficulty || 0,
     elapsed_days: elapsedDays,
     scheduled_days: word.interval || 0,
+    learning_steps: 0, // Необходимое поле для новой версии ts-fsrs
     reps: word.reps || 0,
     lapses: word.lapses || 0,
     state,

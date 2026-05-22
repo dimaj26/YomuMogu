@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       logger.info(`Синхронизация локальных отзывов с Anki: отправка ${localReviews.length} записей`);
       
       // Получаем уже существующие отзывы в Anki для этих карт, чтобы избежать дублирования
-      const localCardIds = Array.from(new Set(localReviews.map((r: any) => r.cardId)));
+      const localCardIds: number[] = Array.from(new Set(localReviews.map((r: any) => Number(r.cardId))));
       const existingTimestamps = new Set<number>();
       try {
         const existingReviews = await ankiClient.getReviewsOfCards(localCardIds);

@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+const fs = typeof window === 'undefined' ? require('fs') : null;
+const path = typeof window === 'undefined' ? require('path') : null;
 
 type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
 
@@ -8,13 +8,19 @@ class Logger {
   private logFile: string;
 
   constructor() {
-    // Будем сохранять логи в корневой папке проекта /logs
-    this.logDir = path.join(process.cwd(), 'logs');
-    this.logFile = path.join(this.logDir, 'app.log');
-    this.initFileLogging();
+    if (typeof window === 'undefined' && path) {
+      // Будем сохранять логи в корневой папке проекта /logs
+      this.logDir = path.join(process.cwd(), 'logs');
+      this.logFile = path.join(this.logDir, 'app.log');
+      this.initFileLogging();
+    } else {
+      this.logDir = '';
+      this.logFile = '';
+    }
   }
 
   private initFileLogging() {
+    if (typeof window !== 'undefined' || !fs) return;
     try {
       if (!fs.existsSync(this.logDir)) {
         fs.mkdirSync(this.logDir, { recursive: true });
@@ -25,6 +31,7 @@ class Logger {
   }
 
   private writeToFile(level: LogLevel, message: string, errorStack?: string) {
+    if (typeof window !== 'undefined' || !fs) return;
     const timestamp = new Date().toISOString();
     const logLine = `[${timestamp}] [${level}] ${message}${errorStack ? `\nStack Trace:\n${errorStack}` : ''}\n`;
     

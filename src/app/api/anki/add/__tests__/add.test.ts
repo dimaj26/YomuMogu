@@ -163,7 +163,8 @@ describe('API Route POST /api/anki/add', () => {
         interval: 10,
         note: 20001,
         queue: 2,
-        due: 0
+        due: 0,
+        type: 2
       }
     ]);
     vi.mocked(ankiClient.addNote).mockResolvedValue(50002);
