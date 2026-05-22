@@ -8,6 +8,7 @@ import styles from './settings.module.css';
 import { AnkiWord } from '@/lib/anki/filter';
 import { useJapanification } from '@/hooks/useJapanification';
 import { useJpUI } from '@/components/JpUIProvider';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { getProfileItem, setProfileItem, removeProfileItem, getProfilesList, setActiveProfileId, getActiveProfileId, createProfile, deleteProfile, ProfileInfo } from '@/lib/profile';
 import { 
   LOCAL_DECK_NAME,
@@ -546,9 +547,9 @@ export default function SettingsPage() {
   };
 
   const handleResetUiProgress = async () => {
-    if (window.confirm('Вы уверены, что хотите сбросить прогресс японизации интерфейса? Все выученные слова элементов интерфейса вернутся на русский, а их FSRS параметры будут сброшены.')) {
+    if (window.confirm('Вы уверены, что хотите сбросить прогресс перевода интерфейса? Все выученные элементы интерфейса вернутся на русский, а их FSRS параметры будут сброшены.')) {
       await resetUiProgress();
-      alert('Прогресс японизации элементов интерфейса успешно сброшен!');
+      alert('Прогресс перевода элементов интерфейса успешно сброшен!');
     }
   };
 
@@ -591,7 +592,8 @@ export default function SettingsPage() {
           <BookOpen size={32} className="logo-text" />
           <span className="logo-text">YomuMogu</span>
         </Link>
-        <div className={styles.navLinks}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <LanguageSwitcher />
           <Link href="/chat" className="btn-3d btn-blue" style={{ padding: '8px 16px', fontSize: '14px' }}>
             В чат
           </Link>
@@ -600,19 +602,6 @@ export default function SettingsPage() {
 
       <main className={styles.main}>
         <h1 className={styles.title}>Настройки интеграции с Anki</h1>
-
-        {jState.uiMode !== 'ru' && (
-          <div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto 24px auto' }}>
-            <button
-              type="button"
-              onClick={() => setUiMode('ru')}
-              className="btn-3d btn-orange"
-              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px', fontSize: '15px', fontWeight: 'bold' }}
-            >
-              🚨 Экстренная кнопка: Вернуть весь интерфейс на русский (без сброса прогресса FSRS)
-            </button>
-          </div>
-        )}
         
         <div className={styles.grid}>
           {/* Левая колонка: Профиль и Настройки подключения */}
@@ -698,9 +687,9 @@ export default function SettingsPage() {
                     <Trophy size={16} style={{ color: 'var(--color-blue)' }} /> Режим интерфейса:
                   </span>
                   <span className={styles.profileStatValue}>
-                    {jState.uiMode === 'ru' && 'Только русский'}
-                    {jState.uiMode === 'smart' && 'Умная японизация'}
-                    {jState.uiMode === 'ja' && 'Только японский'}
+                    {jState.uiMode === 'ru' && 'Русский'}
+                    {jState.uiMode === 'smart' && 'Smart'}
+                    {jState.uiMode === 'ja' && '日本語'}
                   </span>
                 </div>
                 <div className={styles.profileStatRow}>
@@ -725,7 +714,7 @@ export default function SettingsPage() {
 
               {/* Выбор режима японизации */}
               <div className={styles.speedSelectorGroup}>
-                <label>Режим японизации интерфейса</label>
+                <label>Язык интерфейса</label>
                 <div className={styles.speedButtons}>
                   {(['ru', 'smart', 'ja'] as const).map((mode) => (
                     <button
@@ -734,7 +723,7 @@ export default function SettingsPage() {
                       onClick={() => setUiMode(mode)}
                       className={`btn-3d ${jState.uiMode === mode ? 'btn-blue' : ''} ${styles.speedButton}`}
                     >
-                      {mode === 'ru' ? 'Только русский' : mode === 'smart' ? 'Умная японизация' : 'Только японский'}
+                      {mode === 'ru' ? 'Русский' : mode === 'smart' ? 'Smart' : '日本語'}
                     </button>
                   ))}
                 </div>

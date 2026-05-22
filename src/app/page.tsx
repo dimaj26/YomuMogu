@@ -7,6 +7,7 @@ import { BookOpen, Settings, User, HelpCircle, X, Check, Award, BarChart2, BookO
 import { useJapanification } from '@/hooks/useJapanification';
 import { getProfileItem, removeProfileItem, getProfilesList, getActiveProfileId, setActiveProfileId, ProfileInfo } from '@/lib/profile';
 import { JpUI } from '@/components/JpUI';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import styles from './page.module.css';
 
 // Возвращает пороги очков для уровней на нормальной скорости (дефолтная скорость для отображения в профиле)
@@ -165,7 +166,8 @@ export default function HomePage() {
           <BookOpen size={32} className="logo-text" />
           <span className="logo-text">YomuMogu</span>
         </Link>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <LanguageSwitcher />
           <button 
             onClick={() => setShowProfileModal(true)} 
             className="btn-3d btn-blue" 
@@ -293,7 +295,7 @@ export default function HomePage() {
             {/* Прогресс уровня XP */}
             <div className={styles.xpProgressSection}>
               <div className={styles.levelTitleRow}>
-                <span>{t(`Уровень японизации: ${jState.level}`, `日本化レベル: ${jState.level}`, 2)}</span>
+                <span>{t(`Уровень: ${jState.level}`, `レベル: ${jState.level}`, 2)}</span>
                 <span>{jState.level >= 6 ? 'MAX' : `${jState.points} / ${xpStats.next} XP`}</span>
               </div>
               <div className={styles.xpBarContainer}>
@@ -365,7 +367,7 @@ export default function HomePage() {
                 className={`${styles.tabBtn} ${helpTab === 'japanification' ? styles.tabBtnActive : ''}`}
                 onClick={() => setHelpTab('japanification')}
               >
-                {t("Японизация", "日本化", 2)}
+                {t("Погружение", "没入", 2)}
               </button>
             </div>
 
@@ -424,7 +426,7 @@ export default function HomePage() {
                   <h4>{t("Система постепенного погружения в язык", "段階的な言語への浸透システム", 2)}</h4>
                   <p>
                     {t(
-                      "По мере накопления XP (за использование слов и правильную грамматику), интерфейс приложения незаметно русифицируется на японский язык:",
+                      "По мере накопления XP (за использование слов и правильную грамматику), интерфейс приложения постепенно переводится на японский язык:",
                       "会話の中で正しく単語や文法を使用するとXPが増え、アプリの表示が徐々に日本語に切り替わっていきます：",
                       2
                     )}

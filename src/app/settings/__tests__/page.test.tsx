@@ -17,6 +17,9 @@ vi.mock('lucide-react', () => ({
   Zap: () => <span data-testid="icon-zap" />,
   BarChart2: () => <span data-testid="icon-barchart2" />,
   Trash2: () => <span data-testid="icon-trash2" />,
+  Globe: () => <span data-testid="icon-globe" />,
+  ChevronDown: () => <span data-testid="icon-chevron-down" />,
+  Check: () => <span data-testid="icon-check" />,
 }));
 
 // Мокаем next/link и next/navigation

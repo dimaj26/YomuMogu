@@ -60,6 +60,8 @@ src/
     JpUIProvider.tsx      # UI FSRS word state provider
     JpUI.tsx              # Granular Smart Japanification wrapper
     JpUI.module.css       # JpUI CSS module (tooltips, pulse animation)
+    LanguageSwitcher.tsx  # Compact global Language Switcher dropdown component
+    LanguageSwitcher.module.css # Styles for LanguageSwitcher dropdown
   lib/
     logger.ts             # Structured logger (debug/info/warn/error → logs/)
     profile.ts            # localStorage profile helpers + multi-profile management
@@ -105,6 +107,8 @@ src/
 | `components/JpUIProvider.tsx` | `JpUIProvider` context: loaded UI words list, session lockout of 1 upgrade, registers/reverts/confirms FSRS progress |
 | `components/JpUI.tsx` | `<JpUI>` component: smart localized wrapper, ruby furigana (reps <= 2), hovering tooltip translation and buttons |
 | `components/JpUI.module.css` | Vanilla CSS module styles for tooltips and golden pulse animations for new session upgrades |
+| `components/LanguageSwitcher.tsx` | Client component representing a compact UI Language Switcher dropdown (options: Русский, Smart, 日本語) that integrates into headers |
+| `components/LanguageSwitcher.module.css` | CSS modules styling the LanguageSwitcher dropdown in the Duolingo theme |
 | `lib/logger.ts` | `logger.debug/info/warn/error()` — console + file append to `logs/app.log` |
 | `lib/profile.ts` | `getProfileItem`, `setProfileItem`, `removeProfileItem` (namespaced), `getProfilesList`, `createProfile`, `deleteProfile`, `getActiveProfileId`, `setActiveProfileId` |
 | `lib/db.ts` | Client-side IndexedDB database (Dexie.js) for words and reviews with bilateral synchronization coordinator and FSRS state management |
@@ -133,7 +137,7 @@ Default profile ID: `default`
 
 | Key | Type | Content |
 |---|---|---|
-| `japanification` | JSON `JapanificationState` | XP, level, speed, chatLevel, totalWordsUsed, sessionsCompleted |
+| `japanification` | JSON `JapanificationState` | uiMode, points (XP), level, percentage, speed, totalWordsUsed, sessionsCompleted, showTranslationsAlways, chatLevel |
 | `selected_deck` | string | Anki deck name |
 | `front_field` | string | Anki front field name (Japanese) |
 | `back_field` | string | Anki back field name (Russian) |
@@ -176,8 +180,11 @@ interface GeneratedSession {
 }
 
 // JapanificationState (hooks/useJapanification.ts)
+type UiMode = 'ru' | 'smart' | 'ja';
+
 interface JapanificationState {
-  level: number;             // 0–6 (japanification level)
+  uiMode: UiMode;
+  level: number;             // 0–6 (virtual level)
   percentage: number;        // 0–100
   speed: 'slow'|'normal'|'fast';
   points: number;
@@ -455,6 +462,8 @@ To ensure state parity and permit offline study without losing scheduling progre
 ---
 
 ## [PL-7] JAPANIFICATION SYSTEM
+
+To hide user-facing "Japanification" branding, the system is referred to as "Language Immersion Progression" or "Immersion" (Погружение) in the UI. A compact Language Switcher dropdown is placed in the headers of pages to select the interface mode: Русский (`ru`), Smart (`smart` — uses FSRS/XP-based progressive immersion), or 日本語 (`ja` — entire UI is Japanese). Under the hood, the virtual level logic determines element translation within the Smart mode.
 
 ### [PL-7.1] Level Thresholds (points → level 0–6)
 

@@ -13,6 +13,8 @@ vi.mock('lucide-react', () => ({
   Check: () => <span data-testid="icon-check" />,
   Award: () => <span data-testid="icon-award" />,
   BarChart2: () => <span data-testid="icon-barchart2" />,
+  Globe: () => <span data-testid="icon-globe" />,
+  ChevronDown: () => <span data-testid="icon-chevron-down" />,
 }));
 
 // Mock router
@@ -92,7 +94,7 @@ describe('HomePage Component', () => {
     fireEvent.click(profileBtns[0]); // Header profile button
 
     expect(screen.getByText('Профиль и прогресс')).toBeInTheDocument();
-    expect(screen.getByText('Уровень японизации: 0')).toBeInTheDocument();
+    expect(screen.getByText('Уровень: 0')).toBeInTheDocument();
 
     // Close modal
     const closeBtn = screen.getByRole('button', { name: '' }); // Lucide X button inside modal
@@ -121,7 +123,7 @@ describe('HomePage Component', () => {
     expect(screen.getByText('Использование Cyrillic Placeholders')).toBeInTheDocument();
 
     // Switch to Japanification tab
-    const japTabBtn = screen.getByRole('button', { name: /Японизация/ });
+    const japTabBtn = screen.getByRole('button', { name: /Погружение/ });
     fireEvent.click(japTabBtn);
     expect(screen.getByText('Система постепенного погружения в язык')).toBeInTheDocument();
   });
