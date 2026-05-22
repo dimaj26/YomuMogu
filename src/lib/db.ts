@@ -32,15 +32,37 @@ export interface LocalReview {
   synced: number; // 0 = не синхронизировано, 1 = синхронизировано
 }
 
+export interface UiWord {
+  profileId: string;
+  id: string; // Строковый ID элемента интерфейса (например, btn_settings)
+  word: string; // Японское написание
+  reading: string; // Хирагана чтение (опционально)
+  translation: string; // Русский перевод
+  status: 'new' | 'learning' | 'review' | 'mature';
+  stability: number;
+  difficulty: number;
+  interval: number; // Интервал в днях
+  due: number; // Timestamp следующего повторения (ms)
+  lastReview?: number;
+  reps: number;
+  lapses: number;
+}
+
 class YomuMoguDatabase extends Dexie {
   words!: Table<LocalWord>;
   reviews!: Table<LocalReview>;
+  ui_words!: Table<UiWord>;
 
   constructor() {
     super('YomuMoguDatabase');
     this.version(1).stores({
       words: '[profileId+id], id, word, status, deckName, due, profileId',
       reviews: '++id, [profileId+cardId], cardId, timestamp, synced, profileId',
+    });
+    this.version(2).stores({
+      words: '[profileId+id], id, word, status, deckName, due, profileId',
+      reviews: '++id, [profileId+cardId], cardId, timestamp, synced, profileId',
+      ui_words: '[profileId+id], id, status, due, profileId',
     });
   }
 }
@@ -304,3 +326,31 @@ export async function syncLocalDatabaseWithAnki(
     };
   }
 }
+
+/**
+ * Получение всех UI-слов для указанного профиля
+ */
+export async function getLocalUiWords(profileId: string): Promise<UiWord[]> {
+  if (typeof window === 'undefined') return [];
+  return db.ui_words
+    .where('profileId')
+    .equals(profileId)
+    .toArray();
+}
+
+/**
+ * Сохранение/обновление UI-слова в БД
+ */
+export async function saveLocalUiWord(word: UiWord): Promise<void> {
+  if (typeof window === 'undefined') return;
+  await db.ui_words.put(word);
+}
+
+/**
+ * Сброс FSRS прогресса для UI элементов профиля
+ */
+export async function resetLocalUiWords(profileId: string): Promise<void> {
+  if (typeof window === 'undefined') return;
+  await db.ui_words.where('profileId').equals(profileId).delete();
+}
+

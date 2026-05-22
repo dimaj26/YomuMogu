@@ -30,6 +30,11 @@ vi.mock('next/link', () => ({
   ),
 }));
 
+// Mock JpUI component to avoid context error
+vi.mock('@/components/JpUI', () => ({
+  JpUI: ({ ru }: { ru: string }) => <span>{ru}</span>,
+}));
+
 describe('HomePage Component', () => {
   beforeEach(() => {
     vi.restoreAllMocks();

@@ -56,6 +56,10 @@ src/
   hooks/
     useJapanification.ts  # XP progression, level, speed, chatLevel state
     __tests__/useJapanification.test.ts
+  components/
+    JpUIProvider.tsx      # UI FSRS word state provider
+    JpUI.tsx              # Granular Smart Japanification wrapper
+    JpUI.module.css       # JpUI CSS module (tooltips, pulse animation)
   lib/
     logger.ts             # Structured logger (debug/info/warn/error → logs/)
     profile.ts            # localStorage profile helpers + multi-profile management
@@ -98,6 +102,9 @@ src/
 | `app/api/chat/hint/route.ts` | `POST { scenario, targetWords, history, level }` — generates 3 hint variants |
 | `app/api/chat/analyze/route.ts` | `POST { history, deckName, frontField, backField }` — dialogue word/Anki auditor |
 | `hooks/useJapanification.ts` | `JapanificationState` hook: level (0–6), XP, speed, chatLevel (1–5), `t()`, `addPoints()`, `setChatLevel()`, etc. |
+| `components/JpUIProvider.tsx` | `JpUIProvider` context: loaded UI words list, session lockout of 1 upgrade, registers/reverts/confirms FSRS progress |
+| `components/JpUI.tsx` | `<JpUI>` component: smart localized wrapper, ruby furigana (reps <= 2), hovering tooltip translation and buttons |
+| `components/JpUI.module.css` | Vanilla CSS module styles for tooltips and golden pulse animations for new session upgrades |
 | `lib/logger.ts` | `logger.debug/info/warn/error()` — console + file append to `logs/app.log` |
 | `lib/profile.ts` | `getProfileItem`, `setProfileItem`, `removeProfileItem` (namespaced), `getProfilesList`, `createProfile`, `deleteProfile`, `getActiveProfileId`, `setActiveProfileId` |
 | `lib/db.ts` | Client-side IndexedDB database (Dexie.js) for words and reviews with bilateral synchronization coordinator and FSRS state management |
@@ -265,6 +272,23 @@ interface LocalReview {
   timestamp: number; // timestamp of review in ms
   synced: number; // 0 = unsynced, 1 = synced
 }
+
+// UiWord (lib/db.ts)
+interface UiWord {
+  profileId: string;
+  id: string; // HTML element ID
+  word: string;
+  reading: string;
+  translation: string;
+  status: 'new' | 'learning' | 'review' | 'mature';
+  stability: number;
+  difficulty: number;
+  interval: number;
+  due: number;
+  lastReview?: number;
+  reps: number;
+  lapses: number;
+}
 ```
 
 ### [PL-3.4] IndexedDB Schema
@@ -276,6 +300,9 @@ For local-first operation and off-session scheduling, YomuMogu maintains client-
 - **`reviews` Table** (`id` auto-increment key):
   - Stores local review logs generated during dialogue practice.
   - Indexes: `[profileId+cardId]`, `cardId`, `timestamp`, `synced`, `profileId`.
+- **`ui_words` Table** (`[profileId+id]` compound key):
+  - Stores local FSRS progression metrics for each localized UI text snippet.
+  - Indexes: `id`, `status`, `due`, `profileId`.
 
 ---
 

@@ -7,6 +7,7 @@ import { RefreshCw, CheckCircle, XCircle, BookOpen, Settings as SettingsIcon, Al
 import styles from './settings.module.css';
 import { AnkiWord } from '@/lib/anki/filter';
 import { useJapanification } from '@/hooks/useJapanification';
+import { useJpUI } from '@/components/JpUIProvider';
 import { getProfileItem, setProfileItem, removeProfileItem, getProfilesList, setActiveProfileId, getActiveProfileId, createProfile, deleteProfile, ProfileInfo } from '@/lib/profile';
 import { 
   LOCAL_DECK_NAME,
@@ -53,7 +54,8 @@ export default function SettingsPage() {
   const [starterDeckData, setStarterDeckData] = useState<any[]>([]);
 
   const [hasLoaded, setHasLoaded] = useState(false);
-  const { state: jState, setSpeed, setChatLevel, resetProgress } = useJapanification();
+  const { state: jState, setUiMode, setChatLevel, resetProgress } = useJapanification();
+  const { resetUiProgress } = useJpUI();
 
   const [profiles, setProfiles] = useState<ProfileInfo[]>([]);
   const [activeProfileId, setActiveProfileIdState] = useState<string>('default');
@@ -525,9 +527,10 @@ export default function SettingsPage() {
     setInProgressSessions(inProgress);
   }, [sessions, activeProfileId, hasLoaded]);
 
-  const handleResetProgress = () => {
+  const handleResetProgress = async () => {
     if (window.confirm('Вы уверены, что хотите сбросить весь прогресс, настройки и импортированные слова?')) {
       resetProgress();
+      await resetUiProgress();
       setWords([]);
       setSessions([]);
       setSelectedDeck('__all__');
@@ -539,6 +542,13 @@ export default function SettingsPage() {
       removeProfileItem('words');
       removeProfileItem('sessions');
       removeProfileItem('active_session');
+    }
+  };
+
+  const handleResetUiProgress = async () => {
+    if (window.confirm('Вы уверены, что хотите сбросить прогресс японизации интерфейса? Все выученные слова элементов интерфейса вернутся на русский, а их FSRS параметры будут сброшены.')) {
+      await resetUiProgress();
+      alert('Прогресс японизации элементов интерфейса успешно сброшен!');
     }
   };
 
@@ -590,6 +600,19 @@ export default function SettingsPage() {
 
       <main className={styles.main}>
         <h1 className={styles.title}>Настройки интеграции с Anki</h1>
+
+        {jState.uiMode !== 'ru' && (
+          <div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto 24px auto' }}>
+            <button
+              type="button"
+              onClick={() => setUiMode('ru')}
+              className="btn-3d btn-orange"
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px', fontSize: '15px', fontWeight: 'bold' }}
+            >
+              🚨 Экстренная кнопка: Вернуть весь интерфейс на русский (без сброса прогресса FSRS)
+            </button>
+          </div>
+        )}
         
         <div className={styles.grid}>
           {/* Левая колонка: Профиль и Настройки подключения */}
@@ -672,9 +695,13 @@ export default function SettingsPage() {
               <div className={styles.profileStats}>
                 <div className={styles.profileStatRow}>
                   <span className={styles.profileStatLabel}>
-                    <Trophy size={16} style={{ color: 'var(--color-blue)' }} /> Уровень прогресса:
+                    <Trophy size={16} style={{ color: 'var(--color-blue)' }} /> Режим интерфейса:
                   </span>
-                  <span className={styles.profileStatValue}>{jState.level} / 6</span>
+                  <span className={styles.profileStatValue}>
+                    {jState.uiMode === 'ru' && 'Только русский'}
+                    {jState.uiMode === 'smart' && 'Умная японизация'}
+                    {jState.uiMode === 'ja' && 'Только японский'}
+                  </span>
                 </div>
                 <div className={styles.profileStatRow}>
                   <span className={styles.profileStatLabel}>
@@ -696,18 +723,18 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Скорость японификации */}
+              {/* Выбор режима японизации */}
               <div className={styles.speedSelectorGroup}>
-                <label>Скорость японификации</label>
+                <label>Режим японизации интерфейса</label>
                 <div className={styles.speedButtons}>
-                  {(['slow', 'normal', 'fast'] as const).map((s) => (
+                  {(['ru', 'smart', 'ja'] as const).map((mode) => (
                     <button
-                      key={s}
+                      key={mode}
                       type="button"
-                      onClick={() => setSpeed(s)}
-                      className={`btn-3d ${jState.speed === s ? 'btn-blue' : ''} ${styles.speedButton}`}
+                      onClick={() => setUiMode(mode)}
+                      className={`btn-3d ${jState.uiMode === mode ? 'btn-blue' : ''} ${styles.speedButton}`}
                     >
-                      {s === 'slow' ? 'Медленно' : s === 'normal' ? 'Обычная' : 'Быстрая'}
+                      {mode === 'ru' ? 'Только русский' : mode === 'smart' ? 'Умная японизация' : 'Только японский'}
                     </button>
                   ))}
                 </div>
@@ -789,7 +816,15 @@ export default function SettingsPage() {
                 )}
               </div>
 
-              <div className={styles.resetBtnContainer}>
+              <div className={styles.resetBtnContainer} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <button
+                  type="button"
+                  onClick={handleResetUiProgress}
+                  className="btn-3d btn-orange"
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                >
+                  <Trash2 size={16} /> Сбросить FSRS интерфейса
+                </button>
                 <button
                   type="button"
                   onClick={handleResetProgress}

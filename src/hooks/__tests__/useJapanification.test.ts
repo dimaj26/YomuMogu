@@ -82,22 +82,17 @@ describe('useJapanification', () => {
     expect(result.current.state.level).toBe(1);
   });
 
-  it('should change speed and recalculate level', () => {
+  it('should change UI mode and persist to localStorage', () => {
     const { result } = renderHook(() => useJapanification());
 
-    act(() => {
-      result.current.addPoints(15);
-    });
-
-    // При normal speed 15 очков = уровень 0
-    expect(result.current.state.level).toBe(0);
+    expect(result.current.state.uiMode).toBe('smart');
 
     act(() => {
-      result.current.setSpeed('fast');
+      result.current.setUiMode('ja');
     });
 
-    // При fast speed 15 очков = уровень 1 (порог = 10)
-    expect(result.current.state.level).toBe(1);
+    expect(result.current.state.uiMode).toBe('ja');
+    expect(localStorageMock.setItem).toHaveBeenCalled();
   });
 
   it('should reset progress', () => {
@@ -131,14 +126,15 @@ describe('useJapanification', () => {
     expect(result.current.state.showTranslationsAlways).toBe(true);
   });
 
-  it('should return Japanese text at high levels', () => {
+  it('should return Japanese text when uiMode is ja', () => {
     const { result } = renderHook(() => useJapanification());
 
+    expect(result.current.t('Отправить', '送信')).toBe('Отправить');
+
     act(() => {
-      result.current.addPoints(100); // level 3 at normal speed
+      result.current.setUiMode('ja');
     });
 
-    expect(result.current.state.level).toBeGreaterThanOrEqual(2);
     expect(result.current.t('Отправить', '送信')).toBe('送信');
   });
 

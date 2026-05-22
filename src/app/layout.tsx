@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
 import "./globals.css";
+import { JpUIProvider } from "@/components/JpUIProvider";
 
 const nunito = Nunito({
   variable: "--font-nunito",
@@ -21,7 +22,9 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body className={`${nunito.variable}`}>
-        {children}
+        <JpUIProvider>
+          {children}
+        </JpUIProvider>
       </body>
     </html>
   );

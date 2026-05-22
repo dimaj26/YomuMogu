@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { BookOpen, Settings, User, HelpCircle, X, Check, Award, BarChart2, BookOpen as BookIcon } from 'lucide-react';
 import { useJapanification } from '@/hooks/useJapanification';
 import { getProfileItem, removeProfileItem, getProfilesList, getActiveProfileId, setActiveProfileId, ProfileInfo } from '@/lib/profile';
+import { JpUI } from '@/components/JpUI';
 import styles from './page.module.css';
 
 // Возвращает пороги очков для уровней на нормальной скорости (дефолтная скорость для отображения в профиле)
@@ -235,15 +236,21 @@ export default function HomePage() {
         <div className={styles.secondaryGrid}>
           <Link href="/settings" className="btn-3d styles.secondaryBtn">
             <Settings size={20} />
-            <span className={styles.btnLabel}>{t("Настройки", "設定", 2)}</span>
+            <span className={styles.btnLabel}>
+              <JpUI id="btn_settings" ru="Настройки" ja="設定" reading="せってい" />
+            </span>
           </Link>
           <button onClick={() => setShowProfileModal(true)} className="btn-3d styles.secondaryBtn">
             <User size={20} />
-            <span className={styles.btnLabel}>{t("Профиль", "プロフィール", 2)}</span>
+            <span className={styles.btnLabel}>
+              <JpUI id="btn_profile" ru="Профиль" ja="プロフィール" reading="ぷろふぃーる" />
+            </span>
           </button>
           <button onClick={() => { setShowHelpModal(true); setHelpTab('about'); }} className="btn-3d styles.secondaryBtn">
             <HelpCircle size={20} />
-            <span className={styles.btnLabel}>{t("Справка", "ヘルプ", 2)}</span>
+            <span className={styles.btnLabel}>
+              <JpUI id="btn_help" ru="Справка" ja="ヘルプ" reading="へるぷ" />
+            </span>
           </button>
         </div>
       </main>

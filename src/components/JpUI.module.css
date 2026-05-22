@@ -1,0 +1,125 @@
+.wrapper {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.jpWord {
+  cursor: pointer;
+  border-bottom: 2px dashed #f59e0b; /* Золотисто-желтый пунктир */
+  font-weight: 700;
+  transition: all 0.2s ease-in-out;
+  padding: 0 2px;
+  border-radius: 4px;
+}
+
+.jpWord:hover {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+}
+
+/* Золотая пульсация для первого показа в сессии */
+.justUpgraded {
+  animation: jpUiPulse 2.5s ease-in-out 1;
+  border-radius: 4px;
+  background-color: rgba(245, 158, 11, 0.15);
+}
+
+@keyframes jpUiPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.6);
+  }
+  30% {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px 5px rgba(245, 158, 11, 0.8);
+    background-color: rgba(245, 158, 11, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 8px 3px rgba(245, 158, 11, 0.5);
+  }
+  70% {
+    transform: scale(1.08);
+    box-shadow: 0 0 12px 4px rgba(245, 158, 11, 0.7);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+/* Стили тултипа */
+.tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background-color: #1f2937; /* Темно-серый */
+  color: #f9fafb;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: inherit;
+  z-index: 9999;
+  min-width: 180px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: auto;
+  line-height: 1.4;
+  white-space: normal;
+  text-align: center;
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: #1f2937 transparent transparent transparent;
+}
+
+.tooltipTranslation {
+  font-weight: 600;
+  color: #f59e0b; /* Золотистый перевод */
+}
+
+.tooltipInstruction {
+  font-size: 10px;
+  color: #9ca3af;
+}
+
+.tooltipButtons {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.tooltipBtn {
+  padding: 4px 8px;
+  font-size: 11px;
+  border-radius: 6px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.1s ease;
+  color: white;
+}
+
+.tooltipBtn:hover {
+  opacity: 0.9;
+}
+
+.revertBtn {
+  background-color: #ef4444; /* Красный */
+}
+
+.confirmBtn {
+  background-color: #10b981; /* Зеленый */
+}

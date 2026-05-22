@@ -36,6 +36,21 @@ vi.mock('next/navigation', () => {
   };
 });
 
+// Mock JpUIProvider and useJpUI to prevent context error
+vi.mock('@/components/JpUIProvider', () => ({
+  JpUIProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useJpUI: () => ({
+    uiWords: {},
+    upgradedThisSession: null,
+    revertedIds: new Set(),
+    isLoaded: true,
+    upgradeWord: vi.fn(),
+    revertWord: vi.fn(),
+    confirmWord: vi.fn(),
+    resetUiProgress: vi.fn(),
+  }),
+}));
+
 describe('SettingsPage Component', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
