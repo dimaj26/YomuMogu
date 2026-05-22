@@ -11,7 +11,6 @@ globalThis.IDBKeyRange = fakeIDBKeyRange;
 const { db } = await import('../../db');
 const {
   LOCAL_DECK_NAME,
-  DAILY_NEW_WORDS_LIMIT,
   MIN_WORDS_FOR_3_SESSIONS,
   LOCAL_STORAGE_KEY_PREFIX,
   isLocalDeckInitialized,
@@ -20,6 +19,7 @@ const {
   incrementDailyNewWordsCount,
   getDailyActivePool,
   getLocalDeckStats,
+  getDailyNewWordsLimit,
 } = await import('../localDeckService');
 
 describe('LocalDeckService Unit Tests', () => {
@@ -153,7 +153,41 @@ describe('LocalDeckService Unit Tests', () => {
     expect(pool.every(w => w.status !== 'new')).toBe(true);
   });
 
-  it('getDailyActivePool: добирает new слова если due < 15, соблюдает DAILY_NEW_WORDS_LIMIT', async () => {
+  it('getDailyNewWordsLimit: корректно возвращает лимиты для различных пресетов и кастомного значения', () => {
+    // Дефолт без настроек
+    expect(getDailyNewWordsLimit(profileId)).toBe(10);
+
+    // Мало
+    localStorage.setItem(`yomumogu_profile_${profileId}_quota_preset`, 'easy');
+    expect(getDailyNewWordsLimit(profileId)).toBe(5);
+
+    // Стандартно
+    localStorage.setItem(`yomumogu_profile_${profileId}_quota_preset`, 'standard');
+    expect(getDailyNewWordsLimit(profileId)).toBe(10);
+
+    // Много
+    localStorage.setItem(`yomumogu_profile_${profileId}_quota_preset`, 'hard');
+    expect(getDailyNewWordsLimit(profileId)).toBe(20);
+
+    // Кастомное корректное значение
+    localStorage.setItem(`yomumogu_profile_${profileId}_quota_preset`, 'custom');
+    localStorage.setItem(`yomumogu_profile_${profileId}_daily_new_words_limit`, '15');
+    expect(getDailyNewWordsLimit(profileId)).toBe(15);
+
+    // Кастомное некорректное значение (меньше 1) -> фоллбек 10
+    localStorage.setItem(`yomumogu_profile_${profileId}_daily_new_words_limit`, '0');
+    expect(getDailyNewWordsLimit(profileId)).toBe(10);
+
+    // Кастомное некорректное значение (больше 50) -> фоллбек 10
+    localStorage.setItem(`yomumogu_profile_${profileId}_daily_new_words_limit`, '51');
+    expect(getDailyNewWordsLimit(profileId)).toBe(10);
+
+    // Не число -> фоллбек 10
+    localStorage.setItem(`yomumogu_profile_${profileId}_daily_new_words_limit`, 'abc');
+    expect(getDailyNewWordsLimit(profileId)).toBe(10);
+  });
+
+  it('getDailyActivePool: добирает new слова если due < 15, соблюдает getDailyNewWordsLimit', async () => {
     vi.setSystemTime(new Date('2026-05-22T10:00:00Z'));
     const now = Date.now();
 
@@ -198,18 +232,79 @@ describe('LocalDeckService Unit Tests', () => {
 
     await db.words.bulkPut(wordsData);
 
-    // Случай 1: сегодня новые слова еще не изучались (квота = 10)
-    // due (5) + new (добрать 10) = 15
+    // Случай 1: пресет 'standard' (квота = 10)
+    localStorage.setItem(`yomumogu_profile_${profileId}_quota_preset`, 'standard');
     let pool = await getDailyActivePool(profileId, LOCAL_DECK_NAME);
     expect(pool.length).toBe(15);
     expect(pool.filter(w => w.status === 'new').length).toBe(10);
 
-    // Случай 2: сегодня уже изучено 7 слов, лимит оставшийся = 3
-    // due (5) + new (добрать 3) = 8
+    // Случай 2: пресет 'easy' (квота = 5)
+    localStorage.setItem(`yomumogu_profile_${profileId}_quota_preset`, 'easy');
+    pool = await getDailyActivePool(profileId, LOCAL_DECK_NAME);
+    expect(pool.length).toBe(10); // due(5) + new(5)
+    expect(pool.filter(w => w.status === 'new').length).toBe(5);
+
+    // Случай 3: пресет 'custom' с лимитом 12
+    localStorage.setItem(`yomumogu_profile_${profileId}_quota_preset`, 'custom');
+    localStorage.setItem(`yomumogu_profile_${profileId}_daily_new_words_limit`, '12');
+    pool = await getDailyActivePool(profileId, LOCAL_DECK_NAME);
+    // Нам нужно добрать до 15, при 5 due требуется 10 new. 10 < 12, поэтому добираем 10.
+    expect(pool.length).toBe(15);
+    expect(pool.filter(w => w.status === 'new').length).toBe(10);
+
+    // Случай 4: лимит 12, но сегодня уже изучено 7 слов, лимит оставшийся = 5
+    // due (5) + new (добрать 5) = 10
     incrementDailyNewWordsCount(profileId, 7);
     pool = await getDailyActivePool(profileId, LOCAL_DECK_NAME);
-    expect(pool.length).toBe(8);
-    expect(pool.filter(w => w.status === 'new').length).toBe(3);
+    expect(pool.length).toBe(10);
+    expect(pool.filter(w => w.status === 'new').length).toBe(5);
+
+    // Случай 5: проверим, что лимит действительно ограничивает новые слова, если потребность больше лимита
+    // Сбросим счетчик дня
+    localStorage.removeItem(`yomumogu_profile_${profileId}_daily_new_words_2026-05-22`);
+    // Очистим БД и положим только 2 due слова и 20 new слов
+    await db.words.clear();
+    const testWords = [];
+    for (let i = 1; i <= 2; i++) {
+      testWords.push({
+        profileId,
+        id: i,
+        word: `Слово${i}`,
+        reading: `Чтение${i}`,
+        translation: `Перевод${i}`,
+        deckName: LOCAL_DECK_NAME,
+        status: 'learning',
+        stability: 5,
+        difficulty: 5,
+        interval: 5,
+        due: now - 10000,
+        reps: 2,
+        lapses: 0,
+      });
+    }
+    for (let i = 3; i <= 25; i++) {
+      testWords.push({
+        profileId,
+        id: i,
+        word: `Слово${i}`,
+        reading: `Чтение${i}`,
+        translation: `Перевод${i}`,
+        deckName: LOCAL_DECK_NAME,
+        status: 'new',
+        stability: 0,
+        difficulty: 0,
+        interval: 0,
+        due: now,
+        reps: 0,
+        lapses: 0,
+      });
+    }
+    await db.words.bulkPut(testWords);
+
+    pool = await getDailyActivePool(profileId, LOCAL_DECK_NAME);
+    // due(2) + new(12) = 14. Нам нужно добрать 13 слов, но лимит равен 12. Добирается ровно 12.
+    expect(pool.length).toBe(14);
+    expect(pool.filter(w => w.status === 'new').length).toBe(12);
   });
 
   it('getDailyActivePool: добирает mature (по возрастанию interval) если due+new < 15', async () => {

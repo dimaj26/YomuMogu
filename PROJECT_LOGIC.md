@@ -104,7 +104,7 @@ src/
 | `lib/anki/client.ts` | `AnkiConnectClient`: `checkConnection()`, `getDeckNames()`, `findCards()`, `getCardsInfo()`, `getReviewsOfCards()` |
 | `lib/anki/filter.ts` | `filterAndClassifyCards()` — maps raw Anki card data to `AnkiWord[]` with status |
 | `lib/anki/fsrs.ts` | FSRS mathematical scheduler wrapper around `ts-fsrs` with day boundary alignment to 4:00 AM local time |
-| `lib/deck/localDeckService.ts` | Offline local starter deck service: initial assessment import, active pool generation (due + new + mature fallback), and daily quota tracking |
+| `lib/deck/localDeckService.ts` | Offline local starter deck service: initial assessment import, active pool generation (due + new + mature fallback), and dynamic daily quota tracking |
 | `lib/deck/__tests__/localDeckService.test.ts` | Unit tests for localDeckService |
 | `lib/dict/jitendex.ts` | `lookupWord(word)` — offline SQLite JitenDex dictionary lookup |
 | `lib/dict/lookup.py` | Python script invoked via Node `execFile` to query SQLite dictionary database |
@@ -134,6 +134,8 @@ Default profile ID: `default`
 | `sessions` | JSON `GeneratedSession[]` | AI-generated conversation sessions |
 | `active_session` | JSON `SessionData` | Currently selected session for `/chat` |
 | `chat_state_${sessionId}` | JSON `SavedChatState` | Saved chat session progress (messages, state, collected words) |
+| `quota_preset` | string | Preset selection for daily new words quota ('easy', 'standard', 'hard', 'custom') |
+| `daily_new_words_limit` | string | Custom daily limit of new words (validated between 1 and 50) |
 
 Profile metadata (not namespaced):
 - `yomumogu_active_profile_id` — active profile ID string
@@ -497,4 +499,4 @@ npm run test:integration # Integration tests (real Gemini API, needs GEMINI_API_
 
 ### [PL-9.4] Current Test Count
 
-128 unit tests across 20 test files. All passing.
+130 unit tests across 20 test files. All passing.

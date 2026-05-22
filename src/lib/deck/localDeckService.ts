@@ -6,7 +6,6 @@ import { alignToDayBoundary } from '../anki/fsrs';
 // Константы системы
 export const LOCAL_DECK_NAME = '__local_starter__';
 export const MATURE_INTERVAL_DAYS = 200;
-export const DAILY_NEW_WORDS_LIMIT = 10;
 export const MIN_WORDS_FOR_3_SESSIONS = 15;
 export const LOCAL_STORAGE_KEY_PREFIX = 'daily_new_words';
 
@@ -16,6 +15,27 @@ export interface DeckStats {
   learning: number;
   review: number;
   mature: number;
+}
+
+/**
+ * Возвращает дневной лимит новых слов для указанного профиля.
+ */
+export function getDailyNewWordsLimit(profileId: string): number {
+  if (typeof window === 'undefined') return 10;
+  const preset = getProfileItem('quota_preset', profileId);
+  if (preset === 'easy') return 5;
+  if (preset === 'hard') return 20;
+  if (preset === 'custom') {
+    const customLimitStr = getProfileItem('daily_new_words_limit', profileId);
+    if (customLimitStr) {
+      const parsed = parseInt(customLimitStr, 10);
+      if (!isNaN(parsed) && parsed >= 1 && parsed <= 50) {
+        return parsed;
+      }
+    }
+    return 10; // фоллбек при некорректном кастомном значении
+  }
+  return 10; // 'standard' или если пресет не задан
 }
 
 /**
@@ -169,7 +189,8 @@ export async function getDailyActivePool(profileId: string, deckName: string): P
   // Если слов меньше 15, добираем новые слова с учетом дневного лимита
   if (pool.length < MIN_WORDS_FOR_3_SESSIONS) {
     const todayNewCount = getDailyNewWordsCount(profileId);
-    const remainingNewQuota = Math.max(0, DAILY_NEW_WORDS_LIMIT - todayNewCount);
+    const limit = getDailyNewWordsLimit(profileId);
+    const remainingNewQuota = Math.max(0, limit - todayNewCount);
     const neededNewCount = MIN_WORDS_FOR_3_SESSIONS - pool.length;
     const addedNewCount = Math.min(neededNewCount, remainingNewQuota);
 

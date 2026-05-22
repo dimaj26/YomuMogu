@@ -15,7 +15,8 @@ import {
   getDailyNewWordsCount,
   incrementDailyNewWordsCount,
   getDailyActivePool,
-  getLocalDeckStats
+  getLocalDeckStats,
+  getDailyNewWordsLimit
 } from '@/lib/deck/localDeckService';
 import { db } from '@/lib/db';
 
@@ -43,6 +44,8 @@ export default function SettingsPage() {
   // Локальный автономный режим
   const [isLocalInitialized, setIsLocalInitialized] = useState<boolean>(false);
   const [dailyNewWordsCount, setDailyNewWordsCount] = useState<number>(0);
+  const [quotaPreset, setQuotaPreset] = useState<'easy' | 'standard' | 'hard' | 'custom'>('standard');
+  const [customQuotaLimit, setCustomQuotaLimit] = useState<number>(10);
   const [isAssessmentOpen, setIsAssessmentOpen] = useState<boolean>(false);
   const [checkedNewWordIds, setCheckedNewWordIds] = useState<Set<number>>(new Set());
   const [localWordStates, setLocalWordStates] = useState<Record<number, string>>({});
@@ -315,6 +318,19 @@ export default function SettingsPage() {
       
       const savedSessions = getProfileItem('sessions');
       if (savedSessions) setSessions(JSON.parse(savedSessions));
+
+      const savedQuotaPreset = getProfileItem('quota_preset');
+      if (savedQuotaPreset) {
+        setQuotaPreset(savedQuotaPreset as 'easy' | 'standard' | 'hard' | 'custom');
+      }
+
+      const savedQuotaLimit = getProfileItem('daily_new_words_limit');
+      if (savedQuotaLimit) {
+        const parsed = parseInt(savedQuotaLimit, 10);
+        if (!isNaN(parsed) && parsed >= 1 && parsed <= 50) {
+          setCustomQuotaLimit(parsed);
+        }
+      }
     } catch (e) {
       console.error('Failed to load profile data', e);
     } finally {
@@ -347,6 +363,16 @@ export default function SettingsPage() {
     if (!hasLoaded) return;
     setProfileItem('image_field', imageField);
   }, [imageField, hasLoaded]);
+
+  useEffect(() => {
+    if (!hasLoaded) return;
+    setProfileItem('quota_preset', quotaPreset);
+  }, [quotaPreset, hasLoaded]);
+
+  useEffect(() => {
+    if (!hasLoaded) return;
+    setProfileItem('daily_new_words_limit', customQuotaLimit.toString());
+  }, [customQuotaLimit, hasLoaded]);
 
   // Проверяем статус инициализации локальной колоды
   const checkLocalDeckStatus = async () => {
@@ -720,6 +746,49 @@ export default function SettingsPage() {
                 </div>
               </div>
 
+              {/* Дневная норма новых слов */}
+              <div className={styles.quotaSelectorGroup}>
+                <label>Дневной лимит новых слов</label>
+                <div className={styles.quotaButtons}>
+                  {(['easy', 'standard', 'hard', 'custom'] as const).map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setQuotaPreset(preset)}
+                      className={`btn-3d ${quotaPreset === preset ? 'btn-green' : ''} ${styles.quotaButton}`}
+                    >
+                      {preset === 'easy' && 'Мало (5)'}
+                      {preset === 'standard' && 'Стандарт (10)'}
+                      {preset === 'hard' && 'Много (20)'}
+                      {preset === 'custom' && 'Вручную'}
+                    </button>
+                  ))}
+                </div>
+
+                {quotaPreset === 'custom' && (
+                  <div className={styles.customQuotaInputWrapper}>
+                    <span>Укажите лимит:</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={customQuotaLimit}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        if (!isNaN(val)) {
+                          const clamped = Math.max(1, Math.min(50, val));
+                          setCustomQuotaLimit(clamped);
+                        } else {
+                          setCustomQuotaLimit(1);
+                        }
+                      }}
+                      className={styles.customQuotaInput}
+                    />
+                    <span style={{ fontSize: '12px', fontWeight: 'normal' }}>(от 1 до 50)</span>
+                  </div>
+                )}
+              </div>
+
               <div className={styles.resetBtnContainer}>
                 <button
                   type="button"
@@ -769,7 +838,7 @@ export default function SettingsPage() {
                     <strong>Локальный автономный режим.</strong> Изучение встроенного стартового списка из 500 японских слов офлайн через IndexedDB.
                     <br />• Диагностика начальных знаний
                     <br />• Интервальное повторение (FSRS)
-                    <br />• Дневной лимит новых слов: 10
+                    <br />• Дневной лимит новых слов: {getDailyNewWordsLimit(activeProfileId)}
                   </div>
 
                   <div className={styles.statusBox}>
@@ -797,7 +866,7 @@ export default function SettingsPage() {
                     <div className={styles.statusBox} style={{ marginTop: 0 }}>
                       <span className={styles.statusLabel}>Новых слов сегодня:</span>
                       <span className={styles.statusValue} style={{ color: 'var(--color-blue)' }}>
-                        {dailyNewWordsCount} / 10
+                        {dailyNewWordsCount} / {getDailyNewWordsLimit(activeProfileId)}
                       </span>
                     </div>
                   )}

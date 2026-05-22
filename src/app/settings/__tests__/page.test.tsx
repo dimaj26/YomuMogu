@@ -264,4 +264,43 @@ describe('SettingsPage Component', () => {
       expect(screen.getByRole('button', { name: 'Сброс' })).toBeInTheDocument();
     });
   });
+
+  it('allows choosing daily new words quota preset and entering custom limit', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(() => new Promise(() => {}));
+
+    render(<SettingsPage />);
+
+    // Ждем отрисовки кнопок лимита
+    const easyBtn = await screen.findByRole('button', { name: 'Мало (5)' });
+    const standardBtn = screen.getByRole('button', { name: 'Стандарт (10)' });
+    const hardBtn = screen.getByRole('button', { name: 'Много (20)' });
+    const customBtn = screen.getByRole('button', { name: 'Вручную' });
+
+    expect(easyBtn).toBeInTheDocument();
+    expect(standardBtn).toBeInTheDocument();
+    expect(hardBtn).toBeInTheDocument();
+    expect(customBtn).toBeInTheDocument();
+
+    // Кликаем по пресету "Мало (5)"
+    fireEvent.click(easyBtn);
+    await waitFor(() => {
+      expect(localStorage.getItem('yomumogu_profile_default_quota_preset')).toBe('easy');
+    });
+
+    // Кликаем по пресету "Вручную"
+    fireEvent.click(customBtn);
+    await waitFor(() => {
+      expect(localStorage.getItem('yomumogu_profile_default_quota_preset')).toBe('custom');
+    });
+
+    // Должно появиться поле ввода
+    const input = screen.getByDisplayValue('10');
+    expect(input).toBeInTheDocument();
+
+    // Вводим кастомный лимит
+    fireEvent.change(input, { target: { value: '12' } });
+    await waitFor(() => {
+      expect(localStorage.getItem('yomumogu_profile_default_daily_new_words_limit')).toBe('12');
+    });
+  });
 });
