@@ -82,9 +82,9 @@ src/
 | `app/page.tsx` | Landing — gamified client start menu/dashboard with an animated mascot (speech bubble with adaptive Japanification Level greeting), dynamic Start/Resume practice button, and secondary action grid (Settings, Profile modal, Help modal) |
 | `app/page.module.css` | All styles for landing page dashboard, mascot animations, speech bubbles, and modals |
 | `app/globals.css` | CSS variables (colors, radii, shadows), global utility classes (`.btn-3d`, `.card-friendly`, `.input-friendly`, `.badge-status`, `ruby`/`rt` styling) |
-| `app/settings/page.tsx` | Full settings UI: Anki connection, deck/word import, session generation, profile card (XP stats, speed, chat level, multi-profile selector), session grid |
+| `app/settings/page.tsx` | Full settings UI: Anki connection, deck/word import, session generation, profile card (XP stats, speed, chat level, multi-profile selector), session grid with resume/discard controls |
 | `app/settings/settings.module.css` | All styles for settings page components |
-| `app/chat/page.tsx` | Chat UI: message list, word tracker, hint panel, input area, grammar feedback cards, `stripRuby()` helper |
+| `app/chat/page.tsx` | Chat UI: message list, word tracker, hint panel, input area, grammar feedback cards, exit confirmation flow, session validation safeguard, `stripRuby()` helper |
 | `app/chat/chat.module.css` | All styles for chat page |
 | `app/api/anki/connect/route.ts` | `GET` — pings AnkiConnect, returns `{ connected: boolean }` |
 | `app/api/anki/decks/route.ts` | `GET` — returns `{ decks: string[] }` via AnkiConnect |

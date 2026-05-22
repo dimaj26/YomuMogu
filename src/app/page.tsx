@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { BookOpen, Settings, User, HelpCircle, X, Check, Award, BarChart2, BookOpen as BookIcon } from 'lucide-react';
 import { useJapanification } from '@/hooks/useJapanification';
-import { getProfileItem, getProfilesList, getActiveProfileId, setActiveProfileId, ProfileInfo } from '@/lib/profile';
+import { getProfileItem, removeProfileItem, getProfilesList, getActiveProfileId, setActiveProfileId, ProfileInfo } from '@/lib/profile';
 import styles from './page.module.css';
 
 // Возвращает пороги очков для уровней на нормальной скорости (дефолтная скорость для отображения в профиле)
@@ -74,6 +74,22 @@ export default function HomePage() {
     setActiveProfileIdState(profileId);
     window.location.reload();
   };
+
+  const handleDiscardSession = () => {
+    if (window.confirm(t(
+      "Вы действительно хотите сбросить текущую сессию диалога? Весь несинхронизированный прогресс будет потерян.",
+      "現在のセッションをリセットしますか？未同期の進捗は失われます。",
+      2
+    ))) {
+      removeProfileItem('active_session');
+      if (activeSession?.id) {
+        removeProfileItem(`chat_state_${activeSession.id}`);
+      }
+      setActiveSession(null);
+      setHasActiveChat(false);
+    }
+  };
+
 
   // Возвращает текст облачка речи в зависимости от уровня японизации и статуса сессии
   const getMascotBubbleHtml = (): { __html: string } => {
@@ -144,10 +160,10 @@ export default function HomePage() {
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--bg-secondary)' }}>
       {/* HEADER */}
       <header className="navbar">
-        <div className="logo-container">
+        <Link href="/" className="logo-container" style={{ textDecoration: 'none' }}>
           <BookOpen size={32} className="logo-text" />
-          <span className="logo-text">YomuMogu <span className="logo-sub">Anki</span></span>
-        </div>
+          <span className="logo-text">YomuMogu</span>
+        </Link>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button 
             onClick={() => setShowProfileModal(true)} 
@@ -188,9 +204,18 @@ export default function HomePage() {
         <div className={styles.primaryActionContainer}>
           {hasActiveChat && activeSession ? (
             <>
-              <Link href="/chat" className="btn-3d btn-blue" style={{ fontSize: '20px', padding: '16px 32px' }}>
-                {t(`Продолжить: ${activeSession.title}`, `続ける: ${activeSession.title}`, 2)}
-              </Link>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <Link href="/chat" className="btn-3d btn-blue" style={{ fontSize: '20px', padding: '16px 32px' }}>
+                  {t(`Продолжить: ${activeSession.title}`, `続ける: ${activeSession.title}`, 2)}
+                </Link>
+                <button
+                  onClick={handleDiscardSession}
+                  className="btn-3d btn-red"
+                  style={{ fontSize: '20px', padding: '16px 24px' }}
+                >
+                  {t("Сбросить", "リセット", 2)}
+                </button>
+              </div>
               <span className={styles.resumeProgressText}>
                 {t(
                   `Собрано целевых слов: ${collectedWordsCount} из ${totalWordsCount}`,

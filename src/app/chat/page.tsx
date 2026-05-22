@@ -435,6 +435,14 @@ export default function ChatPage() {
     router.push('/settings');
   };
 
+  const handleForceDiscardSession = () => {
+    removeProfileItem('active_session');
+    if (session?.id) {
+      removeProfileItem(`chat_state_${session.id}`);
+    }
+    router.push('/settings');
+  };
+
   const handleConfirmExit = () => {
     setShowExitConfirm(false);
     handleStartCompletion();
@@ -723,6 +731,35 @@ export default function ChatPage() {
           </p>
           <button onClick={() => router.push('/settings')} className="btn-3d btn-green" style={{ marginTop: 16 }}>
             {t('Перейти в настройки', '設定へ')}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Проверка на несовместимый/поврежденный формат сессии
+  const isSessionInvalid = !session.id || 
+                           !session.targetWords || 
+                           !Array.isArray(session.targetWords) ||
+                           !session.title ||
+                           !session.scenario;
+
+  if (isSessionInvalid) {
+    return (
+      <div className={styles.chatContainer}>
+        <div className={styles.messageArea} style={{ justifyContent: 'center', alignItems: 'center', padding: '24px', textAlign: 'center' }}>
+          <AlertCircle size={48} style={{ color: 'var(--color-red)', marginBottom: 16 }} />
+          <h2 style={{ marginBottom: 12, color: 'var(--text-primary)' }}>
+            {t('Обнаружена несовместимая сессия', '不適合なセッションが検出されました')}
+          </h2>
+          <p style={{ maxWidth: 500, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>
+            {t(
+              'Эта сессия была создана в предыдущей версии приложения и не может быть загружена из-за несовпадения структуры данных. Вы можете сбросить её и начать новую.',
+              'このセッションは以前のバージョンで作成されたため、読み込めません。セッションをリセットして新しく開始してください。'
+            )}
+          </p>
+          <button onClick={handleForceDiscardSession} className="btn-3d btn-red">
+            {t('Сбросить сессию', 'セッションをリセット')}
           </button>
         </div>
       </div>

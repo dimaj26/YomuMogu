@@ -259,8 +259,9 @@ describe('SettingsPage Component', () => {
     // Ждем загрузки и рендеринга кнопки продолжения
     await waitFor(() => {
       expect(screen.getByText('Тема разговора')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Продолжить практику' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Продолжить практику' })).toHaveClass('btn-blue');
+      expect(screen.getByRole('button', { name: 'Продолжить' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Продолжить' })).toHaveClass('btn-blue');
+      expect(screen.getByRole('button', { name: 'Сброс' })).toBeInTheDocument();
     });
   });
 });

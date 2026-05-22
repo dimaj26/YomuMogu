@@ -332,6 +332,29 @@ export default function SettingsPage() {
     }
   };
 
+  const handleDiscardSessionInSettings = (sessionId: string) => {
+    if (window.confirm('Вы действительно хотите сбросить прогресс этой сессии диалога? Весь несинхронизированный прогресс будет потерян.')) {
+      removeProfileItem(`chat_state_${sessionId}`);
+      
+      const activeStr = getProfileItem('active_session');
+      if (activeStr) {
+        try {
+          const parsed = JSON.parse(activeStr);
+          if (parsed && parsed.id === sessionId) {
+            removeProfileItem('active_session');
+          }
+        } catch {}
+      }
+      
+      setInProgressSessions(prev => {
+        const next = new Set(prev);
+        next.delete(sessionId);
+        return next;
+      });
+    }
+  };
+
+
   // Статистика слов
   const stats = {
     total: words.length,
@@ -344,10 +367,10 @@ export default function SettingsPage() {
   return (
     <div className={styles.container}>
       <header className="navbar">
-        <div className="logo-container">
+        <Link href="/" className="logo-container" style={{ textDecoration: 'none' }}>
           <BookOpen size={32} className="logo-text" />
-          <span className="logo-text">YomuMogu <span className="logo-sub">Anki</span></span>
-        </div>
+          <span className="logo-text">YomuMogu</span>
+        </Link>
         <div className={styles.navLinks}>
           <Link href="/chat" className="btn-3d btn-blue" style={{ padding: '8px 16px', fontSize: '14px' }}>
             В чат
@@ -778,13 +801,33 @@ export default function SettingsPage() {
                               </span>
                             ))}
                           </div>
-                          <button
-                            onClick={() => startSession(session)}
-                            className={`btn-3d ${inProgressSessions.has(session.id) ? 'btn-blue' : 'btn-green'}`}
-                            style={{ width: '100%', marginTop: 'auto', padding: '8px 16px', fontSize: '14px' }}
-                          >
-                            {inProgressSessions.has(session.id) ? 'Продолжить практику' : 'Начать практику'}
-                          </button>
+                          {inProgressSessions.has(session.id) ? (
+                            <div style={{ display: 'flex', gap: '8px', width: '100%', marginTop: 'auto' }}>
+                              <button
+                                onClick={() => startSession(session)}
+                                className="btn-3d btn-blue"
+                                style={{ flex: 1, padding: '8px 12px', fontSize: '14px' }}
+                              >
+                                Продолжить
+                              </button>
+                              <button
+                                onClick={() => handleDiscardSessionInSettings(session.id)}
+                                className="btn-3d btn-red"
+                                style={{ padding: '8px 12px', fontSize: '14px' }}
+                                title="Сбросить прогресс сессии"
+                              >
+                                Сброс
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => startSession(session)}
+                              className="btn-3d btn-green"
+                              style={{ width: '100%', marginTop: 'auto', padding: '8px 16px', fontSize: '14px' }}
+                            >
+                              Начать практику
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
