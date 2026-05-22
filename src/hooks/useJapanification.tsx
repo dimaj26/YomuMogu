@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getProfileItem, setProfileItem } from '../lib/profile';
 
 export type UiMode = 'ru' | 'smart' | 'ja';
@@ -13,7 +12,7 @@ export interface JapanificationState {
   sessionsCompleted: number;
   showTranslationsAlways: boolean;
   chatLevel: number;        // Сложность японского языка в чате (1-5)
-  level: number;            // Виртуальный уровень японизации
+  level: number;            // Виртуальный уровень японизации (чисто декоративный)
   percentage: number;       // Виртуальный процент прогресса уровня
   speed: 'slow' | 'normal' | 'fast'; // Виртуальная скорость
 }
@@ -29,7 +28,24 @@ const DEFAULT_STATE: Omit<JapanificationState, 'level' | 'percentage' | 'speed'>
   chatLevel: 1,
 };
 
-export function useJapanification() {
+export interface JapanificationContextType {
+  state: JapanificationState;
+  t: (ruText: string, jaText: string, levelRequired?: number) => string;
+  shouldShowTranslation: () => boolean;
+  shouldGrammarBeJapanese: () => boolean;
+  shouldHintsBeJapanese: () => boolean;
+  addPoints: (n: number) => void;
+  trackWordUsed: (count?: number) => void;
+  completeSession: () => void;
+  setUiMode: (uiMode: UiMode) => void;
+  setChatLevel: (chatLevel: number) => void;
+  toggleAlwaysShowTranslations: () => void;
+  resetProgress: () => void;
+}
+
+const JapanificationContext = createContext<JapanificationContextType | undefined>(undefined);
+
+function useJapanificationInternal(): JapanificationContextType {
   const [state, setState] = useState<Omit<JapanificationState, 'level' | 'percentage' | 'speed'>>(DEFAULT_STATE);
 
   // Загружаем состояние из localStorage при монтировании с миграцией данных
@@ -71,7 +87,7 @@ export function useJapanification() {
     }
   }, []);
 
-  // Вычисляем виртуальные поля на лету
+  // Вычисляем виртуальные поля на лету (чисто декоративные)
   const thresholds = [0, 20, 50, 100, 170, 280, 420];
   let level = 0;
   for (let i = 0; i < thresholds.length; i++) {
@@ -84,32 +100,28 @@ export function useJapanification() {
    * Функция перевода для простых строк.
    * Если режим 'ja' — переводит. 
    * Если режим 'ru' — не переводит.
-   * Если режим 'smart' — переводит, если виртуальный уровень японизации >= levelRequired.
+   * В режиме 'smart' — не переводит (уровни больше не влияют на обычные UI строки).
    */
   const t = useCallback((ruText: string, jaText: string, levelRequired: number = 6): string => {
     if (state.uiMode === 'ja') return jaText;
-    if (state.uiMode === 'ru') return ruText;
-    return level >= levelRequired ? jaText : ruText;
-  }, [state.uiMode, level]);
+    return ruText;
+  }, [state.uiMode]);
 
   const shouldShowTranslation = useCallback((): boolean => {
     if (state.showTranslationsAlways) return true;
     if (state.uiMode === 'ja') return false;
-    if (state.uiMode === 'ru') return true;
-    return level < 1;
-  }, [state.uiMode, state.showTranslationsAlways, level]);
+    return true; // В Smart и ru режимах переводы всегда показываются (уровни не влияют)
+  }, [state.uiMode, state.showTranslationsAlways]);
 
   const shouldGrammarBeJapanese = useCallback((): boolean => {
     if (state.uiMode === 'ja') return true;
-    if (state.uiMode === 'ru') return false;
-    return level >= 5;
-  }, [state.uiMode, level]);
+    return false; // В Smart и ru режимах грамматика на русском
+  }, [state.uiMode]);
 
   const shouldHintsBeJapanese = useCallback((): boolean => {
     if (state.uiMode === 'ja') return true;
-    if (state.uiMode === 'ru') return false;
-    return level >= 4;
-  }, [state.uiMode, level]);
+    return false; // В Smart и ru режимах подсказки на русском
+  }, [state.uiMode]);
 
   const addPoints = useCallback((n: number) => {
     setState(prev => {
@@ -215,4 +227,19 @@ export function useJapanification() {
     toggleAlwaysShowTranslations,
     resetProgress,
   };
+}
+
+export function JapanificationProvider({ children }: { children: React.ReactNode }) {
+  const value = useJapanificationInternal();
+  return (
+    <JapanificationContext.Provider value={value}>
+      {children}
+    </JapanificationContext.Provider>
+  );
+}
+
+export function useJapanification(): JapanificationContextType {
+  const context = useContext(JapanificationContext);
+  const local = useJapanificationInternal();
+  return context || local;
 }

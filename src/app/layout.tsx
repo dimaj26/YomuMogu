@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
 import "./globals.css";
 import { JpUIProvider } from "@/components/JpUIProvider";
+import { JapanificationProvider } from "@/hooks/useJapanification";
 
 const nunito = Nunito({
   variable: "--font-nunito",
@@ -22,9 +23,11 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body className={`${nunito.variable}`}>
-        <JpUIProvider>
-          {children}
-        </JpUIProvider>
+        <JapanificationProvider>
+          <JpUIProvider>
+            {children}
+          </JpUIProvider>
+        </JapanificationProvider>
       </body>
     </html>
   );

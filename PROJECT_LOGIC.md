@@ -54,7 +54,7 @@ src/
         __tests__/chat.test.ts, analyze.test.ts
         hint/__tests__/hint.test.ts
   hooks/
-    useJapanification.ts  # XP progression, level, speed, chatLevel state
+    useJapanification.tsx # XP progression, level, speed, chatLevel state
     __tests__/useJapanification.test.ts
   components/
     JpUIProvider.tsx      # UI FSRS word state provider
@@ -103,7 +103,7 @@ src/
 | `app/api/chat/route.ts` | `POST { scenario, targetWords, history, message, level, grammarInJapanese, collectedWords? }` | `ChatResponse` |
 | `app/api/chat/hint/route.ts` | `POST { scenario, targetWords, history, level }` — generates 3 hint variants |
 | `app/api/chat/analyze/route.ts` | `POST { history, deckName, frontField, backField }` — dialogue word/Anki auditor |
-| `hooks/useJapanification.ts` | `JapanificationState` hook: level (0–6), XP, speed, chatLevel (1–5), `t()`, `addPoints()`, `setChatLevel()`, etc. |
+| `hooks/useJapanification.tsx` | `JapanificationState` hook: level (0–6), XP, speed, chatLevel (1–5), `t()`, `addPoints()`, `setChatLevel()`, etc. |
 | `components/JpUIProvider.tsx` | `JpUIProvider` context: loaded UI words list, session lockout of 1 upgrade, registers/reverts/confirms FSRS progress |
 | `components/JpUI.tsx` | `<JpUI>` component: smart localized wrapper, ruby furigana (reps <= 2), hovering tooltip translation and buttons |
 | `components/JpUI.module.css` | Vanilla CSS module styles for tooltips and golden pulse animations for new session upgrades |
@@ -535,4 +535,4 @@ npm run test:integration # Integration tests (real Gemini API, needs GEMINI_API_
 
 ### [PL-9.4] Current Test Count
 
-130 unit tests across 20 test files. All passing.
+131 unit tests across 20 test files. All passing.

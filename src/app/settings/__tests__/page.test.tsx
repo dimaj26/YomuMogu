@@ -66,8 +66,32 @@ describe('SettingsPage Component', () => {
 
     render(<SettingsPage />);
 
-    expect(screen.getByText('Настройки интеграции с Anki')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Настройки', level: 1 })).toBeInTheDocument();
     expect(screen.getByText('Проверка...')).toBeInTheDocument();
+  });
+
+  it('switches tabs correctly', async () => {
+    render(<SettingsPage />);
+
+    // По умолчанию вкладка Импорт & Anki
+    expect(screen.getByText('Источник слов и режим обучения')).toBeInTheDocument();
+    expect(screen.queryByText('Выбор профиля')).not.toBeInTheDocument();
+
+    // Кликаем по вкладке Профиль
+    const profileTabBtn = screen.getByRole('button', { name: /Профиль/ });
+    fireEvent.click(profileTabBtn);
+
+    // Должны появиться элементы профиля
+    expect(screen.getByText('Выбор профиля')).toBeInTheDocument();
+    expect(screen.queryByText('Источник слов и режим обучения')).not.toBeInTheDocument();
+
+    // Кликаем по вкладке Облако
+    const cloudTabBtn = screen.getByRole('button', { name: /Облако/ });
+    fireEvent.click(cloudTabBtn);
+
+    // Должна появиться заглушка облака
+    expect(screen.getByText('Синхронизация с облаком')).toBeInTheDocument();
+    expect(screen.queryByText('Выбор профиля')).not.toBeInTheDocument();
   });
 
   it('displays connection error if Anki is not running', async () => {
@@ -287,6 +311,10 @@ describe('SettingsPage Component', () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(() => new Promise(() => {}));
 
     render(<SettingsPage />);
+
+    // Переходим на вкладку Профиль
+    const profileTabBtn = screen.getByRole('button', { name: /Профиль/ });
+    fireEvent.click(profileTabBtn);
 
     // Ждем отрисовки кнопок лимита
     const easyBtn = await screen.findByRole('button', { name: 'Мало (5)' });

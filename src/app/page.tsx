@@ -236,19 +236,19 @@ export default function HomePage() {
 
         {/* SECONDARY CONTROL GRID */}
         <div className={styles.secondaryGrid}>
-          <Link href="/settings" className="btn-3d styles.secondaryBtn">
+          <Link href="/settings" className={`btn-3d ${styles.secondaryBtn}`}>
             <Settings size={20} />
             <span className={styles.btnLabel}>
               <JpUI id="btn_settings" ru="Настройки" ja="設定" reading="せってい" />
             </span>
           </Link>
-          <button onClick={() => setShowProfileModal(true)} className="btn-3d styles.secondaryBtn">
+          <button onClick={() => setShowProfileModal(true)} className={`btn-3d ${styles.secondaryBtn}`}>
             <User size={20} />
             <span className={styles.btnLabel}>
               <JpUI id="btn_profile" ru="Профиль" ja="プロフィール" reading="ぷろふぃーる" />
             </span>
           </button>
-          <button onClick={() => { setShowHelpModal(true); setHelpTab('about'); }} className="btn-3d styles.secondaryBtn">
+          <button onClick={() => { setShowHelpModal(true); setHelpTab('about'); }} className={`btn-3d ${styles.secondaryBtn}`}>
             <HelpCircle size={20} />
             <span className={styles.btnLabel}>
               <JpUI id="btn_help" ru="Справка" ja="ヘルプ" reading="へるぷ" />
@@ -327,7 +327,7 @@ export default function HomePage() {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
-              <button className="btn-3d btn-green" onClick={() => { setShowProfileModal(false); router.push('/settings'); }}>
+              <button className="btn-3d btn-green" onClick={() => { setShowProfileModal(false); router.push('/settings#profile'); }}>
                 {t("Управление профилями", "プロフィール管理", 2)}
               </button>
             </div>
@@ -423,22 +423,39 @@ export default function HomePage() {
 
               {helpTab === 'japanification' && (
                 <div>
-                  <h4>{t("Система постепенного погружения в язык", "段階的な言語への浸透システム", 2)}</h4>
+                  <h4>{t("Система языкового погружения (Immersion)", "言語浸透システム（イマージョン）", 2)}</h4>
                   <p>
                     {t(
-                      "По мере накопления XP (за использование слов и правильную грамматику), интерфейс приложения постепенно переводится на японский язык:",
-                      "会話の中で正しく単語や文法を使用するとXPが増え、アプリの表示が徐々に日本語に切り替わっていきます：",
+                      "Перевод элементов интерфейса на японский язык полностью управляется алгоритмом интервального повторения FSRS на основе вашей памяти:",
+                      "インターフェースの日本語翻訳は、記憶に基づいたFSRS間隔反復アルゴリズムによって完全に管理されています：",
                       2
                     )}
                   </p>
                   <ul>
-                    <li><strong>L0 (0 XP):</strong> {t("Всё на русском.", "すべてロシア語表記。", 2)}</li>
-                    <li><strong>L1 (20 XP):</strong> {t("Переводы реплик ИИ скрыты по умолчанию (доступны по клику).", "AIメッセージの翻訳が初期状態で非表示になります。", 2)}</li>
-                    <li><strong>L2 (50 XP):</strong> {t("Главные интерактивные кнопки переводятся на японский.", "主要なボタンが日本語表記になります。", 2)}</li>
-                    <li><strong>L3 (100 XP):</strong> {t("Навигация и названия переключаются на японский с фуриганой.", "メニュー表示が日本語（ふりがな付き）になります。", 2)}</li>
-                    <li><strong>L4 (170 XP):</strong> {t("Подсказки (Hints) выдаются на японском языке.", "ヒントが日本語で生成されます。", 2)}</li>
-                    <li><strong>L5 (280 XP):</strong> {t("Объяснения грамматических ошибок переводятся на японский.", "文法ミスの解説が日本語になります。", 2)}</li>
-                    <li><strong>L6 (420 XP):</strong> {t("Приложение полностью на японском языке.", "アプリ全体が完全に日本語になります。", 2)}</li>
+                    <li>
+                      <strong>{t("Умный перевод элементов UI:", "UI要素のスマート翻訳:", 2)}</strong>{' '}
+                      {t(
+                        "В режиме Smart интерфейс постепенно наполняется японскими словами. Кликнув на любое переведенное слово, вы увидите всплывающую подсказку.",
+                        "Smartモードでは、インターフェースが徐々に日本語で表示されます。翻訳された単語をクリックすると、ツールチップが表示されます。",
+                        2
+                      )}
+                    </li>
+                    <li>
+                      <strong>{t("Интерактивная обратная связь:", "インタラクティブなフィードバック:", 2)}</strong>{' '}
+                      {t(
+                        "Кнопка «Знаю» повышает стабильность слова, и оно будет реже беспокоить вас. Кнопка «Забыл» сбрасывает прогресс и мгновенно возвращает русский перевод.",
+                        "「わかる（Знаю）」ボタンは単語の安定度を高め、出現頻度を下げます。「忘れた（Забыл）」ボタンは進捗をリセットし、ロシア語に戻します。",
+                        2
+                      )}
+                    </li>
+                    <li>
+                      <strong>{t("Очки опыта (XP) и Уровни:", "経験値（XP）とレベル:", 2)}</strong>{' '}
+                      {t(
+                        "Накапливаемые вами XP и виртуальные уровни (L0–L6) сейчас служат декоративным показателем вашего прогресса на будущее.",
+                        "獲得するXPと仮想レベル（L0〜L6）は、将来の開発に向けた装飾的な進捗指標として機能しています。",
+                        2
+                      )}
+                    </li>
                   </ul>
                 </div>
               )}

@@ -125,6 +125,6 @@ describe('HomePage Component', () => {
     // Switch to Japanification tab
     const japTabBtn = screen.getByRole('button', { name: /Погружение/ });
     fireEvent.click(japTabBtn);
-    expect(screen.getByText('Система постепенного погружения в язык')).toBeInTheDocument();
+    expect(screen.getByText('Система языкового погружения (Immersion)')).toBeInTheDocument();
   });
 });
