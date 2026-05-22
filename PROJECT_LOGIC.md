@@ -147,6 +147,7 @@ Default profile ID: `default`
 | `chat_state_${sessionId}` | JSON `SavedChatState` | Saved chat session progress (messages, state, collected words) |
 | `quota_preset` | string | Preset selection for daily new words quota ('easy', 'standard', 'hard', 'custom') |
 | `daily_new_words_limit` | string | Custom daily limit of new words (validated between 1 and 50) |
+| `deck_mappings` | JSON `Record<string, { frontField: string; backField: string; audioField?: string; imageField?: string }>` | Per-deck field mapping configurations |
 
 Profile metadata (not namespaced):
 - `yomumogu_active_profile_id` — active profile ID string
@@ -322,9 +323,9 @@ All Anki routes proxy requests to AnkiConnect at `http://localhost:8765`.
 |---|---|---|---|
 | `/api/anki/connect` | GET | — | `{ connected: boolean, error?: string }` |
 | `/api/anki/decks` | GET | — | `{ decks: string[] }` |
-| `/api/anki/words` | GET | `?deck=&frontField=&backField=` | `{ words: AnkiWord[] }` |
+| `/api/anki/words` | GET | `?deck=&frontField=&backField=&mappings=` | `{ words: AnkiWord[] }` |
 | `/api/anki/sync` | POST | `{ cards?: Array<{ cardId: number; ease: number }>, cardIds?: number[] }` | `{ success: boolean }` |
-| `/api/anki/sync-db` | POST | `{ profileId, deckName, frontField?, backField?, localReviews?, localWords? }` | `{ success: boolean, remoteCards: AnkiWord[], remoteReviews: Record<number, AnkiReview[]> }` |
+| `/api/anki/sync-db` | POST | `{ profileId, deckName, frontField?, backField?, deckMappings?, localReviews?, localWords? }` | `{ success: boolean, remoteCards: AnkiWord[], remoteReviews: Record<number, AnkiReview[]> }` |
 | `/api/anki/setup-deck` | POST | `{ deckName?, modelName? }` | `{ success: boolean, deckName: string, modelName: string }` |
 | `/api/anki/add` | POST | `{ deckName, frontField, backField, word, reading, translation, definitionHtml, history?: Array<{ role: string; text: string }> }` | `{ success: boolean }` |
 
@@ -335,7 +336,7 @@ All Anki routes proxy requests to AnkiConnect at `http://localhost:8765`.
 | `/api/gemini/sessions` | POST | `{ words: AnkiWord[] }` | `{ sessions: GeneratedSession[] }` |
 | `/api/chat` | POST | `{ scenario, targetWords, history, message, level, grammarInJapanese, collectedWords? }` | `ChatResponse` |
 | `/api/chat/hint` | POST | `{ scenario, targetWords, history, level }` | `HintResponse` |
-| `/api/chat/analyze` | POST | `{ history, deckName, frontField, backField }` | `{ words: AnalyzedWord[] }` |
+| `/api/chat/analyze` | POST | `{ history, deckName, frontField, backField, deckMappings? }` | `{ words: AnalyzedWord[] }` |
 
 ### [PL-4.3] ChatResponse & HintResponse
 ```typescript
@@ -535,4 +536,4 @@ npm run test:integration # Integration tests (real Gemini API, needs GEMINI_API_
 
 ### [PL-9.4] Current Test Count
 
-131 unit tests across 20 test files. All passing.
+133 unit tests across 20 test files. All passing.

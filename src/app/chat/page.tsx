@@ -514,6 +514,16 @@ export default function ChatPage() {
       const frontField = getProfileItem('front_field') || 'Front';
       const backField = getProfileItem('back_field') || 'Back';
 
+      const deckMappingsStr = getProfileItem('deck_mappings');
+      let deckMappings = undefined;
+      if (deckMappingsStr) {
+        try {
+          deckMappings = JSON.parse(deckMappingsStr);
+        } catch (e) {
+          console.error('Ошибка парсинга deck_mappings:', e);
+        }
+      }
+
       const res = await fetch('/api/chat/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -521,7 +531,8 @@ export default function ChatPage() {
           history: messages.map(m => ({ role: m.role, text: m.text })),
           deckName,
           frontField,
-          backField
+          backField,
+          deckMappings
         })
       });
       if (!res.ok) {
@@ -571,7 +582,37 @@ export default function ChatPage() {
     const backField = getProfileItem('back_field') || 'Back';
     const profileId = getActiveProfileId();
 
+    const deckMappingsStr = getProfileItem('deck_mappings');
+    let deckMappings = undefined;
+    if (deckMappingsStr) {
+      try {
+        deckMappings = JSON.parse(deckMappingsStr);
+      } catch (e) {
+        console.error('Ошибка парсинга deck_mappings:', e);
+      }
+    }
+
     try {
+      // Определяем конкретную целевую колоду для добавления новых слов при selected_deck === '__all__'
+      let targetDeckName = deckName;
+      if (deckName === '__all__' && session && session.targetWords && session.targetWords.length > 0) {
+        for (const tw of session.targetWords) {
+          const localWord = await db.words.where('word').equals(tw.japanese).first();
+          if (localWord && localWord.deckName && localWord.deckName !== '__all__') {
+            targetDeckName = localWord.deckName;
+            break;
+          }
+        }
+        if (targetDeckName === '__all__') {
+          const anyWord = await db.words.where('profileId').equals(profileId).first();
+          if (anyWord && anyWord.deckName && anyWord.deckName !== '__all__') {
+            targetDeckName = anyWord.deckName;
+          } else {
+            targetDeckName = 'Japanese';
+          }
+        }
+      }
+
       // 1. Синхронизируем карточки (повторение) через локальную БД и FSRS
       if (selectedSyncCards.size > 0) {
         for (const cardId of Array.from(selectedSyncCards)) {
@@ -591,7 +632,7 @@ export default function ChatPage() {
                   reading: wordObj.reading,
                   translation: wordObj.translation,
                   status: wordObj.status || 'new',
-                  deckName,
+                  deckName: targetDeckName,
                   stability: 0,
                   difficulty: 0,
                   interval: 0,
@@ -624,13 +665,20 @@ export default function ChatPage() {
         for (const wordStr of Array.from(selectedAddWords)) {
           const w = analyzedWords.find(item => item.word === wordStr);
           if (w) {
+            let activeFrontField = frontField;
+            let activeBackField = backField;
+            if (deckMappings && deckMappings[targetDeckName]) {
+              activeFrontField = deckMappings[targetDeckName].frontField || frontField;
+              activeBackField = deckMappings[targetDeckName].backField || backField;
+            }
+
             const addRes = await fetch('/api/anki/add', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                deckName,
-                frontField,
-                backField,
+                deckName: targetDeckName,
+                frontField: activeFrontField,
+                backField: activeBackField,
                 word: w.word,
                 reading: w.reading,
                 translation: w.translation,
@@ -652,7 +700,8 @@ export default function ChatPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           profileId,
-          deckName
+          deckName,
+          deckMappings
         })
       });
       if (!syncRes.ok) {

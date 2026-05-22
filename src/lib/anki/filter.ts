@@ -98,7 +98,8 @@ export function parseAndFilterCards(
   cards: AnkiCardInfo[],
   frontField: string = 'Front',
   backField: string = 'Back',
-  dueCardIds?: number[]
+  dueCardIds?: number[],
+  deckMappings?: Record<string, { frontField: string; backField: string; audioField?: string; imageField?: string }>
 ): AnkiWord[] {
   const wordMap = new Map<string, AnkiWord>();
   
@@ -110,13 +111,22 @@ export function parseAndFilterCards(
   };
 
   for (const card of cards) {
+    let activeFrontField = frontField;
+    let activeBackField = backField;
+
+    if (deckMappings && card.deckName && deckMappings[card.deckName]) {
+      const mapping = deckMappings[card.deckName];
+      activeFrontField = mapping.frontField || frontField;
+      activeBackField = mapping.backField || backField;
+    }
+
     // Ищем поля по имени (регистронезависимо)
     const frontKey = Object.keys(card.fields).find(
-      (key) => key.toLowerCase() === frontField.toLowerCase()
+      (key) => key.toLowerCase() === activeFrontField.toLowerCase()
     ) || Object.keys(card.fields)[0];
     
     const backKey = Object.keys(card.fields).find(
-      (key) => key.toLowerCase() === backField.toLowerCase()
+      (key) => key.toLowerCase() === activeBackField.toLowerCase()
     ) || Object.keys(card.fields)[1] || Object.keys(card.fields)[0];
 
     const rawFront = card.fields[frontKey]?.value || '';

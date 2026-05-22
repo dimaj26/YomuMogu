@@ -162,6 +162,16 @@ export async function syncLocalDatabaseWithAnki(
     const frontField = getProfileItem('front_field', profileId) || 'Front';
     const backField = getProfileItem('back_field', profileId) || 'Back';
 
+    const deckMappingsStr = getProfileItem('deck_mappings', profileId);
+    let deckMappings = undefined;
+    if (deckMappingsStr) {
+      try {
+        deckMappings = JSON.parse(deckMappingsStr);
+      } catch (e) {
+        console.error('Ошибка парсинга deck_mappings:', e);
+      }
+    }
+
     // 3. Вызываем API-эндпоинт синхронизации
     const res = await fetch('/api/anki/sync-db', {
       method: 'POST',
@@ -173,6 +183,7 @@ export async function syncLocalDatabaseWithAnki(
         deckName,
         frontField,
         backField,
+        deckMappings,
         localReviews: unsyncedReviews,
         localWords: localWordsSummary
       })
@@ -238,7 +249,7 @@ export async function syncLocalDatabaseWithAnki(
               reading: extractReading(card.rawFront),
               translation: card.translation,
               status: 'new',
-              deckName,
+              deckName: card.deckName || deckName,
               stability: 0,
               difficulty: 0,
               interval: 0,
@@ -296,7 +307,7 @@ export async function syncLocalDatabaseWithAnki(
                 reading: extractReading(card.rawFront),
                 translation: card.translation,
                 status: card.status,
-                deckName,
+                deckName: card.deckName || deckName,
                 stability,
                 difficulty,
                 interval: card.interval,

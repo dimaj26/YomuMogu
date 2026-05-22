@@ -239,19 +239,19 @@ export default function HomePage() {
           <Link href="/settings" className={`btn-3d ${styles.secondaryBtn}`}>
             <Settings size={20} />
             <span className={styles.btnLabel}>
-              <JpUI id="btn_settings" ru="Настройки" ja="設定" reading="せってい" />
+              <JpUI id="btn_settings" ru="Настройки" ja="設定" reading="せってい" interactive={false} />
             </span>
           </Link>
           <button onClick={() => setShowProfileModal(true)} className={`btn-3d ${styles.secondaryBtn}`}>
             <User size={20} />
             <span className={styles.btnLabel}>
-              <JpUI id="btn_profile" ru="Профиль" ja="プロフィール" reading="ぷろふぃーる" />
+              <JpUI id="btn_profile" ru="Профиль" ja="プロフィール" reading="ぷろふぃーる" interactive={false} />
             </span>
           </button>
           <button onClick={() => { setShowHelpModal(true); setHelpTab('about'); }} className={`btn-3d ${styles.secondaryBtn}`}>
             <HelpCircle size={20} />
             <span className={styles.btnLabel}>
-              <JpUI id="btn_help" ru="Справка" ja="ヘルプ" reading="へるぷ" />
+              <JpUI id="btn_help" ru="Справка" ja="ヘルプ" reading="へるぷ" interactive={false} />
             </span>
           </button>
         </div>

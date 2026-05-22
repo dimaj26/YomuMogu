@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { history, deckName, frontField, backField } = body;
+    const { history, deckName, frontField, backField, deckMappings } = body;
 
     if (!history || !Array.isArray(history)) {
       logger.warn('Запрос к /api/chat/analyze с отсутствующим или некорректным полем history');
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
           const batchInfo = await ankiClient.getCardsInfo(batchIds);
           cardsInfo.push(...batchInfo);
         }
-        deckWords = parseAndFilterCards(cardsInfo, fField, bField, dueCardIds);
+        deckWords = parseAndFilterCards(cardsInfo, fField, bField, dueCardIds, deckMappings);
       }
       
       ankiConnected = true;

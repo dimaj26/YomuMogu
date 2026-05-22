@@ -33,6 +33,26 @@ export default function SettingsPage() {
   const [imageField, setImageField] = useState<string>('');
   const [deckMode, setDeckMode] = useState<'standard' | 'custom' | 'local'>('standard');
   const [words, setWords] = useState<AnkiWord[]>([]);
+  const [deckMappings, setDeckMappings] = useState<Record<string, { frontField: string; backField: string; audioField?: string; imageField?: string }>>({});
+
+  const handleDeckChange = (newDeckName: string) => {
+    setSelectedDeck(newDeckName);
+    
+    // Если есть сохраненные настройки для этой колоды, загружаем их
+    if (newDeckName !== '__all__' && deckMappings[newDeckName]) {
+      const mapping = deckMappings[newDeckName];
+      setFrontField(mapping.frontField || 'Front');
+      setBackField(mapping.backField || 'Back');
+      setAudioField(mapping.audioField || '');
+      setImageField(mapping.imageField || '');
+    } else {
+      // Если настроек нет или это '__all__', сбрасываем на дефолты
+      setFrontField('Front');
+      setBackField('Back');
+      setAudioField('');
+      setImageField('');
+    }
+  };
   
   const [isLoadingConnection, setIsLoadingConnection] = useState<boolean>(false);
   const [isLoadingDecks, setIsLoadingDecks] = useState<boolean>(false);
@@ -286,7 +306,10 @@ export default function SettingsPage() {
     setError(null);
     setWordLoadSuccess(false);
     try {
-      const url = `/api/anki/words?deck=${encodeURIComponent(selectedDeck)}&frontField=${encodeURIComponent(frontField)}&backField=${encodeURIComponent(backField)}`;
+      let url = `/api/anki/words?deck=${encodeURIComponent(selectedDeck)}&frontField=${encodeURIComponent(frontField)}&backField=${encodeURIComponent(backField)}`;
+      if (Object.keys(deckMappings).length > 0) {
+        url += `&mappings=${encodeURIComponent(JSON.stringify(deckMappings))}`;
+      }
       const res = await fetch(url);
       const data = await res.json();
       if (res.ok) {
@@ -346,6 +369,15 @@ export default function SettingsPage() {
           setCustomQuotaLimit(parsed);
         }
       }
+
+      const savedMappings = getProfileItem('deck_mappings');
+      if (savedMappings) {
+        try {
+          setDeckMappings(JSON.parse(savedMappings));
+        } catch (e) {
+          console.error('Failed to parse deck mappings', e);
+        }
+      }
     } catch (e) {
       console.error('Failed to load profile data', e);
     } finally {
@@ -354,6 +386,11 @@ export default function SettingsPage() {
   }, []);
 
   // Сохраняем данные при изменении
+  useEffect(() => {
+    if (!hasLoaded) return;
+    setProfileItem('deck_mappings', JSON.stringify(deckMappings));
+  }, [deckMappings, hasLoaded]);
+
   useEffect(() => {
     if (!hasLoaded) return;
     setProfileItem('selected_deck', selectedDeck);
@@ -555,6 +592,8 @@ export default function SettingsPage() {
       removeProfileItem('words');
       removeProfileItem('sessions');
       removeProfileItem('active_session');
+      removeProfileItem('deck_mappings');
+      setDeckMappings({});
     }
   };
 
@@ -1006,7 +1045,7 @@ export default function SettingsPage() {
                                     id="deck-select"
                                     className="input-friendly"
                                     value={selectedDeck}
-                                    onChange={(e) => setSelectedDeck(e.target.value)}
+                                    onChange={(e) => handleDeckChange(e.target.value)}
                                   >
                                     <option value="__all__">Все колоды (совместно)</option>
                                     {decks.map((deck) => (
@@ -1026,7 +1065,21 @@ export default function SettingsPage() {
                                     type="text"
                                     className="input-friendly"
                                     value={frontField}
-                                    onChange={(e) => setFrontField(e.target.value)}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setFrontField(val);
+                                      if (selectedDeck !== '__all__') {
+                                        setDeckMappings(prev => ({
+                                          ...prev,
+                                          [selectedDeck]: {
+                                            frontField: val,
+                                            backField: prev[selectedDeck]?.backField || backField,
+                                            audioField: prev[selectedDeck]?.audioField || audioField,
+                                            imageField: prev[selectedDeck]?.imageField || imageField,
+                                          }
+                                        }));
+                                      }
+                                    }}
                                     placeholder="Front"
                                   />
                                 </div>
@@ -1037,7 +1090,21 @@ export default function SettingsPage() {
                                     type="text"
                                     className="input-friendly"
                                     value={backField}
-                                    onChange={(e) => setBackField(e.target.value)}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setBackField(val);
+                                      if (selectedDeck !== '__all__') {
+                                        setDeckMappings(prev => ({
+                                          ...prev,
+                                          [selectedDeck]: {
+                                            frontField: prev[selectedDeck]?.frontField || frontField,
+                                            backField: val,
+                                            audioField: prev[selectedDeck]?.audioField || audioField,
+                                            imageField: prev[selectedDeck]?.imageField || imageField,
+                                          }
+                                        }));
+                                      }
+                                    }}
                                     placeholder="Back"
                                   />
                                 </div>
@@ -1051,7 +1118,21 @@ export default function SettingsPage() {
                                     type="text"
                                     className="input-friendly"
                                     value={audioField}
-                                    onChange={(e) => setAudioField(e.target.value)}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setAudioField(val);
+                                      if (selectedDeck !== '__all__') {
+                                        setDeckMappings(prev => ({
+                                          ...prev,
+                                          [selectedDeck]: {
+                                            frontField: prev[selectedDeck]?.frontField || frontField,
+                                            backField: prev[selectedDeck]?.backField || backField,
+                                            audioField: val,
+                                            imageField: prev[selectedDeck]?.imageField || imageField,
+                                          }
+                                        }));
+                                      }
+                                    }}
                                     placeholder="Audio (или пусто)"
                                   />
                                 </div>
@@ -1062,7 +1143,21 @@ export default function SettingsPage() {
                                     type="text"
                                     className="input-friendly"
                                     value={imageField}
-                                    onChange={(e) => setImageField(e.target.value)}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setImageField(val);
+                                      if (selectedDeck !== '__all__') {
+                                        setDeckMappings(prev => ({
+                                          ...prev,
+                                          [selectedDeck]: {
+                                            frontField: prev[selectedDeck]?.frontField || frontField,
+                                            backField: prev[selectedDeck]?.backField || backField,
+                                            audioField: prev[selectedDeck]?.audioField || audioField,
+                                            imageField: val,
+                                          }
+                                        }));
+                                      }
+                                    }}
                                     placeholder="Image (или пусто)"
                                   />
                                 </div>

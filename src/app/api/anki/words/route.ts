@@ -8,6 +8,16 @@ export async function GET(request: NextRequest) {
   const deck = searchParams.get('deck');
   const frontField = searchParams.get('frontField') || 'Front';
   const backField = searchParams.get('backField') || 'Back';
+  const mappingsParam = searchParams.get('mappings');
+  
+  let deckMappings = undefined;
+  if (mappingsParam) {
+    try {
+      deckMappings = JSON.parse(mappingsParam);
+    } catch (e) {
+      logger.warn('Не удалось распарсить mappings в GET /anki/words', e);
+    }
+  }
 
   if (!deck) {
     logger.warn('Запрос API /anki/words без параметра deck');
@@ -53,7 +63,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 3. Парсим и классифицируем карточки
-    const words = parseAndFilterCards(cardsInfo, frontField, backField, dueCardIds);
+    const words = parseAndFilterCards(cardsInfo, frontField, backField, dueCardIds, deckMappings);
     logger.info(`Успешно обработано слов: ${words.length}`);
 
     return NextResponse.json({ words });

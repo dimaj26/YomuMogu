@@ -11,9 +11,10 @@ interface JpUIProps {
   ja: string; // Японский перевод (Кандзи/Кана)
   reading?: string; // Хирагана чтение (над кандзи)
   className?: string; // Внешний CSS класс
+  interactive?: boolean; // Флаг интерактивности (по умолчанию true)
 }
 
-export function JpUI({ id, ru, ja, reading, className = '' }: JpUIProps) {
+export function JpUI({ id, ru, ja, reading, className = '', interactive = true }: JpUIProps) {
   const { state: jState } = useJapanification();
   const { uiMode } = jState;
 
@@ -87,6 +88,24 @@ export function JpUI({ id, ru, ja, reading, className = '' }: JpUIProps) {
   // Слово изучено (японизировано). Рендерим на японском с интерактивным тултипом
   const showFurigana = wordState.reps <= 2 && !!reading;
   const justUpgraded = upgradedThisSession === id;
+
+  if (!interactive) {
+    return (
+      <span
+        className={`${styles.jpWord} ${justUpgraded ? styles.justUpgraded : ''} ${className}`}
+        title={`Перевод: ${ru}${reading ? ` (Чтение: ${reading})` : ''}`}
+      >
+        {showFurigana ? (
+          <ruby>
+            {ja}
+            <rt>{reading}</rt>
+          </ruby>
+        ) : (
+          ja
+        )}
+      </span>
+    );
+  }
 
   const handleWordClick = (e: React.MouseEvent) => {
     e.preventDefault();

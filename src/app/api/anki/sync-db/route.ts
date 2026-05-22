@@ -11,6 +11,7 @@ export async function POST(request: NextRequest) {
       deckName, 
       frontField = 'Front', 
       backField = 'Back', 
+      deckMappings,
       localReviews = [], 
       localWords = [] 
     } = body;
@@ -109,7 +110,10 @@ export async function POST(request: NextRequest) {
     // 2. Получаем актуальный список карт из Anki для этой колоды
     let remoteCardsInfo: any[] = [];
     try {
-      const remoteCardIds = await ankiClient.findCards(deckName);
+      const isAllDecks = deckName === '__all__';
+      const remoteCardIds = isAllDecks
+        ? await ankiClient.findCardsByQuery('deck:*')
+        : await ankiClient.findCards(deckName);
       if (remoteCardIds.length > 0) {
         const batchSize = 1000;
         for (let i = 0; i < remoteCardIds.length; i += batchSize) {
@@ -161,7 +165,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 5. Парсим и классифицируем карточки для возврата на клиент
-    const parsedWords = parseAndFilterCards(remoteCardsInfo, frontField, backField);
+    const parsedWords = parseAndFilterCards(remoteCardsInfo, frontField, backField, undefined, deckMappings);
 
     return NextResponse.json({
       success: true,

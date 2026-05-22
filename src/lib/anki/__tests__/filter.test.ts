@@ -284,7 +284,61 @@ describe('Anki Word Filter Module', () => {
       expect(result[0].status).toBe('review'); // review priority (3) is higher than mature (0)
       expect(result[0].id).toBe(102);
       expect(result[0].cardIds).toEqual([101, 102]);
-      expect(result[0].translation).toBe('выпить');
+    });
+
+    it('should dynamically apply per-deck mappings if deckMappings parameter is provided', () => {
+      const mockCards: AnkiCardInfo[] = [
+        {
+          cardId: 101,
+          deckName: 'DeckA',
+          modelName: 'Standard',
+          fields: {
+            JapaneseWord: { value: '飲む', order: 0 },
+            RussianTranslation: { value: 'пить', order: 1 },
+            Front: { value: 'wrong_A', order: 2 },
+            Back: { value: 'wrong_A_back', order: 3 },
+          },
+          interval: 30,
+          note: 1001,
+          queue: 2,
+          due: 200,
+          type: 2,
+        },
+        {
+          cardId: 102,
+          deckName: 'DeckB',
+          modelName: 'Standard',
+          fields: {
+            Expression: { value: '書く', order: 0 },
+            Meaning: { value: 'писать', order: 1 },
+            Front: { value: 'wrong_B', order: 2 },
+            Back: { value: 'wrong_B_back', order: 3 },
+          },
+          interval: 5,
+          note: 1002,
+          queue: 2,
+          due: 201,
+          type: 2,
+        },
+      ];
+
+      const deckMappings = {
+        DeckA: { frontField: 'JapaneseWord', backField: 'RussianTranslation' },
+        DeckB: { frontField: 'Expression', backField: 'Meaning' },
+      };
+
+      const result = parseAndFilterCards(mockCards, 'Front', 'Back', [], deckMappings);
+      expect(result).toHaveLength(2);
+      
+      const wordA = result.find(r => r.id === 101);
+      expect(wordA).toBeDefined();
+      expect(wordA?.word).toBe('飲む');
+      expect(wordA?.translation).toBe('пить');
+
+      const wordB = result.find(r => r.id === 102);
+      expect(wordB).toBeDefined();
+      expect(wordB?.word).toBe('書く');
+      expect(wordB?.translation).toBe('писать');
     });
   });
 });

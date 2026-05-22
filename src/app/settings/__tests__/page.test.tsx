@@ -349,4 +349,68 @@ describe('SettingsPage Component', () => {
       expect(localStorage.getItem('yomumogu_profile_default_daily_new_words_limit')).toBe('12');
     });
   });
+
+  it('saves and loads per-deck mappings when deck changes and inputs are modified', async () => {
+    localStorage.setItem('yomumogu_profile_default_deck_mode', 'custom');
+    const mockDecks = ['DeckX', 'DeckY'];
+    
+    vi.spyOn(globalThis, 'fetch').mockImplementation((url) => {
+      if (url.toString().includes('/api/anki/connect')) {
+        return Promise.resolve({ ok: true, json: async () => ({ connected: true }) } as Response);
+      }
+      if (url.toString().includes('/api/anki/decks')) {
+        return Promise.resolve({ ok: true, json: async () => ({ decks: mockDecks }) } as Response);
+      }
+      return Promise.reject(new Error('Unknown URL: ' + url));
+    });
+
+    render(<SettingsPage />);
+
+    // Ждем загрузки списка колод
+    let select!: HTMLSelectElement;
+    await waitFor(() => {
+      select = screen.getByLabelText('Выберите колоду Anki') as HTMLSelectElement;
+      expect(select).toBeInTheDocument();
+    });
+
+    // Выбираем DeckX
+    fireEvent.change(select, { target: { value: 'DeckX' } });
+
+    // Проверяем поля ввода (должны сброситься на дефолтные)
+    const frontInput = screen.getByLabelText('Поле слова (Японский)') as HTMLInputElement;
+    const backInput = screen.getByLabelText('Поле перевода (Русский)') as HTMLInputElement;
+    expect(frontInput.value).toBe('Front');
+    expect(backInput.value).toBe('Back');
+
+    // Редактируем поля для DeckX
+    fireEvent.change(frontInput, { target: { value: 'Kanji' } });
+    fireEvent.change(backInput, { target: { value: 'Russian' } });
+
+    // Убеждаемся, что в localStorage записались mappings
+    await waitFor(() => {
+      const mappingsStr = localStorage.getItem('yomumogu_profile_default_deck_mappings');
+      expect(mappingsStr).toBeTruthy();
+      const mappings = JSON.parse(mappingsStr!);
+      expect(mappings['DeckX']).toEqual({
+        frontField: 'Kanji',
+        backField: 'Russian',
+        audioField: '',
+        imageField: '',
+      });
+    });
+
+    // Переключаемся на DeckY
+    fireEvent.change(select, { target: { value: 'DeckY' } });
+    await waitFor(() => {
+      expect(frontInput.value).toBe('Front');
+      expect(backInput.value).toBe('Back');
+    });
+
+    // Возвращаемся на DeckX
+    fireEvent.change(select, { target: { value: 'DeckX' } });
+    await waitFor(() => {
+      expect(frontInput.value).toBe('Kanji');
+      expect(backInput.value).toBe('Russian');
+    });
+  });
 });

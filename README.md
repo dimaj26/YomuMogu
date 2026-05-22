@@ -65,7 +65,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to start pra
 
 - **Gamified Start Menu & Mascot**: Beautiful bobbing cup mascot 🍵 with adaptive Furigana speech bubble greetings depending on the user's current Japanification level. Includes 3D overlay modals for Stats (XP progress tracker) and a tabbed Help documentation guide.
 - **Refined Chat Exit & Confirmation Flow**: Supports non-destructive back navigation from the active chat directly to the dashboard, and features a dedicated "Завершить" button with a custom 3D confirmation modal to transition into the Bonus Test.
-- **Anki Deck Integration**: Automatically imports cards from selected Anki decks, prioritizing new/learning status words.
+- **Anki Deck Integration**: Automatically imports cards from selected Anki decks, prioritizing new/learning status words. Supports configuring distinct Front, Back, Audio, and Image field mappings per deck to handle custom note templates.
 - **Dynamic Scenario Generation**: Leverages Gemini to build custom practice dialogue sessions based on selected vocab.
 - **Target Word Concealment**: Persona-based AI hides target words until used by the user, prompting natural retrieval.
 - **Interactive Grammar Feedback**: Evaluates Cyrillic/Russian input errors and Japanese grammatical correctness on the fly.
