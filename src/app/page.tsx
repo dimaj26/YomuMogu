@@ -188,7 +188,7 @@ export default function HomePage() {
             🍵
           </div>
           <div className={styles.speechBubble}>
-            <span dangerouslySetInnerHTML={getMascotBubbleHtml()} />
+            <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(getMascotBubbleHtml().__html) }} />
           </div>
         </div>
 
