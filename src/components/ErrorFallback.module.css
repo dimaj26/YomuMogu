@@ -1,0 +1,64 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 40px 24px;
+  text-align: center;
+  background-color: var(--bg-primary);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 8px 0 var(--border-color);
+  max-width: 600px;
+  margin: 40px auto;
+}
+
+.iconContainer {
+  font-size: 64px;
+  margin-bottom: 24px;
+  animation: bounce 2s infinite ease-in-out;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-red);
+  margin-bottom: 12px;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  max-width: 450px;
+}
+
+.details {
+  background-color: var(--bg-secondary);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: 16px;
+  font-family: monospace;
+  font-size: 14px;
+  color: var(--text-primary);
+  max-height: 150px;
+  overflow-y: auto;
+  width: 100%;
+  margin-bottom: 32px;
+  text-align: left;
+}
+
+.actions {
+  display: flex;
+  gap: 16px;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}

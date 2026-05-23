@@ -38,6 +38,9 @@ You are an expert **TypeScript / Next.js 15** developer. Your specialty is App R
 - **Offline Local Starter Deck & Diagnostic Assessment**: Supports completely offline practice without Anki. Includes a 500-word lazy-loaded starter list (`starter_deck.json`), a fullscreen diagnostic assessment grid (grouped by JLPT and part of speech) with additive progress protection (learning/review status is locked), and FSRS scheduling prioritizing due words, daily new limits (10/day), and mature fallbacks.
 - **Granular UI FSRS Japanification**: Smart localization wrapper component (`<JpUI>`) and provider (`JpUIProvider`) driven by `ts-fsrs` mathematical scheduler. Translates up to 1 new word per session, plays a golden pulse animation, provides hover-based translation tooltips, and includes interactive feedback actions ("Забыл (Рус)" which resets progress and reverts translation to Russian, and "Знаю" which increments FSRS status) alongside global Language Switcher settings and DB reset buttons in the UI settings.
 - **Per-Deck Field Mappings**: Allows configuring distinct Front, Back, Audio, and Image field names for each individual Anki deck, stored in a namespaced local storage object. Resolves mismatched deck field mapping errors when syncing all decks under the `__all__` deck selector.
+- **CSRF Protection**: All mutating POST API routes proxying requests to local Anki are secured by same-origin Origin and Referer verification checks.
+- **Unified Error Handling Boundaries & API Hook**: Global class-based React `ErrorBoundary` and UI fallback component catch rendering exceptions, and a custom `useApiCall` hook consolidates client-side loading, error state, and retry logic.
+- **Dropdown Keyboard Accessibility (a11y)**: The LanguageSwitcher component is fully navigable using standard keyboard bindings (Arrows, Escape, Space, Enter) with active focus synchronization.
 
 ---
 
@@ -71,6 +74,7 @@ You are an expert **TypeScript / Next.js 15** developer. Your specialty is App R
 - All `localStorage` access must be guarded: `if (typeof window === 'undefined') return null`.
 - SSR hydration: defer localStorage reads to `useEffect` only.
 - Client-side database queries use Dexie.js (`lib/db.ts`). Defer all database transactions to client-side lifecycle functions (`useEffect`) or wrap them in a `typeof window !== 'undefined'` check to prevent Next.js SSR hydration errors.
+- **Japanification Provider Enforcement**: The `useJapanification` hook must strictly be used within a `<JapanificationProvider>`. It is configured to throw an error if the context is undefined, preventing isolated local state synchronization splits. All tests rendering components calling this hook must wrap the subject under test with the provider.
 
 ### [CP-3.5] API Routes
 - Every route validates required fields and returns structured JSON errors with appropriate HTTP codes.

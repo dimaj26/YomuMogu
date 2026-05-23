@@ -64,3 +64,8 @@ next-env.d.ts
 /AGENTS.md
 /ROADMAP.md
 
+.aider*
+/.agents/
+/task.txt
+
+

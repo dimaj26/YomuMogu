@@ -3,8 +3,14 @@ import { ankiClient } from '@/lib/anki/client';
 import { logger } from '@/lib/logger';
 import { GoogleGenAI } from '@google/genai';
 import { withRetry, GeminiModel } from '@/lib/gemini/retry';
+import { verifyCsrf } from '@/lib/csrf';
 
 export async function POST(request: NextRequest) {
+  if (!verifyCsrf(request)) {
+    logger.warn('[CSRF] Blocked unauthorized request to /api/anki/add');
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   if (!process.env.GEMINI_API_KEY) {
     logger.error('Запрос к /api/anki/add отклонен: GEMINI_API_KEY не задан в .env.local');
     return NextResponse.json(

@@ -97,23 +97,29 @@ src/
 | `app/api/anki/connect/route.ts` | `GET` — pings AnkiConnect, returns `{ connected: boolean }` |
 | `app/api/anki/decks/route.ts` | `GET` — returns `{ decks: string[] }` via AnkiConnect |
 | `app/api/anki/words/route.ts` | `GET ?deck=&frontField=&backField=` — returns `{ words: AnkiWord[] }` |
-| `app/api/anki/sync/route.ts` | `POST { cards, cardIds }` — syncs card review status with custom ease levels in AnkiConnect |
-| `app/api/anki/sync-db/route.ts` | `POST { profileId, deckName, frontField, backField, deckMappings?, localReviews, localWords, sessionId? }` — bilateral synchronization of cards and card review logs between IndexedDB and Anki with query deduplication, cardsInfo-based reviewType determination, lastInterval correction, and session logging |
-| `app/api/anki/setup-deck/route.ts` | `POST { deckName, modelName }` — checks/creates deck and note type structure in AnkiConnect |
-| `app/api/anki/add/route.ts` | `POST { deckName, frontField, backField, word, reading, translation, definitionHtml, history, sessionId? }` — adds new cards to Anki with Gemini-driven dynamic fields, audio TTS, Unsplash images, and session logging |
-| `app/api/gemini/sessions/route.ts` | `POST { words }` — generates 3 conversation sessions via Gemini |
-| `app/api/chat/route.ts` | `POST { scenario, targetWords, history, message, level, grammarInJapanese, collectedWords? }` | `ChatResponse` |
-| `app/api/chat/hint/route.ts` | `POST { scenario, targetWords, history, level }` — generates 3 hint variants |
-| `app/api/chat/analyze/route.ts` | `POST { history, deckName, frontField, backField }` — dialogue word/Anki auditor |
-| `hooks/useJapanification.tsx` | `JapanificationState` hook: level (0–6), XP, speed, chatLevel (1–5), `t()`, `addPoints()`, `setChatLevel()`, etc. |
+| `/app/api/anki/sync/route.ts` | `POST { cards, cardIds }` — syncs card review status with custom ease levels in AnkiConnect (CSRF protected) |
+| `/app/api/anki/sync-db/route.ts` | `POST { profileId, deckName, frontField, backField, deckMappings?, localReviews, localWords, sessionId? }` — bilateral synchronization of cards and card review logs between IndexedDB and Anki with query deduplication, cardsInfo-based reviewType determination, lastInterval correction, and session logging (CSRF protected) |
+| `/app/api/anki/setup-deck/route.ts` | `POST { deckName, modelName }` — checks/creates deck and note type structure in AnkiConnect (CSRF protected) |
+| `/app/api/anki/add/route.ts` | `POST { deckName, frontField, backField, word, reading, translation, definitionHtml, history, sessionId? }` — adds new cards to Anki with Gemini-driven dynamic fields, audio TTS, Unsplash images, and session logging (CSRF protected) |
+| `/app/api/gemini/sessions/route.ts` | `POST { words }` — generates 3 conversation sessions via Gemini |
+| `/app/api/chat/route.ts` | `POST { scenario, targetWords, history, message, level, grammarInJapanese, collectedWords? }` | `ChatResponse` |
+| `/app/api/chat/hint/route.ts` | `POST { scenario, targetWords, history, level }` — generates 3 hint variants |
+| `/app/api/chat/analyze/route.ts` | `POST { history, deckName, frontField, backField }` — dialogue word/Anki auditor |
+| `hooks/useJapanification.tsx` | `JapanificationState` hook: level (0–6), XP, speed, chatLevel (1–5), `t()`, `addPoints()`, `setChatLevel()`, etc. Memoized context value to prevent re-render storms. Enforces scope. |
+| `hooks/useApiCall.ts` | `useApiCall(apiFn, options)` — custom hook for async API requests with loading/error state tracking and retry logic |
+| `components/ErrorBoundary.tsx` | React Class-based error boundary catch-all wrapper component |
+| `components/ErrorFallback.tsx` | Friendly UI component for display in ErrorBoundary |
+| `components/ErrorFallback.module.css` | Styles for ErrorFallback component |
 | `components/JpUIProvider.tsx` | `JpUIProvider` context: loaded UI words list, session lockout of 1 upgrade, registers/reverts/confirms FSRS progress |
 | `components/JpUI.tsx` | `<JpUI>` component: smart localized wrapper, ruby furigana (reps <= 2), hovering tooltip translation and buttons |
 | `components/JpUI.module.css` | Vanilla CSS module styles for tooltips and golden pulse animations for new session upgrades |
-| `components/LanguageSwitcher.tsx` | Client component representing a compact UI Language Switcher dropdown (options: Русский, Smart, 日本語) that integrates into headers |
+| `components/LanguageSwitcher.tsx` | Client component representing a compact UI Language Switcher dropdown (options: Русский, Smart, 日本語) that integrates into headers, with full keyboard navigation (a11y) |
 | `components/LanguageSwitcher.module.css` | CSS modules styling the LanguageSwitcher dropdown in the Duolingo theme |
+| `app/error.tsx` | Next.js App Router page-level global error boundary fallback |
 | `lib/logger.ts` | `logger.debug/info/warn/error()` — console + file append to `logs/app.log` |
 | `lib/profile.ts` | `getProfileItem`, `setProfileItem`, `removeProfileItem` (namespaced), `getProfilesList`, `createProfile`, `deleteProfile`, `getActiveProfileId`, `setActiveProfileId` |
 | `lib/db.ts` | Client-side IndexedDB database (Dexie.js) for words and reviews with bilateral synchronization coordinator and FSRS state management |
+| `lib/csrf.ts` | CSRF verification: validates `Origin`/`Referer` headers against `nextUrl.origin` on mutating POST requests |
 | `lib/anki/client.ts` | `AnkiConnectClient`: `checkConnection()`, `getDeckNames()`, `findCards()`, `getCardsInfo()`, `getReviewsOfCards()` |
 | `lib/anki/filter.ts` | `filterAndClassifyCards()` — maps raw Anki card data to `AnkiWord[]` with status |
 | `lib/anki/fsrs.ts` | FSRS mathematical scheduler wrapper around `ts-fsrs` with day boundary alignment to 4:00 AM local time |
@@ -541,4 +547,4 @@ npm run test:integration # Integration tests (real Gemini API, needs GEMINI_API_
 
 ### [PL-9.4] Current Test Count
 
-152 unit tests across 21 test files. All passing.
+162 unit tests across 24 test files. All passing.

@@ -206,14 +206,14 @@ function useJapanificationInternal(): JapanificationContextType {
     percentage = Math.max(0, Math.min(100, Math.round((progress / total) * 100)));
   }
 
-  const stateWithDerived: JapanificationState = {
+  const stateWithDerived: JapanificationState = React.useMemo(() => ({
     ...state,
     level,
     percentage,
     speed: 'normal',
-  };
+  }), [state, level, percentage]);
 
-  return {
+  const value = React.useMemo(() => ({
     state: stateWithDerived,
     t,
     shouldShowTranslation,
@@ -226,7 +226,22 @@ function useJapanificationInternal(): JapanificationContextType {
     setChatLevel,
     toggleAlwaysShowTranslations,
     resetProgress,
-  };
+  }), [
+    stateWithDerived,
+    t,
+    shouldShowTranslation,
+    shouldGrammarBeJapanese,
+    shouldHintsBeJapanese,
+    addPoints,
+    trackWordUsed,
+    completeSession,
+    setUiMode,
+    setChatLevel,
+    toggleAlwaysShowTranslations,
+    resetProgress
+  ]);
+
+  return value;
 }
 
 export function JapanificationProvider({ children }: { children: React.ReactNode }) {
@@ -240,6 +255,8 @@ export function JapanificationProvider({ children }: { children: React.ReactNode
 
 export function useJapanification(): JapanificationContextType {
   const context = useContext(JapanificationContext);
-  const local = useJapanificationInternal();
-  return context || local;
+  if (context === undefined) {
+    throw new Error('useJapanification must be used within a JapanificationProvider');
+  }
+  return context;
 }

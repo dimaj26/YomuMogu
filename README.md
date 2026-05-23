@@ -66,11 +66,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to start pra
 - **Gamified Start Menu & Mascot**: Beautiful bobbing cup mascot 🍵 with adaptive Furigana speech bubble greetings depending on the user's current Japanification level. Includes 3D overlay modals for Stats (XP progress tracker) and a tabbed Help documentation guide.
 - **Refined Chat Exit & Confirmation Flow**: Supports non-destructive back navigation from the active chat directly to the dashboard, and features a dedicated "Завершить" button with a custom 3D confirmation modal to transition into the Bonus Test.
 - **Anki Deck Integration**: Automatically imports cards from selected Anki decks, prioritizing new/learning status words. Supports configuring distinct Front, Back, Audio, and Image field mappings per deck to handle custom note templates.
-- **Dynamic Scenario Generation**: Leverages Gemini to build custom practice dialogue sessions based on selected vocab.
-- **Target Word Concealment**: Persona-based AI hides target words until used by the user, prompting natural retrieval.
-- **Interactive Grammar Feedback**: Evaluates Cyrillic/Russian input errors and Japanese grammatical correctness on the fly.
-- **Furigana Rendering**: Multi-level furigana display rules using `<ruby>` tags based on user preference.
-- **Language Switcher Dropdown**: Compact 3D Duolingo-styled global language switcher dropdown in the header, letting the user switch between Russian (`ru`), Smart progressive immersion (`smart`), and Japanese (`ja`) modes.
+- **CSRF Protection**: All mutating API endpoints proxying requests to local Anki are protected by strict Origin/Referer verification checks.
+- **Unified Error Handling Boundaries & API Hook**: Reusable React `ErrorBoundary` and companion `ErrorFallback` UI wrap rendering exceptions, and a custom `useApiCall` hook handles loading, error, and retry state management on client fetches.
+- **Language Switcher Dropdown (a11y)**: Compact 3D Duolingo-styled global language switcher dropdown in the header, fully keyboard navigable (Arrows, Space, Enter, Escape) with active focus synchronization.
 - **Granular UI FSRS Japanification**: Under-the-hood smart localization wrapper component (`<JpUI>`) and provider (`JpUIProvider`) driven by the `ts-fsrs` mathematical scheduler. In Smart mode, it dynamically translates UI elements (up to 1 new word per session), plays gold pulse animations on new translations, provides hover translation tooltips, and supports interactive FSRS assessments ("Забыл" / "Знаю") directly in the UI. All user-facing "Japanification" branding is hidden (referred to as Immersion / "Погружение" or "Уровень" in Russian).
 - **Chat Session Persistence**: Automatically serializes and restores complete chat history, targets, and progress states across page reloads and navigation. In-progress sessions can be resumed via homepage or settings CTA buttons.
 - **Multi-Profile Isolation**: Isolates learning progress, XP statistics, imported words, and active chat states under unique profile namespaces to support multiple local users.
@@ -93,7 +91,9 @@ src/
     chat/                 # Conversation UI & Bonus/Sync flow
     settings/             # Deck imports, session list, XP profiles
     api/                  # Proxy routes to Gemini & AnkiConnect
-  hooks/                  # Custom state hooks (JapanificationState)
+    error.tsx             # Global layout error fallback page
+  components/             # UI Components (LanguageSwitcher, JpUI, ErrorBoundary)
+  hooks/                  # Custom state hooks (JapanificationState, useApiCall)
   lib/
     anki/                 # AnkiConnect client, card filtering, & FSRS scheduler
     dict/                 # SQLite dictionary lookup script and helper
@@ -101,6 +101,7 @@ src/
     db.ts                 # Client-side IndexedDB database (Dexie.js)
     logger.ts             # Structured log writer
     profile.ts            # Namespaced profile storage helpers
+    csrf.ts               # CSRF verification helper
 ```
 
 ---

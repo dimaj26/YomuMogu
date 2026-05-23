@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useJapanification } from '../useJapanification';
+import { useJapanification, JapanificationProvider } from '../useJapanification';
 
 // Мокаем localStorage
 const localStorageMock = (() => {
@@ -22,7 +22,7 @@ describe('useJapanification', () => {
   });
 
   it('should initialize with default state', () => {
-    const { result } = renderHook(() => useJapanification());
+    const { result } = renderHook(() => useJapanification(), { wrapper: JapanificationProvider });
     expect(result.current.state.level).toBe(0);
     expect(result.current.state.percentage).toBe(0);
     expect(result.current.state.speed).toBe('normal');
@@ -30,17 +30,17 @@ describe('useJapanification', () => {
   });
 
   it('should return Russian text at level 0', () => {
-    const { result } = renderHook(() => useJapanification());
+    const { result } = renderHook(() => useJapanification(), { wrapper: JapanificationProvider });
     expect(result.current.t('Отправить', '送信')).toBe('Отправить');
   });
 
   it('should show translation by default at level 0', () => {
-    const { result } = renderHook(() => useJapanification());
+    const { result } = renderHook(() => useJapanification(), { wrapper: JapanificationProvider });
     expect(result.current.shouldShowTranslation()).toBe(true);
   });
 
   it('should add points and persist to localStorage', () => {
-    const { result } = renderHook(() => useJapanification());
+    const { result } = renderHook(() => useJapanification(), { wrapper: JapanificationProvider });
     
     act(() => {
       result.current.addPoints(10);
@@ -51,7 +51,7 @@ describe('useJapanification', () => {
   });
 
   it('should track word usage', () => {
-    const { result } = renderHook(() => useJapanification());
+    const { result } = renderHook(() => useJapanification(), { wrapper: JapanificationProvider });
 
     act(() => {
       result.current.trackWordUsed(3);
@@ -62,7 +62,7 @@ describe('useJapanification', () => {
   });
 
   it('should complete session and add bonus points', () => {
-    const { result } = renderHook(() => useJapanification());
+    const { result } = renderHook(() => useJapanification(), { wrapper: JapanificationProvider });
 
     act(() => {
       result.current.completeSession();
@@ -73,7 +73,7 @@ describe('useJapanification', () => {
   });
 
   it('should level up after reaching threshold', () => {
-    const { result } = renderHook(() => useJapanification());
+    const { result } = renderHook(() => useJapanification(), { wrapper: JapanificationProvider });
 
     act(() => {
       result.current.addPoints(20); // normal speed, level 1 threshold = 20
@@ -83,7 +83,7 @@ describe('useJapanification', () => {
   });
 
   it('should change UI mode and persist to localStorage', () => {
-    const { result } = renderHook(() => useJapanification());
+    const { result } = renderHook(() => useJapanification(), { wrapper: JapanificationProvider });
 
     expect(result.current.state.uiMode).toBe('smart');
 
@@ -96,7 +96,7 @@ describe('useJapanification', () => {
   });
 
   it('should reset progress', () => {
-    const { result } = renderHook(() => useJapanification());
+    const { result } = renderHook(() => useJapanification(), { wrapper: JapanificationProvider });
 
     act(() => {
       result.current.addPoints(50);
@@ -115,7 +115,7 @@ describe('useJapanification', () => {
   });
 
   it('should toggle always show translations', () => {
-    const { result } = renderHook(() => useJapanification());
+    const { result } = renderHook(() => useJapanification(), { wrapper: JapanificationProvider });
 
     expect(result.current.state.showTranslationsAlways).toBe(false);
 
@@ -127,7 +127,7 @@ describe('useJapanification', () => {
   });
 
   it('should return Japanese text when uiMode is ja', () => {
-    const { result } = renderHook(() => useJapanification());
+    const { result } = renderHook(() => useJapanification(), { wrapper: JapanificationProvider });
 
     expect(result.current.t('Отправить', '送信')).toBe('Отправить');
 
@@ -139,12 +139,12 @@ describe('useJapanification', () => {
   });
 
   it('should initialize chatLevel to 1', () => {
-    const { result } = renderHook(() => useJapanification());
+    const { result } = renderHook(() => useJapanification(), { wrapper: JapanificationProvider });
     expect(result.current.state.chatLevel).toBe(1);
   });
 
   it('should change chatLevel and persist to localStorage', () => {
-    const { result } = renderHook(() => useJapanification());
+    const { result } = renderHook(() => useJapanification(), { wrapper: JapanificationProvider });
 
     act(() => {
       result.current.setChatLevel(3);

@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import SettingsPage from '../page';
+import { JapanificationProvider } from '@/hooks/useJapanification';
 
 // Мокаем lucide-react, так как некоторые иконки могут некорректно рендериться в jsdom
 vi.mock('lucide-react', () => ({
@@ -64,14 +65,14 @@ describe('SettingsPage Component', () => {
     // Мокаем fetch для бесконечного ожидания
     vi.spyOn(globalThis, 'fetch').mockImplementation(() => new Promise(() => {}));
 
-    render(<SettingsPage />);
+    render(<JapanificationProvider><SettingsPage /></JapanificationProvider>);
 
     expect(screen.getByRole('heading', { name: 'Настройки', level: 1 })).toBeInTheDocument();
     expect(screen.getByText('Проверка...')).toBeInTheDocument();
   });
 
   it('switches tabs correctly', async () => {
-    render(<SettingsPage />);
+    render(<JapanificationProvider><SettingsPage /></JapanificationProvider>);
 
     // По умолчанию вкладка Импорт & Anki
     expect(screen.getByText('Источник слов и режим обучения')).toBeInTheDocument();
@@ -102,7 +103,7 @@ describe('SettingsPage Component', () => {
       json: async () => ({ connected: false, error: 'Anki не запущен' }),
     } as Response);
 
-    render(<SettingsPage />);
+    render(<JapanificationProvider><SettingsPage /></JapanificationProvider>);
 
     await waitFor(() => {
       expect(screen.getByText('Нет связи')).toBeInTheDocument();
@@ -139,7 +140,7 @@ describe('SettingsPage Component', () => {
       return Promise.reject(new Error('Unknown URL'));
     });
 
-    render(<SettingsPage />);
+    render(<JapanificationProvider><SettingsPage /></JapanificationProvider>);
 
     // Ждем подключения
     await waitFor(() => {
@@ -181,7 +182,7 @@ describe('SettingsPage Component', () => {
       return Promise.reject(new Error('Unknown URL: ' + url));
     });
 
-    render(<SettingsPage />);
+    render(<JapanificationProvider><SettingsPage /></JapanificationProvider>);
 
     // Ждем появления кнопки импорта
     const importBtn = await screen.findByRole('button', { name: 'Импортировать слова' });
@@ -242,7 +243,7 @@ describe('SettingsPage Component', () => {
       return Promise.reject(new Error('Unknown URL'));
     });
 
-    render(<SettingsPage />);
+    render(<JapanificationProvider><SettingsPage /></JapanificationProvider>);
 
     // Импортируем слова
     const importBtn = await screen.findByRole('button', { name: 'Импортировать слова' });
@@ -296,7 +297,7 @@ describe('SettingsPage Component', () => {
       return Promise.reject(new Error('Unknown URL'));
     });
 
-    render(<SettingsPage />);
+    render(<JapanificationProvider><SettingsPage /></JapanificationProvider>);
 
     // Ждем загрузки и рендеринга кнопки продолжения
     await waitFor(() => {
@@ -310,7 +311,7 @@ describe('SettingsPage Component', () => {
   it('allows choosing daily new words quota preset and entering custom limit', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(() => new Promise(() => {}));
 
-    render(<SettingsPage />);
+    render(<JapanificationProvider><SettingsPage /></JapanificationProvider>);
 
     // Переходим на вкладку Профиль
     const profileTabBtn = screen.getByRole('button', { name: /Профиль/ });
@@ -364,7 +365,7 @@ describe('SettingsPage Component', () => {
       return Promise.reject(new Error('Unknown URL: ' + url));
     });
 
-    render(<SettingsPage />);
+    render(<JapanificationProvider><SettingsPage /></JapanificationProvider>);
 
     // Ждем загрузки списка колод
     let select!: HTMLSelectElement;

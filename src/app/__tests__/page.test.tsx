@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import HomePage from '../page';
+import { JapanificationProvider } from '@/hooks/useJapanification';
 
 // Mock Lucide icons
 vi.mock('lucide-react', () => ({
@@ -45,7 +46,7 @@ describe('HomePage Component', () => {
   });
 
   it('renders landing page with Start Practice button when no active session', async () => {
-    render(<HomePage />);
+    render(<JapanificationProvider><HomePage /></JapanificationProvider>);
 
     // Wait for the loading state to complete
     await waitFor(() => {
@@ -72,7 +73,7 @@ describe('HomePage Component', () => {
     localStorage.setItem('yomumogu_profile_default_active_session', JSON.stringify(activeSession));
     localStorage.setItem('yomumogu_profile_default_chat_state_test-session', JSON.stringify(chatState));
 
-    render(<HomePage />);
+    render(<JapanificationProvider><HomePage /></JapanificationProvider>);
 
     await waitFor(() => {
       expect(screen.getByText('Продолжить: В ресторане')).toBeInTheDocument();
@@ -83,7 +84,7 @@ describe('HomePage Component', () => {
   });
 
   it('opens and closes profile modal', async () => {
-    render(<HomePage />);
+    render(<JapanificationProvider><HomePage /></JapanificationProvider>);
 
     await waitFor(() => {
       expect(screen.getByText('Начать практику')).toBeInTheDocument();
@@ -104,7 +105,7 @@ describe('HomePage Component', () => {
   });
 
   it('opens and closes help modal, switches tabs', async () => {
-    render(<HomePage />);
+    render(<JapanificationProvider><HomePage /></JapanificationProvider>);
 
     await waitFor(() => {
       expect(screen.getByText('Начать практику')).toBeInTheDocument();

@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ChatPage from '../page';
+import { JapanificationProvider } from '@/hooks/useJapanification';
 
 // Mock Lucide icons
 vi.mock('lucide-react', () => ({
@@ -62,7 +63,7 @@ describe('ChatPage Component', () => {
       }),
     } as Response);
 
-    render(<ChatPage />);
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
 
     await waitFor(() => {
       expect(screen.getByText('Тема тренировки')).toBeInTheDocument();
@@ -81,7 +82,7 @@ describe('ChatPage Component', () => {
       json: async () => ({ reply: 'こんにちは！' }),
     } as Response);
 
-    render(<ChatPage />);
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
 
     await waitFor(() => {
       expect(screen.getByText('Тема тренировки')).toBeInTheDocument();
@@ -106,7 +107,7 @@ describe('ChatPage Component', () => {
       json: async () => ({ reply: 'こんにちは！' }),
     } as Response);
 
-    render(<ChatPage />);
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
 
     await waitFor(() => {
       expect(screen.getByText('Тема тренировки')).toBeInTheDocument();
@@ -140,7 +141,7 @@ describe('ChatPage Component', () => {
       json: async () => ({ reply: 'こんにちは！' }),
     } as Response);
 
-    render(<ChatPage />);
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
 
     await waitFor(() => {
       expect(screen.getByText('Тема тренировки')).toBeInTheDocument();

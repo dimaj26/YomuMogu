@@ -1,8 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { ankiClient } from '@/lib/anki/client';
 import { logger } from '@/lib/logger';
+import { verifyCsrf } from '@/lib/csrf';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  if (!verifyCsrf(request)) {
+    logger.warn('[CSRF] Blocked unauthorized request to /api/anki/setup-deck');
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   try {
     logger.info('Начало автоматической настройки колоды и шаблона YomuMogu');
     

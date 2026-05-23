@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ankiClient } from '@/lib/anki/client';
 import { logger } from '@/lib/logger';
+import { verifyCsrf } from '@/lib/csrf';
 
 export async function POST(request: NextRequest) {
+  if (!verifyCsrf(request)) {
+    logger.warn('[CSRF] Blocked unauthorized request to /api/anki/sync');
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   try {
     const body = await request.json();
     const { cardIds, cards } = body;
