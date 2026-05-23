@@ -43,7 +43,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to start pra
   ```powershell
   npm run test
   ```
-- **Integration Tests** (online, uses real Gemini API key):
+- **Integration Tests** (online, uses real Gemini API key; requires local Anki Desktop running with AnkiConnect active to run the full suite, otherwise Anki sync parts will be skipped):
   ```powershell
   npm run test:integration
   ```
@@ -53,9 +53,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to start pra
   ```
 
 > [!WARNING]
-> **Anki Integration Testing Guidelines & Safety:**
+> **Anki Integration Testing Requirements & Safety:**
 > - Running integration tests (`npm run test:integration` or `npm run test:anki`) connects directly to your active Anki Desktop profile via AnkiConnect.
-> - The tests create a temporary deck named `Test YomuMogu`, add test cards, perform bilateral sync, and automatically delete the deck upon completion.
+> - **Important Requirement**: For the integration tests to run completely and verify real synchronization logic, **Anki Desktop must be open and running** on your local machine with the AnkiConnect plugin active on port 8765. If Anki is offline, the Anki integration tests will be skipped automatically to prevent test suite failure.
 > - **Strongly Recommended**: Switch to an isolated, unsynced Anki profile (e.g., `YomuMoguTest`) in Anki Desktop before running these tests. Do not run tests on your primary study profile to avoid polluting your card review history or syncing test garbage to your AnkiWeb account.
 
 

@@ -4,6 +4,8 @@ import fakeIndexedDB, { IDBKeyRange } from 'fake-indexeddb';
 import { ankiClient } from '../client';
 import { POST as syncDbPost } from '@/app/api/anki/sync-db/route';
 import { NextRequest } from 'next/server';
+import { calculateNextFsrsState } from '../fsrs';
+
 
 // Настройка полифилла IndexedDB для Dexie в окружении Node/JSDOM ДО импорта Dexie
 globalThis.indexedDB = fakeIndexedDB;
@@ -213,7 +215,150 @@ describe.runIf(ankiConnected)('Anki Bilateral Sync Real Integration Test', () =>
     expect(sampleWord).toBeDefined();
     expect(sampleWord?.word).toBe('ТестСлово50[тестчтение50]');
   }, 45000);
+
+  it('should correctly replay three distinct card histories (stable, fluctuating, forgotten) and schedule them non-linearly', async () => {
+    // 1. Создаем 3 карточки в Anki
+    const testCards = [
+      { deckName: testDeckName, modelName: 'Basic', fields: { Front: '車テスト一[くるまてすといち]', Back: 'машина' } },
+      { deckName: testDeckName, modelName: 'Basic', fields: { Front: '猫テスト二[ねこてすとに]', Back: 'кошка' } },
+      { deckName: testDeckName, modelName: 'Basic', fields: { Front: '水テスト三[みずてすとさん]', Back: 'вода' } }
+    ];
+    const cardIds = await ankiClient.addNotes(testCards);
+    expect(cardIds).toHaveLength(3);
+    const [card1Id, card2Id, card3Id] = cardIds;
+
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    const now = Date.now();
+
+    // Вспомогательная функция для получения уникального таймстампа для отзывов
+    // Добавляем инкрементальное смещение, чтобы исключить UNIQUE constraint в Anki Connect (revlog.id)
+    let offsetCounter = 0;
+    const getUniqueTime = (daysAgo: number) => {
+      offsetCounter += 1;
+      return now - daysAgo * oneDayMs + offsetCounter * 1000;
+    };
+
+    // 2. Генерируем историю повторений в Anki
+    const reviews: Array<[number, number, number, number, number, number, number, number, number]> = [];
+
+    // Карточка 1: Стабильное прохождение (Good, Good, Good, Good)
+    reviews.push(
+      [getUniqueTime(90), card1Id, -1, 3, 3, 0, 0, 5000, 0],   // Good, ivl = 3
+      [getUniqueTime(87), card1Id, -1, 3, 12, 3, 0, 5000, 1],  // Good, ivl = 12
+      [getUniqueTime(75), card1Id, -1, 3, 30, 12, 0, 5000, 1], // Good, ivl = 30
+      [getUniqueTime(45), card1Id, -1, 3, 75, 30, 0, 5000, 1]  // Good, ivl = 75
+    );
+
+    // Карточка 2: Колеблющееся прохождение (Good, Hard, Good, Hard, Good)
+    reviews.push(
+      [getUniqueTime(90), card2Id, -1, 3, 3, 0, 0, 5000, 0],   // Good, ivl = 3
+      [getUniqueTime(87), card2Id, -1, 2, 4, 3, 0, 5000, 1],   // Hard, ivl = 4
+      [getUniqueTime(83), card2Id, -1, 3, 10, 4, 0, 5000, 1],  // Good, ivl = 10
+      [getUniqueTime(73), card2Id, -1, 2, 12, 10, 0, 5000, 1], // Hard, ivl = 12
+      [getUniqueTime(61), card2Id, -1, 3, 28, 12, 0, 5000, 1]  // Good, ivl = 28
+    );
+
+    // Карточка 3: Проблемная/часто забываемая (Good, Again, Good, Again, Good, Again)
+    reviews.push(
+      [getUniqueTime(90), card3Id, -1, 3, 3, 0, 0, 5000, 0],   // Good, ivl = 3
+      [getUniqueTime(87), card3Id, -1, 1, 0, 3, 0, 5000, 2],   // Again, ivl = 0
+      [getUniqueTime(86), card3Id, -1, 3, 1, 0, 0, 5000, 0],   // Good, ivl = 1
+      [getUniqueTime(85), card3Id, -1, 1, 0, 1, 0, 5000, 2],   // Again, ivl = 0
+      [getUniqueTime(84), card3Id, -1, 3, 1, 0, 0, 5000, 0],   // Good, ivl = 1
+      [getUniqueTime(60), card3Id, -1, 1, 0, 1, 0, 5000, 2]    // Again, ivl = 0
+    );
+
+
+    console.log('Вставка истории повторений в Anki...');
+    await ankiClient.insertReviews(reviews);
+
+    // 3. Синхронизируем базу данных
+    console.log('Синхронизация трех карточек с историей...');
+    const syncResult = await syncLocalDatabaseWithAnki(profileId, testDeckName);
+    expect(syncResult.success).toBe(true);
+
+    // 4. Проверяем локальное состояние в Dexie
+    const localWords = await getLocalWords(profileId, testDeckName);
+    
+    const word1 = localWords.find(w => w.id === card1Id);
+    const word2 = localWords.find(w => w.id === card2Id);
+    const word3 = localWords.find(w => w.id === card3Id);
+
+    expect(word1).toBeDefined();
+    expect(word2).toBeDefined();
+    expect(word3).toBeDefined();
+
+    expect(word1?.reps).toBe(4);
+    expect(word2?.reps).toBe(5);
+    expect(word3?.reps).toBe(6);
+
+    // 5. Выполняем FSRS-расчет для каждой карты с оценкой Good (3) СЕГОДНЯ
+    const dbWord1 = await db.words.get([profileId, card1Id]);
+    const dbWord2 = await db.words.get([profileId, card2Id]);
+    const dbWord3 = await db.words.get([profileId, card3Id]);
+
+    const res1 = calculateNextFsrsState(dbWord1, 3, new Date());
+    const res2 = calculateNextFsrsState(dbWord2, 3, new Date());
+    const res3 = calculateNextFsrsState(dbWord3, 3, new Date());
+
+    console.log(`Новые интервалы - Стабильная: ${res1.newInterval}д, Колеблющаяся: ${res2.newInterval}д, Проблемная: ${res3.newInterval}д`);
+
+    // Сравниваем нелинейность интервалов: стабильная > колеблющаяся > проблемная
+    expect(res1.newInterval).toBeGreaterThan(res2.newInterval);
+    expect(res2.newInterval).toBeGreaterThan(res3.newInterval);
+    
+    // Проблемная карта из-за частых забываний (последнее было Again) должна получить очень маленький интервал (1-3 дня)
+    expect(res3.newInterval).toBeLessThanOrEqual(3);
+
+    // 6. Записываем отзывы локально и синхронизируем с Anki
+    await db.words.put(res1.updatedWord);
+    await db.words.put(res2.updatedWord);
+    await db.words.put(res3.updatedWord);
+
+    await addLocalReview({
+      profileId,
+      cardId: card1Id,
+      ease: 3,
+      interval: res1.newInterval,
+      lastInterval: dbWord1.interval,
+      duration: 3000,
+      timestamp: Date.now(),
+      synced: 0
+    });
+
+    await addLocalReview({
+      profileId,
+      cardId: card2Id,
+      ease: 3,
+      interval: res2.newInterval,
+      lastInterval: dbWord2.interval,
+      duration: 3000,
+      timestamp: Date.now() + 10,
+      synced: 0
+    });
+
+    await addLocalReview({
+      profileId,
+      cardId: card3Id,
+      ease: 3,
+      interval: res3.newInterval,
+      lastInterval: dbWord3.interval,
+      duration: 3000,
+      timestamp: Date.now() + 20,
+      synced: 0
+    });
+
+    const syncResult2 = await syncLocalDatabaseWithAnki(profileId, testDeckName);
+    expect(syncResult2.success).toBe(true);
+
+    // 7. Проверяем, что в Anki интервалы установились в соответствии с нашими нелинейными расчетами
+    const cardsInfo = await ankiClient.getCardsInfo([card1Id, card2Id, card3Id]);
+    expect(cardsInfo[0].interval).toBe(res1.newInterval);
+    expect(cardsInfo[1].interval).toBe(res2.newInterval);
+    expect(cardsInfo[2].interval).toBe(res3.newInterval);
+  }, 40000);
 });
+
 
 // Если Anki недоступен, регистрируем заглушку, чтобы тест завершался успехом
 describe.skipIf(ankiConnected)('Anki Bilateral Sync Integration Test (Skipped)', () => {

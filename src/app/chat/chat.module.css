@@ -716,6 +716,14 @@
   flex-shrink: 0;
 }
 
+.activeCheck {
+  font-size: 14px;
+  user-select: none;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
 .wordInfoLabel {
   display: flex;
   align-items: baseline;
@@ -1076,5 +1084,35 @@
 .modalActions {
   display: flex;
   gap: 12px;
+}
+
+.individualBtn {
+  font-size: 12px;
+  padding: 6px 10px;
+  letter-spacing: 0.5px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.individualBtn svg {
+  margin: 0 !important;
+}
+
+.individualBtn .spinner {
+  animation: spin 1s linear infinite;
+}
+
+.individualError {
+  color: var(--color-red);
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 4px;
+  padding: 8px 16px;
+  text-align: left;
+  border-top: 2px solid var(--border-color);
+  background-color: #fff8f8;
 }
 

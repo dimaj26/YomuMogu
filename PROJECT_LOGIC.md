@@ -63,6 +63,8 @@ src/
     LanguageSwitcher.tsx  # Compact global Language Switcher dropdown component
     LanguageSwitcher.module.css # Styles for LanguageSwitcher dropdown
   lib/
+    db.ts               # Client-side IndexedDB database (Dexie.js)
+    __tests__/db.test.ts # Unit tests for local IndexedDB operations and safety guards
     logger.ts             # Structured logger (debug/info/warn/error → logs/)
     profile.ts            # localStorage profile helpers + multi-profile management
     anki/
@@ -96,9 +98,9 @@ src/
 | `app/api/anki/decks/route.ts` | `GET` — returns `{ decks: string[] }` via AnkiConnect |
 | `app/api/anki/words/route.ts` | `GET ?deck=&frontField=&backField=` — returns `{ words: AnkiWord[] }` |
 | `app/api/anki/sync/route.ts` | `POST { cards, cardIds }` — syncs card review status with custom ease levels in AnkiConnect |
-| `app/api/anki/sync-db/route.ts` | `POST { profileId, deckName, frontField, backField, localReviews, localWords }` — bilateral synchronization of cards and card review logs between IndexedDB and Anki with query deduplication |
+| `app/api/anki/sync-db/route.ts` | `POST { profileId, deckName, frontField, backField, deckMappings?, localReviews, localWords, sessionId? }` — bilateral synchronization of cards and card review logs between IndexedDB and Anki with query deduplication, cardsInfo-based reviewType determination, lastInterval correction, and session logging |
 | `app/api/anki/setup-deck/route.ts` | `POST { deckName, modelName }` — checks/creates deck and note type structure in AnkiConnect |
-| `app/api/anki/add/route.ts` | `POST { deckName, frontField, backField, word, reading, translation, definitionHtml, history }` — adds new cards to Anki with Gemini-driven dynamic fields, audio TTS, and Unsplash images |
+| `app/api/anki/add/route.ts` | `POST { deckName, frontField, backField, word, reading, translation, definitionHtml, history, sessionId? }` — adds new cards to Anki with Gemini-driven dynamic fields, audio TTS, Unsplash images, and session logging |
 | `app/api/gemini/sessions/route.ts` | `POST { words }` — generates 3 conversation sessions via Gemini |
 | `app/api/chat/route.ts` | `POST { scenario, targetWords, history, message, level, grammarInJapanese, collectedWords? }` | `ChatResponse` |
 | `app/api/chat/hint/route.ts` | `POST { scenario, targetWords, history, level }` — generates 3 hint variants |
@@ -325,9 +327,9 @@ All Anki routes proxy requests to AnkiConnect at `http://localhost:8765`.
 | `/api/anki/decks` | GET | — | `{ decks: string[] }` |
 | `/api/anki/words` | GET | `?deck=&frontField=&backField=&mappings=` | `{ words: AnkiWord[] }` |
 | `/api/anki/sync` | POST | `{ cards?: Array<{ cardId: number; ease: number }>, cardIds?: number[] }` | `{ success: boolean }` |
-| `/api/anki/sync-db` | POST | `{ profileId, deckName, frontField?, backField?, deckMappings?, localReviews?, localWords? }` | `{ success: boolean, remoteCards: AnkiWord[], remoteReviews: Record<number, AnkiReview[]> }` |
+| `/api/anki/sync-db` | POST | `{ profileId, deckName, frontField?, backField?, deckMappings?, localReviews?, localWords?, sessionId? }` | `{ success: boolean, remoteCards: AnkiWord[], remoteReviews: Record<number, AnkiReview[]> }` |
 | `/api/anki/setup-deck` | POST | `{ deckName?, modelName? }` | `{ success: boolean, deckName: string, modelName: string }` |
-| `/api/anki/add` | POST | `{ deckName, frontField, backField, word, reading, translation, definitionHtml, history?: Array<{ role: string; text: string }> }` | `{ success: boolean }` |
+| `/api/anki/add` | POST | `{ deckName, frontField, backField, word, reading, translation, definitionHtml, history?: Array<{ role: string; text: string }>, sessionId? }` | `{ success: boolean }` |
 
 ### [PL-4.2] Gemini Routes
 
@@ -459,6 +461,8 @@ To ensure state parity and permit offline study without losing scheduling progre
 2. **Bulk Querying**: Rather than executing individual `getReviewsOfCard` requests concurrently via `Promise.all` which triggers connection bottlenecks in AnkiConnect, a single `getReviewsOfCards` bulk request is used.
 3. **FSRS Parameter Approximation**: When caching imported cards that have an interval in Anki (`interval > 0`) but no remote reviews history, the database approximates FSRS state by initializing `stability = card.interval`, `difficulty = 5.0` (standard intermediate difficulty), and `reps = 1` (simulated initial review) on the first sync. This prevents ts-fsrs from resetting mature card intervals down to 1-3 days on the first local review.
 4. **Day Boundary Alignment**: The scheduler's daily boundary alignment function (`alignToDayBoundary`) sets the review date timestamp to `04:00 AM` local time instead of midnight, matching the default new day boundary in Anki Desktop.
+5. **ReviewType Determination**: When inserting reviews into Anki, the sync engine queries `getCardsInfo` for each synced card to determine the correct `reviewType` (0=Learn, 1=Review, 2=Relearn) based on the card's actual Anki state (interval/queue), rather than inferring from `lastInterval`. This prevents falsely tagging mature card reviews as "Learn" steps, which would corrupt FSRS replay stability calculations.
+6. **LastInterval Correction**: If a local review has `lastInterval=0` but the card in Anki has `interval > 0`, the sync engine corrects `lastInterval` to the Anki card's actual interval. This prevents FSRS from treating an established card's review as a first-time learning step.
 
 ---
 
@@ -520,13 +524,14 @@ To hide user-facing "Japanification" branding, the system is referred to as "Lan
 ### [PL-9.2] Commands
 ```powershell
 npm run test             # Unit tests (mocked, offline)
-npm run test:integration # Integration tests (real Gemini API, needs GEMINI_API_KEY)
+npm run test:integration # Integration tests (real Gemini API, needs GEMINI_API_KEY and active local Anki Desktop)
 ```
 
 ### [PL-9.3] Test Categories
 | Category | Location | Mock strategy |
 |---|---|---|
 | Anki Client | `lib/anki/__tests__/` | Mock `fetch` |
+| Local Database | `lib/__tests__/` | `fake-indexeddb` polyfill |
 | Anki Filter | `lib/anki/__tests__/` | Pure function, no mocks |
 | Gemini Client | `lib/gemini/__tests__/` | Mock `@google/genai` |
 | API Routes | `app/api/*/__tests__/` | Mock service singletons |
@@ -536,4 +541,4 @@ npm run test:integration # Integration tests (real Gemini API, needs GEMINI_API_
 
 ### [PL-9.4] Current Test Count
 
-133 unit tests across 20 test files. All passing.
+152 unit tests across 21 test files. All passing.

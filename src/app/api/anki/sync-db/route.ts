@@ -16,22 +16,29 @@ export async function POST(request: NextRequest) {
       localWords = [] 
     } = body;
 
+    const sessionId = body.sessionId;
+    const logPrefix = sessionId ? `[Session: ${sessionId}] ` : '';
+
     if (!profileId || !deckName) {
+      logger.warn(`${logPrefix}[Step: Validation] Пропущена синхронизация: отсутствуют profileId или deckName`);
       return NextResponse.json(
         { error: 'Параметры profileId и deckName обязательны' },
         { status: 400 }
       );
     }
 
-    logger.info(`Начало двусторонней синхронизации для колоды "${deckName}" (профиль: ${profileId})`);
+    logger.info(`${logPrefix}[Step: Start] Начало двусторонней синхронизации для колоды "${deckName}" (профиль: ${profileId})`);
 
     // 1. Записываем несинхронизированные локальные отзывы в Anki
     if (localReviews.length > 0) {
-      logger.info(`Синхронизация локальных отзывов с Anki: отправка ${localReviews.length} записей`);
+      logger.info(`${logPrefix}[Step: ReviewsSync] Синхронизация локальных отзывов с Anki: отправка ${localReviews.length} записей`);
       
       // Получаем уже существующие отзывы в Anki для этих карт, чтобы избежать дублирования
       const localCardIds: number[] = Array.from(new Set(localReviews.map((r: any) => Number(r.cardId))));
       const existingTimestamps = new Set<number>();
+      
+      // Получаем информацию о картах из Anki для определения правильного reviewType
+      let ankiCardsMap: Map<number, { interval: number; queue: number; type: number }> = new Map();
       try {
         const existingReviews = await ankiClient.getReviewsOfCards(localCardIds);
         for (const cid of localCardIds) {
@@ -40,36 +47,53 @@ export async function POST(request: NextRequest) {
             existingTimestamps.add(r.id);
           }
         }
+        
+        // Запрашиваем cardsInfo для определения текущего состояния каждой карты в Anki
+        const cardsInfoForType = await ankiClient.getCardsInfo(localCardIds);
+        for (const ci of cardsInfoForType) {
+          ankiCardsMap.set(ci.cardId, { interval: ci.interval, queue: ci.queue, type: ci.type });
+        }
       } catch (err) {
-        logger.warn('Не удалось получить историю повторений для дедупликации', err);
+        logger.warn(`${logPrefix}[Step: ReviewsSync] Не удалось получить историю/информацию о картах для дедупликации`, err);
       }
 
       const reviewsToInsert: Array<[number, number, number, number, number, number, number, number, number]> = [];
       const relearnCardIds: number[] = [];
-      const intervalGroups: Record<number, number[]> = {};
 
       for (const rev of localReviews) {
         // Пропускаем отзывы, которые уже есть в Anki
         if (existingTimestamps.has(rev.timestamp)) {
-          logger.info(`Отзыв с таймстемпом ${rev.timestamp} для карты ${rev.cardId} уже есть в Anki, пропускаем`);
+          logger.info(`${logPrefix}[Step: ReviewsSync] Отзыв с таймстемпом ${rev.timestamp} для карты ${rev.cardId} уже есть в Anki, пропускаем`);
           continue;
         }
 
         if (rev.ease === 1) {
           relearnCardIds.push(rev.cardId);
-        } else {
-          if (!intervalGroups[rev.interval]) {
-            intervalGroups[rev.interval] = [];
-          }
-          intervalGroups[rev.interval].push(rev.cardId);
         }
 
-        // Определение типа повторения в Anki (0=learn, 1=review, 2=relearn)
-        let reviewType = 1;
-        if (rev.lastInterval === 0) {
-          reviewType = 0;
-        } else if (rev.ease === 1) {
-          reviewType = 2;
+        // Определяем тип повторения на основе реального состояния карты в Anki
+        // 0=learn (новая карта, первый раз), 1=review (повторение), 2=relearn (после ошибки)
+        const ankiCard = ankiCardsMap.get(rev.cardId);
+        let reviewType = 1; // По умолчанию — review
+        
+        if (rev.ease === 1) {
+          reviewType = 2; // Again всегда relearn
+        } else if (ankiCard) {
+          // Если карта в Anki уже проходила обучение (interval > 0 или queue >= 1), это review
+          if (ankiCard.interval > 0 || ankiCard.queue >= 1) {
+            reviewType = 1; // Review
+          } else {
+            reviewType = 0; // Действительно новая карта в Anki
+          }
+        } else if (rev.lastInterval > 0) {
+          reviewType = 1; // Есть предыдущий интервал — review
+        }
+        
+        // Для lastInterval используем реальный Anki interval если локальный = 0
+        let lastIvl = rev.lastInterval;
+        if (lastIvl === 0 && ankiCard && ankiCard.interval > 0) {
+          lastIvl = ankiCard.interval;
+          logger.info(`${logPrefix}[Step: ReviewsSync] Скорректирован lastInterval для карты ${rev.cardId}: 0 → ${lastIvl} (из Anki)`);
         }
 
         reviewsToInsert.push([
@@ -78,7 +102,7 @@ export async function POST(request: NextRequest) {
           -1, // usn
           rev.ease,
           rev.interval,
-          rev.lastInterval,
+          lastIvl,
           0, // factor (0 для FSRS)
           rev.duration || 5000,
           reviewType
@@ -90,6 +114,17 @@ export async function POST(request: NextRequest) {
           await ankiClient.relearnCards(relearnCardIds);
         }
 
+        // Обновляем дату повторения карты в Anki для корректного планирования
+        const intervalGroups: Record<number, number[]> = {};
+        for (const rev of localReviews) {
+          if (existingTimestamps.has(rev.timestamp)) continue;
+          if (rev.ease !== 1 && rev.interval > 0) {
+            if (!intervalGroups[rev.interval]) {
+              intervalGroups[rev.interval] = [];
+            }
+            intervalGroups[rev.interval].push(rev.cardId);
+          }
+        }
         for (const [interval, ids] of Object.entries(intervalGroups)) {
           await ankiClient.setDueDate(ids, `${interval}!`);
         }
@@ -97,9 +132,9 @@ export async function POST(request: NextRequest) {
         if (reviewsToInsert.length > 0) {
           await ankiClient.insertReviews(reviewsToInsert);
         }
-        logger.info(`Локальные отзывы успешно синхронизированы с Anki`);
+        logger.info(`${logPrefix}[Step: ReviewsSync] Локальные отзывы успешно синхронизированы с Anki`);
       } catch (err) {
-        logger.error(`Ошибка при отправке локальных отзывов в AnkiConnect`, err);
+        logger.error(`${logPrefix}[Step: ReviewsSync] Ошибка при отправке локальных отзывов в AnkiConnect`, err);
         return NextResponse.json(
           { error: 'Не удалось синхронизировать локальные отзывы с Anki. Проверьте подключение.' },
           { status: 500 }
@@ -107,8 +142,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
+
     // 2. Получаем актуальный список карт из Anki для этой колоды
     let remoteCardsInfo: any[] = [];
+    logger.info(`${logPrefix}[Step: QueryAnki] Получение актуального списка карт из Anki для колоды "${deckName}"`);
     try {
       const isAllDecks = deckName === '__all__';
       const remoteCardIds = isAllDecks
@@ -122,8 +159,9 @@ export async function POST(request: NextRequest) {
           remoteCardsInfo.push(...batchInfo);
         }
       }
+      logger.info(`${logPrefix}[Step: QueryAnki] Получено ${remoteCardsInfo.length} карт из Anki`);
     } catch (err) {
-      logger.error(`Не удалось получить информацию о картах из Anki`, err);
+      logger.error(`${logPrefix}[Step: QueryAnki] Не удалось получить информацию о картах из Anki`, err);
       return NextResponse.json(
         { error: 'Не удалось загрузить карты из Anki для синхронизации.' },
         { status: 500 }
@@ -136,11 +174,10 @@ export async function POST(request: NextRequest) {
       const lw = localWords.find((w: any) => w.id === remoteCard.cardId);
       
       if (!lw) {
-        // Карта есть в Anki, но нет локально. 
-        // Запрашиваем историю только если карта уже проходилась (интервал > 0)
-        if (remoteCard.interval > 0 || remoteCard.queue === 2) {
-          cardsToFetchReviews.push(remoteCard.cardId);
-        }
+        // Карта есть в Anki, но нет локально — всегда запрашиваем историю.
+        // Нельзя полагаться только на interval/queue, т.к. insertReviews
+        // пишет в revlog, не обновляя поля самой карты.
+        cardsToFetchReviews.push(remoteCard.cardId);
       } else {
         const remoteQueue = remoteCard.queue < 0 ? remoteCard.type : remoteCard.queue;
         let localQueue = 0;
@@ -156,16 +193,18 @@ export async function POST(request: NextRequest) {
     // 4. Запрашиваем историю отзывов (revlog) из Anki для изменившихся карт пакетом (bulk)
     let remoteReviews: Record<number, any[]> = {};
     if (cardsToFetchReviews.length > 0) {
-      logger.info(`Запрос истории повторений из Anki для ${cardsToFetchReviews.length} измененных карт пакетом`);
+      logger.info(`${logPrefix}[Step: FetchHistory] Запрос истории повторений из Anki для ${cardsToFetchReviews.length} измененных карт пакетом`);
       try {
         remoteReviews = await ankiClient.getReviewsOfCards(cardsToFetchReviews);
       } catch (err) {
-        logger.error(`Не удалось получить логи повторений пакетом для измененных карт`, err);
+        logger.error(`${logPrefix}[Step: FetchHistory] Не удалось получить логи повторений пакетом для измененных карт`, err);
       }
     }
 
     // 5. Парсим и классифицируем карточки для возврата на клиент
     const parsedWords = parseAndFilterCards(remoteCardsInfo, frontField, backField, undefined, deckMappings);
+
+    logger.info(`${logPrefix}[Step: Success] Двусторонняя синхронизация успешно завершена для колоды "${deckName}". Передано ${parsedWords.length} слов.`);
 
     return NextResponse.json({
       success: true,
@@ -173,7 +212,9 @@ export async function POST(request: NextRequest) {
       remoteReviews
     });
   } catch (error: any) {
-    logger.error('Исключение в API /api/anki/sync-db', error);
+    const body = await request.clone().json().catch(() => ({}));
+    const logPrefix = body.sessionId ? `[Session: ${body.sessionId}] ` : '';
+    logger.error(`${logPrefix}[Step: Error] Исключение в API /api/anki/sync-db`, error);
     return NextResponse.json(
       { error: error.message || 'Произошла непредвиденная ошибка при синхронизации' },
       { status: 500 }

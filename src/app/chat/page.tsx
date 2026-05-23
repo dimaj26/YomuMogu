@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Send, Lightbulb, X, Check, Loader2, ChevronDown, ChevronUp, RefreshCw, AlertCircle, Plus } from 'lucide-react';
 import { useJapanification } from '@/hooks/useJapanification';
 import { getProfileItem, setProfileItem, removeProfileItem, getActiveProfileId } from '@/lib/profile';
-import { db, addLocalReview } from '@/lib/db';
+import { db, addLocalReview, syncLocalDatabaseWithAnki } from '@/lib/db';
 import { calculateNextFsrsState } from '@/lib/anki/fsrs';
 import styles from './chat.module.css';
 
@@ -111,6 +111,11 @@ export default function ChatPage() {
   const [expandedDefinitions, setExpandedDefinitions] = useState<Set<string>>(new Set());
   const [isSubmittingSync, setIsSubmittingSync] = useState(false);
   const [syncStatus, setSyncStatus] = useState<{ success: boolean; message: string } | null>(null);
+
+  // States for individual word sync/add progress
+  const [syncCardStatus, setSyncCardStatus] = useState<Record<number, 'idle' | 'loading' | 'success' | 'error'>>({});
+  const [addWordStatus, setAddWordStatus] = useState<Record<string, 'idle' | 'loading' | 'success' | 'error'>>({});
+  const [individualErrors, setIndividualErrors] = useState<Record<string, string>>({});
 
   const [isStateLoaded, setIsStateLoaded] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -572,6 +577,246 @@ export default function ChatPage() {
     }
   };
 
+  const handleSyncSingleCard = async (cardId: number, ease: number, wordObj: AnalyzedWord) => {
+    if (syncCardStatus[cardId] === 'loading') return;
+    
+    setSyncCardStatus(prev => ({ ...prev, [cardId]: 'loading' }));
+    setIndividualErrors(prev => {
+      const next = { ...prev };
+      delete next[`card-${cardId}`];
+      return next;
+    });
+
+    const deckName = getProfileItem('selected_deck') || 'Japanese';
+    const profileId = getActiveProfileId();
+
+    try {
+      if (!profileId || typeof profileId !== 'string') {
+        throw new Error(t('Неверный профиль', 'Invalid profile'));
+      }
+
+      // Определяем конкретную целевую колоду при selected_deck === '__all__'
+      let targetDeckName = deckName;
+      if (deckName === '__all__' && session && session.targetWords) {
+        for (const tw of session.targetWords) {
+          if (!tw.word || typeof tw.word !== 'string') continue;
+          const localWord = await db.words.where('word').equals(tw.word).first();
+          if (localWord && localWord.deckName && localWord.deckName !== '__all__') {
+            targetDeckName = localWord.deckName;
+            break;
+          }
+        }
+        if (targetDeckName === '__all__') {
+          const anyWord = await db.words.where('profileId').equals(profileId).first();
+          if (anyWord && anyWord.deckName && anyWord.deckName !== '__all__') {
+            targetDeckName = anyWord.deckName;
+          } else {
+            targetDeckName = 'Japanese';
+          }
+        }
+      }
+
+      const targetIds = (wordObj.cardIds && wordObj.cardIds.length > 0 ? wordObj.cardIds : [cardId])
+        .filter((id): id is number => typeof id === 'number' && !isNaN(id));
+
+      for (const cid of targetIds) {
+        let localWord = await db.words.get([profileId, cid]);
+        if (!localWord) {
+          localWord = {
+            profileId,
+            id: cid,
+            word: wordObj.word,
+            reading: wordObj.reading,
+            translation: wordObj.translation,
+            status: wordObj.status || 'new',
+            deckName: targetDeckName,
+            stability: 0,
+            difficulty: 0,
+            interval: 0,
+            due: Date.now(),
+            reps: 0,
+            lapses: 0
+          };
+        }
+
+        const { updatedWord, newInterval, lastInterval } = calculateNextFsrsState(localWord, ease);
+        await db.words.put(updatedWord);
+
+        await addLocalReview({
+          profileId,
+          cardId: cid,
+          ease,
+          interval: newInterval,
+          lastInterval,
+          duration: 5000, // Разумная длительность для чат-практики (5 сек)
+          timestamp: Date.now(),
+          synced: 0
+        });
+      }
+
+      // Синхронизируем локальные отзывы с Anki с передачей sessionId
+      const syncResult = await syncLocalDatabaseWithAnki(profileId, deckName, session?.id);
+      if (!syncResult.success) {
+        throw new Error(syncResult.message);
+      }
+
+      // Обновляем локальный стейт в памяти, чтобы UI сразу отреагировал
+      let finalStatus: 'new' | 'learning' | 'review' | 'mature' = wordObj.status || 'learning';
+      for (const cid of targetIds) {
+        const localWord = await db.words.get([profileId, cid]);
+        if (localWord) {
+          finalStatus = localWord.status;
+        }
+      }
+
+      setAnalyzedWords(prev =>
+        prev.map(w => {
+          if (w.cardId === cardId || (w.cardIds && w.cardIds.includes(cardId))) {
+            return {
+              ...w,
+              isDue: false,
+              status: finalStatus
+            };
+          }
+          return w;
+        })
+      );
+
+      setSyncCardStatus(prev => ({ ...prev, [cardId]: 'success' }));
+      setSelectedSyncCards(prev => {
+        const next = new Set(prev);
+        next.delete(cardId);
+        return next;
+      });
+    } catch (err: any) {
+      console.error('Ошибка индивидуальной синхронизации карточки:', err);
+      setSyncCardStatus(prev => ({ ...prev, [cardId]: 'error' }));
+      setIndividualErrors(prev => ({
+        ...prev,
+        [`card-${cardId}`]: err.message || t('Ошибка синхронизации', 'Sync error')
+      }));
+    }
+  };
+
+  const handleAddSingleWord = async (wordStr: string, wordObj: AnalyzedWord) => {
+    if (addWordStatus[wordStr] === 'loading') return;
+
+    setAddWordStatus(prev => ({ ...prev, [wordStr]: 'loading' }));
+    setIndividualErrors(prev => {
+      const next = { ...prev };
+      delete next[`word-${wordStr}`];
+      return next;
+    });
+
+    const deckName = getProfileItem('selected_deck') || 'Japanese';
+    const frontField = getProfileItem('front_field') || 'Front';
+    const backField = getProfileItem('back_field') || 'Back';
+    const profileId = getActiveProfileId();
+
+    const deckMappingsStr = getProfileItem('deck_mappings');
+    let deckMappings = undefined;
+    if (deckMappingsStr) {
+      try {
+        deckMappings = JSON.parse(deckMappingsStr);
+      } catch (e) {
+        console.error('Ошибка парсинга deck_mappings:', e);
+      }
+    }
+
+    try {
+      if (!profileId || typeof profileId !== 'string') {
+        throw new Error(t('Неверный профиль', 'Invalid profile'));
+      }
+
+      // Определяем конкретную целевую колоду при selected_deck === '__all__'
+      let targetDeckName = deckName;
+      if (deckName === '__all__' && session && session.targetWords) {
+        for (const tw of session.targetWords) {
+          if (!tw.word || typeof tw.word !== 'string') continue;
+          const localWord = await db.words.where('word').equals(tw.word).first();
+          if (localWord && localWord.deckName && localWord.deckName !== '__all__') {
+            targetDeckName = localWord.deckName;
+            break;
+          }
+        }
+        if (targetDeckName === '__all__') {
+          const anyWord = await db.words.where('profileId').equals(profileId).first();
+          if (anyWord && anyWord.deckName && anyWord.deckName !== '__all__') {
+            targetDeckName = anyWord.deckName;
+          } else {
+            targetDeckName = 'Japanese';
+          }
+        }
+      }
+
+      let activeFrontField = frontField;
+      let activeBackField = backField;
+      if (deckMappings && deckMappings[targetDeckName]) {
+        activeFrontField = deckMappings[targetDeckName].frontField || frontField;
+        activeBackField = deckMappings[targetDeckName].backField || backField;
+      }
+
+      const addRes = await fetch('/api/anki/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deckName: targetDeckName,
+          frontField: activeFrontField,
+          backField: activeBackField,
+          word: wordObj.word,
+          reading: wordObj.reading,
+          translation: wordObj.translation,
+          definitionHtml: wordObj.definitionHtml,
+          history: messages.map(m => ({ role: m.role, text: m.text })),
+          sessionId: session?.id
+        })
+      });
+
+      if (!addRes.ok) {
+        const errData = await addRes.json();
+        throw new Error(errData.error || t('Ошибка при добавлении карточки в Anki', 'Ankiへのカード追加中にエラーが発生しました'));
+      }
+
+      const data = await addRes.json();
+
+      // Запускаем синхронизацию локальной БД, чтобы подтянуть новое слово в IndexedDB
+      const syncResult = await syncLocalDatabaseWithAnki(profileId, deckName, session?.id);
+      if (!syncResult.success) {
+        console.warn('Фоновая синхронизация после добавления слова не удалась:', syncResult.message);
+      }
+
+      setAddWordStatus(prev => ({ ...prev, [wordStr]: 'success' }));
+      setSelectedAddWords(prev => {
+        const next = new Set(prev);
+        next.delete(wordStr);
+        return next;
+      });
+
+      // Обновляем локальный список analyzedWords, чтобы слово пометилось зеленым / перешло в Anki
+      setAnalyzedWords(prev =>
+        prev.map(w => {
+          if (w.word === wordStr) {
+            return {
+              ...w,
+              inAnki: true,
+              cardId: data.noteId,
+              status: 'learning',
+              isDue: false
+            };
+          }
+          return w;
+        })
+      );
+    } catch (err: any) {
+      console.error('Ошибка индивидуального добавления слова:', err);
+      setAddWordStatus(prev => ({ ...prev, [wordStr]: 'error' }));
+      setIndividualErrors(prev => ({
+        ...prev,
+        [`word-${wordStr}`]: err.message || t('Ошибка добавления', 'Add error')
+      }));
+    }
+  };
+
   const handleSyncAndAdd = async () => {
     if (!session || isSubmittingSync) return;
     setIsSubmittingSync(true);
@@ -597,7 +842,8 @@ export default function ChatPage() {
       let targetDeckName = deckName;
       if (deckName === '__all__' && session && session.targetWords && session.targetWords.length > 0) {
         for (const tw of session.targetWords) {
-          const localWord = await db.words.where('word').equals(tw.japanese).first();
+          if (!tw.word || typeof tw.word !== 'string') continue;
+          const localWord = await db.words.where('word').equals(tw.word).first();
           if (localWord && localWord.deckName && localWord.deckName !== '__all__') {
             targetDeckName = localWord.deckName;
             break;
@@ -620,9 +866,14 @@ export default function ChatPage() {
           const ease = syncCardGrades[cardId] || 3;
           
           if (wordObj) {
-            const targetIds = wordObj.cardIds && wordObj.cardIds.length > 0 ? wordObj.cardIds : [cardId];
+            const targetIds = (wordObj.cardIds && wordObj.cardIds.length > 0 ? wordObj.cardIds : [cardId])
+              .filter((id): id is number => typeof id === 'number' && !isNaN(id));
+              
             for (const cid of targetIds) {
-              let localWord = await db.words.get({ profileId, id: cid });
+              if (!profileId || typeof profileId !== 'string') {
+                continue;
+              }
+              let localWord = await db.words.get([profileId, cid]);
               
               if (!localWord) {
                 localWord = {
@@ -651,7 +902,7 @@ export default function ChatPage() {
                 ease,
                 interval: newInterval,
                 lastInterval,
-                duration: 0,
+                duration: 5000, // Разумная длительность для чат-практики (5 сек)
                 timestamp: Date.now(),
                 synced: 0
               });
@@ -683,7 +934,8 @@ export default function ChatPage() {
                 reading: w.reading,
                 translation: w.translation,
                 definitionHtml: w.definitionHtml,
-                history: messages.map(m => ({ role: m.role, text: m.text }))
+                history: messages.map(m => ({ role: m.role, text: m.text })),
+                sessionId: session.id
               })
             });
             if (!addRes.ok) {
@@ -695,19 +947,40 @@ export default function ChatPage() {
       }
 
       // 3. Запускаем фоновую синхронизацию локальной БД с Anki
-      const syncRes = await fetch('/api/anki/sync-db', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          profileId,
-          deckName,
-          deckMappings
-        })
-      });
-      if (!syncRes.ok) {
-        const errData = await syncRes.json();
-        throw new Error(errData.error || t('Ошибка при синхронизации с Anki', 'Ankiとの同期中にエラーが発生しました'));
+      const syncResult = await syncLocalDatabaseWithAnki(profileId, deckName, session.id);
+      if (!syncResult.success) {
+        throw new Error(syncResult.message || t('Ошибка при синхронизации с Anki', 'Ankiとの同期中にエラーが発生しました'));
       }
+
+      // Обновляем локальный стейт в памяти для всех синхронизированных карточек
+      const syncedCardIds = Array.from(selectedSyncCards);
+      const nextCardStatuses: Record<number, 'new' | 'learning' | 'review' | 'mature'> = {};
+      for (const cid of syncedCardIds) {
+        const localWord = await db.words.get([profileId, cid]);
+        if (localWord) {
+          nextCardStatuses[cid] = localWord.status;
+          setSyncCardStatus(prev => ({ ...prev, [cid]: 'success' }));
+        }
+      }
+
+      setAnalyzedWords(prev =>
+        prev.map(w => {
+          const matchedId = w.cardIds
+            ? w.cardIds.find(id => nextCardStatuses[id] !== undefined)
+            : (w.cardId && nextCardStatuses[w.cardId] !== undefined ? w.cardId : undefined);
+          
+          if (matchedId !== undefined) {
+            return {
+              ...w,
+              isDue: false,
+              status: nextCardStatuses[matchedId]
+            };
+          }
+          return w;
+        })
+      );
+
+      setSelectedSyncCards(new Set());
 
       setSyncStatus({
         success: true,
@@ -971,13 +1244,16 @@ export default function ChatPage() {
                     {analyzedWords
                       .filter(w => w.inAnki)
                       .map((w, idx) => {
-                        const canSync = w.status === 'learning' || w.isDue;
+                        const isSynced = w.cardId ? syncCardStatus[w.cardId] === 'success' : false;
+                        const canSync = (w.status === 'learning' || w.isDue) && !isSynced;
                         const isChecked = w.cardId ? selectedSyncCards.has(w.cardId) : false;
                         return (
                           <div key={idx} className={styles.syncWordBlock}>
                             <div className={`${styles.wordRow} ${w.inAnki ? styles.existingWord : ''}`}>
                               <div className={styles.wordRowLeft}>
-                                {canSync ? (
+                                {isSynced ? (
+                                  <span className={styles.activeCheck} title={t('Синхронизировано', '同期済')}>✅</span>
+                                ) : canSync ? (
                                   <input
                                     type="checkbox"
                                     className={styles.wordCheckbox}
@@ -1002,8 +1278,31 @@ export default function ChatPage() {
                                    w.status === 'review' ? t('повторение', '復習') : t('усвоено', '習得済')}
                                 </span>
                                 {w.isDue && <span className={styles.dueBadge}>{t('Срок!', '期限!')}</span>}
+                                {canSync && w.cardId && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSyncSingleCard(w.cardId!, syncCardGrades[w.cardId!] || 3, w)}
+                                    className={`${styles.individualBtn} btn-3d btn-blue`}
+                                    disabled={isSubmittingSync || syncCardStatus[w.cardId] === 'loading' || syncCardStatus[w.cardId] === 'success'}
+                                    title={t('Синхронизировать это слово', 'この単語を同期する')}
+                                    style={{ marginLeft: 8 }}
+                                  >
+                                    {syncCardStatus[w.cardId] === 'loading' ? (
+                                      <Loader2 className={styles.spinner} size={14} />
+                                    ) : syncCardStatus[w.cardId] === 'success' ? (
+                                      <Check size={14} />
+                                    ) : (
+                                      <RefreshCw size={14} />
+                                    )}
+                                  </button>
+                                )}
                               </div>
                             </div>
+                            {w.cardId && individualErrors[`card-${w.cardId}`] && (
+                              <div className={styles.individualError}>
+                                {individualErrors[`card-${w.cardId}`]}
+                              </div>
+                            )}
                             {canSync && isChecked && w.cardId && (
                               <div className={styles.gradeSelector}>
                                 <button
@@ -1080,6 +1379,22 @@ export default function ChatPage() {
                                 </label>
                               </div>
                               <div className={styles.wordRowRight}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddSingleWord(w.word, w)}
+                                  className={`${styles.individualBtn} btn-3d btn-green`}
+                                  disabled={isSubmittingSync || addWordStatus[w.word] === 'loading' || addWordStatus[w.word] === 'success'}
+                                  title={t('Добавить это слово в Anki', 'この単語をAnkiに追加する')}
+                                  style={{ marginRight: 8 }}
+                                >
+                                  {addWordStatus[w.word] === 'loading' ? (
+                                    <Loader2 className={styles.spinner} size={14} />
+                                  ) : addWordStatus[w.word] === 'success' ? (
+                                    <Check size={14} />
+                                  ) : (
+                                    <Plus size={14} />
+                                  )}
+                                </button>
                                 {w.definitionHtml && (
                                   <button
                                     onClick={() => toggleDefinitionExpand(w.word)}
@@ -1092,6 +1407,11 @@ export default function ChatPage() {
                                 )}
                               </div>
                             </div>
+                            {individualErrors[`word-${w.word}`] && (
+                              <div className={styles.individualError}>
+                                {individualErrors[`word-${w.word}`]}
+                              </div>
+                            )}
                             {isExpanded && w.definitionHtml && (
                               <div className={styles.dictContent}>
                                 <div 

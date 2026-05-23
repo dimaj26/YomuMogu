@@ -17,24 +17,31 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { deckName, frontField, backField, word, reading, translation, definitionHtml, history } = body;
 
+    const sessionId = body.sessionId;
+    const logPrefix = sessionId ? `[Session: ${sessionId}] ` : '';
+
     // Валидация полей
     if (!deckName || typeof deckName !== 'string') {
+      logger.warn(`${logPrefix}[Step: Validation] Ошибка валидации: отсутствует deckName`);
       return NextResponse.json({ error: 'Необходимо передать deckName' }, { status: 400 });
     }
     if (!word || typeof word !== 'string') {
+      logger.warn(`${logPrefix}[Step: Validation] Ошибка валидации: отсутствует word`);
       return NextResponse.json({ error: 'Необходимо передать word' }, { status: 400 });
     }
     if (!reading || typeof reading !== 'string') {
+      logger.warn(`${logPrefix}[Step: Validation] Ошибка валидации: отсутствует reading`);
       return NextResponse.json({ error: 'Необходимо передать reading' }, { status: 400 });
     }
     if (!translation || typeof translation !== 'string') {
+      logger.warn(`${logPrefix}[Step: Validation] Ошибка валидации: отсутствует translation`);
       return NextResponse.json({ error: 'Необходимо передать translation' }, { status: 400 });
     }
 
     const fField = typeof frontField === 'string' && frontField ? frontField : 'Front';
     const bField = typeof backField === 'string' && backField ? backField : 'Back';
 
-    logger.info(`Запрос на добавление нового слова "${word}" в колоду "${deckName}"`);
+    logger.info(`${logPrefix}[Step: Start] Запрос на добавление нового слова "${word}" в колоду "${deckName}"`);
 
     // Динамическое определение типа заметки (modelName) и полей из колоды
     let modelName = 'Basic';
@@ -45,7 +52,7 @@ export async function POST(request: NextRequest) {
         const cardInfos = await ankiClient.getCardsInfo([existingCardIds[0]]);
         if (cardInfos.length > 0) {
           modelName = cardInfos[0].modelName;
-          logger.debug(`Обнаружен тип заметки для колоды "${deckName}": ${modelName}`);
+          logger.debug(`${logPrefix}[Step: CheckModel] Обнаружен тип заметки для колоды "${deckName}": ${modelName}`);
 
           // Сортируем поля по order
           const fieldsWithOrder = Object.entries(cardInfos[0].fields).map(([name, f]) => ({
@@ -54,11 +61,11 @@ export async function POST(request: NextRequest) {
           }));
           fieldsWithOrder.sort((a, b) => a.order - b.order);
           detectedFields = fieldsWithOrder.map(f => f.name);
-          logger.debug(`Обнаруженные поля модели: ${detectedFields.join(', ')}`);
+          logger.debug(`${logPrefix}[Step: CheckModel] Обнаруженные поля модели: ${detectedFields.join(', ')}`);
         }
       }
     } catch (err) {
-      logger.warn(`Не удалось определить тип заметки для колоды "${deckName}", используем по умолчанию "${modelName}"`, err);
+      logger.warn(`${logPrefix}[Step: CheckModel] Не удалось определить тип заметки для колоды "${deckName}", используем по умолчанию "${modelName}"`, err);
     }
 
     const finalFrontField = detectedFields.length > 0 && !detectedFields.includes(fField) ? detectedFields[0] : fField;
@@ -121,8 +128,10 @@ ${transcript}
         };
       });
 
+      logger.info(`${logPrefix}[Step: GeminiGenerate] Начало генерации карточки через Gemini для слова "${word}"`);
+
       const geminiResult = await withRetry(async (model: GeminiModel) => {
-        logger.debug(`Генерация карточки: используется модель ${model}`);
+        logger.debug(`${logPrefix}[Step: GeminiGenerate] Генерация карточки: используется модель ${model}`);
         const response = await ai.models.generateContent({
           model,
           contents: 'Пожалуйста, заполни поля для карточки Anki.',
@@ -143,9 +152,9 @@ ${transcript}
       });
 
       fields = geminiResult;
-      logger.info(`ИИ успешно сгенерировал поля для карточки: ${Object.keys(fields).join(', ')}`);
+      logger.info(`${logPrefix}[Step: GeminiGenerate] ИИ успешно сгенерировал поля для карточки: ${Object.keys(fields).join(', ')}`);
     } catch (err) {
-      logger.warn('Не удалось сгенерировать поля через ИИ, используем стандартную разметку', err);
+      logger.warn(`${logPrefix}[Step: GeminiGenerate] Не удалось сгенерировать поля через ИИ, используем стандартную разметку`, err);
       // Фолбек: если произошла ошибка, заполняем дефолтные поля
       fields = {
         [finalFrontField]: word,
@@ -159,13 +168,16 @@ ${transcript}
       });
     }
 
+    logger.info(`${logPrefix}[Step: AddNote] Добавление заметки в Anki с note type "${modelName}" для слова "${word}"`);
     // Добавляем заметку с тегом "yomumogu_sync"
     const noteId = await ankiClient.addNote(deckName, modelName, fields, ['yomumogu_sync']);
 
-    logger.info(`Слово "${word}" успешно добавлено в Anki, noteId: ${noteId}`);
+    logger.info(`${logPrefix}[Step: Success] Слово "${word}" успешно добавлено в Anki, noteId: ${noteId}`);
     return NextResponse.json({ success: true, noteId });
   } catch (error: any) {
-    logger.error('Исключение в API /api/anki/add', error);
+    const body = await request.clone().json().catch(() => ({}));
+    const logPrefix = body.sessionId ? `[Session: ${body.sessionId}] ` : '';
+    logger.error(`${logPrefix}[Step: Error] Исключение в API /api/anki/add`, error);
     return NextResponse.json(
       { error: error.message || 'Произошла ошибка при добавлении карточки в Anki' },
       { status: 500 }

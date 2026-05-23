@@ -5,11 +5,13 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: 'node', // Интеграционные тесты API запускаются в окружении Node, а не в jsdom (поскольку они тестируют бэкенд-логику)
+    environment: 'jsdom',
     globals: true,
-    include: ['**/*.integration.test.ts'],
+    setupFiles: ['./vitest.setup.ts'],
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+    include: ['**/*.integration.test.ts'],
+    testTimeout: 60000,
   },
 });

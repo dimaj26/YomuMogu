@@ -1,8 +1,11 @@
 import { fsrs, Card, State, Rating } from 'ts-fsrs';
 import type { LocalWord } from '../db';
 
-// Инициализируем стандартный FSRS-планировщик с дефолтными параметрами
-const scheduler = fsrs();
+// Инициализируем стандартный FSRS-планировщик с отключенными краткосрочными шагами обучения
+const scheduler = fsrs({
+  enable_short_term: false
+});
+
 
 /**
  * Сбрасывает время до начала дня (00:00:00) по местному времени устройства.
@@ -18,7 +21,7 @@ export function alignToDayBoundary(date: Date): Date {
 /**
  * Конвертирует локальное слово из БД в структуру карточки для ts-fsrs
  */
-export function mapLocalToFsrsCard(word: LocalWord): Card {
+export function mapLocalToFsrsCard(word: LocalWord, now?: Date): Card {
   let state = State.New;
   
   if (word.status === 'learning') {
@@ -27,18 +30,18 @@ export function mapLocalToFsrsCard(word: LocalWord): Card {
     state = State.Review;
   }
 
-  const now = Date.now();
+  const referenceTime = now ? now.getTime() : Date.now();
   const lastReviewDate = word.lastReview ? new Date(word.lastReview) : undefined;
   
   // Вычисляем количество дней, прошедших с последнего повторения
   let elapsedDays = 0;
   if (lastReviewDate) {
-    const diffTime = Math.abs(now - lastReviewDate.getTime());
+    const diffTime = Math.abs(referenceTime - lastReviewDate.getTime());
     elapsedDays = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
   }
 
   return {
-    due: new Date(word.due || now),
+    due: new Date(word.due || referenceTime),
     stability: word.stability || 0,
     difficulty: word.difficulty || 0,
     elapsed_days: elapsedDays,
@@ -93,7 +96,7 @@ export function calculateNextFsrsState(
   ease: number,
   now: Date = new Date()
 ): { updatedWord: LocalWord; newInterval: number; lastInterval: number } {
-  const card = mapLocalToFsrsCard(word);
+  const card = mapLocalToFsrsCard(word, now);
   
   // Мапим оценки YomuMogu (1-4) на Rating из ts-fsrs
   let rating = Rating.Good;

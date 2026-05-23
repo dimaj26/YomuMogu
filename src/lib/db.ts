@@ -71,10 +71,30 @@ class YomuMoguDatabase extends Dexie {
 export const db = new YomuMoguDatabase();
 
 /**
+ * Проверяет, является ли значение валидным ключом для IndexedDB.
+ * Валидные ключи: string (не пустая), number (не NaN), Date (не с getTime() = NaN), Array.
+ */
+export function isValidIndexedDbKey(key: any): boolean {
+  if (key === null || key === undefined) return false;
+  if (typeof key === 'string') return key.length > 0;
+  if (typeof key === 'number') return !isNaN(key);
+  if (key instanceof Date) return !isNaN(key.getTime());
+  if (Array.isArray(key)) {
+    if (key.length === 0) return false;
+    return key.every(k => isValidIndexedDbKey(k));
+  }
+  return false;
+}
+
+/**
  * Получение всех слов текущего профиля для выбранной колоды
  */
 export async function getLocalWords(profileId: string, deckName: string): Promise<LocalWord[]> {
   if (typeof window === 'undefined') return [];
+  if (!isValidIndexedDbKey(profileId)) {
+    logger.warn('getLocalWords: Невалидный profileId', { profileId });
+    return [];
+  }
   return db.words
     .where('profileId')
     .equals(profileId)
@@ -87,6 +107,10 @@ export async function getLocalWords(profileId: string, deckName: string): Promis
  */
 export async function getDueWords(profileId: string, deckName: string, now: number): Promise<LocalWord[]> {
   if (typeof window === 'undefined') return [];
+  if (!isValidIndexedDbKey(profileId)) {
+    logger.warn('getDueWords: Невалидный profileId', { profileId });
+    return [];
+  }
   return db.words
     .where('profileId')
     .equals(profileId)
@@ -99,7 +123,12 @@ export async function getDueWords(profileId: string, deckName: string, now: numb
  */
 export async function saveLocalWords(words: LocalWord[]): Promise<void> {
   if (typeof window === 'undefined' || words.length === 0) return;
-  await db.words.bulkPut(words);
+  const validWords = words.filter(w => isValidIndexedDbKey([w.profileId, w.id]));
+  if (validWords.length === 0) {
+    logger.warn('saveLocalWords: Нет слов с валидными ключами для сохранения');
+    return;
+  }
+  await db.words.bulkPut(validWords);
 }
 
 /**
@@ -107,6 +136,13 @@ export async function saveLocalWords(words: LocalWord[]): Promise<void> {
  */
 export async function addLocalReview(review: LocalReview): Promise<void> {
   if (typeof window === 'undefined') return;
+  if (!review || !isValidIndexedDbKey([review.profileId, review.cardId])) {
+    logger.warn('addLocalReview: Попытка добавить отзыв с невалидными ключами', {
+      profileId: review?.profileId,
+      cardId: review?.cardId
+    });
+    return;
+  }
   await db.reviews.add(review);
 }
 
@@ -115,6 +151,10 @@ export async function addLocalReview(review: LocalReview): Promise<void> {
  */
 export async function getUnsyncedReviews(profileId: string): Promise<LocalReview[]> {
   if (typeof window === 'undefined') return [];
+  if (!isValidIndexedDbKey(profileId)) {
+    logger.warn('getUnsyncedReviews: Невалидный profileId', { profileId });
+    return [];
+  }
   return db.reviews
     .where('profileId')
     .equals(profileId)
@@ -127,8 +167,10 @@ export async function getUnsyncedReviews(profileId: string): Promise<LocalReview
  */
 export async function markReviewsAsSynced(reviewIds: number[]): Promise<void> {
   if (typeof window === 'undefined' || reviewIds.length === 0) return;
+  const validIds = reviewIds.filter(id => typeof id === 'number' && !isNaN(id));
+  if (validIds.length === 0) return;
   await db.transaction('rw', db.reviews, async () => {
-    for (const id of reviewIds) {
+    for (const id of validIds) {
       await db.reviews.update(id, { synced: 1 });
     }
   });
@@ -139,10 +181,16 @@ export async function markReviewsAsSynced(reviewIds: number[]): Promise<void> {
  */
 export async function syncLocalDatabaseWithAnki(
   profileId: string,
-  deckName: string
+  deckName: string,
+  sessionId?: string
 ): Promise<{ success: boolean; message: string }> {
   if (typeof window === 'undefined') {
     return { success: false, message: 'Синхронизация доступна только в браузере' };
+  }
+
+  if (!isValidIndexedDbKey(profileId)) {
+    logger.warn('syncLocalDatabaseWithAnki: Невалидный profileId', { profileId });
+    return { success: false, message: 'Неверный идентификатор профиля' };
   }
 
   try {
@@ -185,7 +233,8 @@ export async function syncLocalDatabaseWithAnki(
         backField,
         deckMappings,
         localReviews: unsyncedReviews,
-        localWords: localWordsSummary
+        localWords: localWordsSummary,
+        sessionId
       })
     });
 
@@ -231,9 +280,15 @@ export async function syncLocalDatabaseWithAnki(
     // 6. Синхронизируем состояние карточек в IndexedDB
     await db.transaction('rw', db.words, db.reviews, async () => {
       for (const card of remoteCards) {
-        const cardIds = card.cardIds && card.cardIds.length > 0 ? card.cardIds : [card.id];
+        const cardIds = (card.cardIds && card.cardIds.length > 0 ? card.cardIds : [card.id])
+          .filter((id): id is number => typeof id === 'number' && !isNaN(id));
 
         for (const cid of cardIds) {
+          if (!isValidIndexedDbKey([profileId, cid])) {
+            logger.warn(`Пропуск синхронизации для карты из-за невалидного ключа: profileId=${profileId}, cardId=${cid}`);
+            continue;
+          }
+
           const reviews = remoteReviews[cid];
           const hasRemoteReviews = reviews && reviews.length > 0;
 
@@ -264,6 +319,11 @@ export async function syncLocalDatabaseWithAnki(
               if (r.type === 4 || r.ease === 0) {
                 continue;
               }
+              if (typeof r.id !== 'number' || isNaN(r.id)) {
+                logger.warn(`Пропуск некорректного отзыва с невалидным таймстампом`, r);
+                continue;
+              }
+
               const result = calculateNextFsrsState(localWord, r.ease, new Date(r.id));
               localWord = result.updatedWord;
 
@@ -289,16 +349,19 @@ export async function syncLocalDatabaseWithAnki(
             }
 
             // Перезаписываем/сохраняем слово в БД
-            await db.words.put(localWord);
+            if (isValidIndexedDbKey([localWord.profileId, localWord.id])) {
+              await db.words.put(localWord);
+            }
           } else {
             // Отзывов нет. Проверяем, есть ли слово локально
-            const exists = await db.words.get({ profileId, id: cid });
+            const exists = await db.words.get([profileId, cid]);
             if (!exists) {
               // Если слова нет, добавляем его как новое
               // При положительном интервале аппроксимируем параметры FSRS
               const stability = card.interval > 0 ? card.interval : 0;
               const difficulty = card.interval > 0 ? 5.0 : 0;
               const reps = card.interval > 0 ? 1 : 0;
+              const due = card.interval > 0 ? Date.now() + card.interval * 24 * 60 * 60 * 1000 : Date.now();
 
               await db.words.put({
                 profileId,
@@ -311,7 +374,7 @@ export async function syncLocalDatabaseWithAnki(
                 stability,
                 difficulty,
                 interval: card.interval,
-                due: Date.now(),
+                due,
                 reps,
                 lapses: 0
               });
@@ -343,6 +406,10 @@ export async function syncLocalDatabaseWithAnki(
  */
 export async function getLocalUiWords(profileId: string): Promise<UiWord[]> {
   if (typeof window === 'undefined') return [];
+  if (!isValidIndexedDbKey(profileId)) {
+    logger.warn('getLocalUiWords: Невалидный profileId', { profileId });
+    return [];
+  }
   return db.ui_words
     .where('profileId')
     .equals(profileId)
@@ -354,6 +421,10 @@ export async function getLocalUiWords(profileId: string): Promise<UiWord[]> {
  */
 export async function saveLocalUiWord(word: UiWord): Promise<void> {
   if (typeof window === 'undefined') return;
+  if (!word || !isValidIndexedDbKey([word.profileId, word.id])) {
+    logger.warn('saveLocalUiWord: Попытка сохранить UiWord с невалидными ключами', word);
+    return;
+  }
   await db.ui_words.put(word);
 }
 
@@ -362,6 +433,10 @@ export async function saveLocalUiWord(word: UiWord): Promise<void> {
  */
 export async function resetLocalUiWords(profileId: string): Promise<void> {
   if (typeof window === 'undefined') return;
+  if (!isValidIndexedDbKey(profileId)) {
+    logger.warn('resetLocalUiWords: Невалидный profileId', { profileId });
+    return;
+  }
   await db.ui_words.where('profileId').equals(profileId).delete();
 }
 
