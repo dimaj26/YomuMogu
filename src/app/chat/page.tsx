@@ -6,6 +6,7 @@ import { ArrowLeft, Send, Lightbulb, X, Check, Loader2, ChevronDown, ChevronUp, 
 import { useJapanification } from '@/hooks/useJapanification';
 import { getProfileItem, setProfileItem, removeProfileItem, getActiveProfileId } from '@/lib/profile';
 import { db, addLocalReview, syncLocalDatabaseWithAnki } from '@/lib/db';
+import { sanitizeHtml } from '@/lib/sanitize';
 import { calculateNextFsrsState } from '@/lib/anki/fsrs';
 import styles from './chat.module.css';
 
@@ -1416,7 +1417,7 @@ export default function ChatPage() {
                               <div className={styles.dictContent}>
                                 <div 
                                   className={styles.jitendexHtml}
-                                  dangerouslySetInnerHTML={{ __html: w.definitionHtml }} 
+                                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(w.definitionHtml) }} 
                                 />
                               </div>
                             )}
@@ -1539,7 +1540,7 @@ export default function ChatPage() {
               <div className={styles.messageContent}>
                 <div className={`${styles.messageBubble} ${msg.role === 'user' ? styles.user : styles.ai}`}>
                   {msg.role === 'model' ? (
-                    <span dangerouslySetInnerHTML={{ __html: msg.text }} />
+                    <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.text) }} />
                   ) : (
                     msg.text
                   )}
@@ -1581,7 +1582,7 @@ export default function ChatPage() {
                     <div className={styles.grammarBody}>
                       {msg.grammarFeedback.correction && (
                         <span className={styles.grammarCorrection}>
-                          → <span dangerouslySetInnerHTML={{ __html: msg.grammarFeedback.correction }} />
+                          → <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.grammarFeedback.correction) }} />
                         </span>
                       )}
                       {!msg.grammarFeedback.correction && msg.grammarFeedback.explanation && (
@@ -1592,7 +1593,7 @@ export default function ChatPage() {
                       {(expandedGrammar.has(msg.id) || !msg.grammarFeedback.correction) && msg.grammarFeedback.explanation && (
                         <span
                           className={styles.grammarExplanation}
-                          dangerouslySetInnerHTML={{ __html: msg.grammarFeedback.explanation }}
+                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.grammarFeedback.explanation) }}
                         />
                       )}
                     </div>
@@ -1655,7 +1656,7 @@ export default function ChatPage() {
                 <span className={`${styles.hintLevel} ${styles[hint.level] || ''}`}>
                   {hint.level === 'easy' ? '🟢' : hint.level === 'medium' ? '🟡' : '🔴'} {hint.level}
                 </span>
-                <span className={styles.hintText} dangerouslySetInnerHTML={{ __html: hint.japanese }} />
+                <span className={styles.hintText} dangerouslySetInnerHTML={{ __html: sanitizeHtml(hint.japanese) }} />
                 <span className={styles.hintTranslation}>{hint.translation}</span>
               </div>
             ))

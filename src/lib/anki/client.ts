@@ -21,6 +21,9 @@ export class AnkiConnectClient {
   private url: string;
 
   constructor(url: string = 'http://127.0.0.1:8765') {
+    if (typeof window !== 'undefined') {
+      throw new Error('AnkiConnectClient нельзя запускать в браузере – только на сервере');
+    }
     this.url = url;
   }
 

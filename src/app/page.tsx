@@ -9,6 +9,7 @@ import { getProfileItem, removeProfileItem, getProfilesList, getActiveProfileId,
 import { JpUI } from '@/components/JpUI';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import styles from './page.module.css';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 // Возвращает пороги очков для уровней на нормальной скорости (дефолтная скорость для отображения в профиле)
 const NORMAL_THRESHOLDS = [0, 20, 50, 100, 170, 280, 420];
