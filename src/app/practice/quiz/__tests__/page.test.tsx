@@ -94,6 +94,9 @@ describe('QuizPage Component', () => {
 
     // Enter correct answer
     const input = screen.getByPlaceholderText('Введите ответ на японском...');
+    await waitFor(() => {
+      expect(input).toHaveFocus();
+    });
     fireEvent.change(input, { target: { value: 'ねこ' } });
 
     // Click check
@@ -149,6 +152,9 @@ describe('QuizPage Component', () => {
 
     // Enter incorrect answer
     const input = screen.getByPlaceholderText('Введите ответ на японском...');
+    await waitFor(() => {
+      expect(input).toHaveFocus();
+    });
     fireEvent.change(input, { target: { value: 'ねко' } });
 
     // Click check
