@@ -1,8 +1,16 @@
 import React from 'react';
+import fakeIndexedDB, { IDBKeyRange } from 'fake-indexeddb';
+
+// Инициализируем полифилл IndexedDB до загрузки Dexie
+globalThis.indexedDB = fakeIndexedDB;
+globalThis.IDBKeyRange = IDBKeyRange;
+
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import SettingsPage from '../page';
 import { JapanificationProvider } from '@/hooks/useJapanification';
+import { db } from '@/core/db';
+
 
 // Мокаем lucide-react, так как некоторые иконки могут некорректно рендериться в jsdom
 vi.mock('lucide-react', () => ({
@@ -56,9 +64,11 @@ vi.mock('@/components/JpUIProvider', () => ({
 }));
 
 describe('SettingsPage Component', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.restoreAllMocks();
     localStorage.clear();
+    await db.words.clear();
+    await db.reviews.clear();
   });
 
   it('renders title and loading state initially', async () => {
@@ -310,6 +320,53 @@ describe('SettingsPage Component', () => {
     await waitFor(() => {
       expect(frontInput.value).toBe('Kanji');
       expect(backInput.value).toBe('Russian');
+    });
+  });
+
+  it('loads and displays local deck words and statistics in local mode', async () => {
+    // Setup local deck mode in localStorage
+    localStorage.setItem('yomumogu_profile_default_deck_mode', 'local');
+    localStorage.setItem('yomumogu_profile_default_quota_preset', 'standard');
+
+    // Populate IndexedDB with a local deck word (Version 3 schema properties)
+    await db.words.put({
+      profileId: 'default',
+      id: 777,
+      word: '猫',
+      reading: 'ねこ',
+      translation: 'кошка',
+      category: '__local_starter__',
+      source: 'starter',
+      passive: {
+        status: 'mature',
+        stability: 200,
+        difficulty: 5.0,
+        interval: 200,
+        due: Date.now() + 100000,
+        reps: 1,
+        lapses: 0,
+      },
+      active: {
+        status: 'mature',
+        stability: 200,
+        difficulty: 5.0,
+        interval: 200,
+        due: Date.now() + 100000,
+        reps: 1,
+        lapses: 0,
+      },
+      contextExamples: []
+    });
+
+    render(<JapanificationProvider><SettingsPage /></JapanificationProvider>);
+
+    // Verify statistics and words table display correct data
+    await waitFor(() => {
+      // stats.mature should be 1
+      expect(screen.getByText('Изучено')).toBeInTheDocument();
+      // JSDOM might show table words: 猫 and кошка
+      expect(screen.getByText('猫')).toBeInTheDocument();
+      expect(screen.getByText('кошка')).toBeInTheDocument();
     });
   });
 });

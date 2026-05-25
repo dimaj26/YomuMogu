@@ -95,6 +95,7 @@ You are an expert **TypeScript / Next.js 15** developer. Your specialty is App R
 - Integration tests require Anki Desktop to be running with AnkiConnect active on port 8765; if Anki is offline, sync-related integration tests will be silently skipped. The AI must explicitly instruct the user to open Anki Desktop before running integration tests.
 - When adding a new module, add corresponding test file in `__tests__/` sibling directory.
 - Mock all `lucide-react` icons in UI component tests to avoid SVG rendering issues in jsdom.
+- For database-dependent unit tests (e.g. settings or practice pages querying Dexie IndexedDB), import and initialize the global polyfill `fake-indexeddb` at the top of the test file: `import fakeIndexedDB, { IDBKeyRange } from 'fake-indexeddb'; globalThis.indexedDB = fakeIndexedDB; globalThis.IDBKeyRange = IDBKeyRange;` to run offline DB queries and statistics aggregation safely in JSDOM.
 
 ### [CP-3.7] File Modification Rules
 - Always read target file before proposing or making any change. Never guess existing content.

@@ -1,8 +1,16 @@
 import React from 'react';
+import fakeIndexedDB, { IDBKeyRange } from 'fake-indexeddb';
+
+// Инициализируем полифилл IndexedDB до загрузки Dexie
+globalThis.indexedDB = fakeIndexedDB;
+globalThis.IDBKeyRange = IDBKeyRange;
+
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import PracticePage from '../page';
 import { JapanificationProvider } from '@/hooks/useJapanification';
+import { db } from '@/core/db';
+
 
 // Мокаем lucide-react, так как некоторые иконки могут некорректно рендериться в jsdom
 vi.mock('lucide-react', () => ({
@@ -37,9 +45,11 @@ vi.mock('next/navigation', () => {
 });
 
 describe('PracticePage Component', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.restoreAllMocks();
     localStorage.clear();
+    await db.words.clear();
+    await db.reviews.clear();
   });
 
   it('отображает заголовок страницы и загрузку данных', async () => {
@@ -156,6 +166,85 @@ describe('PracticePage Component', () => {
       expect(screen.getByText('Тема кафе')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Продолжить' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Сброс' })).toBeInTheDocument();
+    });
+  });
+
+  it('loads and displays local deck due words count for quiz in local mode', async () => {
+    // Setup local deck mode in localStorage
+    localStorage.setItem('yomumogu_profile_default_deck_mode', 'local');
+    localStorage.setItem('yomumogu_profile_default_selected_deck', '__local_starter__');
+
+    // Populate IndexedDB with a local deck word (Version 3 schema properties)
+    // One word that is due (due <= now)
+    const now = Date.now();
+    await db.words.put({
+      profileId: 'default',
+      id: 777,
+      word: '猫',
+      reading: 'ねこ',
+      translation: 'кошка',
+      category: '__local_starter__',
+      source: 'starter',
+      passive: {
+        status: 'mature',
+        stability: 200,
+        difficulty: 5.0,
+        interval: 200,
+        due: now - 10000, // due
+        reps: 1,
+        lapses: 0,
+      },
+      active: {
+        status: 'mature',
+        stability: 200,
+        difficulty: 5.0,
+        interval: 200,
+        due: now - 10000, // due
+        reps: 1,
+        lapses: 0,
+      },
+      contextExamples: []
+    });
+
+    // One word that is not due (due > now)
+    await db.words.put({
+      profileId: 'default',
+      id: 888,
+      word: '犬',
+      reading: 'いぬ',
+      translation: 'собака',
+      category: '__local_starter__',
+      source: 'starter',
+      passive: {
+        status: 'mature',
+        stability: 200,
+        difficulty: 5.0,
+        interval: 200,
+        due: now + 500000, // not due
+        reps: 1,
+        lapses: 0,
+      },
+      active: {
+        status: 'mature',
+        stability: 200,
+        difficulty: 5.0,
+        interval: 200,
+        due: now + 500000, // not due
+        reps: 1,
+        lapses: 0,
+      },
+      contextExamples: []
+    });
+
+    render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+
+    // Verify statistics and words table display correct data
+    await waitFor(() => {
+      // It should display that 1 word is ready for repetition in quiz: "Повторить активные слова (Квиз) [1]"
+      expect(screen.getByText(/Повторить активные слова/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Повторить активные слова \(Квиз\) \[1\]/ })).toBeInTheDocument();
+      // It should say "Лимит новых слов сегодня" or "Импортировано слов" depending on local state initialization
+      expect(screen.getByText(/Источник обучения:/)).toBeInTheDocument();
     });
   });
 });
