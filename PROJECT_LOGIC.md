@@ -484,20 +484,16 @@ To hide user-facing "Japanification" branding, the system is referred to as "Lan
 
 ---
 
-## [PL-8] OPERATIONAL CONSTRAINTS FOR AI
+## [PL-8] ARCHITECTURAL & CODE CONSTRAINTS
 
-1. **[PL-8.1] Always read target file before editing.** Never guess existing content.
-2. **[PL-8.2] Preserve module registry integrity.** Adding/removing/renaming files requires CMD-1.
-3. **[PL-8.3] No direct localStorage access.** All client persistence via `profile.ts` helpers.
-4. **[PL-8.4] No direct Gemini SDK calls.** Always wrap in `withRetry()`.
-5. **[PL-8.5] SSR guard.** Never access `localStorage`/`window` outside `useEffect` or without `typeof window !== 'undefined'` check.
-6. **[PL-8.6] dangerouslySetInnerHTML scope.** Only allowed in chat message bubbles, grammar feedback cards, and hint text (for `<ruby>` rendering).
-7. **[PL-8.7] No Tailwind.** CSS Modules only.
-8. **[PL-8.8] Test coverage.** Every new API route needs unit test with mocked Gemini/Anki.
-9. **[PL-8.9] System instruction language.** Never use forbidden words (see PL-5.4).
-10. **[PL-8.10] Git safety.** AI is allowed to automatically run GW-1 to stage and commit changes locally upon completing milestones. Automated `git push` is strictly forbidden and must only be run on explicit user instruction.
-11. **[PL-8.11] Temporary scripts logging.** All temporary, scratch, or diagnostic files created in the workspace (e.g. in `scratch/`) must be registered in `scratch/SCRATCH_LOG.md` immediately upon creation. This log acts as a permanent historical audit trail: entries are never deleted. All side-effects (Anki decks, SQLite files, database entries) must be fully cleaned up prior to script file deletion, and the script status updated in the log to serve as a trace for any future troubleshooting.
-12. **[PL-8.12] Changelog updates.** Root `CHANGELOG.md` (Public, tracked in Git) must be updated via `CMD-4` on every feature release or documentation restructuring. It is not pre-read automatically for Route A, but must be checked during onboarding or troubleshooting to capture the current active version and historical updates.
+1. **[PL-8.1] No direct localStorage access.** All client persistence via `profile.ts` helpers.
+2. **[PL-8.2] No direct Gemini SDK calls.** Always wrap in `withRetry()`.
+3. **[PL-8.3] SSR guard.** Never access `localStorage`/`window` outside `useEffect` or without `typeof window !== 'undefined'` check.
+4. **[PL-8.4] dangerouslySetInnerHTML scope.** Only allowed in chat message bubbles, grammar feedback cards, and hint text (for `<ruby>` rendering).
+5. **[PL-8.5] No Tailwind.** CSS Modules only.
+6. **[PL-8.6] Test coverage.** Every new API route needs unit test with mocked Gemini/Anki.
+7. **[PL-8.7] System instruction language.** Never use forbidden words (see PL-5.4).
+
 
 
 ---

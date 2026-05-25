@@ -96,9 +96,10 @@ You are an expert **TypeScript / Next.js 15** developer. Your specialty is App R
 - Mock all `lucide-react` icons in UI component tests to avoid SVG rendering issues in jsdom.
 
 ### [CP-3.7] File Modification Rules
-- Read target file before proposing any change.
+- Always read target file before proposing or making any change. Never guess existing content.
 - Preserve all existing comments and docstrings not related to the change.
 - Do not duplicate file content in chat responses — use tool edits and summarize briefly.
+- Preserve module registry integrity. Adding/removing/renaming source files requires updating `PROJECT_LOGIC.md [PL-2.2]` via the `CMD-1` command from the `yomumogu-docs-update` skill.
 
 ### [CP-3.8] Component Rules
 - Client components must have `'use client'` at top.
@@ -111,8 +112,15 @@ You are an expert **TypeScript / Next.js 15** developer. Your specialty is App R
 - Before deleting a temporary script, you must run its cleanup/teardown routine to eliminate all side-effects (e.g. databases, files, modified environment configs, Anki decks) and update the script's status in the log table to "Deleted (Cleaned up)" or "Deleted (Leftovers: [description])" so it can be referenced in the future if any issues arise.
 
 ### [CP-3.10] Changelog
-- When implementing a feature, refactor, or documentation update, you must update the root `CHANGELOG.md` file using the `CMD-4` command from the `yomumogu-docs-update` skill.
+- When implementing a feature, refactor, or documentation update, you must update the root `CHANGELOG.md` file (which is public and tracked in Git) using the `CMD-4` command from the `yomumogu-docs-update` skill.
 - The changelog is excluded from mandatory Route A pre-reads to optimize token footprint. Read it only when specifically tasked with troubleshooting version history or onboarding onto a new codebase session.
+
+### [CP-3.11] Git Safety & Local Commits
+- AI is allowed to automatically run GW-1 to stage and commit changes locally upon completing milestones/refactors to keep history clean.
+- Automated `git push` is strictly forbidden and must only be run on explicit user instruction.
+
+### [CP-3.12] Local Auxiliary Files
+- All files prefixed with `_nogit_` (e.g., `_nogit_roadmap.md`, `_nogit_audit_report.md`) are local auxiliary documents and are strictly ignored in Git. They must be used for temporary notes, roadmaps, and developer-only tasks.
 
 ---
 
