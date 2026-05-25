@@ -530,8 +530,9 @@ To hide user-facing "Japanification" branding, the system is referred to as "Lan
 
 ### [PL-9.2] Commands
 ```powershell
-npm run test             # Unit tests (mocked, offline)
-npm run test:integration # Integration tests (real Gemini API, needs GEMINI_API_KEY and active local Anki Desktop)
+npm run test                   # Unit tests (mocked, offline)
+npm run test:integration       # Local integration tests (Anki only, free, requires local Anki Desktop)
+npm run test:integration:gemini # Live LLM integration tests (uses Gemini API, costs money)
 ```
 
 ### [PL-9.3] Test Categories
