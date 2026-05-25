@@ -3,9 +3,11 @@ import {
   alignToDayBoundary, 
   mapLocalToFsrsCard, 
   mapFsrsToLocalWord, 
-  calculateNextFsrsState 
+  calculateNextFsrsState,
+  createDefaultFsrsState
 } from '../scheduler';
-import type { LocalWord } from '../db';
+import type { LocalWord } from '../types';
+
 
 describe('FSRS Scheduling logic', () => {
   it('should align date to local day boundary (04:00:00)', () => {
@@ -254,4 +256,38 @@ describe('FSRS Scheduling logic', () => {
       word = result.updatedWord;
     }
   });
+
+  it('should calculate active and passive states independently', () => {
+    const word: LocalWord = {
+      profileId: 'test-user',
+      id: 99999,
+      word: '猫',
+      reading: 'ねこ',
+      translation: 'кошка',
+      category: 'Japanese',
+      source: 'manual',
+      passive: createDefaultFsrsState(new Date('2026-05-01T12:00:00').getTime()),
+      active: createDefaultFsrsState(new Date('2026-05-01T12:00:00').getTime())
+    };
+
+    const date = new Date('2026-05-01T12:00:00');
+    
+    // 1. Делаем пассивное повторение
+    const passiveResult = calculateNextFsrsState(word, 3, 'passive', date);
+    expect(passiveResult.updatedWord.passive.status).toBe('review');
+    expect(passiveResult.updatedWord.passive.reps).toBe(1);
+    
+    // Активное состояние должно остаться нетронутым
+    expect(passiveResult.updatedWord.active.status).toBe('new');
+    expect(passiveResult.updatedWord.active.reps).toBe(0);
+
+    // 2. Делаем активное повторение на основе результата пассивного
+    const activeResult = calculateNextFsrsState(passiveResult.updatedWord, 4, 'active', date);
+    expect(activeResult.updatedWord.active.status).toBe('review');
+    expect(activeResult.updatedWord.active.reps).toBe(1);
+    
+    // Пассивное должно сохранить свои изменения
+    expect(activeResult.updatedWord.passive.reps).toBe(1);
+  });
 });
+

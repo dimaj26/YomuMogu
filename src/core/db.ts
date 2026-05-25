@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import { calculateNextFsrsState } from './scheduler';
+import { calculateNextFsrsState, createDefaultFsrsState } from './scheduler';
 import { getProfileItem } from '../lib/profile';
 import { logger } from '../lib/logger';
 import { LocalWord, LocalReview, UiWord } from './types';
@@ -14,14 +14,53 @@ class YomuMoguDatabase extends Dexie {
 
   constructor() {
     super('YomuMoguDatabase');
+    
     this.version(1).stores({
       words: '[profileId+id], id, word, status, deckName, due, profileId',
       reviews: '++id, [profileId+cardId], cardId, timestamp, synced, profileId',
     });
+    
     this.version(2).stores({
       words: '[profileId+id], id, word, status, deckName, due, profileId',
       reviews: '++id, [profileId+cardId], cardId, timestamp, synced, profileId',
       ui_words: '[profileId+id], id, status, due, profileId',
+    });
+
+    this.version(3).stores({
+      words: '[profileId+id], id, word, category, [profileId+category], passive.due, active.due, profileId',
+      reviews: '++id, [profileId+cardId], cardId, timestamp, synced, profileId',
+      ui_words: '[profileId+id], id, status, due, profileId',
+    }).upgrade(async (tx) => {
+      logger.info('Миграция IndexedDB на версию 3: конвертация плоской структуры FSRS в двойную (passive/active)');
+      await tx.table('words').toCollection().modify((word: any) => {
+        const flatFsrs = {
+          stability: word.stability ?? 0,
+          difficulty: word.difficulty ?? 0,
+          interval: word.interval ?? 0,
+          due: word.due ?? Date.now(),
+          lastReview: word.lastReview,
+          reps: word.reps ?? 0,
+          lapses: word.lapses ?? 0,
+          status: word.status ?? 'new'
+        };
+
+        word.passive = { ...flatFsrs };
+        word.active = { ...flatFsrs };
+        word.category = word.deckName || 'Japanese';
+        word.source = word.source || 'anki';
+        word.contextExamples = [];
+
+        // Удаляем старые плоские поля
+        delete word.stability;
+        delete word.difficulty;
+        delete word.interval;
+        delete word.due;
+        delete word.lastReview;
+        delete word.reps;
+        delete word.lapses;
+        delete word.status;
+        delete word.deckName;
+      });
     });
   }
 }
@@ -46,9 +85,9 @@ export function isValidIndexedDbKey(key: any): boolean {
 }
 
 /**
- * Получение всех слов текущего профиля для выбранной колоды
+ * Получение всех слов текущего профиля для выбранной категории (колоды)
  */
-export async function getLocalWords(profileId: string, deckName: string): Promise<LocalWord[]> {
+export async function getLocalWords(profileId: string, category: string): Promise<LocalWord[]> {
   if (typeof window === 'undefined') return [];
   if (!isValidIndexedDbKey(profileId)) {
     logger.warn('getLocalWords: Невалидный profileId', { profileId });
@@ -57,14 +96,14 @@ export async function getLocalWords(profileId: string, deckName: string): Promis
   return db.words
     .where('profileId')
     .equals(profileId)
-    .filter(w => w.deckName === deckName)
+    .filter(w => w.category === category)
     .toArray();
 }
 
 /**
- * Получение списка слов текущего профиля, требующих повторения (due <= now)
+ * Получение списка слов текущего профиля, требующих повторения (due <= now) в пассивной или активной форме
  */
-export async function getDueWords(profileId: string, deckName: string, now: number): Promise<LocalWord[]> {
+export async function getDueWords(profileId: string, category: string, now: number): Promise<LocalWord[]> {
   if (typeof window === 'undefined') return [];
   if (!isValidIndexedDbKey(profileId)) {
     logger.warn('getDueWords: Невалидный profileId', { profileId });
@@ -73,7 +112,7 @@ export async function getDueWords(profileId: string, deckName: string, now: numb
   return db.words
     .where('profileId')
     .equals(profileId)
-    .filter(w => w.deckName === deckName && w.due <= now)
+    .filter(w => w.category === category && (w.passive.due <= now || w.active.due <= now))
     .toArray();
 }
 
@@ -158,12 +197,14 @@ export async function syncLocalDatabaseWithAnki(
 
     // 2. Получаем текущие локальные слова, чтобы сервер знал, какие из них изменились в Anki
     const localWords = await db.words.where('profileId').equals(profileId).toArray();
+    
+    // Передаем active шкалу в Anki как основную для планирования интервалов
     const localWordsSummary = localWords.map(w => ({
       id: w.id,
-      interval: w.interval,
-      due: w.due,
-      reps: w.reps,
-      status: w.status
+      interval: w.active.interval,
+      due: w.active.due,
+      reps: w.active.reps,
+      status: w.active.status
     }));
 
     const frontField = getProfileItem('front_field', profileId) || 'Front';
@@ -262,19 +303,15 @@ export async function syncLocalDatabaseWithAnki(
               word: card.word,
               reading: extractReading(card.rawFront),
               translation: card.translation,
-              status: 'new',
-              deckName: card.deckName || deckName,
-              stability: 0,
-              difficulty: 0,
-              interval: 0,
-              due: Date.now(),
-              reps: 0,
-              lapses: 0
+              category: card.deckName || deckName,
+              source: 'anki',
+              passive: createDefaultFsrsState(Date.now()),
+              active: createDefaultFsrsState(Date.now()),
+              contextExamples: []
             };
 
-            // Прокручиваем FSRS по всей истории
+            // Прокручиваем FSRS по всей истории для обеих шкал
             for (const r of sortedReviews) {
-              // Игнорируем ручные перепланирования (тип 4 или оценка 0 в Anki)
               if (r.type === 4 || r.ease === 0) {
                 continue;
               }
@@ -283,8 +320,10 @@ export async function syncLocalDatabaseWithAnki(
                 continue;
               }
 
-              const result = calculateNextFsrsState(localWord, r.ease, new Date(r.id));
-              localWord = result.updatedWord;
+              const resultPassive = calculateNextFsrsState(localWord, r.ease, 'passive', new Date(r.id));
+              localWord = resultPassive.updatedWord;
+              const resultActive = calculateNextFsrsState(localWord, r.ease, 'active', new Date(r.id));
+              localWord = resultActive.updatedWord;
 
               // Записываем отзыв в локальную историю, если его еще нет
               const reviewExists = await db.reviews
@@ -315,12 +354,22 @@ export async function syncLocalDatabaseWithAnki(
             // Отзывов нет. Проверяем, есть ли слово локально
             const exists = await db.words.get([profileId, cid]);
             if (!exists) {
-              // Если слова нет, добавляем его как новое
-              // При положительном интервале аппроксимируем параметры FSRS
+              // Если слова нет, добавляем его как новое.
+              // При положительном интервале аппроксимируем параметры FSRS для обеих шкал.
               const stability = card.interval > 0 ? card.interval : 0;
               const difficulty = card.interval > 0 ? 5.0 : 0;
               const reps = card.interval > 0 ? 1 : 0;
               const due = card.interval > 0 ? Date.now() + card.interval * 24 * 60 * 60 * 1000 : Date.now();
+
+              const approximatedState = {
+                stability,
+                difficulty,
+                interval: card.interval,
+                due,
+                reps,
+                lapses: 0,
+                status: card.status
+              };
 
               await db.words.put({
                 profileId,
@@ -328,17 +377,14 @@ export async function syncLocalDatabaseWithAnki(
                 word: card.word,
                 reading: extractReading(card.rawFront),
                 translation: card.translation,
-                status: card.status,
-                deckName: card.deckName || deckName,
-                stability,
-                difficulty,
-                interval: card.interval,
-                due,
-                reps,
-                lapses: 0
+                category: card.deckName || deckName,
+                source: 'anki',
+                passive: { ...approximatedState },
+                active: { ...approximatedState },
+                contextExamples: []
               });
             } else {
-              // Если слово есть, но отзывы не поменялись, обновляем базовые свойства (на случай редактирования полей в Anki)
+              // Если слово есть, но отзывы не поменялись, обновляем базовые свойства
               await db.words.update([profileId, cid], {
                 word: card.word,
                 translation: card.translation,
@@ -398,4 +444,5 @@ export async function resetLocalUiWords(profileId: string): Promise<void> {
   }
   await db.ui_words.where('profileId').equals(profileId).delete();
 }
+
 

@@ -1,5 +1,5 @@
 import { fsrs, Card, State, Rating } from 'ts-fsrs';
-import type { LocalWord } from './types';
+import type { LocalWord, FsrsState } from './types';
 
 // Инициализируем стандартный FSRS-планировщик с отключенными краткосрочными шагами обучения
 const scheduler = fsrs({
@@ -8,7 +8,7 @@ const scheduler = fsrs({
 
 
 /**
- * Сбрасывает время до начала дня (00:00:00) по местному времени устройства.
+ * Сбрасывает время до начала дня (04:00:00) по местному времени устройства.
  * Это необходимо, чтобы избежать блокировки карточки на полные 24 часа
  * и сблизить поведение с границами дня в Anki (где новые сутки начинаются рано утром).
  */
@@ -19,19 +19,34 @@ export function alignToDayBoundary(date: Date): Date {
 }
 
 /**
- * Конвертирует локальное слово из БД в структуру карточки для ts-fsrs
+ * Создает пустое/новое состояние FSRS
  */
-export function mapLocalToFsrsCard(word: LocalWord, now?: Date): Card {
-  let state = State.New;
+export function createDefaultFsrsState(initialDue: number = Date.now()): FsrsState {
+  return {
+    stability: 0,
+    difficulty: 0,
+    interval: 0,
+    due: initialDue,
+    reps: 0,
+    lapses: 0,
+    status: 'new'
+  };
+}
+
+/**
+ * Конвертирует состояние FSRS в структуру карточки для ts-fsrs
+ */
+export function mapFsrsStateToCard(state: FsrsState, now?: Date): Card {
+  let fsrsState = State.New;
   
-  if (word.status === 'learning') {
-    state = State.Learning;
-  } else if (word.status === 'review' || word.status === 'mature') {
-    state = State.Review;
+  if (state.status === 'learning') {
+    fsrsState = State.Learning;
+  } else if (state.status === 'review' || state.status === 'mature') {
+    fsrsState = State.Review;
   }
 
   const referenceTime = now ? now.getTime() : Date.now();
-  const lastReviewDate = word.lastReview ? new Date(word.lastReview) : undefined;
+  const lastReviewDate = state.lastReview ? new Date(state.lastReview) : undefined;
   
   // Вычисляем количество дней, прошедших с последнего повторения
   let elapsedDays = 0;
@@ -41,23 +56,23 @@ export function mapLocalToFsrsCard(word: LocalWord, now?: Date): Card {
   }
 
   return {
-    due: new Date(word.due || referenceTime),
-    stability: word.stability || 0,
-    difficulty: word.difficulty || 0,
+    due: new Date(state.due || referenceTime),
+    stability: state.stability || 0,
+    difficulty: state.difficulty || 0,
     elapsed_days: elapsedDays,
-    scheduled_days: word.interval || 0,
-    learning_steps: 0, // Необходимое поле для новой версии ts-fsrs
-    reps: word.reps || 0,
-    lapses: word.lapses || 0,
-    state,
+    scheduled_days: state.interval || 0,
+    learning_steps: 0,
+    reps: state.reps || 0,
+    lapses: state.lapses || 0,
+    state: fsrsState,
     last_review: lastReviewDate
   };
 }
 
 /**
- * Конвертирует карту ts-fsrs обратно в поля локального слова для сохранения в БД
+ * Конвертирует карту ts-fsrs обратно в поля FsrsState
  */
-export function mapFsrsToLocalWord(word: LocalWord, card: Card): LocalWord {
+export function mapFsrsToSubState(state: FsrsState, card: Card): FsrsState {
   let status: 'new' | 'learning' | 'review' | 'mature' = 'new';
   
   if (card.state === State.New) {
@@ -65,15 +80,12 @@ export function mapFsrsToLocalWord(word: LocalWord, card: Card): LocalWord {
   } else if (card.state === State.Learning || card.state === State.Relearning) {
     status = 'learning';
   } else if (card.state === State.Review) {
-    // В Anki зрелыми (mature) считаются карты с интервалом от 21 дня
     status = card.scheduled_days >= 21 ? 'mature' : 'review';
   }
 
-  // Выравниваем due date до начала дня для локального планирования только для интервалов >= 1 дня
   const alignedDue = card.scheduled_days >= 1 ? alignToDayBoundary(card.due) : card.due;
 
   return {
-    ...word,
     stability: card.stability,
     difficulty: card.difficulty,
     interval: card.scheduled_days,
@@ -86,34 +98,150 @@ export function mapFsrsToLocalWord(word: LocalWord, card: Card): LocalWord {
 }
 
 /**
- * Расчет следующего FSRS-состояния карточки на основе оценки пользователя
- * @param word Локальное слово из БД
- * @param ease Оценка (1 = Again, 2 = Hard, 3 = Good, 4 = Easy)
- * @param now Время повторения (по умолчанию текущее)
+ * Конвертирует локальное слово из БД в структуру карточки для ts-fsrs (legacy)
  */
-export function calculateNextFsrsState(
-  word: LocalWord,
+export function mapLocalToFsrsCard(word: LocalWord, now?: Date): Card {
+  // Для обратной совместимости, если у слова плоская структура
+  const flatState = (word as any).passive || {
+    stability: (word as any).stability,
+    difficulty: (word as any).difficulty,
+    interval: (word as any).interval,
+    due: (word as any).due,
+    lastReview: (word as any).lastReview,
+    reps: (word as any).reps,
+    lapses: (word as any).lapses,
+    status: (word as any).status
+  };
+  return mapFsrsStateToCard(flatState, now);
+}
+
+/**
+ * Конвертирует карту ts-fsrs обратно в поля локального слова для сохранения в БД (legacy)
+ */
+export function mapFsrsToLocalWord(word: LocalWord, card: Card): LocalWord {
+  // Для обратной совместимости, если у слова плоская структура
+  if (!(word as any).passive) {
+    const subState = mapFsrsToSubState({} as FsrsState, card);
+    return {
+      ...word,
+      stability: subState.stability,
+      difficulty: subState.difficulty,
+      interval: subState.interval,
+      due: subState.due,
+      lastReview: subState.lastReview,
+      status: subState.status,
+      reps: subState.reps,
+      lapses: subState.lapses
+    } as any;
+  }
+  
+  const passive = mapFsrsToSubState(word.passive, card);
+  return {
+    ...word,
+    passive
+  };
+}
+
+/**
+ * Расчет следующего FSRS-состояния на основе плоского стейта FsrsState
+ */
+export function calculateNextFsrsStateForState(
+  state: FsrsState,
   ease: number,
   now: Date = new Date()
-): { updatedWord: LocalWord; newInterval: number; lastInterval: number } {
-  const card = mapLocalToFsrsCard(word, now);
+): { updatedState: FsrsState; newInterval: number; lastInterval: number } {
+  const card = mapFsrsStateToCard(state, now);
   
-  // Мапим оценки YomuMogu (1-4) на Rating из ts-fsrs
   let rating = Rating.Good;
   if (ease === 1) rating = Rating.Again;
   else if (ease === 2) rating = Rating.Hard;
   else if (ease === 3) rating = Rating.Good;
   else if (ease === 4) rating = Rating.Easy;
 
-  // Рассчитываем следующее состояние
   const schedulingInfo = scheduler.repeat(card, now);
   const nextStep = schedulingInfo[rating];
   
-  const updatedWord = mapFsrsToLocalWord(word, nextStep.card);
+  const updatedState = mapFsrsToSubState(state, nextStep.card);
   
   return {
-    updatedWord,
+    updatedState,
     newInterval: nextStep.card.scheduled_days,
     lastInterval: card.scheduled_days
   };
 }
+
+/**
+ * Расчет следующего FSRS-состояния карточки на основе оценки пользователя.
+ * Поддерживает полиморфный вызов: для плоских объектов (UiWord) или вложенных (LocalWord).
+ * 
+ * @param word Локальное слово из БД или плоский FSRS объект
+ * @param ease Оценка (1 = Again, 2 = Hard, 3 = Good, 4 = Easy)
+ * @param typeOrNow Тип повторения ('passive' | 'active') ИЛИ дата повторения (для совместимости)
+ * @param nowArg Время повторения (используется, если третьим параметром передан тип)
+ */
+export function calculateNextFsrsState(
+  word: any,
+  ease: number,
+  typeOrNow?: 'passive' | 'active' | Date,
+  nowArg?: Date
+): { updatedWord: any; newInterval: number; lastInterval: number } {
+  let type: 'passive' | 'active' | undefined = undefined;
+  let now = new Date();
+
+  if (typeOrNow instanceof Date) {
+    now = typeOrNow;
+  } else if (typeof typeOrNow === 'string') {
+    type = typeOrNow as 'passive' | 'active';
+    if (nowArg) {
+      now = nowArg;
+    }
+  } else if (nowArg) {
+    now = nowArg;
+  }
+
+  if (type && (word.passive || word.active)) {
+    // Вложенная структура LocalWord
+    const state = word[type] || createDefaultFsrsState(now.getTime());
+    const { updatedState, newInterval, lastInterval } = calculateNextFsrsStateForState(state, ease, now);
+    return {
+      updatedWord: {
+        ...word,
+        [type]: updatedState
+      },
+      newInterval,
+      lastInterval
+    };
+  } else {
+    // Плоская структура (UiWord, legacy-костыли или тесты)
+    const state: FsrsState = {
+      stability: word.stability ?? 0,
+      difficulty: word.difficulty ?? 0,
+      interval: word.interval ?? 0,
+      due: word.due ?? now.getTime(),
+      lastReview: word.lastReview,
+      reps: word.reps ?? 0,
+      lapses: word.lapses ?? 0,
+      status: word.status ?? 'new'
+    };
+    
+    const { updatedState, newInterval, lastInterval } = calculateNextFsrsStateForState(state, ease, now);
+    
+    return {
+      updatedWord: {
+        ...word,
+        stability: updatedState.stability,
+        difficulty: updatedState.difficulty,
+        interval: updatedState.interval,
+        due: updatedState.due,
+        lastReview: updatedState.lastReview,
+        reps: updatedState.reps,
+        lapses: updatedState.lapses,
+        status: updatedState.status
+      },
+      newInterval,
+      lastInterval
+    };
+  }
+}
+
+

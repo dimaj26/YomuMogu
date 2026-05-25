@@ -10,14 +10,7 @@ export interface CardWord {
   cardIds?: number[];
 }
 
-export interface LocalWord {
-  profileId: string;
-  id: number; // cardId
-  word: string;
-  reading: string;
-  translation: string;
-  status: 'new' | 'learning' | 'review' | 'mature';
-  deckName: string;
+export interface FsrsState {
   stability: number;
   difficulty: number;
   interval: number; // интервал повторения в днях
@@ -25,6 +18,26 @@ export interface LocalWord {
   lastReview?: number; // timestamp последнего повторения
   reps: number; // количество повторений
   lapses: number; // количество ошибок (Again)
+  status: 'new' | 'learning' | 'review' | 'mature';
+}
+
+export interface WordContextExample {
+  sentence: string;
+  translation?: string;
+  timestamp: number;
+}
+
+export interface LocalWord {
+  profileId: string;
+  id: number; // cardId
+  word: string;
+  reading: string;
+  translation: string;
+  category: string; // Заменяет deckName
+  source: 'anki' | 'starter' | 'manual';
+  passive: FsrsState;
+  active: FsrsState;
+  contextExamples?: WordContextExample[];
 }
 
 export interface LocalReview {
@@ -32,11 +45,12 @@ export interface LocalReview {
   profileId: string;
   cardId: number; // cardId
   ease: number; // оценка (1-4)
-  interval: number; // новый интервал в днях (отрицательное число для секунд/минут)
+  interval: number; // новый интервал в днях
   lastInterval: number; // предыдущий интервал в днях
   duration: number; // время ответа в мс
   timestamp: number; // точное время ответа (ms)
   synced: number; // 0 = не синхронизировано, 1 = синхронизировано
+  reviewType?: 'passive' | 'active'; // тип отзыва: пассивный или активный
 }
 
 export interface UiWord {
@@ -54,3 +68,4 @@ export interface UiWord {
   reps: number;
   lapses: number;
 }
+

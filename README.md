@@ -77,8 +77,8 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to start pra
 - **Granular UI FSRS Japanification**: Under-the-hood smart localization wrapper component (`<JpUI>`) and provider (`JpUIProvider`) driven by the `ts-fsrs` mathematical scheduler. In Smart mode, it dynamically translates UI elements (up to 1 new word per session), plays gold pulse animations on new translations, provides hover translation tooltips, and supports interactive FSRS assessments ("Забыл" / "Знаю") directly in the UI. All user-facing "Japanification" branding is hidden (referred to as Immersion / "Погружение" or "Уровень" in Russian).
 - **Chat Session Persistence**: Automatically serializes and restores complete chat history, targets, and progress states across page reloads and navigation. In-progress sessions can be resumed via homepage or settings CTA buttons.
 - **Multi-Profile Isolation**: Isolates learning progress, XP statistics, imported words, and active chat states under unique profile namespaces to support multiple local users.
-- **Local-First Database Cache**: Caches imported decks and review logs locally using a Dexie.js (IndexedDB) database for high responsiveness and offline capability.
-- **Bilateral FSRS Sync**: Synchronizes local review logs and card states with local Anki Desktop using a robust synchronizer featuring query deduplication (idempotence), FSRS parameter approximation (`stability = interval`, `difficulty = 5.0`, `reps = 1`) to preserve mature card history, and 4:00 AM day boundary alignment.
+- **Local-First Database Cache**: Caches imported decks and review logs locally using a Dexie.js (IndexedDB) database for high responsiveness and offline capability. Captures and saves user-generated contextual sentences under vocabulary entities.
+- **Bilateral FSRS Sync**: Synchronizes local review logs and card states with local Anki Desktop using a robust synchronizer featuring query deduplication (idempotence), FSRS parameter approximation (`stability = interval`, `difficulty = 5.0`, `reps = 1`) to preserve mature card history, and 4:00 AM day boundary alignment. Maintains dual `passive` and `active` scheduling state curves aligned via remote review replay, utilizing the active state as the primary sync anchor. Cleans and truncates HTML from imported card translations.
 - **Session Completion Flow**:
   - *Bonus Test*: Interactive written translation quiz for unused target words.
   - *Gemini-Powered Chat Audit*: Automatically extracts new N4+ vocabulary used during practice.
@@ -100,11 +100,15 @@ src/
     error.tsx             # Global layout error fallback page
   components/             # UI Components (LanguageSwitcher, JpUI, ErrorBoundary)
   hooks/                  # Custom state hooks (JapanificationState, useApiCall)
+  core/                   # Core local-first services & DB
+    db.ts                 # IndexedDB database definition (Dexie.js)
+    scheduler.ts          # Dual-state FSRS mathematical scheduling engine
+    localDeckService.ts   # Starter deck importer and local DB manager
+    types.ts              # Core type definitions
+    pluginRegistry.ts     # Interface for custom data sources & plugins
   lib/
-    anki/                 # AnkiConnect client, card filtering, & FSRS scheduler
     dict/                 # SQLite dictionary lookup script and helper
     gemini/               # Gemini content generation, fallbacks, & withRetry wrapper
-    db.ts                 # Client-side IndexedDB database (Dexie.js)
     logger.ts             # Structured log writer
     profile.ts            # Namespaced profile storage helpers
     csrf.ts               # CSRF verification helper

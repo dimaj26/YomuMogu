@@ -1,7 +1,7 @@
 import { db } from './db';
 import type { LocalWord, CardWord as AnkiWord } from './types';
 import { getProfileItem, setProfileItem } from '../lib/profile';
-import { alignToDayBoundary } from './scheduler';
+import { alignToDayBoundary, createDefaultFsrsState } from './scheduler';
 
 // Константы системы
 export const LOCAL_DECK_NAME = '__local_starter__';
@@ -50,14 +50,14 @@ function getLocalDateString(): string {
 }
 
 /**
- * Проверяет наличие записей с deckName === LOCAL_DECK_NAME в IndexedDB для данного профиля.
+ * Проверяет наличие записей с category === LOCAL_DECK_NAME в IndexedDB для данного профиля.
  */
 export async function isLocalDeckInitialized(profileId: string): Promise<boolean> {
   if (typeof window === 'undefined') return false;
   const count = await db.words
     .where('profileId')
     .equals(profileId)
-    .filter(w => w.deckName === LOCAL_DECK_NAME)
+    .filter(w => w.category === LOCAL_DECK_NAME)
     .count();
   return count > 0;
 }
@@ -76,7 +76,7 @@ export async function importStarterDeck(profileId: string, knownWordIds: Set<num
   const existingWords = await db.words
     .where('profileId')
     .equals(profileId)
-    .filter(w => w.deckName === LOCAL_DECK_NAME)
+    .filter(w => w.category === LOCAL_DECK_NAME)
     .toArray();
 
   const existingMap = new Map<number, LocalWord>(existingWords.map(w => [w.id, w]));
@@ -89,8 +89,8 @@ export async function importStarterDeck(profileId: string, knownWordIds: Set<num
     const wordId = item.id;
     const existing = existingMap.get(wordId);
 
-    // Если слово уже есть в БД и его статус не 'new', то пропускаем (защита прогресса)
-    if (existing && existing.status !== 'new') {
+    // Если слово уже есть в БД и его статус не 'new' в активном состоянии, то пропускаем
+    if (existing && existing.active.status !== 'new') {
       continue;
     }
 
@@ -102,15 +102,29 @@ export async function importStarterDeck(profileId: string, knownWordIds: Set<num
       word: item.word,
       reading: item.reading,
       translation: item.translation,
-      deckName: LOCAL_DECK_NAME,
-      status: isKnown ? 'mature' : 'new',
-      stability: isKnown ? MATURE_INTERVAL_DAYS : 0,
-      difficulty: isKnown ? 5.0 : 0,
-      interval: isKnown ? MATURE_INTERVAL_DAYS : 0,
-      due: isKnown ? matureDue : now,
-      reps: isKnown ? 1 : 0,
-      lapses: 0,
-      lastReview: isKnown ? now : undefined,
+      category: LOCAL_DECK_NAME,
+      source: 'starter',
+      passive: isKnown ? {
+        stability: MATURE_INTERVAL_DAYS,
+        difficulty: 5.0,
+        interval: MATURE_INTERVAL_DAYS,
+        due: matureDue,
+        reps: 1,
+        lapses: 0,
+        status: 'mature',
+        lastReview: now
+      } : createDefaultFsrsState(now),
+      active: isKnown ? {
+        stability: MATURE_INTERVAL_DAYS,
+        difficulty: 5.0,
+        interval: MATURE_INTERVAL_DAYS,
+        due: matureDue,
+        reps: 1,
+        lapses: 0,
+        status: 'mature',
+        lastReview: now
+      } : createDefaultFsrsState(now),
+      contextExamples: []
     };
 
     wordsToSave.push(wordRecord);
@@ -150,9 +164,9 @@ export function localWordToAnkiWord(word: LocalWord): AnkiWord {
     id: word.id,
     word: word.word,
     translation: word.translation,
-    interval: word.interval,
-    status: word.status,
-    deckName: word.deckName,
+    interval: word.active.interval,
+    status: word.active.status,
+    deckName: word.category,
     rawFront: word.word,
     rawBack: word.translation,
     cardIds: [word.id],
@@ -161,28 +175,40 @@ export function localWordToAnkiWord(word: LocalWord): AnkiWord {
 
 /**
  * Возвращает активный пул слов для генерации сессий:
- *   1. due words: status in ('learning','review','mature') AND due <= now
+ *   1. due words: status in ('learning','review','mature') AND due <= now в одной из шкал
  *   2. Если |due| < MIN_WORDS_FOR_3_SESSIONS: добирать new, не превышая дневной лимит
  *   3. Если всё ещё < MIN_WORDS_FOR_3_SESSIONS: добирать mature с наименьшим interval
  */
-export async function getDailyActivePool(profileId: string, deckName: string): Promise<AnkiWord[]> {
+export async function getDailyActivePool(profileId: string, category: string): Promise<AnkiWord[]> {
   if (typeof window === 'undefined') return [];
 
-  // Получаем все слова колоды из IndexedDB
+  // Получаем все слова категории из IndexedDB
   const allWords = await db.words
     .where('profileId')
     .equals(profileId)
-    .filter(w => w.deckName === deckName)
+    .filter(w => w.category === category)
     .toArray();
 
   const now = Date.now();
 
-  // Разделяем слова по категориям
-  const dueWords = allWords.filter(w => w.status !== 'new' && w.due <= now);
-  const newWords = allWords.filter(w => w.status === 'new').sort((a, b) => a.id - b.id);
+  // Разделяем слова по категориям на основе пассивного/активного состояния
+  const dueWords = allWords.filter(w => 
+    (w.passive.status !== 'new' || w.active.status !== 'new') && 
+    (w.passive.due <= now || w.active.due <= now)
+  );
+  
+  const newWords = allWords.filter(w => 
+    w.passive.status === 'new' && 
+    w.active.status === 'new'
+  ).sort((a, b) => a.id - b.id);
+  
   const matureFallbackWords = allWords
-    .filter(w => w.status === 'mature' && w.due > now)
-    .sort((a, b) => a.interval - b.interval);
+    .filter(w => 
+      (w.passive.status === 'mature' || w.active.status === 'mature') && 
+      w.passive.due > now && 
+      w.active.due > now
+    )
+    .sort((a, b) => Math.min(a.passive.interval, a.active.interval) - Math.min(b.passive.interval, b.active.interval));
 
   const pool: LocalWord[] = [...dueWords];
 
@@ -221,16 +247,17 @@ export async function getLocalDeckStats(profileId: string): Promise<DeckStats> {
   const words = await db.words
     .where('profileId')
     .equals(profileId)
-    .filter(w => w.deckName === LOCAL_DECK_NAME)
+    .filter(w => w.category === LOCAL_DECK_NAME)
     .toArray();
 
   const stats: DeckStats = { total: words.length, new: 0, learning: 0, review: 0, mature: 0 };
 
   for (const w of words) {
-    if (w.status === 'new') stats.new++;
-    else if (w.status === 'learning') stats.learning++;
-    else if (w.status === 'review') stats.review++;
-    else if (w.status === 'mature') stats.mature++;
+    const status = w.active.status; // За основу берем активную шкалу
+    if (status === 'new') stats.new++;
+    else if (status === 'learning') stats.learning++;
+    else if (status === 'review') stats.review++;
+    else if (status === 'mature') stats.mature++;
   }
 
   return stats;
@@ -258,14 +285,11 @@ export async function addWord(
     word,
     reading,
     translation,
-    deckName,
-    status: 'new',
-    stability: 0,
-    difficulty: 0,
-    interval: 0,
-    due: Date.now(),
-    reps: 0,
-    lapses: 0,
+    category: deckName,
+    source: 'manual',
+    passive: createDefaultFsrsState(Date.now()),
+    active: createDefaultFsrsState(Date.now()),
+    contextExamples: []
   };
 
   try {
@@ -275,3 +299,4 @@ export async function addWord(
     return { success: false, message: err.message || 'Ошибка добавления' };
   }
 }
+

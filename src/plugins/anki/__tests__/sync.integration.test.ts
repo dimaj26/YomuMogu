@@ -122,7 +122,7 @@ describe.runIf(ankiConnected)('Anki Bilateral Sync Real Integration Test', () =>
     expect(catWord).toBeDefined();
     expect(catWord?.word).toBe('猫');
     expect(catWord?.reading).toBe('ねко');
-    expect(catWord?.status).toBe('new');
+    expect(catWord?.active.status).toBe('new');
   }, 20000);
 
   it('should sync local reviews back to Anki and update FSRS parameters', async () => {
@@ -174,8 +174,8 @@ describe.runIf(ankiConnected)('Anki Bilateral Sync Real Integration Test', () =>
     const updatedWords = await getLocalWords(profileId, testDeckName);
     const updatedWord = updatedWords.find(w => w.id === cardId);
     expect(updatedWord).toBeDefined();
-    expect(updatedWord?.status).not.toBe('new');
-    expect(updatedWord?.reps).toBe(1);
+    expect(updatedWord?.active.status).not.toBe('new');
+    expect(updatedWord?.active.reps).toBe(1);
   }, 25000);
 
   it('should handle large batches (100 cards) during synchronization', async () => {
@@ -288,18 +288,18 @@ describe.runIf(ankiConnected)('Anki Bilateral Sync Real Integration Test', () =>
     expect(word2).toBeDefined();
     expect(word3).toBeDefined();
 
-    expect(word1?.reps).toBe(4);
-    expect(word2?.reps).toBe(5);
-    expect(word3?.reps).toBe(6);
+    expect(word1?.active.reps).toBe(4);
+    expect(word2?.active.reps).toBe(5);
+    expect(word3?.active.reps).toBe(6);
 
     // 5. Выполняем FSRS-расчет для каждой карты с оценкой Good (3) СЕГОДНЯ
     const dbWord1 = await db.words.get([profileId, card1Id]);
     const dbWord2 = await db.words.get([profileId, card2Id]);
     const dbWord3 = await db.words.get([profileId, card3Id]);
 
-    const res1 = calculateNextFsrsState(dbWord1, 3, new Date());
-    const res2 = calculateNextFsrsState(dbWord2, 3, new Date());
-    const res3 = calculateNextFsrsState(dbWord3, 3, new Date());
+    const res1 = calculateNextFsrsState(dbWord1, 3, 'active', new Date());
+    const res2 = calculateNextFsrsState(dbWord2, 3, 'active', new Date());
+    const res3 = calculateNextFsrsState(dbWord3, 3, 'active', new Date());
 
     console.log(`Новые интервалы - Стабильная: ${res1.newInterval}д, Колеблющаяся: ${res2.newInterval}д, Проблемная: ${res3.newInterval}д`);
 
@@ -320,29 +320,29 @@ describe.runIf(ankiConnected)('Anki Bilateral Sync Real Integration Test', () =>
       cardId: card1Id,
       ease: 3,
       interval: res1.newInterval,
-      lastInterval: dbWord1.interval,
+      lastInterval: dbWord1.active.interval,
       duration: 3000,
       timestamp: Date.now(),
       synced: 0
     });
-
+ 
     await addLocalReview({
       profileId,
       cardId: card2Id,
       ease: 3,
       interval: res2.newInterval,
-      lastInterval: dbWord2.interval,
+      lastInterval: dbWord2.active.interval,
       duration: 3000,
       timestamp: Date.now() + 10,
       synced: 0
     });
-
+ 
     await addLocalReview({
       profileId,
       cardId: card3Id,
       ease: 3,
       interval: res3.newInterval,
-      lastInterval: dbWord3.interval,
+      lastInterval: dbWord3.active.interval,
       duration: 3000,
       timestamp: Date.now() + 20,
       synced: 0

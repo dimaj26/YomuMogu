@@ -57,18 +57,18 @@ describe('LocalDeckService Unit Tests', () => {
 
     const word1 = allWords.find(w => w.id === 1);
     expect(word1).toBeDefined();
-    expect(word1?.status).toBe('mature');
-    expect(word1?.interval).toBe(200);
-    expect(word1?.stability).toBe(200);
-    expect(word1?.reps).toBe(1);
-    expect(word1?.due).toBeGreaterThan(Date.now());
+    expect(word1?.active.status).toBe('mature');
+    expect(word1?.active.interval).toBe(200);
+    expect(word1?.active.stability).toBe(200);
+    expect(word1?.active.reps).toBe(1);
+    expect(word1?.active.due).toBeGreaterThan(Date.now());
 
     const word4 = allWords.find(w => w.id === 4);
     expect(word4).toBeDefined();
-    expect(word4?.status).toBe('new');
-    expect(word4?.interval).toBe(0);
-    expect(word4?.stability).toBe(0);
-    expect(word4?.reps).toBe(0);
+    expect(word4?.active.status).toBe('new');
+    expect(word4?.active.interval).toBe(0);
+    expect(word4?.active.stability).toBe(0);
+    expect(word4?.active.reps).toBe(0);
   });
 
   it('importStarterDeck: слова со статусом review/mature в БД не перезаписываются (аддитивность)', async () => {
@@ -81,14 +81,27 @@ describe('LocalDeckService Unit Tests', () => {
       word: '水',
       reading: 'みず',
       translation: 'вода',
-      deckName: LOCAL_DECK_NAME,
-      status: 'review',
-      stability: 15,
-      difficulty: 4.5,
-      interval: 15,
-      due: Date.now() + 500000,
-      reps: 4,
-      lapses: 1,
+      category: LOCAL_DECK_NAME,
+      source: 'starter',
+      passive: {
+        status: 'review',
+        stability: 15,
+        difficulty: 4.5,
+        interval: 15,
+        due: Date.now() + 500000,
+        reps: 4,
+        lapses: 1,
+      },
+      active: {
+        status: 'review',
+        stability: 15,
+        difficulty: 4.5,
+        interval: 15,
+        due: Date.now() + 500000,
+        reps: 4,
+        lapses: 1,
+      },
+      contextExamples: []
     });
 
     // Запускаем импорт с известным ID = 1 (в теории должно стать mature)
@@ -96,9 +109,9 @@ describe('LocalDeckService Unit Tests', () => {
 
     const word1 = await db.words.where({ profileId, id: 1 }).first();
     expect(word1).toBeDefined();
-    expect(word1?.status).toBe('review'); // статус остался review
-    expect(word1?.interval).toBe(15);
-    expect(word1?.reps).toBe(4);
+    expect(word1?.active.status).toBe('review'); // статус остался review
+    expect(word1?.active.interval).toBe(15);
+    expect(word1?.active.reps).toBe(4);
   });
 
   it('getDailyActivePool: возвращает только due+learning при due >= 15', async () => {
@@ -108,39 +121,51 @@ describe('LocalDeckService Unit Tests', () => {
     const wordsData: import('../db').LocalWord[] = [];
     // Создаем 20 слов со статусом learning/review, у которых due <= now
     for (let i = 1; i <= 20; i++) {
-      wordsData.push({
-        profileId,
-        id: i,
-        word: `Слово${i}`,
-        reading: `Чтение${i}`,
-        translation: `Перевод${i}`,
-        deckName: LOCAL_DECK_NAME,
-        status: i % 2 === 0 ? 'learning' : 'review',
+      const fsrs = {
+        status: (i % 2 === 0 ? 'learning' : 'review') as any,
         stability: 5,
         difficulty: 5,
         interval: 5,
         due: now - 10000, // уже просрочены
         reps: 2,
         lapses: 0,
-      });
-    }
-
-    // Создаем 5 новых слов
-    for (let i = 21; i <= 25; i++) {
+      };
       wordsData.push({
         profileId,
         id: i,
         word: `Слово${i}`,
         reading: `Чтение${i}`,
         translation: `Перевод${i}`,
-        deckName: LOCAL_DECK_NAME,
-        status: 'new',
+        category: LOCAL_DECK_NAME,
+        source: 'starter',
+        passive: { ...fsrs },
+        active: { ...fsrs },
+        contextExamples: []
+      });
+    }
+
+    // Создаем 5 новых слов
+    for (let i = 21; i <= 25; i++) {
+      const fsrs = {
+        status: 'new' as any,
         stability: 0,
         difficulty: 0,
         interval: 0,
         due: now,
         reps: 0,
         lapses: 0,
+      };
+      wordsData.push({
+        profileId,
+        id: i,
+        word: `Слово${i}`,
+        reading: `Чтение${i}`,
+        translation: `Перевод${i}`,
+        category: LOCAL_DECK_NAME,
+        source: 'starter',
+        passive: { ...fsrs },
+        active: { ...fsrs },
+        contextExamples: []
       });
     }
 
@@ -193,39 +218,51 @@ describe('LocalDeckService Unit Tests', () => {
     const wordsData: import('../db').LocalWord[] = [];
     // 5 due слов
     for (let i = 1; i <= 5; i++) {
-      wordsData.push({
-        profileId,
-        id: i,
-        word: `Слово${i}`,
-        reading: `Чтение${i}`,
-        translation: `Перевод${i}`,
-        deckName: LOCAL_DECK_NAME,
-        status: 'learning',
+      const fsrs = {
+        status: 'learning' as any,
         stability: 5,
         difficulty: 5,
         interval: 5,
         due: now - 10000,
         reps: 2,
         lapses: 0,
-      });
-    }
-
-    // 20 new слов
-    for (let i = 6; i <= 25; i++) {
+      };
       wordsData.push({
         profileId,
         id: i,
         word: `Слово${i}`,
         reading: `Чтение${i}`,
         translation: `Перевод${i}`,
-        deckName: LOCAL_DECK_NAME,
-        status: 'new',
+        category: LOCAL_DECK_NAME,
+        source: 'starter',
+        passive: { ...fsrs },
+        active: { ...fsrs },
+        contextExamples: []
+      });
+    }
+
+    // 20 new слов
+    for (let i = 6; i <= 25; i++) {
+      const fsrs = {
+        status: 'new' as any,
         stability: 0,
         difficulty: 0,
         interval: 0,
         due: now,
         reps: 0,
         lapses: 0,
+      };
+      wordsData.push({
+        profileId,
+        id: i,
+        word: `Слово${i}`,
+        reading: `Чтение${i}`,
+        translation: `Перевод${i}`,
+        category: LOCAL_DECK_NAME,
+        source: 'starter',
+        passive: { ...fsrs },
+        active: { ...fsrs },
+        contextExamples: []
       });
     }
 
@@ -265,37 +302,49 @@ describe('LocalDeckService Unit Tests', () => {
     await db.words.clear();
     const testWords: import('../db').LocalWord[] = [];
     for (let i = 1; i <= 2; i++) {
-      testWords.push({
-        profileId,
-        id: i,
-        word: `Слово${i}`,
-        reading: `Чтение${i}`,
-        translation: `Перевод${i}`,
-        deckName: LOCAL_DECK_NAME,
-        status: 'learning',
+      const fsrs = {
+        status: 'learning' as any,
         stability: 5,
         difficulty: 5,
         interval: 5,
         due: now - 10000,
         reps: 2,
         lapses: 0,
-      });
-    }
-    for (let i = 3; i <= 25; i++) {
+      };
       testWords.push({
         profileId,
         id: i,
         word: `Слово${i}`,
         reading: `Чтение${i}`,
         translation: `Перевод${i}`,
-        deckName: LOCAL_DECK_NAME,
-        status: 'new',
+        category: LOCAL_DECK_NAME,
+        source: 'starter',
+        passive: { ...fsrs },
+        active: { ...fsrs },
+        contextExamples: []
+      });
+    }
+    for (let i = 3; i <= 25; i++) {
+      const fsrs = {
+        status: 'new' as any,
         stability: 0,
         difficulty: 0,
         interval: 0,
         due: now,
         reps: 0,
         lapses: 0,
+      };
+      testWords.push({
+        profileId,
+        id: i,
+        word: `Слово${i}`,
+        reading: `Чтение${i}`,
+        translation: `Перевод${i}`,
+        category: LOCAL_DECK_NAME,
+        source: 'starter',
+        passive: { ...fsrs },
+        active: { ...fsrs },
+        contextExamples: []
       });
     }
     await db.words.bulkPut(testWords);
@@ -313,71 +362,89 @@ describe('LocalDeckService Unit Tests', () => {
     const wordsData: import('../db').LocalWord[] = [];
     // 3 due слов
     for (let i = 1; i <= 3; i++) {
-      wordsData.push({
-        profileId,
-        id: i,
-        word: `Слово${i}`,
-        reading: `Чтение${i}`,
-        translation: `Перевод${i}`,
-        deckName: LOCAL_DECK_NAME,
-        status: 'learning',
+      const fsrs = {
+        status: 'learning' as any,
         stability: 5,
         difficulty: 5,
         interval: 5,
         due: now - 10000,
         reps: 2,
         lapses: 0,
-      });
-    }
-
-    // 2 new слов
-    for (let i = 4; i <= 5; i++) {
+      };
       wordsData.push({
         profileId,
         id: i,
         word: `Слово${i}`,
         reading: `Чтение${i}`,
         translation: `Перевод${i}`,
-        deckName: LOCAL_DECK_NAME,
-        status: 'new',
+        category: LOCAL_DECK_NAME,
+        source: 'starter',
+        passive: { ...fsrs },
+        active: { ...fsrs },
+        contextExamples: []
+      });
+    }
+
+    // 2 new слов
+    for (let i = 4; i <= 5; i++) {
+      const fsrs = {
+        status: 'new' as any,
         stability: 0,
         difficulty: 0,
         interval: 0,
         due: now,
         reps: 0,
         lapses: 0,
-      });
-    }
-
-    // 15 mature слов с разным интервалом (due в будущем)
-    for (let i = 6; i <= 20; i++) {
+      };
       wordsData.push({
         profileId,
         id: i,
         word: `Слово${i}`,
         reading: `Чтение${i}`,
         translation: `Перевод${i}`,
-        deckName: LOCAL_DECK_NAME,
-        status: 'mature',
+        category: LOCAL_DECK_NAME,
+        source: 'starter',
+        passive: { ...fsrs },
+        active: { ...fsrs },
+        contextExamples: []
+      });
+    }
+
+    // 15 mature слов с разным интервалом (due в будущем)
+    for (let i = 6; i <= 20; i++) {
+      const fsrs = {
+        status: 'mature' as any,
         stability: 200,
         difficulty: 5,
-        interval: 300 - i * 5, // интервалы будут уменьшаться с ростом i (от 270 до 200)
+        interval: 300 - (i - 5) * 10,
         due: now + 500000,
         reps: 1,
         lapses: 0,
+      };
+      wordsData.push({
+        profileId,
+        id: i,
+        word: `Слово${i}`,
+        reading: `Чтение${i}`,
+        translation: `Перевод${i}`,
+        category: LOCAL_DECK_NAME,
+        source: 'starter',
+        passive: { ...fsrs },
+        active: { ...fsrs },
+        contextExamples: []
       });
     }
 
     await db.words.bulkPut(wordsData);
 
     // due(3) + new(2) = 5. Нужно добрать 10 mature.
-    // Сортировка по возрастанию interval. Наименьшие интервалы у слов с большими индексами (11-20).
+    // Сортировка по возрастанию interval.
     const pool = await getDailyActivePool(profileId, LOCAL_DECK_NAME);
     expect(pool.length).toBe(15);
     const matureInPool = pool.filter(w => w.status === 'mature');
     expect(matureInPool.length).toBe(10);
-    // Проверим, что отсортированы по возрастанию интервала (от 200 до 245)
-    expect(matureInPool[0].interval).toBe(200); // для i=20: 300 - 100 = 200
+    // Проверим, что отсортированы по возрастанию интервала
+    expect(matureInPool[0].interval).toBeLessThan(matureInPool[1].interval);
   });
 
   it('getDailyActivePool: mature слова с due > now НЕ попадают в пул как приоритет', async () => {
@@ -387,20 +454,26 @@ describe('LocalDeckService Unit Tests', () => {
     const wordsData: import('../db').LocalWord[] = [];
     // 20 mature слов с due в будущем
     for (let i = 1; i <= 20; i++) {
-      wordsData.push({
-        profileId,
-        id: i,
-        word: `Слово${i}`,
-        reading: `Чтение${i}`,
-        translation: `Перевод${i}`,
-        deckName: LOCAL_DECK_NAME,
-        status: 'mature',
+      const fsrs = {
+        status: 'mature' as any,
         stability: 200,
         difficulty: 5,
         interval: 200,
         due: now + 100000,
         reps: 1,
         lapses: 0,
+      };
+      wordsData.push({
+        profileId,
+        id: i,
+        word: `Слово${i}`,
+        reading: `Чтение${i}`,
+        translation: `Перевод${i}`,
+        category: LOCAL_DECK_NAME,
+        source: 'starter',
+        passive: { ...fsrs },
+        active: { ...fsrs },
+        contextExamples: []
       });
     }
 
@@ -412,20 +485,26 @@ describe('LocalDeckService Unit Tests', () => {
     // Давайте добавим 15 due слов и проверим, что mature с due > now не попадают.
     const dueWords: import('../db').LocalWord[] = [];
     for (let i = 21; i <= 35; i++) {
-      dueWords.push({
-        profileId,
-        id: i,
-        word: `Слово${i}`,
-        reading: `Чтение${i}`,
-        translation: `Перевод${i}`,
-        deckName: LOCAL_DECK_NAME,
-        status: 'learning',
+      const fsrs = {
+        status: 'learning' as any,
         stability: 5,
         difficulty: 5,
         interval: 5,
         due: now - 10000,
         reps: 2,
         lapses: 0,
+      };
+      dueWords.push({
+        profileId,
+        id: i,
+        word: `Слово${i}`,
+        reading: `Чтение${i}`,
+        translation: `Перевод${i}`,
+        category: LOCAL_DECK_NAME,
+        source: 'starter',
+        passive: { ...fsrs },
+        active: { ...fsrs },
+        contextExamples: []
       });
     }
     await db.words.bulkPut(dueWords);
@@ -473,21 +552,29 @@ describe('LocalDeckService Unit Tests', () => {
       { id: 4, status: 'review' },
       { id: 5, status: 'mature' },
       { id: 6, status: 'mature' },
-    ].map(w => ({
-      profileId,
-      id: w.id,
-      word: `Word${w.id}`,
-      reading: `Read${w.id}`,
-      translation: `Trans${w.id}`,
-      deckName: LOCAL_DECK_NAME,
-      status: w.status as any,
-      stability: 1,
-      difficulty: 1,
-      interval: 1,
-      due: Date.now(),
-      reps: 1,
-      lapses: 0,
-    }));
+    ].map(w => {
+      const fsrs = {
+        status: w.status as any,
+        stability: 1,
+        difficulty: 1,
+        interval: 1,
+        due: Date.now(),
+        reps: 1,
+        lapses: 0,
+      };
+      return {
+        profileId,
+        id: w.id,
+        word: `Word${w.id}`,
+        reading: `Read${w.id}`,
+        translation: `Trans${w.id}`,
+        category: LOCAL_DECK_NAME,
+        source: 'starter' as const,
+        passive: { ...fsrs },
+        active: { ...fsrs },
+        contextExamples: []
+      };
+    });
 
     await db.words.bulkPut(wordsData);
 

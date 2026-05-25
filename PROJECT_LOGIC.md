@@ -230,8 +230,14 @@ interface LocalWord {
   word: string;
   reading: string;
   translation: string;
-  status: 'new' | 'learning' | 'review' | 'mature';
-  deckName: string;
+  category: string; // replaces deckName
+  source: 'anki' | 'starter' | 'manual';
+  passive: FsrsState;
+  active: FsrsState;
+  contextExamples?: WordContextExample[];
+}
+
+interface FsrsState {
   stability: number;
   difficulty: number;
   interval: number; // interval in days
@@ -239,6 +245,13 @@ interface LocalWord {
   lastReview?: number; // timestamp of last review
   reps: number;
   lapses: number;
+  status: 'new' | 'learning' | 'review' | 'mature';
+}
+
+interface WordContextExample {
+  sentence: string;
+  translation?: string;
+  timestamp: number;
 }
 
 // LocalReview (lib/db.ts)
@@ -252,6 +265,7 @@ interface LocalReview {
   duration: number; // answer duration in ms
   timestamp: number; // timestamp of review in ms
   synced: number; // 0 = unsynced, 1 = synced
+  reviewType?: 'passive' | 'active';
 }
 
 // UiWord (lib/db.ts)
@@ -277,7 +291,7 @@ interface UiWord {
 For local-first operation and off-session scheduling, YomuMogu maintains client-side storage using Dexie.js:
 - **`words` Table** (`[profileId+id]` compound key):
   - Stores the local replication of Anki cards including calculated FSRS variables.
-  - Indexes: `id`, `word`, `status`, `deckName`, `due`, `profileId`.
+  - Indexes: `id`, `word`, `category`, `passive.due`, `active.due`, `profileId`.
 - **`reviews` Table** (`id` auto-increment key):
   - Stores local review logs generated during dialogue practice.
   - Indexes: `[profileId+cardId]`, `cardId`, `timestamp`, `synced`, `profileId`.
@@ -434,6 +448,9 @@ To ensure state parity and permit offline study without losing scheduling progre
 4. **Day Boundary Alignment**: The scheduler's daily boundary alignment function (`alignToDayBoundary`) sets the review date timestamp to `04:00 AM` local time instead of midnight, matching the default new day boundary in Anki Desktop.
 5. **ReviewType Determination**: When inserting reviews into Anki, the sync engine queries `getCardsInfo` for each synced card to determine the correct `reviewType` (0=Learn, 1=Review, 2=Relearn) based on the card's actual Anki state (interval/queue), rather than inferring from `lastInterval`. This prevents falsely tagging mature card reviews as "Learn" steps, which would corrupt FSRS replay stability calculations.
 6. **LastInterval Correction**: If a local review has `lastInterval=0` but the card in Anki has `interval > 0`, the sync engine corrects `lastInterval` to the Anki card's actual interval. This prevents FSRS from treating an established card's review as a first-time learning step.
+7. **Dual-State FSRS**: Vocabulary entities maintain two distinct scheduling trajectories (`passive` and `active`). Passive scheduling handles recognition/reading, while active scheduling handles speech/writing production.
+8. **Anki Integration for Dual-States**: Anki sync processes use the active FSRS state as the primary scheduling data synced with Anki. Remote reviews are replayed to align both passive and active states, and imported translations have HTML cleanings applied.
+9. **Contextual Sentence Examples**: Sentences correctly produced by the user in dialogue are preserved as contextual examples in IndexedDB under the associated word entity's `contextExamples` field.
 
 ---
 
@@ -478,9 +495,9 @@ To hide user-facing "Japanification" branding, the system is referred to as "Lan
 7. **[PL-8.7] No Tailwind.** CSS Modules only.
 8. **[PL-8.8] Test coverage.** Every new API route needs unit test with mocked Gemini/Anki.
 9. **[PL-8.9] System instruction language.** Never use forbidden words (see PL-5.4).
-10. **[PL-8.10] Git safety.** No automated git ops. `git push` must be a standalone command.
+10. **[PL-8.10] Git safety.** AI is allowed to automatically run GW-1 to stage and commit changes locally upon completing milestones. Automated `git push` is strictly forbidden and must only be run on explicit user instruction.
 11. **[PL-8.11] Temporary scripts logging.** All temporary, scratch, or diagnostic files created in the workspace (e.g. in `scratch/`) must be registered in `scratch/SCRATCH_LOG.md` immediately upon creation. This log acts as a permanent historical audit trail: entries are never deleted. All side-effects (Anki decks, SQLite files, database entries) must be fully cleaned up prior to script file deletion, and the script status updated in the log to serve as a trace for any future troubleshooting.
-12. **[PL-8.12] Changelog updates.** Root `CHANGELOG.md` must be updated via `CMD-4` on every feature release or documentation restructuring. It is not pre-read automatically for Route A, but must be checked during onboarding or troubleshooting to capture the current active version and historical updates.
+12. **[PL-8.12] Changelog updates.** Root `CHANGELOG.md` (Public, tracked in Git) must be updated via `CMD-4` on every feature release or documentation restructuring. It is not pre-read automatically for Route A, but must be checked during onboarding or troubleshooting to capture the current active version and historical updates.
 
 
 ---
@@ -513,4 +530,4 @@ npm run test:integration:gemini # Live LLM integration tests (uses Gemini API, c
 
 ### [PL-9.4] Current Test Count
 
-167 unit tests across 26 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
+168 unit tests across 26 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).

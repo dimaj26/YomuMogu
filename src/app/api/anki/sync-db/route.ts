@@ -214,6 +214,17 @@ export async function POST(request: NextRequest) {
     // 5. Парсим и классифицируем карточки для возврата на клиент
     const parsedWords = parseAndFilterCards(remoteCardsInfo, frontField, backField, undefined, deckMappings);
 
+    // Очищаем переводы от HTML тегов и ограничиваем размер
+    for (const card of parsedWords) {
+      if (card.translation) {
+        card.translation = card.translation
+          .replace(/<[^>]*>/g, '') // Удаляем HTML теги
+          .replace(/\s+/g, ' ')   // Схлопываем лишние пробелы
+          .trim()
+          .substring(0, 150);     // Лимитируем длину
+      }
+    }
+
     logger.info(`${logPrefix}[Step: Success] Двусторонняя синхронизация успешно завершена для колоды "${deckName}". Передано ${parsedWords.length} слов.`);
 
     return NextResponse.json({

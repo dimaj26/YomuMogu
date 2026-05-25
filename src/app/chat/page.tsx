@@ -629,19 +629,44 @@ export default function ChatPage() {
             word: wordObj.word,
             reading: wordObj.reading,
             translation: wordObj.translation,
-            status: wordObj.status || 'new',
-            deckName: targetDeckName,
-            stability: 0,
-            difficulty: 0,
-            interval: 0,
-            due: Date.now(),
-            reps: 0,
-            lapses: 0
+            category: targetDeckName,
+            source: 'anki',
+            passive: createDefaultFsrsState(Date.now()),
+            active: createDefaultFsrsState(Date.now()),
+            contextExamples: []
           };
         }
 
-        const { updatedWord, newInterval, lastInterval } = calculateNextFsrsState(localWord, ease);
-        await db.words.put(updatedWord);
+        const isCollected = collectedWords.has(wordObj.word);
+        const type: 'passive' | 'active' = isCollected ? 'active' : 'passive';
+
+        const { updatedWord, newInterval, lastInterval } = calculateNextFsrsState(localWord, ease, type);
+        let finalWord = updatedWord;
+
+        // Если это успешное активное повторение, подтягиваем и пассивный стейт
+        if (isCollected && ease > 1) {
+          const passRes = calculateNextFsrsState(finalWord, ease, 'passive');
+          finalWord = passRes.updatedWord;
+        }
+
+        // Сохраняем пример использования в диалоге
+        if (isCollected) {
+          const userMessages = messages.filter(m => m.role === 'user' && m.text.includes(wordObj.word));
+          if (userMessages.length > 0) {
+            const bestMessage = userMessages[userMessages.length - 1];
+            const examples = finalWord.contextExamples || [];
+            if (!examples.some(ex => ex.sentence === bestMessage.text)) {
+              examples.push({
+                sentence: bestMessage.text,
+                translation: bestMessage.translation,
+                timestamp: Date.now()
+              });
+              finalWord.contextExamples = examples;
+            }
+          }
+        }
+
+        await db.words.put(finalWord);
 
         await addLocalReview({
           profileId,
@@ -651,7 +676,8 @@ export default function ChatPage() {
           lastInterval,
           duration: 5000, // Разумная длительность для чат-практики (5 сек)
           timestamp: Date.now(),
-          synced: 0
+          synced: 0,
+          reviewType: type
         });
       }
 
@@ -883,19 +909,44 @@ export default function ChatPage() {
                   word: wordObj.word,
                   reading: wordObj.reading,
                   translation: wordObj.translation,
-                  status: wordObj.status || 'new',
-                  deckName: targetDeckName,
-                  stability: 0,
-                  difficulty: 0,
-                  interval: 0,
-                  due: Date.now(),
-                  reps: 0,
-                  lapses: 0
+                  category: targetDeckName,
+                  source: 'anki',
+                  passive: createDefaultFsrsState(Date.now()),
+                  active: createDefaultFsrsState(Date.now()),
+                  contextExamples: []
                 };
               }
               
-              const { updatedWord, newInterval, lastInterval } = calculateNextFsrsState(localWord, ease);
-              await db.words.put(updatedWord);
+              const isCollected = collectedWords.has(wordObj.word);
+              const type: 'passive' | 'active' = isCollected ? 'active' : 'passive';
+
+              const { updatedWord, newInterval, lastInterval } = calculateNextFsrsState(localWord, ease, type);
+              let finalWord = updatedWord;
+
+              // Если это успешное активное повторение, подтягиваем и пассивный стейт
+              if (isCollected && ease > 1) {
+                const passRes = calculateNextFsrsState(finalWord, ease, 'passive');
+                finalWord = passRes.updatedWord;
+              }
+
+              // Сохраняем пример использования в диалоге
+              if (isCollected) {
+                const userMessages = messages.filter(m => m.role === 'user' && m.text.includes(wordObj.word));
+                if (userMessages.length > 0) {
+                  const bestMessage = userMessages[userMessages.length - 1];
+                  const examples = finalWord.contextExamples || [];
+                  if (!examples.some(ex => ex.sentence === bestMessage.text)) {
+                    examples.push({
+                      sentence: bestMessage.text,
+                      translation: bestMessage.translation,
+                      timestamp: Date.now()
+                    });
+                    finalWord.contextExamples = examples;
+                  }
+                }
+              }
+
+              await db.words.put(finalWord);
               
               await addLocalReview({
                 profileId,
@@ -905,7 +956,8 @@ export default function ChatPage() {
                 lastInterval,
                 duration: 5000, // Разумная длительность для чат-практики (5 сек)
                 timestamp: Date.now(),
-                synced: 0
+                synced: 0,
+                reviewType: type
               });
             }
           }
