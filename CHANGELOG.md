@@ -14,6 +14,10 @@ All notable changes to the YomuMogu project are documented in this file. The for
 - Integrated FSRS dual-curve alignment (`alignPassiveToActiveState`) inside the remote review synchronization replayer (`db.ts`) and client-side chat review updates, assuring passive recognition stability updates synchronously with active production trials.
 - Configured local reviews synchronization (`/api/anki/sync-db`) to filter out and skip local reviews of type `passive` to avoid polluting the single Anki FSRS curve.
 
+### Fixed
+- Corrected Cyrillic character typo in the reading of word 115 (忙しい) inside the offline starter deck database (`starter_deck.json`).
+- Stabilized quiz page test assertions by adding focus checks (`toHaveFocus`) before typing values to prevent mock rendering loop race conditions.
+
 ## [1.19.0] - 2026-05-25
 ### Added
 - Added dual-state FSRS scheduling support (`passive` and `active` states) for each vocabulary item in IndexedDB to separately track recognition (reading) and recall/usage (chat dialog writing).
