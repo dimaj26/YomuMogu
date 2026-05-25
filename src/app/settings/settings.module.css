@@ -47,6 +47,7 @@
 .statusBox {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
   padding: 16px;
   border-radius: var(--border-radius-sm);

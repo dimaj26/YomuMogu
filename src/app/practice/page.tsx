@@ -67,15 +67,15 @@ export default function PracticePage() {
           const localWords = await db.words
             .where('profileId')
             .equals(profileId)
-            .filter(w => w.deckName === LOCAL_DECK_NAME)
+            .filter(w => w.category === LOCAL_DECK_NAME)
             .toArray();
           const mapped = localWords.map(w => ({
             id: w.id,
             word: w.word,
             translation: w.translation,
-            interval: w.interval,
-            status: w.status,
-            deckName: w.deckName,
+            interval: w.active.interval,
+            status: w.active.status,
+            deckName: w.category,
             rawFront: w.word,
             rawBack: w.translation,
             cardIds: [w.id]
