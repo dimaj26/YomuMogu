@@ -87,16 +87,25 @@ src/
 
 | File | Role |
 |---|---|
+| `core/db.ts` | Dexie.js client-side database definitions, schemas, and FSRS transaction helpers |
+| `core/scheduler.ts` | Polymorphic FSRS mathematical calculation engine supporting active/passive states |
 | `core/localDeckService.ts` | Offline local starter deck service and local db operations |
+| `core/types.ts` | Central TypeScript interface definitions for db schemas, reviews, and FSRS states |
+| `core/pluginRegistry.ts` | Interfaces for custom learning plugins and active `WordSource` providers |
 | `core/__tests__/localDeckService.test.ts` | Unit tests for localDeckService |
+| `plugins/anki/index.ts` | Entry point for the Anki integration plugin registering itself to the core |
+| `plugins/anki/client.ts` | `AnkiConnectClient` wrapper class querying local Anki desktop HTTP API |
+| `plugins/anki/filter.ts` | Functional filters classifying card statuses from raw Anki queue parameters |
+| `plugins/anki/wordSource.ts` | Implements `WordSource` utilizing Anki client for deck querying and sync |
 | `lib/dict/jitendex.ts` | `lookupWord(word)` — offline SQLite JitenDex dictionary lookup |
 | `lib/dict/lookup.py` | Python script invoked via Node `execFile` to query SQLite dictionary database |
 | `lib/gemini/client.ts` | `GeminiClient.generateSessions(words)` — singleton `geminiClient` |
 | `lib/gemini/chat.ts` | `ChatService.sendMessage()`, `ChatService.generateHints()` — singleton `chatService` |
-| `lib/gemini/prompts.ts` | `getChatSystemInstruction()`, `getHintSystemInstruction()` — centralized prompt templates for Gemini AI character persona and rules |
-| `lib/gemini/retry.ts` | `withRetry(fn, options)`, `GEMINI_MODELS` array, exponential backoff + model fallback |
-| `lib/gemini/__tests__/scenarios.integration.test.ts` | Integration tests verifying 4 multi-turn dialogue scenarios for the AI Sensei (Memory, Keigo exclusion, Nudging, Ambiguity resolution) against live Gemini API |
-| `scratch/SCRATCH_LOG.md` | Markdown registry for logging temporary sandbox/scratch scripts and their created resources/side-effects |
+| `lib/gemini/prompts.ts` | Centralized prompt templates for Gemini AI character persona and difficulty levels |
+| `lib/gemini/retry.ts` | Singleton wrapper implementing exponential backoffs and model fallback loops |
+| `lib/gemini/__tests__/scenarios.integration.test.ts` | Integration tests verifying multi-turn conversational scenarios against live Gemini API |
+| `scratch/SCRATCH_LOG.md` | Permanent historical audit registry tracking sandbox scripts and side effects |
+
 
 ---
 
