@@ -15,9 +15,11 @@ All notable changes to the YomuMogu project are documented in this file. The for
 - Integrated FSRS dual-curve alignment (`alignPassiveToActiveState`) inside the remote review synchronization replayer (`db.ts`) and client-side chat review updates, assuring passive recognition stability updates synchronously with active production trials.
 - Configured local reviews synchronization (`/api/anki/sync-db`) to filter out and skip local reviews of type `passive` to avoid polluting the single Anki FSRS curve.
 - Updated `GEMINI.md` and `CONTEXT_PROMPT.md` to enforce procedural TDD checks (naming reproducing tests in plans before execution) and to provide clear setup instructions for `fake-indexeddb` database-dependent unit testing.
+- Renamed the user-facing term "Локальная колода" (local deck) to "Локальный список" (local list) in settings and practice pages to decouple the offline vocabulary source from Anki terminology, preserving internal database indices to protect user progress.
 
 ### Fixed
 - Corrected Cyrillic character typo in the reading of word 115 (忙しい) inside the offline starter deck database (`starter_deck.json`).
+- Corrected Japanese reading typos for words 425 (アドバイスする) and 459 (ネガティブ) inside the offline starter list database (`starter_deck.json`).
 - Stabilized quiz page test assertions by adding focus checks (`toHaveFocus`) before typing values to prevent mock rendering loop race conditions.
 
 ## [1.19.0] - 2026-05-25
