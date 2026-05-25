@@ -9,6 +9,7 @@ All notable changes to the YomuMogu project are documented in this file. The for
 - Integrated FSRS active due count indicator and quiz launcher button in the Practice page dashboard (`/practice`).
 - Added complete unit test coverage for the quiz page in `src/app/practice/quiz/__tests__/page.test.tsx` verifying loading states, standard/ad-hoc modes, feedback, and hint functionality.
 - Added database-dependent JSDOM page integration regression tests for settings page (`src/app/settings/__tests__/page.test.tsx`) and practice page (`src/app/practice/__tests__/page.test.tsx`) that mock local Dexie database entries and verify statistics and due quiz counts in local mode.
+- Added automatic synchronization of existing local database words with the updated starter deck (`syncExistingLocalWordsWithStarterDeck`) upon initializing settings or practice page dashboards, fixing text and transcription typos automatically on the client side without losing FSRS progress.
 
 ### Changed
 - Replaced the inline Bonus Test screen in `/chat` page with an ad-hoc quiz redirect (`/practice/quiz?words=...`) rendering checklist dialog examples with user selection controls.
