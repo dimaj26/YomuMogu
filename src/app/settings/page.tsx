@@ -18,7 +18,8 @@ import {
   incrementDailyNewWordsCount,
   getDailyActivePool,
   getLocalDeckStats,
-  getDailyNewWordsLimit
+  getDailyNewWordsLimit,
+  syncExistingLocalWordsWithStarterDeck
 } from '@/core/localDeckService';
 import { db } from '@/core/db';
 
@@ -373,10 +374,11 @@ export default function SettingsPage() {
   const checkLocalDeckStatus = async () => {
     if (!activeProfileId) return;
     const initialized = await isLocalDeckInitialized(activeProfileId);
-    setIsLocalInitialized(initialized);
     if (initialized) {
+      await syncExistingLocalWordsWithStarterDeck(activeProfileId);
       setDailyNewWordsCount(getDailyNewWordsCount(activeProfileId));
     }
+    setIsLocalInitialized(initialized);
   };
 
   useEffect(() => {

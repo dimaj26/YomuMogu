@@ -300,3 +300,44 @@ export async function addWord(
   }
 }
 
+/**
+ * Корректирует опечатки/поля в уже импортированных словах локального списка
+ * на основе свежей версии starter_deck.json, сохраняя историю FSRS.
+ */
+export async function syncExistingLocalWordsWithStarterDeck(profileId: string): Promise<void> {
+  if (typeof window === 'undefined') return;
+
+  const deckData = (await import('../resources/starter_deck.json')).default;
+  const existingWords = await db.words
+    .where('profileId')
+    .equals(profileId)
+    .filter(w => w.category === LOCAL_DECK_NAME)
+    .toArray();
+
+  if (existingWords.length === 0) return;
+
+  const existingMap = new Map<number, LocalWord>(existingWords.map(w => [w.id, w]));
+  const wordsToUpdate: LocalWord[] = [];
+
+  for (const item of deckData) {
+    const existing = existingMap.get(item.id);
+    if (existing) {
+      if (
+        existing.word !== item.word ||
+        existing.reading !== item.reading ||
+        existing.translation !== item.translation
+      ) {
+        existing.word = item.word;
+        existing.reading = item.reading;
+        existing.translation = item.translation;
+        wordsToUpdate.push(existing);
+      }
+    }
+  }
+
+  if (wordsToUpdate.length > 0) {
+    await db.words.bulkPut(wordsToUpdate);
+    console.log(`[LocalDeck] Автоматически исправлены опечатки в ${wordsToUpdate.length} словах для профиля ${profileId}`);
+  }
+}
+

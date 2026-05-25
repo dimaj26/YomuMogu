@@ -14,7 +14,8 @@ import {
   getDailyActivePool,
   getDailyNewWordsLimit,
   getDailyNewWordsCount,
-  incrementDailyNewWordsCount
+  incrementDailyNewWordsCount,
+  syncExistingLocalWordsWithStarterDeck
 } from '@/core/localDeckService';
 import { db } from '@/core/db';
 import { AnkiWord } from '@/plugins/anki/filter';
@@ -63,6 +64,7 @@ export default function PracticePage() {
         const initialized = await isLocalDeckInitialized(profileId);
         setIsLocalInitialized(initialized);
         if (initialized) {
+          await syncExistingLocalWordsWithStarterDeck(profileId);
           setDailyNewWordsCount(getDailyNewWordsCount(profileId));
           const localWords = await db.words
             .where('profileId')
