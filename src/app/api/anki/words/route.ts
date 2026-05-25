@@ -4,7 +4,7 @@ import { parseAndFilterCards } from '@/plugins/anki/filter';
 import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
-  if (process.env.ANKI_ENABLED !== 'true') {
+  if (process.env.ANKI_ENABLED === 'false') {
     return NextResponse.json({ error: 'Anki integration is disabled' }, { status: 403 });
   }
 

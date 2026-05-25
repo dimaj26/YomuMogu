@@ -1,5 +1,6 @@
 import { AnkiCardInfo } from './client';
 import { CardWord as AnkiWord } from '../../core/types';
+export type { AnkiWord };
 
 /**
  * Очищает HTML-теги из строк Anki

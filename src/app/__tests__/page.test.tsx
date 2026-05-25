@@ -54,7 +54,7 @@ describe('HomePage Component', () => {
     });
 
     expect(screen.getByText('Превратите ваши слова в живую речь!')).toBeInTheDocument();
-    expect(screen.getByText('Привет! Давай попрактикуемся сегодня? Выбери тему в настройках!')).toBeInTheDocument();
+    expect(screen.getByText('Привет! Давай попрактикуемся сегодня? Перейди в раздел практики и выбери тему!').textContent).toBe('Привет! Давай попрактикуемся сегодня? Перейди в раздел практики и выбери тему!');
   });
 
   it('renders landing page with Resume Practice button when there is an active session', async () => {

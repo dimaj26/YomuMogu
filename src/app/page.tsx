@@ -112,7 +112,7 @@ export default function HomePage() {
     // Обычное приветствие
     switch (level) {
       case 0:
-        return { __html: "Привет! Давай попрактикуемся сегодня? Выбери тему в настройках!" };
+        return { __html: "Привет! Давай попрактикуемся сегодня? Перейди в раздел практики и выбери тему!" };
       case 1:
       case 2:
         return { __html: "こんにちは！<ruby>今日<rt>きょう</rt></ruby>も<ruby>練習<rt>れんしゅう</rt></ruby>しましょう！" };
@@ -229,7 +229,7 @@ export default function HomePage() {
               </span>
             </>
           ) : (
-            <Link href="/settings" className="btn-3d btn-green" style={{ fontSize: '20px', padding: '16px 32px' }}>
+            <Link href="/practice" className="btn-3d btn-green" style={{ fontSize: '20px', padding: '16px 32px' }}>
               {t("Начать практику", "練習を開始する", 2)}
             </Link>
           )}

@@ -57,11 +57,9 @@ export default function SettingsPage() {
   const [isLoadingConnection, setIsLoadingConnection] = useState<boolean>(false);
   const [isLoadingDecks, setIsLoadingDecks] = useState<boolean>(false);
   const [isLoadingWords, setIsLoadingWords] = useState<boolean>(false);
-  const [isLoadingSessions, setIsLoadingSessions] = useState<boolean>(false);
   
   const [error, setError] = useState<string | null>(null);
   const [wordLoadSuccess, setWordLoadSuccess] = useState<boolean>(false);
-  const [sessions, setSessions] = useState<any[]>([]);
 
   // Локальный автономный режим
   const [isLocalInitialized, setIsLocalInitialized] = useState<boolean>(false);
@@ -82,7 +80,6 @@ export default function SettingsPage() {
   const [activeProfileId, setActiveProfileIdState] = useState<string>('default');
   const [newProfileName, setNewProfileName] = useState<string>('');
   const [showAddProfile, setShowAddProfile] = useState<boolean>(false);
-  const [inProgressSessions, setInProgressSessions] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'profile' | 'anki' | 'cloud'>('anki');
 
   useEffect(() => {
@@ -131,60 +128,7 @@ export default function SettingsPage() {
     }
   };
 
-  // Сгенерировать темы диалогов при помощи Gemini
-  const generateSessions = async () => {
-    setIsLoadingSessions(true);
-    setError(null);
-    try {
-      let wordsToUse = words;
-      if (deckMode === 'local') {
-        wordsToUse = await getDailyActivePool(activeProfileId, LOCAL_DECK_NAME);
-      }
-
-      if (wordsToUse.length === 0) {
-        if (deckMode === 'local') {
-          setError('Колода не инициализирована или пуста. Пройдите оценку знаний.');
-        } else {
-          setError('Список слов пуст. Импортируйте слова.');
-        }
-        setIsLoadingSessions(false);
-        return;
-      }
-
-      const response = await fetch('/api/gemini/sessions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ words: wordsToUse }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setSessions(data.sessions || []);
-        
-        // Если это локальный режим, увеличиваем квоту изученных слов сегодня
-        if (deckMode === 'local') {
-          const newWordsInPool = wordsToUse.filter(w => w.status === 'new').length;
-          if (newWordsInPool > 0) {
-            incrementDailyNewWordsCount(activeProfileId, newWordsInPool);
-            setDailyNewWordsCount(getDailyNewWordsCount(activeProfileId));
-          }
-        }
-      } else {
-        setError(data.error || 'Не удалось сгенерировать темы');
-      }
-    } catch (err) {
-      setError('Ошибка при обращении к ИИ для генерации тем.');
-    } finally {
-      setIsLoadingSessions(false);
-    }
-  };
-
-  // Начать конкретную сессию
-  const startSession = (session: any) => {
-    setProfileItem('active_session', JSON.stringify(session));
-    router.push('/chat');
-  };
+  // Сессии управления диалогом перенесены на страницу практики (/practice)
 
   // Настройка стандартной колоды YomuMogu в Anki
   const setupStandardDeck = async () => {
@@ -354,8 +298,7 @@ export default function SettingsPage() {
       const savedWords = getProfileItem('words');
       if (savedWords) setWords(JSON.parse(savedWords));
       
-      const savedSessions = getProfileItem('sessions');
-      if (savedSessions) setSessions(JSON.parse(savedSessions));
+      // Загрузка сессий перенесена на страницу практики (/practice)
 
       const savedQuotaPreset = getProfileItem('quota_preset');
       if (savedQuotaPreset) {
@@ -444,7 +387,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!hasLoaded) return;
-    const isAnkiEnabled = process.env.NEXT_PUBLIC_ANKI_ENABLED === 'true';
+    const isAnkiEnabled = process.env.NEXT_PUBLIC_ANKI_ENABLED !== 'false';
     if (!isAnkiEnabled && deckMode !== 'local') {
       setDeckMode('local');
       return;
@@ -558,37 +501,13 @@ export default function SettingsPage() {
     setProfileItem('words', JSON.stringify(words));
   }, [words, hasLoaded]);
 
-  useEffect(() => {
-    if (!hasLoaded) return;
-    setProfileItem('sessions', JSON.stringify(sessions));
-  }, [sessions, hasLoaded]);
-
-  useEffect(() => {
-    if (!hasLoaded || sessions.length === 0) return;
-
-    const inProgress = new Set<string>();
-    sessions.forEach(session => {
-      try {
-        const savedStateStr = getProfileItem(`chat_state_${session.id}`);
-        if (savedStateStr) {
-          const savedState = JSON.parse(savedStateStr);
-          if (savedState && savedState.messages && savedState.messages.length > 0) {
-            inProgress.add(session.id);
-          }
-        }
-      } catch (e) {
-        // Ошибка чтения или парсинга состояния сессии
-      }
-    });
-    setInProgressSessions(inProgress);
-  }, [sessions, activeProfileId, hasLoaded]);
+  // Логика сохранения сессий и отслеживания прогресса перенесена на /practice
 
   const handleResetProgress = async () => {
     if (window.confirm('Вы уверены, что хотите сбросить весь прогресс, настройки и импортированные слова?')) {
       resetProgress();
       await resetUiProgress();
       setWords([]);
-      setSessions([]);
       setSelectedDeck('__all__');
       setFrontField('Front');
       setBackField('Back');
@@ -610,27 +529,7 @@ export default function SettingsPage() {
     }
   };
 
-  const handleDiscardSessionInSettings = (sessionId: string) => {
-    if (window.confirm('Вы действительно хотите сбросить прогресс этой сессии диалога? Весь несинхронизированный прогресс будет потерян.')) {
-      removeProfileItem(`chat_state_${sessionId}`);
-      
-      const activeStr = getProfileItem('active_session');
-      if (activeStr) {
-        try {
-          const parsed = JSON.parse(activeStr);
-          if (parsed && parsed.id === sessionId) {
-            removeProfileItem('active_session');
-          }
-        } catch {}
-      }
-      
-      setInProgressSessions(prev => {
-        const next = new Set(prev);
-        next.delete(sessionId);
-        return next;
-      });
-    }
-  };
+  // Сброс прогресса сессии перенесен на страницу практики (/practice)
 
 
   // Статистика слов
@@ -671,7 +570,7 @@ export default function SettingsPage() {
             className={`${styles.tabBtn} ${activeTab === 'anki' ? styles.tabBtnActive : ''}`}
           >
             <BookOpen size={18} />
-            <span>Импорт & Anki</span>
+            <span>Источник обучения</span>
           </button>
           <button
             onClick={() => setActiveTab('cloud')}
@@ -917,7 +816,7 @@ export default function SettingsPage() {
 
                   {/* Переключатель режима колоды */}
                   <div className={styles.modeSelector}>
-                    {process.env.NEXT_PUBLIC_ANKI_ENABLED === 'true' && (
+                    {process.env.NEXT_PUBLIC_ANKI_ENABLED !== 'false' && (
                       <>
                         <button
                           type="button"
@@ -1245,88 +1144,7 @@ export default function SettingsPage() {
                         </div>
                       </div>
 
-                      {/* Генерация сессий с Gemini */}
-                      <div className={styles.sessionSection}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-                          <h3 className={styles.sessionSectionTitle}>
-                            <Sparkles size={20} style={{ color: 'var(--color-blue)' }} /> Разговорные сессии с Gemini ИИ
-                          </h3>
-                          {sessions.length === 0 && (
-                            <button
-                              onClick={generateSessions}
-                              disabled={isLoadingSessions}
-                              className="btn-3d btn-blue"
-                              style={{ padding: '8px 16px', fontSize: '14px' }}
-                            >
-                              {isLoadingSessions ? 'Создание тем...' : 'Сгенерировать темы тренировок'}
-                            </button>
-                          )}
-                        </div>
-
-                        {isLoadingSessions && (
-                          <div className={styles.loadingText} style={{ padding: '32px' }}>
-                            <RefreshCw size={24} className={`${styles.spin}`} style={{ margin: '0 auto 12px auto', color: 'var(--color-blue)', display: 'block' }} />
-                            <p style={{ margin: 0, fontWeight: 700 }}>ИИ анализирует ваши слова и подбирает лучшие сценарии...</p>
-                          </div>
-                        )}
-
-                        {sessions.length > 0 && (
-                          <div className={styles.sessionGrid}>
-                            {sessions.map((session) => (
-                              <div key={session.id} className={styles.sessionCard}>
-                                <h4 className={styles.sessionTitle}>{session.title}</h4>
-                                <p className={styles.sessionDescription}>{session.description}</p>
-                                <div className={styles.sessionWordsTitle}>Целевые слова:</div>
-                                <div className={styles.sessionWordList}>
-                                  {session.targetWords.map((tw: any, idx: number) => (
-                                    <span key={idx} className={styles.sessionWordBadge}>
-                                      {tw.translation}
-                                    </span>
-                                  ))}
-                                </div>
-                                {inProgressSessions.has(session.id) ? (
-                                  <div style={{ display: 'flex', gap: '8px', width: '100%', marginTop: 'auto' }}>
-                                    <button
-                                      onClick={() => startSession(session)}
-                                      className="btn-3d btn-blue"
-                                      style={{ flex: 1, padding: '8px 12px', fontSize: '14px' }}
-                                    >
-                                      Продолжить
-                                    </button>
-                                    <button
-                                      onClick={() => handleDiscardSessionInSettings(session.id)}
-                                      className="btn-3d btn-red"
-                                      style={{ padding: '8px 12px', fontSize: '14px' }}
-                                      title="Сбросить прогресс сессии"
-                                    >
-                                      Сброс
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <button
-                                    onClick={() => startSession(session)}
-                                    className="btn-3d btn-green"
-                                    style={{ width: '100%', marginTop: 'auto', padding: '8px 16px', fontSize: '14px' }}
-                                  >
-                                    Начать практику
-                                  </button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {sessions.length > 0 && (
-                          <button
-                            onClick={generateSessions}
-                            disabled={isLoadingSessions}
-                            className="btn-3d"
-                            style={{ padding: '8px 16px', fontSize: '14px', alignSelf: 'center' }}
-                          >
-                            {isLoadingSessions ? 'Обновление...' : 'Перегенерировать другие темы'}
-                          </button>
-                        )}
-                      </div>
+                      {/* Сессии перенесены на /practice */}
 
                       {/* Таблица слов */}
                       <div className={styles.tableWrapper}>

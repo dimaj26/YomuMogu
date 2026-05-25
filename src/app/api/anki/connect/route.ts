@@ -3,7 +3,7 @@ import { ankiClient } from '@/plugins/anki/client';
 import { logger } from '@/lib/logger';
 
 export async function GET() {
-  if (process.env.ANKI_ENABLED !== 'true') {
+  if (process.env.ANKI_ENABLED === 'false') {
     return NextResponse.json({ error: 'Anki integration is disabled' }, { status: 403 });
   }
 

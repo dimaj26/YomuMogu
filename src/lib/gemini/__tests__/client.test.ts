@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GeminiClient } from '../client';
-import { AnkiWord } from '../../anki/filter';
+import { AnkiWord } from '@/plugins/anki/filter';
 
 // Мокаем SDK GoogleGenAI
 vi.mock('@google/genai', () => {

@@ -29,9 +29,13 @@ src/
     page.module.css       # Root landing page CSS module
     layout.tsx            # Root layout (Nunito font, global CSS)
     globals.css           # Design system tokens, global classes
-    settings/             # /settings page — Anki config + profile + sessions
+    settings/             # /settings page — Anki config, profile switching, and field mapping configurations
       page.tsx
       settings.module.css
+      __tests__/page.test.tsx
+    practice/             # /practice page — Practice launcher, session management, scenario generation
+      page.tsx
+      practice.module.css
       __tests__/page.test.tsx
     chat/                 # /chat page — AI conversation interface
       page.tsx
@@ -509,4 +513,4 @@ npm run test:integration:gemini # Live LLM integration tests (uses Gemini API, c
 
 ### [PL-9.4] Current Test Count
 
-162 unit tests across 24 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
+167 unit tests across 26 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).

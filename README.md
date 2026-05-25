@@ -94,7 +94,8 @@ src/
   app/                    # Next.js pages and API routes
     page.tsx              # Root landing page & dashboard start menu
     chat/                 # Conversation UI & Bonus/Sync flow
-    settings/             # Deck imports, session list, XP profiles
+    practice/             # Practice launcher, session management, & stats
+    settings/             # Deck settings, profile management, & field mappings
     api/                  # Proxy routes to Gemini & AnkiConnect
     error.tsx             # Global layout error fallback page
   components/             # UI Components (LanguageSwitcher, JpUI, ErrorBoundary)

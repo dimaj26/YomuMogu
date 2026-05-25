@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
-import { AnkiWord } from '../anki/filter';
+import { AnkiWord } from '@/plugins/anki/filter';
 import { logger } from '../logger';
 import { withRetry, GeminiModel } from './retry';
 

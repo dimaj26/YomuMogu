@@ -16,8 +16,8 @@ export class AnkiPlugin implements Plugin {
   }
 }
 
-// Register if enabled
-if (process.env.ANKI_ENABLED === 'true') {
+// Регистрируем плагин по умолчанию, если он не отключен явно через переменные окружения
+if (process.env.ANKI_ENABLED !== 'false') {
   const plugin = new AnkiPlugin();
   registerPlugin(plugin);
 }

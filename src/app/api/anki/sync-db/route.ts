@@ -5,7 +5,7 @@ import { logger } from '@/lib/logger';
 import { verifyCsrf } from '@/lib/csrf';
 
 export async function POST(request: NextRequest) {
-  if (process.env.ANKI_ENABLED !== 'true') {
+  if (process.env.ANKI_ENABLED === 'false') {
     return NextResponse.json({ error: 'Anki integration is disabled' }, { status: 403 });
   }
 
