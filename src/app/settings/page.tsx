@@ -839,7 +839,7 @@ export default function SettingsPage() {
                       onClick={() => setDeckMode('local')}
                       className={`btn-3d ${deckMode === 'local' ? 'btn-blue' : ''} ${styles.modeButton}`}
                     >
-                      Локальная колода
+                      Локальный список
                     </button>
                   </div>
 
@@ -856,7 +856,7 @@ export default function SettingsPage() {
                         <span className={styles.statusLabel}>Статус:</span>
                         {isLocalInitialized ? (
                           <span className={`${styles.statusValue} ${styles.connected}`}>
-                            <CheckCircle size={16} /> Инициализирована
+                            <CheckCircle size={16} /> Инициализирован
                           </span>
                         ) : (
                           <span className={`${styles.statusValue} ${styles.disconnected}`}>
@@ -1099,7 +1099,7 @@ export default function SettingsPage() {
                       <BookOpen size={48} className={styles.emptyIcon} />
                       {deckMode === 'local' ? (
                         <>
-                          <p>Слова еще не загружены. Пожалуйста, пройдите диагностику знаний для инициализации локальной колоды.</p>
+                          <p>Слова еще не загружены. Пожалуйста, пройдите диагностику знаний для инициализации локального списка.</p>
                           <button
                             onClick={openAssessmentModal}
                             className="btn-3d btn-green"

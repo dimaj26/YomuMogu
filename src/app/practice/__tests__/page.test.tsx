@@ -63,7 +63,7 @@ describe('PracticePage Component', () => {
     render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
 
     await waitFor(() => {
-      expect(screen.getByText(/Локальная колода еще не инициализирована/)).toBeInTheDocument();
+      expect(screen.getByText(/Локальный список еще не инициализирован/)).toBeInTheDocument();
       expect(screen.getByRole('link', { name: 'Перейти в настройки' })).toBeInTheDocument();
     });
   });

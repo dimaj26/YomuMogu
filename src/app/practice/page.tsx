@@ -249,7 +249,7 @@ export default function PracticePage() {
             <h3 style={{ margin: '0 0 4px 0', fontSize: '18px', fontWeight: 800 }}>
               Источник обучения:{' '}
               <span style={{ color: 'var(--color-blue)' }}>
-                {deckMode === 'local' && 'Локальная колода'}
+                {deckMode === 'local' && 'Локальный список'}
                 {deckMode === 'standard' && 'Стандартная Anki'}
                 {deckMode === 'custom' && `Своя Anki (${selectedDeck})`}
               </span>
@@ -335,7 +335,7 @@ export default function PracticePage() {
               <XCircle size={48} className={styles.emptyIcon} />
               <p>
                 {deckMode === 'local'
-                  ? 'Локальная колода еще не инициализирована. Пожалуйста, пройдите диагностику в настройках.'
+                  ? 'Локальный список еще не инициализирован. Пожалуйста, пройдите диагностику в настройках.'
                   : 'Слова из Anki не импортированы. Пожалуйста, выберите колоду и импортируйте слова в настройках.'
                 }
               </p>
