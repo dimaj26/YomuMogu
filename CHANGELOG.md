@@ -8,11 +8,13 @@ All notable changes to the YomuMogu project are documented in this file. The for
 - Added offline dictionary search API route `/api/dict/lookup/route.ts` proxying offline SQLite lookup requests.
 - Integrated FSRS active due count indicator and quiz launcher button in the Practice page dashboard (`/practice`).
 - Added complete unit test coverage for the quiz page in `src/app/practice/quiz/__tests__/page.test.tsx` verifying loading states, standard/ad-hoc modes, feedback, and hint functionality.
+- Added database-dependent JSDOM page integration regression tests for settings page (`src/app/settings/__tests__/page.test.tsx`) and practice page (`src/app/practice/__tests__/page.test.tsx`) that mock local Dexie database entries and verify statistics and due quiz counts in local mode.
 
 ### Changed
 - Replaced the inline Bonus Test screen in `/chat` page with an ad-hoc quiz redirect (`/practice/quiz?words=...`) rendering checklist dialog examples with user selection controls.
 - Integrated FSRS dual-curve alignment (`alignPassiveToActiveState`) inside the remote review synchronization replayer (`db.ts`) and client-side chat review updates, assuring passive recognition stability updates synchronously with active production trials.
 - Configured local reviews synchronization (`/api/anki/sync-db`) to filter out and skip local reviews of type `passive` to avoid polluting the single Anki FSRS curve.
+- Updated `GEMINI.md` and `CONTEXT_PROMPT.md` to enforce procedural TDD checks (naming reproducing tests in plans before execution) and to provide clear setup instructions for `fake-indexeddb` database-dependent unit testing.
 
 ### Fixed
 - Corrected Cyrillic character typo in the reading of word 115 (忙しい) inside the offline starter deck database (`starter_deck.json`).
