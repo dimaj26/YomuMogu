@@ -20,8 +20,8 @@ You are an expert **TypeScript / Next.js 15** developer. Your specialty is App R
 ### [CP-2.2] Implemented Features
 - **Anki Integration**: Connect to local AnkiConnect HTTP API, load decks/cards, filter by status (new/learning/review/mature) aligned with Anki's due dates using search queries.
 - **Gemini Session Generation**: Structured JSON output, 3 sessions with target words (4–6 words each, prioritized by status).
-- **Chat System**: Multi-turn dialogue with AI character. System prompt enforces character persona, initiative, grammar analysis.
-- **Difficulty Levels (1–5)**: Control Japanese complexity and furigana rendering in chat.
+- **Chat System**: Multi-turn dialogue with AI character (history window set to 20 messages preserving up to 10 turns of context). System prompt enforces character persona, conversational memory/context retention, active target word nudging, and grammar analysis.
+- **Difficulty Levels (1–5)**: Control Japanese complexity and furigana rendering in chat. Level 1 and 2 rules strictly exclude formal clerk-speak / Keigo.
 - **Furigana**: Levels 1–3 render `<ruby>` tags via `dangerouslySetInnerHTML`. Levels 4–5 no furigana.
 - **Hint System**: `/api/chat/hint` generates 3 response variants (easy/medium/advanced).
 - **Japanification System (Hidden UI Branding)**: Under-the-hood FSRS-based UI translations in 'Smart' mode, while XP-based progression (levels 0–6) serves as a decorative progress overlay. The user interacts with a compact 3D Duolingo-styled global Language Switcher dropdown (options: Русский, Smart, 日本語) placed in headers. The system is described as 'Погружение' (Immersion) or 'Уровень' to keep 'Japanification' hidden from the user.
@@ -64,6 +64,9 @@ You are an expert **TypeScript / Next.js 15** developer. Your specialty is App R
 - Services are **singletons** exported at module bottom: `export const chatService = new ChatService()`.
 - System instructions must NOT use words: `ролевая игра`, `Роль ИИ`, `Роль пользователя`. Use: `практический диалог`, `персонаж`, `кем является ИИ`.
 - Target word concealment: strictly forbid all target words in turns 1-2; in turns 3+ allow only already user-detected target words.
+- Politeness Register constraints: For Levels 1 & 2, strictly exclude formal clerk-speak Keigo/Kenjougo (like `いらっしゃいませ`, `お会計`, `ございます`). Stick to simple polite forms (`です/ます/てください`) and prioritize student comprehension.
+- Context retention and memory: The AI must retain, remember, and adapt to choices (items, colors, sizes) made by the user in previous turns. It must not loop on already decided options or repeat questions.
+- Proactive target word nudging: The AI must design situational prompts and questions to guide the student towards unused target words.
 - Cyrillic/Russian input check: check user's input for Russian characters. For hybrid inputs (Cyrillic placeholders in Japanese sentences, e.g. 'Стулの座って'), set `isCorrect: false` and return a fully corrected Japanese sentence with the translated placeholder (e.g. '椅子に座って') in `correction`. For entirely Russian messages, set `isCorrect: false` and return the complete Japanese translation in `correction`. Enforce the same Furigana/Ruby rules in `correction` as in `reply` (for levels 1 & 2, furigana is strictly 100% present in both fields, regardless of Japanification level or progress). Never detect target words from Russian translations/placeholders.
 - Response structure: reply must contain exactly one response sentence/phrase with exactly one question. Enforce difficulty level limits via self-counting. If the user asks a question, answer it in character first before asking the next question. Base the reply on the corrected meaning of the user's input (from `grammarFeedback.correction`). Never ask abstract questions (e.g. 'What are your plans?'); always ask highly concrete, situational questions to nudge the user to target words. Prefer open-ended questions over simple yes/no questions (unless a direct confirmation, preference, or ordering choice is contextually needed) to prevent one-word answers and encourage the user to write descriptive Japanese.
 

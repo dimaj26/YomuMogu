@@ -119,8 +119,8 @@ export class ChatService {
       modelTurnCount
     });
 
-    // Ограничиваем историю диалога для Gemini до последних 5 сообщений для экономии токенов
-    const slicedHistory = history.slice(-5);
+    // Ограничиваем историю диалога для Gemini до последних 20 сообщений для экономии токенов и сохранения контекста
+    const slicedHistory = history.slice(-20);
 
     // Формируем историю диалога для Gemini
     const contents = [

@@ -131,6 +131,7 @@ src/
 | `lib/gemini/chat.ts` | `ChatService.sendMessage()`, `ChatService.generateHints()` — singleton `chatService` |
 | `lib/gemini/prompts.ts` | `getChatSystemInstruction()`, `getHintSystemInstruction()` — centralized prompt templates for Gemini AI character persona and rules |
 | `lib/gemini/retry.ts` | `withRetry(fn, options)`, `GEMINI_MODELS` array, exponential backoff + model fallback |
+| `lib/gemini/__tests__/scenarios.integration.test.ts` | Integration tests verifying 4 multi-turn dialogue scenarios for the AI Sensei (Memory, Keigo exclusion, Nudging, Ambiguity resolution) against live Gemini API |
 | `scratch/SCRATCH_LOG.md` | Markdown registry for logging temporary sandbox/scratch scripts and their created resources/side-effects |
 
 ---
@@ -547,4 +548,4 @@ npm run test:integration # Integration tests (real Gemini API, needs GEMINI_API_
 
 ### [PL-9.4] Current Test Count
 
-162 unit tests across 24 test files. All passing.
+162 unit tests across 24 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
