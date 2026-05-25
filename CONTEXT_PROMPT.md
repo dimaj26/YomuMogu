@@ -43,6 +43,7 @@ You are an expert **TypeScript / Next.js 15** developer. Your specialty is App R
 - **CSRF Protection**: All mutating POST API routes proxying requests to local Anki are secured by same-origin Origin and Referer verification checks.
 - **Unified Error Handling Boundaries & API Hook**: Global class-based React `ErrorBoundary` and UI fallback component catch rendering exceptions, and a custom `useApiCall` hook consolidates client-side loading, error state, and retry logic.
 - **Dropdown Keyboard Accessibility (a11y)**: The LanguageSwitcher component is fully navigable using standard keyboard bindings (Arrows, Escape, Space, Enter) with active focus synchronization.
+- **Local Active Recall Quiz & FSRS Alignment**: Offline-first client-side quiz page (`/practice/quiz`) with Cloze Deletions, fallback direct translation, and dual hint systems (first character and JitenDex offline lookup with target word masking). Integrates with chat results via ad-hoc redirect (`?words=...`) and FSRS due-based reviews. Features bilateral scheduling curve alignment (`alignPassiveToActiveState`) to prevent passive curve lag, and skips passive log synchronization to Anki.
 
 ---
 

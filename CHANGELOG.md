@@ -2,6 +2,18 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.20.0] - 2026-05-26
+### Added
+- Added client-side active recall quiz page `/practice/quiz` with Cloze Deletions, fallback Russian-Japanese translation tests, and dual hint systems (first character reveal and offline JitenDex definitions lookup with target word masking `***`).
+- Added offline dictionary search API route `/api/dict/lookup/route.ts` proxying offline SQLite lookup requests.
+- Integrated FSRS active due count indicator and quiz launcher button in the Practice page dashboard (`/practice`).
+- Added complete unit test coverage for the quiz page in `src/app/practice/quiz/__tests__/page.test.tsx` verifying loading states, standard/ad-hoc modes, feedback, and hint functionality.
+
+### Changed
+- Replaced the inline Bonus Test screen in `/chat` page with an ad-hoc quiz redirect (`/practice/quiz?words=...`) rendering checklist dialog examples with user selection controls.
+- Integrated FSRS dual-curve alignment (`alignPassiveToActiveState`) inside the remote review synchronization replayer (`db.ts`) and client-side chat review updates, assuring passive recognition stability updates synchronously with active production trials.
+- Configured local reviews synchronization (`/api/anki/sync-db`) to filter out and skip local reviews of type `passive` to avoid polluting the single Anki FSRS curve.
+
 ## [1.19.0] - 2026-05-25
 ### Added
 - Added dual-state FSRS scheduling support (`passive` and `active` states) for each vocabulary item in IndexedDB to separately track recognition (reading) and recall/usage (chat dialog writing).

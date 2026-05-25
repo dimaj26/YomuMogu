@@ -37,6 +37,10 @@ src/
       page.tsx
       practice.module.css
       __tests__/page.test.tsx
+      quiz/               # /practice/quiz page — Active Recall FSRS quiz interface
+        page.tsx
+        quiz.module.css
+        __tests__/page.test.tsx
     chat/                 # /chat page — AI conversation interface
       page.tsx
       chat.module.css
@@ -57,6 +61,8 @@ src/
         analyze/route.ts  # POST /api/chat/analyze
         __tests__/chat.test.ts, analyze.test.ts
         hint/__tests__/hint.test.ts
+      dict/
+        lookup/route.ts   # GET  /api/dict/lookup (offline JitenDex query)
   hooks/
     useJapanification.tsx # XP progression, level, speed, chatLevel state
     __tests__/useJapanification.test.ts
@@ -97,6 +103,8 @@ src/
 | `plugins/anki/client.ts` | `AnkiConnectClient` wrapper class querying local Anki desktop HTTP API |
 | `plugins/anki/filter.ts` | Functional filters classifying card statuses from raw Anki queue parameters |
 | `plugins/anki/wordSource.ts` | Implements `WordSource` utilizing Anki client for deck querying and sync |
+| `app/api/dict/lookup/route.ts` | GET endpoint for offline dictionary lookup |
+| `app/practice/quiz/page.tsx` | Gamified Active Recall quiz component supporting ad-hoc and FSRS standard modes |
 | `lib/dict/jitendex.ts` | `lookupWord(word)` — offline SQLite JitenDex dictionary lookup |
 | `lib/dict/lookup.py` | Python script invoked via Node `execFile` to query SQLite dictionary database |
 | `lib/gemini/client.ts` | `GeminiClient.generateSessions(words)` — singleton `geminiClient` |
@@ -325,7 +333,7 @@ All Anki routes proxy requests to AnkiConnect at `http://localhost:8765`.
 | `/api/anki/setup-deck` | POST | `{ deckName?, modelName? }` | `{ success: boolean, deckName: string, modelName: string }` |
 | `/api/anki/add` | POST | `{ deckName, frontField, backField, word, reading, translation, definitionHtml, history?: Array<{ role: string; text: string }>, sessionId? }` | `{ success: boolean }` |
 
-### [PL-4.2] Gemini Routes
+### [PL-4.2] Gemini & Dict Routes
 
 | Route | Method | Input | Output |
 |---|---|---|---|
@@ -333,6 +341,7 @@ All Anki routes proxy requests to AnkiConnect at `http://localhost:8765`.
 | `/api/chat` | POST | `{ scenario, targetWords, history, message, level, grammarInJapanese, collectedWords? }` | `ChatResponse` |
 | `/api/chat/hint` | POST | `{ scenario, targetWords, history, level }` | `HintResponse` |
 | `/api/chat/analyze` | POST | `{ history, deckName, frontField, backField, deckMappings? }` | `{ words: AnalyzedWord[] }` |
+| `/api/dict/lookup` | GET | `?word=WORD` | `{ definition: string }` |
 
 ### [PL-4.3] ChatResponse & HintResponse
 ```typescript
@@ -535,4 +544,4 @@ npm run test:integration:gemini # Live LLM integration tests (uses Gemini API, c
 
 ### [PL-9.4] Current Test Count
 
-168 unit tests across 26 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
+177 unit tests across 27 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
