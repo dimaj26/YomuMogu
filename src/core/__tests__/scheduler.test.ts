@@ -4,8 +4,8 @@ import {
   mapLocalToFsrsCard, 
   mapFsrsToLocalWord, 
   calculateNextFsrsState 
-} from '../fsrs';
-import type { LocalWord } from '../../db';
+} from '../scheduler';
+import type { LocalWord } from '../db';
 
 describe('FSRS Scheduling logic', () => {
   it('should align date to local day boundary (04:00:00)', () => {
@@ -255,4 +255,3 @@ describe('FSRS Scheduling logic', () => {
     }
   });
 });
-

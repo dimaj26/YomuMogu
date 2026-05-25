@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { POST as analyzePost } from '../route';
 import { NextRequest } from 'next/server';
 import { lookupWord } from '@/lib/dict/jitendex';
-import { ankiClient } from '@/lib/anki/client';
+import { ankiClient } from '@/plugins/anki/client';
 
 // Mock dependencies
 vi.mock('@google/genai', () => {
@@ -34,7 +34,7 @@ vi.mock('@/lib/dict/jitendex', () => {
   };
 });
 
-vi.mock('@/lib/anki/client', () => {
+vi.mock('@/plugins/anki/client', () => {
   return {
     ankiClient: {
       findCardsByQuery: vi.fn(),

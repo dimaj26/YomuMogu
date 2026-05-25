@@ -1,5 +1,5 @@
 import { fsrs, Card, State, Rating } from 'ts-fsrs';
-import type { LocalWord } from '../db';
+import type { LocalWord } from './types';
 
 // Инициализируем стандартный FSRS-планировщик с отключенными краткосрочными шагами обучения
 const scheduler = fsrs({

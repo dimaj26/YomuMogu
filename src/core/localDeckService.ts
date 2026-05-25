@@ -1,7 +1,7 @@
-import { db, type LocalWord } from '../db';
-import type { AnkiWord } from '../anki/filter';
-import { getProfileItem, setProfileItem } from '../profile';
-import { alignToDayBoundary } from '../anki/fsrs';
+import { db } from './db';
+import type { LocalWord, CardWord as AnkiWord } from './types';
+import { getProfileItem, setProfileItem } from '../lib/profile';
+import { alignToDayBoundary } from './scheduler';
 
 // Константы системы
 export const LOCAL_DECK_NAME = '__local_starter__';
@@ -70,7 +70,7 @@ export async function importStarterDeck(profileId: string, knownWordIds: Set<num
   if (typeof window === 'undefined') return;
 
   // Ленивый динамический импорт
-  const deckData = (await import('../../resources/starter_deck.json')).default;
+  const deckData = (await import('../resources/starter_deck.json')).default;
 
   // Извлекаем существующие слова для этого профиля и колоды
   const existingWords = await db.words
@@ -234,4 +234,44 @@ export async function getLocalDeckStats(profileId: string): Promise<DeckStats> {
   }
 
   return stats;
+}
+
+/**
+ * Добавляет новое слово в локальную колоду.
+ */
+export async function addWord(
+  profileId: string,
+  word: string,
+  reading: string,
+  translation: string,
+  deckName: string = LOCAL_DECK_NAME
+): Promise<{ success: boolean; message: string }> {
+  if (typeof window === 'undefined') {
+    return { success: false, message: 'Добавление доступно только в браузере' };
+  }
+
+  const wordId = Date.now();
+  
+  const wordRecord: LocalWord = {
+    profileId,
+    id: wordId,
+    word,
+    reading,
+    translation,
+    deckName,
+    status: 'new',
+    stability: 0,
+    difficulty: 0,
+    interval: 0,
+    due: Date.now(),
+    reps: 0,
+    lapses: 0,
+  };
+
+  try {
+    await db.words.put(wordRecord);
+    return { success: true, message: 'Слово добавлено локально' };
+  } catch (err: any) {
+    return { success: false, message: err.message || 'Ошибка добавления' };
+  }
 }

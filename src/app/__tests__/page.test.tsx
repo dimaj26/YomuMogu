@@ -53,7 +53,7 @@ describe('HomePage Component', () => {
       expect(screen.getByText('Начать практику')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Превратите слова из Anki в живую речь!')).toBeInTheDocument();
+    expect(screen.getByText('Превратите ваши слова в живую речь!')).toBeInTheDocument();
     expect(screen.getByText('Привет! Давай попрактикуемся сегодня? Выбери тему в настройках!')).toBeInTheDocument();
   });
 

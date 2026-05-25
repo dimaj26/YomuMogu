@@ -4,7 +4,7 @@ import fakeIndexedDB, { IDBKeyRange } from 'fake-indexeddb';
 import { ankiClient } from '../client';
 import { POST as syncDbPost } from '@/app/api/anki/sync-db/route';
 import { NextRequest } from 'next/server';
-import { calculateNextFsrsState } from '../fsrs';
+import { calculateNextFsrsState } from '@/core/scheduler';
 
 
 // Настройка полифилла IndexedDB для Dexie в окружении Node/JSDOM ДО импорта Dexie
@@ -36,21 +36,21 @@ describe.runIf(ankiConnected)('Anki Bilateral Sync Real Integration Test', () =>
   // Динамические импорты для гарантированного порядка загрузки после полифиллов
   let db: any;
   let syncLocalDatabaseWithAnki: (profileId: string, deckName: string) => Promise<{ success: boolean; message: string }>;
-  let getLocalWords: (profileId: string, deckName: string) => Promise<import('../../db').LocalWord[]>;
+  let getLocalWords: (profileId: string, deckName: string) => Promise<import('@/core/db').LocalWord[]>;
   let addLocalReview: (review: any) => Promise<void>;
   let getUnsyncedReviews: (profileId: string) => Promise<any[]>;
   let setProfileItem: (key: string, value: string, profileId?: string) => void;
 
   beforeAll(async () => {
     // Импортируем модули динамически, когда indexedDB уже есть в globalThis
-    const dbModule = await import('../../db');
+    const dbModule = await import('@/core/db');
     db = dbModule.db;
     syncLocalDatabaseWithAnki = dbModule.syncLocalDatabaseWithAnki;
     getLocalWords = dbModule.getLocalWords;
     addLocalReview = dbModule.addLocalReview;
     getUnsyncedReviews = dbModule.getUnsyncedReviews;
 
-    const profileModule = await import('../../profile');
+    const profileModule = await import('@/lib/profile');
     setProfileItem = profileModule.setProfileItem;
 
     console.log('--- Начат интеграционный тест синхронизации с реальным Anki ---');
@@ -97,7 +97,7 @@ describe.runIf(ankiConnected)('Anki Bilateral Sync Real Integration Test', () =>
 
     // 2. Добавляем 5 тестовых карточек
     const testCards = [
-      { deckName: testDeckName, modelName: 'Basic', fields: { Front: '猫[ねこ]', Back: 'кошка' } },
+      { deckName: testDeckName, modelName: 'Basic', fields: { Front: '猫[ねко]', Back: 'кошка' } },
       { deckName: testDeckName, modelName: 'Basic', fields: { Front: '犬[いぬ]', Back: 'собака' } },
       { deckName: testDeckName, modelName: 'Basic', fields: { Front: '水[みず]', Back: 'вода' } },
       { deckName: testDeckName, modelName: 'Basic', fields: { Front: '本[ほん]', Back: 'книга' } },
@@ -121,7 +121,7 @@ describe.runIf(ankiConnected)('Anki Bilateral Sync Real Integration Test', () =>
     const catWord = localWords.find(w => w.translation === 'кошка');
     expect(catWord).toBeDefined();
     expect(catWord?.word).toBe('猫');
-    expect(catWord?.reading).toBe('ねこ');
+    expect(catWord?.reading).toBe('ねко');
     expect(catWord?.status).toBe('new');
   }, 20000);
 
@@ -220,7 +220,7 @@ describe.runIf(ankiConnected)('Anki Bilateral Sync Real Integration Test', () =>
     // 1. Создаем 3 карточки в Anki
     const testCards = [
       { deckName: testDeckName, modelName: 'Basic', fields: { Front: '車テスト一[くるまてすといち]', Back: 'машина' } },
-      { deckName: testDeckName, modelName: 'Basic', fields: { Front: '猫テスト二[ねこてすとに]', Back: 'кошка' } },
+      { deckName: testDeckName, modelName: 'Basic', fields: { Front: '猫テスト二[ねкоてすとに]', Back: 'кошка' } },
       { deckName: testDeckName, modelName: 'Basic', fields: { Front: '水テスト三[みずてすとさん]', Back: 'вода' } }
     ];
     const cardIds = await ankiClient.addNotes(testCards);

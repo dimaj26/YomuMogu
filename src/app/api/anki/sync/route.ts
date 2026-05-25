@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ankiClient } from '@/lib/anki/client';
+import { ankiClient } from '@/plugins/anki/client';
 import { logger } from '@/lib/logger';
 import { verifyCsrf } from '@/lib/csrf';
 
 export async function POST(request: NextRequest) {
+  if (process.env.ANKI_ENABLED !== 'true') {
+    return NextResponse.json({ error: 'Anki integration is disabled' }, { status: 403 });
+  }
+
   if (!verifyCsrf(request)) {
     logger.warn('[CSRF] Blocked unauthorized request to /api/anki/sync');
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

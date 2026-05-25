@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { POST as syncDbPost } from '../route';
-import { ankiClient } from '@/lib/anki/client';
+import { ankiClient } from '@/plugins/anki/client';
 import { NextRequest } from 'next/server';
 
-vi.mock('@/lib/anki/client', () => {
+vi.mock('@/plugins/anki/client', () => {
   return {
     ankiClient: {
       findCards: vi.fn(),

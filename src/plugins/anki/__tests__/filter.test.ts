@@ -28,7 +28,7 @@ describe('Anki Word Filter Module', () => {
     });
 
     it('should remove bracket readings (furigana)', () => {
-      expect(stripHtml('笑う[わらう]')).toBe('笑う');
+      expect(stripHtml('笑う[ваらう]')).toBe('笑う');
       expect(stripHtml('食べる（たべる）')).toBe('食べる');
       expect(stripHtml('飲む〔のむ〕')).toBe('飲む');
       expect(stripHtml('漢字[かんじ]')).toBe('漢字');

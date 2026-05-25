@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
-import { ankiClient } from '@/lib/anki/client';
+import { ankiClient } from '@/plugins/anki/client';
 import { logger } from '@/lib/logger';
 
 export async function GET() {
+  if (process.env.ANKI_ENABLED !== 'true') {
+    return NextResponse.json({ error: 'Anki integration is disabled' }, { status: 403 });
+  }
+
   try {
     const isConnected = await ankiClient.checkConnection();
     if (isConnected) {

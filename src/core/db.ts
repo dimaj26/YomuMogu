@@ -1,52 +1,11 @@
 import Dexie, { type Table } from 'dexie';
-import { calculateNextFsrsState } from './anki/fsrs';
-import { getProfileItem } from './profile';
-import { logger } from './logger';
+import { calculateNextFsrsState } from './scheduler';
+import { getProfileItem } from '../lib/profile';
+import { logger } from '../lib/logger';
+import { LocalWord, LocalReview, UiWord } from './types';
 
-export interface LocalWord {
-  profileId: string;
-  id: number; // cardId из Anki
-  word: string;
-  reading: string;
-  translation: string;
-  status: 'new' | 'learning' | 'review' | 'mature';
-  deckName: string;
-  stability: number;
-  difficulty: number;
-  interval: number; // интервал повторения в днях
-  due: number; // timestamp (ms) даты следующего повторения
-  lastReview?: number; // timestamp последнего повторения
-  reps: number; // количество повторений
-  lapses: number; // количество ошибок (Again)
-}
+export type { LocalWord, LocalReview, UiWord };
 
-export interface LocalReview {
-  id?: number; // локальный автоинкрементный ID
-  profileId: string;
-  cardId: number; // cardId из Anki
-  ease: number; // оценка (1-4)
-  interval: number; // новый интервал в днях (отрицательное число для секунд/минут)
-  lastInterval: number; // предыдущий интервал в днях
-  duration: number; // время ответа в мс
-  timestamp: number; // точное время ответа (ms)
-  synced: number; // 0 = не синхронизировано, 1 = синхронизировано
-}
-
-export interface UiWord {
-  profileId: string;
-  id: string; // Строковый ID элемента интерфейса (например, btn_settings)
-  word: string; // Японское написание
-  reading: string; // Хирагана чтение (опционально)
-  translation: string; // Русский перевод
-  status: 'new' | 'learning' | 'review' | 'mature';
-  stability: number;
-  difficulty: number;
-  interval: number; // Интервал в днях
-  due: number; // Timestamp следующего повторения (ms)
-  lastReview?: number;
-  reps: number;
-  lapses: number;
-}
 
 class YomuMoguDatabase extends Dexie {
   words!: Table<LocalWord>;

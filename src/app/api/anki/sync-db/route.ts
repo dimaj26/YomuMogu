@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ankiClient } from '@/lib/anki/client';
-import { parseAndFilterCards } from '@/lib/anki/filter';
+import { ankiClient } from '@/plugins/anki/client';
+import { parseAndFilterCards } from '@/plugins/anki/filter';
 import { logger } from '@/lib/logger';
 import { verifyCsrf } from '@/lib/csrf';
 
 export async function POST(request: NextRequest) {
+  if (process.env.ANKI_ENABLED !== 'true') {
+    return NextResponse.json({ error: 'Anki integration is disabled' }, { status: 403 });
+  }
+
   if (!verifyCsrf(request)) {
     logger.warn('[CSRF] Blocked unauthorized request to /api/anki/sync-db');
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

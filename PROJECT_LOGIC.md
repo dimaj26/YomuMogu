@@ -56,6 +56,18 @@ src/
   hooks/
     useJapanification.tsx # XP progression, level, speed, chatLevel state
     __tests__/useJapanification.test.ts
+  core/
+    db.ts                 # Decoupled IndexedDB database
+    localDeckService.ts   # Local word management
+    scheduler.ts          # FSRS math scheduling
+    pluginRegistry.ts     # WordSource and Plugin interfaces
+    types.ts              # Core types
+  plugins/
+    anki/                 # Anki integration plugin
+      client.ts
+      filter.ts
+      wordSource.ts
+      index.ts
   components/
     JpUIProvider.tsx      # UI FSRS word state provider
     JpUI.tsx              # Granular Smart Japanification wrapper
@@ -63,68 +75,16 @@ src/
     LanguageSwitcher.tsx  # Compact global Language Switcher dropdown component
     LanguageSwitcher.module.css # Styles for LanguageSwitcher dropdown
   lib/
-    db.ts               # Client-side IndexedDB database (Dexie.js)
-    __tests__/db.test.ts # Unit tests for local IndexedDB operations and safety guards
     logger.ts             # Structured logger (debug/info/warn/error → logs/)
     profile.ts            # localStorage profile helpers + multi-profile management
-    anki/
-      client.ts           # AnkiConnect HTTP client (checkConnection, getDeckNames, getCards)
-      filter.ts           # Card filtering/classification (new/learning/review/mature)
-      __tests__/client.test.ts, filter.test.ts
-    dict/
-      jitendex.ts         # JitenDex Offline dictionary lookup helper
-      lookup.py           # Python offline SQLite dict lookup script
-      __tests__/jitendex.test.ts
-    gemini/
-      client.ts           # GeminiClient — session generation (structured JSON output)
-      chat.ts             # ChatService — sendMessage + generateHints
-      retry.ts            # withRetry() — exponential backoff + model fallback
-      __tests__/client.test.ts, client.integration.test.ts, prompts.test.ts, chat.integration.test.ts
 ```
 
-### [PL-2.2] Module Registry
+### [PL-2.2] File Registry
 
-| File | Responsibility |
+| File | Role |
 |---|---|
-| `app/layout.tsx` | Root HTML shell, Nunito font, `globals.css` import |
-| `app/page.tsx` | Landing — gamified client start menu/dashboard with an animated mascot (speech bubble with adaptive Japanification Level greeting), dynamic Start/Resume practice button, and secondary action grid (Settings, Profile modal, Help modal) |
-| `app/page.module.css` | All styles for landing page dashboard, mascot animations, speech bubbles, and modals |
-| `app/globals.css` | CSS variables (colors, radii, shadows), global utility classes (`.btn-3d`, `.card-friendly`, `.input-friendly`, `.badge-status`, `ruby`/`rt` styling) |
-| `app/settings/page.tsx` | Full settings UI: Anki connection, deck/word import, session generation, profile card (XP stats, speed, chat level, multi-profile selector), session grid with resume/discard controls |
-| `app/settings/settings.module.css` | All styles for settings page components |
-| `app/chat/page.tsx` | Chat UI: message list, word tracker, hint panel, input area, grammar feedback cards, exit confirmation flow, session validation safeguard, `stripRuby()` helper |
-| `app/chat/chat.module.css` | All styles for chat page |
-| `app/api/anki/connect/route.ts` | `GET` — pings AnkiConnect, returns `{ connected: boolean }` |
-| `app/api/anki/decks/route.ts` | `GET` — returns `{ decks: string[] }` via AnkiConnect |
-| `app/api/anki/words/route.ts` | `GET ?deck=&frontField=&backField=` — returns `{ words: AnkiWord[] }` |
-| `/app/api/anki/sync/route.ts` | `POST { cards, cardIds }` — syncs card review status with custom ease levels in AnkiConnect (CSRF protected) |
-| `/app/api/anki/sync-db/route.ts` | `POST { profileId, deckName, frontField, backField, deckMappings?, localReviews, localWords, sessionId? }` — bilateral synchronization of cards and card review logs between IndexedDB and Anki with query deduplication, cardsInfo-based reviewType determination, lastInterval correction, and session logging (CSRF protected) |
-| `/app/api/anki/setup-deck/route.ts` | `POST { deckName, modelName }` — checks/creates deck and note type structure in AnkiConnect (CSRF protected) |
-| `/app/api/anki/add/route.ts` | `POST { deckName, frontField, backField, word, reading, translation, definitionHtml, history, sessionId? }` — adds new cards to Anki with Gemini-driven dynamic fields, audio TTS, Unsplash images, and session logging (CSRF protected) |
-| `/app/api/gemini/sessions/route.ts` | `POST { words }` — generates 3 conversation sessions via Gemini |
-| `/app/api/chat/route.ts` | `POST { scenario, targetWords, history, message, level, grammarInJapanese, collectedWords? }` | `ChatResponse` |
-| `/app/api/chat/hint/route.ts` | `POST { scenario, targetWords, history, level }` — generates 3 hint variants |
-| `/app/api/chat/analyze/route.ts` | `POST { history, deckName, frontField, backField }` — dialogue word/Anki auditor |
-| `hooks/useJapanification.tsx` | `JapanificationState` hook: level (0–6), XP, speed, chatLevel (1–5), `t()`, `addPoints()`, `setChatLevel()`, etc. Memoized context value to prevent re-render storms. Enforces scope. |
-| `hooks/useApiCall.ts` | `useApiCall(apiFn, options)` — custom hook for async API requests with loading/error state tracking and retry logic |
-| `components/ErrorBoundary.tsx` | React Class-based error boundary catch-all wrapper component |
-| `components/ErrorFallback.tsx` | Friendly UI component for display in ErrorBoundary |
-| `components/ErrorFallback.module.css` | Styles for ErrorFallback component |
-| `components/JpUIProvider.tsx` | `JpUIProvider` context: loaded UI words list, session lockout of 1 upgrade, registers/reverts/confirms FSRS progress |
-| `components/JpUI.tsx` | `<JpUI>` component: smart localized wrapper, ruby furigana (reps <= 2), hovering tooltip translation and buttons |
-| `components/JpUI.module.css` | Vanilla CSS module styles for tooltips and golden pulse animations for new session upgrades |
-| `components/LanguageSwitcher.tsx` | Client component representing a compact UI Language Switcher dropdown (options: Русский, Smart, 日本語) that integrates into headers, with full keyboard navigation (a11y) |
-| `components/LanguageSwitcher.module.css` | CSS modules styling the LanguageSwitcher dropdown in the Duolingo theme |
-| `app/error.tsx` | Next.js App Router page-level global error boundary fallback |
-| `lib/logger.ts` | `logger.debug/info/warn/error()` — console + file append to `logs/app.log` |
-| `lib/profile.ts` | `getProfileItem`, `setProfileItem`, `removeProfileItem` (namespaced), `getProfilesList`, `createProfile`, `deleteProfile`, `getActiveProfileId`, `setActiveProfileId` |
-| `lib/db.ts` | Client-side IndexedDB database (Dexie.js) for words and reviews with bilateral synchronization coordinator and FSRS state management |
-| `lib/csrf.ts` | CSRF verification: validates `Origin`/`Referer` headers against `nextUrl.origin` on mutating POST requests |
-| `lib/anki/client.ts` | `AnkiConnectClient`: `checkConnection()`, `getDeckNames()`, `findCards()`, `getCardsInfo()`, `getReviewsOfCards()` |
-| `lib/anki/filter.ts` | `filterAndClassifyCards()` — maps raw Anki card data to `AnkiWord[]` with status |
-| `lib/anki/fsrs.ts` | FSRS mathematical scheduler wrapper around `ts-fsrs` with day boundary alignment to 4:00 AM local time |
-| `lib/deck/localDeckService.ts` | Offline local starter deck service: initial assessment import, active pool generation (due + new + mature fallback), and dynamic daily quota tracking |
-| `lib/deck/__tests__/localDeckService.test.ts` | Unit tests for localDeckService |
+| `core/localDeckService.ts` | Offline local starter deck service and local db operations |
+| `core/__tests__/localDeckService.test.ts` | Unit tests for localDeckService |
 | `lib/dict/jitendex.ts` | `lookupWord(word)` — offline SQLite JitenDex dictionary lookup |
 | `lib/dict/lookup.py` | Python script invoked via Node `execFile` to query SQLite dictionary database |
 | `lib/gemini/client.ts` | `GeminiClient.generateSessions(words)` — singleton `geminiClient` |

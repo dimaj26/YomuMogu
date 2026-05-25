@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Send, Lightbulb, X, Check, Loader2, ChevronDown, ChevronUp, RefreshCw, AlertCircle, Plus } from 'lucide-react';
 import { useJapanification } from '@/hooks/useJapanification';
 import { getProfileItem, setProfileItem, removeProfileItem, getActiveProfileId } from '@/lib/profile';
-import { db, addLocalReview, syncLocalDatabaseWithAnki } from '@/lib/db';
+import { db, addLocalReview, syncLocalDatabaseWithAnki } from '@/core/db';
 import { sanitizeHtml } from '@/lib/sanitize';
-import { calculateNextFsrsState } from '@/lib/anki/fsrs';
+import { calculateNextFsrsState } from '@/core/scheduler';
 import styles from './chat.module.css';
 
 interface TargetWord {

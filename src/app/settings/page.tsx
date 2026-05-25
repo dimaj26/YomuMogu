@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { RefreshCw, CheckCircle, XCircle, BookOpen, Settings as SettingsIcon, AlertCircle, Sparkles, User, Trophy, Zap, BarChart2, Trash2 } from 'lucide-react';
 import styles from './settings.module.css';
-import { AnkiWord } from '@/lib/anki/filter';
+import { AnkiWord } from '@/plugins/anki/filter';
 import { useJapanification } from '@/hooks/useJapanification';
 import { useJpUI } from '@/components/JpUIProvider';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
@@ -19,8 +19,8 @@ import {
   getDailyActivePool,
   getLocalDeckStats,
   getDailyNewWordsLimit
-} from '@/lib/deck/localDeckService';
-import { db } from '@/lib/db';
+} from '@/core/localDeckService';
+import { db } from '@/core/db';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -444,6 +444,12 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!hasLoaded) return;
+    const isAnkiEnabled = process.env.NEXT_PUBLIC_ANKI_ENABLED === 'true';
+    if (!isAnkiEnabled && deckMode !== 'local') {
+      setDeckMode('local');
+      return;
+    }
+    
     setProfileItem('deck_mode', deckMode);
 
     if (deckMode === 'standard' && isConnected) {
@@ -911,20 +917,24 @@ export default function SettingsPage() {
 
                   {/* Переключатель режима колоды */}
                   <div className={styles.modeSelector}>
-                    <button
-                      type="button"
-                      onClick={() => setDeckMode('standard')}
-                      className={`btn-3d ${deckMode === 'standard' ? 'btn-blue' : ''} ${styles.modeButton}`}
-                    >
-                      Стандартная Anki
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeckMode('custom')}
-                      className={`btn-3d ${deckMode === 'custom' ? 'btn-blue' : ''} ${styles.modeButton}`}
-                    >
-                      Своя Anki
-                    </button>
+                    {process.env.NEXT_PUBLIC_ANKI_ENABLED === 'true' && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setDeckMode('standard')}
+                          className={`btn-3d ${deckMode === 'standard' ? 'btn-blue' : ''} ${styles.modeButton}`}
+                        >
+                          Стандартная Anki
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeckMode('custom')}
+                          className={`btn-3d ${deckMode === 'custom' ? 'btn-blue' : ''} ${styles.modeButton}`}
+                        >
+                          Своя Anki
+                        </button>
+                      </>
+                    )}
                     <button
                       type="button"
                       onClick={() => setDeckMode('local')}

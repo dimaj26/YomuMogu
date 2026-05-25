@@ -1,16 +1,5 @@
 import { AnkiCardInfo } from './client';
-
-export interface AnkiWord {
-  id: number;
-  word: string;
-  translation: string;
-  interval: number;
-  status: 'new' | 'learning' | 'review' | 'mature';
-  deckName: string;
-  rawFront: string;
-  rawBack: string;
-  cardIds?: number[];
-}
+import { CardWord as AnkiWord } from '../../core/types';
 
 /**
  * Очищает HTML-теги из строк Anki

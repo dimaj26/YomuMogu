@@ -7,7 +7,7 @@ globalThis.indexedDB = fakeIndexedDB;
 globalThis.IDBKeyRange = IDBKeyRange;
 
 // Динамически импортируем db и localDeckService
-const { db } = await import('../../db');
+const { db } = await import('../db');
 const {
   LOCAL_DECK_NAME,
   MIN_WORDS_FOR_3_SESSIONS,
@@ -105,7 +105,7 @@ describe('LocalDeckService Unit Tests', () => {
     vi.setSystemTime(new Date('2026-05-22T10:00:00Z'));
     const now = Date.now();
 
-    const wordsData: import('../../db').LocalWord[] = [];
+    const wordsData: import('../db').LocalWord[] = [];
     // Создаем 20 слов со статусом learning/review, у которых due <= now
     for (let i = 1; i <= 20; i++) {
       wordsData.push({
@@ -190,7 +190,7 @@ describe('LocalDeckService Unit Tests', () => {
     vi.setSystemTime(new Date('2026-05-22T10:00:00Z'));
     const now = Date.now();
 
-    const wordsData: import('../../db').LocalWord[] = [];
+    const wordsData: import('../db').LocalWord[] = [];
     // 5 due слов
     for (let i = 1; i <= 5; i++) {
       wordsData.push({
@@ -263,7 +263,7 @@ describe('LocalDeckService Unit Tests', () => {
     localStorage.removeItem(`yomumogu_profile_${profileId}_daily_new_words_2026-05-22`);
     // Очистим БД и положим только 2 due слова и 20 new слов
     await db.words.clear();
-    const testWords: import('../../db').LocalWord[] = [];
+    const testWords: import('../db').LocalWord[] = [];
     for (let i = 1; i <= 2; i++) {
       testWords.push({
         profileId,
@@ -310,7 +310,7 @@ describe('LocalDeckService Unit Tests', () => {
     vi.setSystemTime(new Date('2026-05-22T10:00:00Z'));
     const now = Date.now();
 
-    const wordsData: import('../../db').LocalWord[] = [];
+    const wordsData: import('../db').LocalWord[] = [];
     // 3 due слов
     for (let i = 1; i <= 3; i++) {
       wordsData.push({
@@ -384,7 +384,7 @@ describe('LocalDeckService Unit Tests', () => {
     vi.setSystemTime(new Date('2026-05-22T10:00:00Z'));
     const now = Date.now();
 
-    const wordsData: import('../../db').LocalWord[] = [];
+    const wordsData: import('../db').LocalWord[] = [];
     // 20 mature слов с due в будущем
     for (let i = 1; i <= 20; i++) {
       wordsData.push({
@@ -410,7 +410,7 @@ describe('LocalDeckService Unit Tests', () => {
     // Так как due=0, new=0, мы вынуждены добирать mature по fallback.
     // Но если бы у нас было 15 due-слов, эти mature не попали бы.
     // Давайте добавим 15 due слов и проверим, что mature с due > now не попадают.
-    const dueWords: import('../../db').LocalWord[] = [];
+    const dueWords: import('../db').LocalWord[] = [];
     for (let i = 21; i <= 35; i++) {
       dueWords.push({
         profileId,

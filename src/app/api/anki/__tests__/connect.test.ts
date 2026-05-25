@@ -2,11 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET as connectGet } from '../connect/route';
 import { GET as decksGet } from '../decks/route';
 import { GET as wordsGet } from '../words/route';
-import { ankiClient } from '@/lib/anki/client';
+import { ankiClient } from '@/plugins/anki/client';
 import { NextRequest } from 'next/server';
 
 // Мокаем сам клиент ankiClient
-vi.mock('@/lib/anki/client', () => {
+vi.mock('@/plugins/anki/client', () => {
   return {
     ankiClient: {
       checkConnection: vi.fn(),

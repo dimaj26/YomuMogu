@@ -25,6 +25,8 @@ try {
 } catch (e) {
   console.error('Не удалось загрузить .env.local во время настройки тестов', e);
 }
+process.env.ANKI_ENABLED = 'true';
+process.env.NEXT_PUBLIC_ANKI_ENABLED = 'true';
 
 // На случай, если в тестовом окружении jsdom не полностью определен fetch
 if (!globalThis.fetch) {

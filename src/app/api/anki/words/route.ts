@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ankiClient } from '@/lib/anki/client';
-import { parseAndFilterCards } from '@/lib/anki/filter';
+import { ankiClient } from '@/plugins/anki/client';
+import { parseAndFilterCards } from '@/plugins/anki/filter';
 import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
+  if (process.env.ANKI_ENABLED !== 'true') {
+    return NextResponse.json({ error: 'Anki integration is disabled' }, { status: 403 });
+  }
+
   const { searchParams } = new URL(request.url);
   const deck = searchParams.get('deck');
   const frontField = searchParams.get('frontField') || 'Front';

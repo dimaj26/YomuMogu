@@ -3,8 +3,9 @@ import { GoogleGenAI } from '@google/genai';
 import { withRetry, GeminiModel } from '@/lib/gemini/retry';
 import { logger } from '@/lib/logger';
 import { lookupWord } from '@/lib/dict/jitendex';
-import { ankiClient } from '@/lib/anki/client';
-import { parseAndFilterCards, AnkiWord } from '@/lib/anki/filter';
+import { getActiveWordSource } from '@/core/pluginRegistry';
+import { getLocalWords } from '@/core/db';
+import '@/plugins/anki/index';
 
 interface ChatMessage {
   role: 'user' | 'model';
@@ -102,41 +103,28 @@ export async function POST(request: NextRequest) {
     // 2. Для каждого слова проверяем его в словаре JitenDex и в Anki
     const analyzedWords = [];
 
-    const isAllDecks = deckName === '__all__';
-    // Получаем список всех due карточек и все карточки колоды из Anki для проверки в памяти
-    let dueCardIds: number[] = [];
-    let deckWords: AnkiWord[] = [];
+    let deckWords: any[] = [];
     let ankiConnected = false;
     try {
-      // Находим ID всех карточек
-      const allCardIds = isAllDecks
-        ? await ankiClient.findCardsByQuery('deck:*')
-        : await ankiClient.findCards(deckName);
+      const activeSource = getActiveWordSource();
+      const profileId = body.profileId || 'default';
       
-      try {
-        dueCardIds = isAllDecks
-          ? await ankiClient.findCardsByQuery('is:due')
-          : await ankiClient.findCardsByQuery(`deck:"${deckName}" is:due`);
-      } catch (dueErr) {
-        logger.warn(`Не удалось получить список due карт для ${isAllDecks ? 'всех колод' : `колоды ${deckName}`}`, dueErr);
+      if (activeSource) {
+        deckWords = await activeSource.getWords(profileId, deckName);
+        ankiConnected = true;
+      } else {
+        const localWords = await getLocalWords(profileId, deckName);
+        deckWords = localWords.map(w => ({
+          id: w.id,
+          word: w.word,
+          status: w.status,
+          cardIds: [w.id]
+        }));
+        ankiConnected = true;
       }
-
-      if (allCardIds.length > 0) {
-        // Загружаем подробную информацию пачками по 1000
-        const batchSize = 1000;
-        const cardsInfo = [];
-        for (let i = 0; i < allCardIds.length; i += batchSize) {
-          const batchIds = allCardIds.slice(i, i + batchSize);
-          const batchInfo = await ankiClient.getCardsInfo(batchIds);
-          cardsInfo.push(...batchInfo);
-        }
-        deckWords = parseAndFilterCards(cardsInfo, fField, bField, dueCardIds, deckMappings);
-      }
-      
-      ankiConnected = true;
-      logger.info(`Загружено карточек для сопоставления в памяти: ${deckWords.length}, из них due: ${dueCardIds.length}`);
+      logger.info(`Загружено карточек для сопоставления в памяти: ${deckWords.length}`);
     } catch (err) {
-      logger.warn('Не удалось получить список карточек из Anki (Anki не запущен или недоступен)');
+      logger.warn('Не удалось получить список карточек из активного источника');
     }
 
     for (const item of extractedWords) {
@@ -167,9 +155,7 @@ export async function POST(request: NextRequest) {
           cardId = matched.id;
           cardIds = matched.cardIds;
           status = matched.status;
-          isDue = matched.cardIds
-            ? matched.cardIds.some((id) => dueCardIds.includes(id))
-            : dueCardIds.includes(matched.id);
+          isDue = matched.status === 'learning' || matched.status === 'review';
         }
       }
 

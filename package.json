@@ -9,9 +9,9 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:integration": "vitest run src/lib/anki/__tests__/sync.integration.test.ts --config vitest.integration.config.ts",
+    "test:integration": "vitest run src/plugins/anki/__tests__/sync.integration.test.ts --config vitest.integration.config.ts",
     "test:integration:gemini": "vitest run src/lib/gemini/__tests__/ --config vitest.integration.config.ts",
-    "test:anki": "vitest run src/lib/anki/__tests__/sync.integration.test.ts --config vitest.integration.config.ts"
+    "test:anki": "vitest run src/plugins/anki/__tests__/sync.integration.test.ts --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
