@@ -121,7 +121,7 @@ describe('ChatPage Component', () => {
     expect(screen.getByText('Завершить диалог?')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Вы хотите завершить диалог прямо сейчас? Не собранные целевые слова будут перенесены в бонусный тест.'
+        'Вы хотите завершить диалог прямо сейчас? Не собранные целевые слова будут перенесены в быстрый квиз.'
       )
     ).toBeInTheDocument();
 
@@ -133,7 +133,7 @@ describe('ChatPage Component', () => {
     expect(screen.queryByText('Завершить диалог?')).not.toBeInTheDocument();
   });
 
-  it('confirms early exit and triggers bonus test flow', async () => {
+  it('confirms early exit and triggers results screen flow', async () => {
     setupActiveSession();
 
     vi.spyOn(globalThis, 'fetch').mockResolvedValue({
@@ -155,10 +155,9 @@ describe('ChatPage Component', () => {
     const confirmBtn = screen.getAllByRole('button', { name: 'Завершить' })[1]; // The one in the modal
     fireEvent.click(confirmBtn);
 
-    // Verify we enter the Bonus Test screen
+    // Verify we enter the results screen
     await waitFor(() => {
-      expect(screen.getByText('Бонусный тест')).toBeInTheDocument();
-      expect(screen.getByText('Переведите слова, которые не встретились в диалоге')).toBeInTheDocument();
+      expect(screen.getByText('Итоги практики')).toBeInTheDocument();
     });
   });
 });

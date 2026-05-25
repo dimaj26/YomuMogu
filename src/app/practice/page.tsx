@@ -34,6 +34,7 @@ export default function PracticePage() {
   const [isLoadingSessions, setIsLoadingSessions] = useState<boolean>(false);
   const [isLocalInitialized, setIsLocalInitialized] = useState<boolean>(false);
   const [dailyNewWordsCount, setDailyNewWordsCount] = useState<number>(0);
+  const [dueActiveWordsCount, setDueActiveWordsCount] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [hasLoaded, setHasLoaded] = useState<boolean>(false);
 
@@ -91,6 +92,15 @@ export default function PracticePage() {
           setWords([]);
         }
       }
+
+      // Загружаем количество due слов для активного квиза
+      const now = Date.now();
+      const count = await db.words
+        .where('profileId')
+        .equals(profileId)
+        .filter(w => w.active && w.active.due <= now)
+        .count();
+      setDueActiveWordsCount(count);
     } catch (e) {
       console.error('Ошибка загрузки данных профиля для практики', e);
     } finally {
@@ -256,6 +266,35 @@ export default function PracticePage() {
             <Settings size={16} style={{ marginRight: 6 }} /> Настроить источник
           </Link>
         </div>
+
+        {/* Квизы на повторение слов */}
+        {words.length > 0 && (
+          <div className="card-friendly" style={{ marginBottom: '32px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', fontSize: '20px', fontWeight: 800 }}>
+                  <Sparkles size={20} style={{ color: 'var(--color-orange)', marginRight: 8 }} />
+                  {t('Активное повторение слов', '単語の活発な復習')}
+                </h2>
+                <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                  {dueActiveWordsCount > 0 ? (
+                    t(`У вас есть ${dueActiveWordsCount} слов(а), готовых к повторению по системе FSRS.`, `FSRSによる復習対象の単語が${dueActiveWordsCount}個あります。`)
+                  ) : (
+                    t('Все активные слова повторены! Отличная работа.', 'すべての単語の復習が完了しています！')
+                  )}
+                </p>
+              </div>
+              <button
+                onClick={() => router.push('/practice/quiz')}
+                disabled={dueActiveWordsCount === 0}
+                className={`btn-3d ${dueActiveWordsCount > 0 ? 'btn-orange' : ''}`}
+                style={{ padding: '10px 20px', fontSize: '15px' }}
+              >
+                {t(`Повторить активные слова (Квиз) [${dueActiveWordsCount}]`, `単語の復習テストに進む [${dueActiveWordsCount}]`)}
+              </button>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className={styles.errorAlert}>

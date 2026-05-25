@@ -244,4 +244,74 @@ export function calculateNextFsrsState(
   }
 }
 
+/**
+ * Выравнивает пассивное состояние на основе активного, если пассивное отстает
+ * (т.е. интервал меньше или дата due наступит раньше).
+ * Все комментарии в коде пишутся на русском языке.
+ */
+export function alignPassiveToActiveState(word: LocalWord): LocalWord {
+  if (!word.passive || !word.active) return word;
+
+  const passiveIsWorse =
+    word.passive.interval < word.active.interval ||
+    word.passive.due < word.active.due;
+
+  if (passiveIsWorse) {
+    return {
+      ...word,
+      passive: {
+        ...word.passive,
+        stability: word.active.stability,
+        difficulty: word.active.difficulty,
+        interval: word.active.interval,
+        due: word.active.due,
+        status: word.active.status,
+        reps: word.active.reps,
+        lapses: word.active.lapses,
+        lastReview: word.active.lastReview
+      }
+    };
+  }
+
+  return word;
+}
+
+/**
+ * Проверяет, подходит ли предложение пользователя в качестве качественного примера
+ * контекста (contextExamples) для последующего использования в Cloze Deletion квизах.
+ * 
+ * Правила:
+ * 1. Длина предложения не менее 8 символов.
+ * 2. Содержит целевое японское слово.
+ * 3. Содержит хотя бы один падежный показатель (を/が/に/で) или кандзи вне целевого слова.
+ * 4. Исключает тривиальные шаблоны объявления слова (типа "словоです", "словоがあります").
+ */
+export function isGoodContextExample(sentence: string, targetWord: string): boolean {
+  const cleaned = sentence.trim();
+  
+  if (cleaned.length < 6) return false;
+  if (!cleaned.includes(targetWord)) return false;
+
+  // Проверка наличия падежных/грамматических частиц (を, が, に, で, は, も, と, へ)
+  const hasParticle = /[をがにではもとへ]/.test(cleaned);
+  if (!hasParticle) return false;
+
+  const sentenceWithoutTarget = cleaned.replace(targetWord, '');
+
+  // Исключаем простейшие предложения
+  const isSimplePattern =
+    cleaned === `${targetWord}です` ||
+    cleaned === `${targetWord}だ` ||
+    cleaned === `${targetWord}がある` ||
+    cleaned === `${targetWord}があります` ||
+    cleaned === `${targetWord}がいる` ||
+    cleaned === `${targetWord}がいます` ||
+    cleaned === `${targetWord}はなんですか` ||
+    /^[はが]$/.test(sentenceWithoutTarget.trim());
+
+  if (isSimplePattern) return false;
+
+  return true;
+}
+
 

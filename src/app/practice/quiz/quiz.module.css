@@ -1,0 +1,348 @@
+.quizContainer {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  backgroundColor: var(--bg-secondary, #f7f9fa);
+  color: var(--text-primary, #3c3c3c);
+  fontFamily: 'Nunito', sans-serif;
+}
+
+.quizHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background-color: var(--bg-primary, #ffffff);
+  border-bottom: 2px solid var(--border-color, #e5e5e5);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.backButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary, #afafaf);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.backButton:hover {
+  background-color: var(--bg-hover, #f1f1f1);
+  color: var(--text-primary, #3c3c3c);
+}
+
+.quizTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary, #3c3c3c);
+}
+
+.progressBarContainer {
+  flex: 1;
+  max-width: 300px;
+  height: 16px;
+  background-color: #e5e5e5;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 0 16px;
+  position: relative;
+}
+
+.progressBar {
+  height: 100%;
+  background-color: var(--color-green, #58cc02);
+  border-radius: 8px;
+  transition: width 0.3s ease-out;
+}
+
+.progressText {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary, #777777);
+  min-width: 45px;
+  text-align: right;
+}
+
+.mainArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.cardFriendly {
+  background-color: var(--bg-primary, #ffffff);
+  border: 2px solid var(--border-color, #e5e5e5);
+  border-radius: 16px;
+  padding: 32px;
+  width: 100%;
+  box-shadow: 0 4px 0 var(--border-color, #e5e5e5);
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.promptSection {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.promptLabel {
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-secondary, #afafaf);
+  letter-spacing: 0.8px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.translationContext {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-secondary, #777777);
+  margin-bottom: 16px;
+  font-style: italic;
+}
+
+.clozeSentence {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-primary, #3c3c3c);
+  line-height: 1.6;
+  margin: 24px 0;
+  text-align: center;
+  word-break: break-all;
+}
+
+.clozeBlank {
+  display: inline-block;
+  border-bottom: 3px dashed var(--color-blue, #1899eb);
+  color: var(--color-blue, #1899eb);
+  padding: 0 8px;
+  font-weight: 900;
+  min-width: 100px;
+}
+
+.inputGroup {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.quizInput {
+  width: 100%;
+  padding: 16px;
+  font-size: 18px;
+  font-weight: 700;
+  border: 2px solid var(--border-color, #e5e5e5);
+  border-radius: 12px;
+  background-color: var(--bg-primary, #ffffff);
+  color: var(--text-primary, #3c3c3c);
+  transition: border-color 0.2s;
+  text-align: center;
+}
+
+.quizInput:focus {
+  outline: none;
+  border-color: var(--color-blue, #1899eb);
+}
+
+.quizInput:disabled {
+  background-color: var(--bg-secondary, #f7f9fa);
+  cursor: not-allowed;
+}
+
+.hintContainer {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.hintButton {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hintContent {
+  width: 100%;
+  background-color: #e8f4fd;
+  border: 1px dashed var(--color-blue, #1899eb);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1899eb;
+  margin-bottom: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.feedbackArea {
+  width: 100%;
+  border-radius: 16px;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  animation: slideUp 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.feedbackCorrect {
+  background-color: #d7ffb8;
+  border: 2px solid #58cc02;
+  color: #58cc02;
+}
+
+.feedbackIncorrect {
+  background-color: #ffdfe0;
+  border: 2px solid #ff4b4b;
+  color: #ff4b4b;
+}
+
+.feedbackIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: currentColor;
+  color: white;
+}
+
+.feedbackText {
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.actionArea {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.submitBtn {
+  width: 100%;
+  max-width: 300px;
+  padding: 14px;
+  font-size: 16px;
+}
+
+/* RESULTS SCREEN */
+.resultsCard {
+  text-align: center;
+  padding: 48px 32px;
+}
+
+.trophyContainer {
+  font-size: 64px;
+  margin-bottom: 16px;
+  animation: bounce 1s infinite alternate;
+}
+
+.resultsTitle {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  color: var(--text-primary, #3c3c3c);
+}
+
+.resultsSubtitle {
+  font-size: 16px;
+  color: var(--text-secondary, #777777);
+  margin-bottom: 32px;
+  font-weight: 600;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 32px;
+  width: 100%;
+}
+
+.statBlock {
+  background-color: var(--bg-secondary, #f7f9fa);
+  border: 2px solid var(--border-color, #e5e5e5);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.statVal {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--color-blue, #1899eb);
+  display: block;
+}
+
+.statValGreen {
+  color: var(--color-green, #58cc02);
+}
+
+.statLbl {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary, #777777);
+  text-transform: uppercase;
+}
+
+.emptyIcon {
+  font-size: 64px;
+  color: #ccc;
+  margin-bottom: 16px;
+}
+
+.jitendexHtml {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.jitendexHtml b {
+  color: #ff4b4b;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes bounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(-10px); }
+}

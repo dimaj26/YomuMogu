@@ -4,7 +4,9 @@ import {
   mapLocalToFsrsCard, 
   mapFsrsToLocalWord, 
   calculateNextFsrsState,
-  createDefaultFsrsState
+  createDefaultFsrsState,
+  alignPassiveToActiveState,
+  isGoodContextExample
 } from '../scheduler';
 import type { LocalWord } from '../types';
 
@@ -288,6 +290,93 @@ describe('FSRS Scheduling logic', () => {
     
     // Пассивное должно сохранить свои изменения
     expect(activeResult.updatedWord.passive.reps).toBe(1);
+  });
+
+  describe('alignPassiveToActiveState', () => {
+    it('should copy active state to passive state if passive is worse (shorter interval)', () => {
+      const word: LocalWord = {
+        profileId: 'test-user',
+        id: 111,
+        word: '猫',
+        reading: 'ねこ',
+        translation: 'кошка',
+        category: 'Japanese',
+        source: 'manual',
+        passive: {
+          stability: 2,
+          difficulty: 5.0,
+          interval: 2,
+          due: Date.now() + 2 * 24 * 3600 * 1000,
+          reps: 1,
+          lapses: 0,
+          status: 'review'
+        },
+        active: {
+          stability: 10,
+          difficulty: 4.5,
+          interval: 10,
+          due: Date.now() + 10 * 24 * 3600 * 1000,
+          reps: 3,
+          lapses: 0,
+          status: 'review'
+        }
+      };
+
+      const aligned = alignPassiveToActiveState(word);
+      expect(aligned.passive.interval).toBe(10);
+      expect(aligned.passive.stability).toBe(10);
+      expect(aligned.passive.difficulty).toBe(4.5);
+    });
+
+    it('should not copy active state if passive is better (longer interval and further due date)', () => {
+      const word: LocalWord = {
+        profileId: 'test-user',
+        id: 111,
+        word: '猫',
+        reading: 'ねこ',
+        translation: 'кошка',
+        category: 'Japanese',
+        source: 'manual',
+        passive: {
+          stability: 20,
+          difficulty: 4.0,
+          interval: 20,
+          due: Date.now() + 20 * 24 * 3600 * 1000,
+          reps: 5,
+          lapses: 0,
+          status: 'mature'
+        },
+        active: {
+          stability: 10,
+          difficulty: 4.5,
+          interval: 10,
+          due: Date.now() + 10 * 24 * 3600 * 1000,
+          reps: 3,
+          lapses: 0,
+          status: 'review'
+        }
+      };
+
+      const aligned = alignPassiveToActiveState(word);
+      expect(aligned.passive.interval).toBe(20);
+      expect(aligned.passive.stability).toBe(20);
+    });
+  });
+
+  describe('isGoodContextExample', () => {
+    it('should validate good sentences and reject poor context or simple copulas', () => {
+      // 1. Слишком короткое
+      expect(isGoodContextExample('猫です', '猫')).toBe(false);
+      // 2. Нет падежей и нет кандзи вне слова
+      expect(isGoodContextExample('ねこ 食べる', 'ねこ')).toBe(false);
+      // 3. Отличный пример с частицей и кандзи
+      expect(isGoodContextExample('私は毎日公園で猫を見ます。', '猫')).toBe(true);
+      // 4. Простой шаблон объявления
+      expect(isGoodContextExample('猫があります', '猫')).toBe(false);
+      expect(isGoodContextExample('猫です', '猫')).toBe(false);
+      // 5. Короткое, но с частицей (длина >= 8)
+      expect(isGoodContextExample('寿司を食べます', '寿司')).toBe(true);
+    });
   });
 });
 

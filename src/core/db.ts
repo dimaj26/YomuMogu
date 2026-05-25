@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import { calculateNextFsrsState, createDefaultFsrsState } from './scheduler';
+import { calculateNextFsrsState, createDefaultFsrsState, alignPassiveToActiveState } from './scheduler';
 import { getProfileItem } from '../lib/profile';
 import { logger } from '../lib/logger';
 import { LocalWord, LocalReview, UiWord } from './types';
@@ -323,7 +323,7 @@ export async function syncLocalDatabaseWithAnki(
               const resultPassive = calculateNextFsrsState(localWord, r.ease, 'passive', new Date(r.id));
               localWord = resultPassive.updatedWord;
               const resultActive = calculateNextFsrsState(localWord, r.ease, 'active', new Date(r.id));
-              localWord = resultActive.updatedWord;
+              localWord = alignPassiveToActiveState(resultActive.updatedWord);
 
               // Записываем отзыв в локальную историю, если его еще нет
               const reviewExists = await db.reviews

@@ -7,7 +7,8 @@ import { useJapanification } from '@/hooks/useJapanification';
 import { getProfileItem, setProfileItem, removeProfileItem, getActiveProfileId } from '@/lib/profile';
 import { db, addLocalReview, syncLocalDatabaseWithAnki } from '@/core/db';
 import { sanitizeHtml } from '@/lib/sanitize';
-import { calculateNextFsrsState } from '@/core/scheduler';
+import Link from 'next/link';
+import { calculateNextFsrsState, createDefaultFsrsState, alignPassiveToActiveState, isGoodContextExample } from '@/core/scheduler';
 import styles from './chat.module.css';
 
 interface TargetWord {
@@ -96,12 +97,8 @@ export default function ChatPage() {
   const [isComplete, setIsComplete] = useState(false);
 
   // States for Bonus Test and Results Summary flow
-  const [showBonusTest, setShowBonusTest] = useState(false);
   const [unusedTargetWords, setUnusedTargetWords] = useState<TargetWord[]>([]);
-  const [currentBonusIndex, setCurrentBonusIndex] = useState(0);
-  const [bonusInput, setBonusInput] = useState('');
-  const [bonusChecked, setBonusChecked] = useState(false);
-  const [bonusFeedback, setBonusFeedback] = useState<{ isCorrect: boolean; message: string } | null>(null);
+  const [sessionExamples, setSessionExamples] = useState<Array<{ word: string; sentence: string; translation?: string; enabled: boolean }>>([]);
 
   const [showSummaryScreen, setShowSummaryScreen] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -149,12 +146,7 @@ export default function ChatPage() {
           setMessages(savedState.messages);
           setCollectedWords(new Set(savedState.collectedWords || []));
           setIsComplete(savedState.isComplete || false);
-          setShowBonusTest(savedState.showBonusTest || false);
           setUnusedTargetWords(savedState.unusedTargetWords || []);
-          setCurrentBonusIndex(savedState.currentBonusIndex || 0);
-          setBonusInput(savedState.bonusInput || '');
-          setBonusChecked(savedState.bonusChecked || false);
-          setBonusFeedback(savedState.bonusFeedback);
           setShowSummaryScreen(savedState.showSummaryScreen || false);
           setAnalyzedWords(savedState.analyzedWords || []);
           setSelectedSyncCards(new Set(savedState.selectedSyncCards || []));
@@ -187,12 +179,7 @@ export default function ChatPage() {
         messages,
         collectedWords: Array.from(collectedWords),
         isComplete,
-        showBonusTest,
         unusedTargetWords,
-        currentBonusIndex,
-        bonusInput,
-        bonusChecked,
-        bonusFeedback,
         showSummaryScreen,
         analyzedWords,
         selectedSyncCards: Array.from(selectedSyncCards),
@@ -210,12 +197,7 @@ export default function ChatPage() {
     messages,
     collectedWords,
     isComplete,
-    showBonusTest,
     unusedTargetWords,
-    currentBonusIndex,
-    bonusInput,
-    bonusChecked,
-    bonusFeedback,
     showSummaryScreen,
     analyzedWords,
     selectedSyncCards,
@@ -457,56 +439,7 @@ export default function ChatPage() {
   const handleStartCompletion = () => {
     if (!session) return;
     const unused = session.targetWords.filter(tw => !collectedWords.has(tw.word));
-    if (unused.length > 0) {
-      setUnusedTargetWords(unused);
-      setCurrentBonusIndex(0);
-      setBonusInput('');
-      setBonusChecked(false);
-      setBonusFeedback(null);
-      setShowBonusTest(true);
-    } else {
-      startAnalysis();
-    }
-  };
-
-  const handleCheckBonus = () => {
-    if (unusedTargetWords.length === 0) return;
-    const currentWord = unusedTargetWords[currentBonusIndex];
-    const isCorrect = bonusInput.trim() === currentWord.word;
-
-    if (isCorrect) {
-      addPoints(1);
-      setBonusFeedback({
-        isCorrect: true,
-        message: t('Правильно! +1 XP', '正解！+1 XP')
-      });
-    } else {
-      setBonusFeedback({
-        isCorrect: false,
-        message: t(`Неверно. Правильный ответ: ${currentWord.word}`, `不正解。正しい答え: ${currentWord.word}`)
-      });
-    }
-    setBonusChecked(true);
-  };
-
-  const handleNextBonus = () => {
-    if (currentBonusIndex < unusedTargetWords.length - 1) {
-      setCurrentBonusIndex(prev => prev + 1);
-      setBonusInput('');
-      setBonusChecked(false);
-      setBonusFeedback(null);
-    } else {
-      setShowBonusTest(false);
-      startAnalysis();
-    }
-  };
-
-  const handleSkipBonus = () => {
-    handleNextBonus();
-  };
-
-  const handleSkipAllBonus = () => {
-    setShowBonusTest(false);
+    setUnusedTargetWords(unused);
     startAnalysis();
   };
 
@@ -547,6 +480,27 @@ export default function ChatPage() {
       const data = await res.json();
       const words: AnalyzedWord[] = data.words || [];
       setAnalyzedWords(words);
+
+      // Инициализируем примеры предложений из сессии чата, подходящие под эвристики
+      const examplesList: Array<{ word: string; sentence: string; translation?: string; enabled: boolean }> = [];
+      words.forEach(w => {
+        const isCollected = collectedWords.has(w.word);
+        if (isCollected) {
+          const userMessages = messages.filter(m => m.role === 'user' && m.text.includes(w.word));
+          if (userMessages.length > 0) {
+            const bestMessage = userMessages[userMessages.length - 1];
+            if (isGoodContextExample(bestMessage.text, w.word)) {
+              examplesList.push({
+                word: w.word,
+                sentence: bestMessage.text,
+                translation: bestMessage.translation,
+                enabled: true
+              });
+            }
+          }
+        }
+      });
+      setSessionExamples(examplesList);
 
       // Auto-select due/learning cards for syncing
       const syncs = new Set<number>();
@@ -645,20 +599,18 @@ export default function ChatPage() {
 
         // Если это успешное активное повторение, подтягиваем и пассивный стейт
         if (isCollected && ease > 1) {
-          const passRes = calculateNextFsrsState(finalWord, ease, 'passive');
-          finalWord = passRes.updatedWord;
+          finalWord = alignPassiveToActiveState(finalWord);
         }
 
         // Сохраняем пример использования в диалоге
         if (isCollected) {
-          const userMessages = messages.filter(m => m.role === 'user' && m.text.includes(wordObj.word));
-          if (userMessages.length > 0) {
-            const bestMessage = userMessages[userMessages.length - 1];
+          const matchingExample = sessionExamples.find(ex => ex.word === wordObj.word && ex.enabled);
+          if (matchingExample) {
             const examples = finalWord.contextExamples || [];
-            if (!examples.some(ex => ex.sentence === bestMessage.text)) {
+            if (!examples.some(ex => ex.sentence === matchingExample.sentence)) {
               examples.push({
-                sentence: bestMessage.text,
-                translation: bestMessage.translation,
+                sentence: matchingExample.sentence,
+                translation: matchingExample.translation,
                 timestamp: Date.now()
               });
               finalWord.contextExamples = examples;
@@ -925,20 +877,18 @@ export default function ChatPage() {
 
               // Если это успешное активное повторение, подтягиваем и пассивный стейт
               if (isCollected && ease > 1) {
-                const passRes = calculateNextFsrsState(finalWord, ease, 'passive');
-                finalWord = passRes.updatedWord;
+                finalWord = alignPassiveToActiveState(finalWord);
               }
 
               // Сохраняем пример использования в диалоге
               if (isCollected) {
-                const userMessages = messages.filter(m => m.role === 'user' && m.text.includes(wordObj.word));
-                if (userMessages.length > 0) {
-                  const bestMessage = userMessages[userMessages.length - 1];
+                const matchingExample = sessionExamples.find(ex => ex.word === wordObj.word && ex.enabled);
+                if (matchingExample) {
                   const examples = finalWord.contextExamples || [];
-                  if (!examples.some(ex => ex.sentence === bestMessage.text)) {
+                  if (!examples.some(ex => ex.sentence === matchingExample.sentence)) {
                     examples.push({
-                      sentence: bestMessage.text,
-                      translation: bestMessage.translation,
+                      sentence: matchingExample.sentence,
+                      translation: matchingExample.translation,
                       timestamp: Date.now()
                     });
                     finalWord.contextExamples = examples;
@@ -1145,107 +1095,7 @@ export default function ChatPage() {
   const collectedCount = collectedWords.size;
   const progressPercent = totalWords > 0 ? Math.round((collectedCount / totalWords) * 100) : 0;
 
-  if (showBonusTest && unusedTargetWords.length > 0) {
-    const currentWord = unusedTargetWords[currentBonusIndex];
-    return (
-      <div className={styles.chatContainer}>
-        {/* HEADER */}
-        <header className={styles.chatHeader}>
-          <div className={styles.headerLeft}>
-            <button onClick={handleSkipAllBonus} className={styles.backButton} title={t('Пропустить всё', 'すべてスキップ')}>
-              <ArrowLeft size={20} />
-            </button>
-            <div>
-              <h1 className={styles.scenarioTitle}>{t('Бонусный тест', 'ボーнаステスト')}</h1>
-              <p className={styles.scenarioSubtitle}>
-                {t('Переведите слова, которые не встретились в диалоге', '会話で使わなかった単語を翻訳しましょう')}
-              </p>
-            </div>
-          </div>
-          <div className={styles.progressBarContainer}>
-            <span className={styles.progressText}>
-              {currentBonusIndex + 1} / {unusedTargetWords.length}
-            </span>
-          </div>
-        </header>
 
-        {/* TEST BODY */}
-        <div className={styles.messageArea} style={{ justifyContent: 'center', alignItems: 'center' }}>
-          <div className={styles.bonusCard}>
-            <div className={styles.bonusQuestion}>
-              <span className={styles.bonusLabel}>{t('Как переводится:', '翻訳してください:')}</span>
-              <h2 className={styles.bonusRussianWord}>{currentWord.translation}</h2>
-            </div>
-
-            <div className={styles.bonusInputGroup}>
-              <input
-                type="text"
-                className="input-friendly"
-                value={bonusInput}
-                onChange={e => setBonusInput(e.target.value)}
-                placeholder={t('Введите слово на японском...', '日本語で入力...')}
-                disabled={bonusChecked}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    if (!bonusChecked) {
-                      if (bonusInput.trim()) handleCheckBonus();
-                    } else {
-                      handleNextBonus();
-                    }
-                  }
-                }}
-                autoFocus
-              />
-            </div>
-
-            {bonusFeedback && (
-              <div className={`${styles.bonusFeedback} ${bonusFeedback.isCorrect ? styles.correct : styles.incorrect}`}>
-                {bonusFeedback.isCorrect ? <Check size={20} /> : <AlertCircle size={20} />}
-                <span>{bonusFeedback.message}</span>
-              </div>
-            )}
-
-            <div className={styles.bonusActions}>
-              {!bonusChecked ? (
-                <>
-                  <button
-                    onClick={handleSkipBonus}
-                    className="btn-3d"
-                    style={{ flex: 1 }}
-                  >
-                    {t('Пропустить', 'スキップ')}
-                  </button>
-                  <button
-                    onClick={handleCheckBonus}
-                    className="btn-3d btn-green"
-                    disabled={!bonusInput.trim()}
-                    style={{ flex: 1 }}
-                  >
-                    {t('Проверить', '確認')}
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={handleNextBonus}
-                  className="btn-3d btn-blue"
-                  style={{ width: '100%' }}
-                >
-                  {currentBonusIndex < unusedTargetWords.length - 1 ? t('Следующее слово', '次の単語') : t('Показать результаты', '結果を見る')}
-                </button>
-              )}
-            </div>
-          </div>
-
-          <button
-            onClick={handleSkipAllBonus}
-            className={styles.skipAllLink}
-          >
-            {t('Пропустить тест и перейти к результатам', 'テストをスキップして結果へ')}
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   if (showSummaryScreen) {
     return (
@@ -1483,6 +1333,73 @@ export default function ChatPage() {
               {analyzedWords.length === 0 && (
                 <div className={styles.noWordsCard}>
                   <p>{t('В диалоге не найдено новых слов уровня N4+.', '対話の中にN4以上の新しい単語は見つかりませんでした。')}</p>
+                </div>
+              )}
+
+              {/* SENTENCE EXAMPLES SECTION */}
+              {sessionExamples.length > 0 && (
+                <div className={styles.summarySection}>
+                  <h3 className={styles.sectionTitle}>
+                    <BookOpen size={18} /> {t('Примеры предложений из диалога', '会話の例文')}
+                  </h3>
+                  <p className={styles.sectionSubtitle}>
+                    {t('Сэнсей сохранил ваши фразы как примеры контекста для слов. Отметьте те, которые хотите сохранить.', '先生は会話のフレーズをコンテキストの例文として保存しました。保存したいものにチェックを入れてください。')}
+                  </p>
+                  <div className={styles.wordsList}>
+                    {sessionExamples.map((ex, idx) => (
+                      <div key={idx} className={styles.wordRow} style={{ padding: '12px 16px' }}>
+                        <div className={styles.wordRowLeft}>
+                          <input
+                            type="checkbox"
+                            className={styles.wordCheckbox}
+                            checked={ex.enabled}
+                            onChange={() => {
+                              setSessionExamples(prev =>
+                                prev.map((item, i) => i === idx ? { ...item, enabled: !item.enabled } : item)
+                              );
+                            }}
+                            id={`example-check-${idx}`}
+                          />
+                          <label htmlFor={`example-check-${idx}`} className={styles.wordInfoLabel} style={{ cursor: 'pointer' }}>
+                            <span className={styles.jpWord} style={{ fontSize: '15px' }}>{ex.word}</span>
+                            <span style={{ fontSize: '14px', color: 'var(--text-primary)', marginLeft: '12px', display: 'block', marginTop: '4px' }}>
+                              {ex.sentence}
+                            </span>
+                            {ex.translation && (
+                              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginTop: '2px' }}>
+                                {ex.translation}
+                              </span>
+                            )}
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* UNUSED TARGET WORDS QUIZ OFFER */}
+              {unusedTargetWords.length > 0 && (
+                <div className="card-friendly" style={{ border: '2px dashed var(--color-orange-shadow)', backgroundColor: 'rgba(255, 150, 0, 0.05)', marginBottom: '24px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', textAlign: 'center' }}>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--color-orange)' }}>
+                    {t('Не все целевые слова использованы!', '目標単語がすべて使われていません！')}
+                  </h3>
+                  <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                    {t(
+                      `Вы не успели применить ${unusedTargetWords.length} слов(а) в диалоге. Пройдите по ним быстрый квиз, чтобы закрепить их в активной памяти!`,
+                      `会話で${unusedTargetWords.length}個の単語を使いませんでした。クイズで復習して記憶に定着させましょう！`
+                    )}
+                  </p>
+                  <button
+                    onClick={() => {
+                      const wordsParam = unusedTargetWords.map(w => w.word).join(',');
+                      router.push(`/practice/quiz?words=${encodeURIComponent(wordsParam)}`);
+                    }}
+                    className="btn-3d btn-orange"
+                    style={{ padding: '10px 20px', fontSize: '15px' }}
+                  >
+                    {t(`Пройти быстрый тест по неиспользованным словам (${unusedTargetWords.length})`, `未使用単語のテストに進む (${unusedTargetWords.length})`)}
+                  </button>
                 </div>
               )}
 
@@ -1762,8 +1679,8 @@ export default function ChatPage() {
             <div className={styles.modalBody}>
               <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-secondary)', margin: '0 0 20px 0', lineHeight: '1.5' }}>
                 {t(
-                  "Вы хотите завершить диалог прямо сейчас? Не собранные целевые слова будут перенесены в бонусный тест.",
-                  "今すぐ対話を終了しますか？まだ集めていない目標単語はボーナステストに出題されます。"
+                  "Вы хотите завершить диалог прямо сейчас? Не собранные целевые слова будут перенесены в быстрый квиз.",
+                  "今すぐ対話を終了しますか？まだ集めていない目標単語はクイッククイズに出題されます。"
                 )}
               </p>
             </div>
