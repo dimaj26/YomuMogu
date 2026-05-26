@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.26.0] - 2026-05-26
+### Fixed
+- Fixed FSRS due words query in the Debug HUD Side Drawer: words with status `'new'` are now properly filtered out, avoiding them incorrectly matching the due date filter (`due <= now`).
+- Fixed premature daily new words limit exhaustion in local mode: generating chat scenarios no longer consumes the daily limit. The daily limit is now consumed when words with status `'new'` are actually reviewed and saved during Chat session results sync.
+
 ## [1.25.0] - 2026-05-26
 ### Added
 - Added a global toggleable Debug HUD Side Drawer (`src/components/DebugDrawer.tsx`, `src/components/DebugDrawer.module.css`) to the root layout, enabled only in development and testing modes.

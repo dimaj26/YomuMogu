@@ -348,15 +348,6 @@ export default function PracticePage() {
         const newSessions = data.sessions || [];
         setSessions(newSessions);
         setProfileItem('sessions', JSON.stringify(newSessions));
-        
-        // Если это локальный режим, увеличиваем квоту изученных слов сегодня
-        if (deckMode === 'local') {
-          const newWordsInPool = wordsToUse.filter(w => w.status === 'new').length;
-          if (newWordsInPool > 0) {
-            incrementDailyNewWordsCount(activeProfileId, newWordsInPool);
-            setDailyNewWordsCount(getDailyNewWordsCount(activeProfileId));
-          }
-        }
       } else {
         setError(data.error || 'Не удалось сгенерировать темы');
       }

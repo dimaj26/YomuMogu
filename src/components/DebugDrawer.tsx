@@ -80,7 +80,7 @@ export function DebugDrawer() {
       console.error('Ошибка загрузки изученных сегодня слов:', e);
     }
 
-    // 2. Загрузка из IndexedDB слов на повторении (due)
+    // 2. Загрузка из IndexedDB слов на повторении (due, исключая новые)
     try {
       const nowMs = Date.now();
       const loadedWords = await db.words
@@ -88,7 +88,12 @@ export function DebugDrawer() {
         .equals(activePid)
         .toArray();
       
-      const due = loadedWords.filter(w => w.active.due <= nowMs || w.passive.due <= nowMs);
+      const due = loadedWords.filter(w => 
+        w.active && w.passive &&
+        w.active.status !== 'new' && 
+        w.passive.status !== 'new' && 
+        (w.active.due <= nowMs || w.passive.due <= nowMs)
+      );
       setDueWords(due);
       setAllWords(loadedWords);
     } catch (e) {

@@ -9,6 +9,7 @@ import { db, addLocalReview, syncLocalDatabaseWithAnki } from '@/core/db';
 import { sanitizeHtml } from '@/lib/sanitize';
 import Link from 'next/link';
 import { calculateNextFsrsState, createDefaultFsrsState, alignPassiveToActiveState, isGoodContextExample } from '@/core/scheduler';
+import { incrementDailyNewWordsCount } from '@/core/localDeckService';
 import styles from './chat.module.css';
 
 interface TargetWord {
@@ -602,6 +603,7 @@ export default function ChatPage() {
 
         const isCollected = collectedWords.has(wordObj.word);
         const type: 'passive' | 'active' = isCollected ? 'active' : 'passive';
+        const isNew = localWord.active.status === 'new';
 
         const { updatedWord, newInterval, lastInterval } = calculateNextFsrsState(localWord, ease, type);
         let finalWord = updatedWord;
@@ -628,6 +630,10 @@ export default function ChatPage() {
         }
 
         await db.words.put(finalWord);
+
+        if (isNew) {
+          incrementDailyNewWordsCount(profileId, 1);
+        }
 
         await addLocalReview({
           profileId,
@@ -880,6 +886,7 @@ export default function ChatPage() {
               
               const isCollected = collectedWords.has(wordObj.word);
               const type: 'passive' | 'active' = isCollected ? 'active' : 'passive';
+              const isNew = localWord.active.status === 'new';
 
               const { updatedWord, newInterval, lastInterval } = calculateNextFsrsState(localWord, ease, type);
               let finalWord = updatedWord;
@@ -906,6 +913,10 @@ export default function ChatPage() {
               }
 
               await db.words.put(finalWord);
+
+              if (isNew) {
+                incrementDailyNewWordsCount(profileId, 1);
+              }
               
               await addLocalReview({
                 profileId,

@@ -10,6 +10,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import PracticePage from '../page';
 import { JapanificationProvider } from '@/hooks/useJapanification';
 import { db } from '@/core/db';
+import { getDailyNewWordsCount } from '@/core/localDeckService';
 
 
 // Мокаем lucide-react, так как некоторые иконки могут некорректно рендериться в jsdom
@@ -405,5 +406,63 @@ describe('PracticePage Component', () => {
     // Должен появиться экран завершения с кнопкой закрепления
     expect(await screen.findByText('Разминка завершена!')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Закрепить новые слова (Квиз)' })).toBeInTheDocument();
+  });
+
+  it('does NOT increment the daily new words count when generating scenarios in local mode', async () => {
+    localStorage.setItem('yomumogu_profile_default_deck_mode', 'local');
+    localStorage.setItem('yomumogu_profile_default_daily_new_words_limit', '10');
+    
+    // Очистим счетчик в localStorage
+    const dString = new Date().toISOString().split('T')[0];
+    localStorage.removeItem(`yomumogu_profile_default_daily_new_words_${dString}`);
+
+    // Добавим одно новое слово в БД
+    const now = Date.now();
+    await db.words.put({
+      profileId: 'default',
+      id: 8888,
+      word: 'テスト',
+      reading: 'てすと',
+      translation: 'тест',
+      category: '__local_starter__',
+      source: 'starter',
+      passive: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
+      active: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
+      contextExamples: []
+    });
+
+    const mockSessions = [
+      {
+        id: 'session-local',
+        title: 'Тема Локал',
+        description: 'Описание Локал.',
+        scenario: 'Сценарий Локал',
+        targetWords: [{ word: 'テスト', translation: 'тест' }]
+      }
+    ];
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation((url) => {
+      if (url.toString().includes('/api/gemini/sessions')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ sessions: mockSessions }),
+        } as Response);
+      }
+      return Promise.reject(new Error('Unknown URL: ' + url));
+    });
+
+    render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+
+    // Ждем кнопку генерации и кликаем
+    const genBtns = await screen.findAllByRole('button', { name: 'Сгенерировать темы тренировок' });
+    fireEvent.click(genBtns[0]);
+
+    // Ждем появления сгенерированной сессии
+    await screen.findByText('Тема Локал');
+
+    // Проверяем, что счетчик изученных за сегодня слов остался равен 0
+    expect(getDailyNewWordsCount('default')).toBe(0);
+
+    fetchSpy.mockRestore();
   });
 });
