@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import HomePage from '../page';
 import { JapanificationProvider } from '@/hooks/useJapanification';
@@ -127,5 +127,48 @@ describe('HomePage Component', () => {
     const japTabBtn = screen.getByRole('button', { name: /Погружение/ });
     fireEvent.click(japTabBtn);
     expect(screen.getByText('Система языкового погружения (Immersion)')).toBeInTheDocument();
+  });
+
+  it('clicking mascot triggers wiggle animation and shows a motivational phrase', async () => {
+    const MASCOT_PHRASES = [
+      { ja: "頑張って！", reading: "がんばって", ru: "Постарайся! / Удачи!" },
+      { ja: "お茶をどうぞ！", reading: "おちゃをどうぞ", ru: "Пожалуйста, выпей чаю!" },
+      { ja: "日本語は面白いですね！", reading: "にほんごはおもしろいですね", ru: "Японский язык интересный, не правда ли?" },
+      { ja: "一歩一歩進みましょう！", reading: "いっぽいっぽすすみましょう", ru: "Давай продвигаться шаг за шагом!" },
+      { ja: "今日も素晴らしい日です！", reading: "きょうмоすばらしいひです", ru: "Сегодня тоже отличный день!" }
+    ];
+
+    render(<JapanificationProvider><HomePage /></JapanificationProvider>);
+
+    await waitFor(() => {
+      expect(screen.getByText('Начать практику')).toBeInTheDocument();
+    });
+
+    vi.useFakeTimers();
+
+    const mascot = screen.getByText('🍵');
+    expect(mascot).toBeInTheDocument();
+
+    // Click the mascot
+    fireEvent.click(mascot);
+
+    // Mascot container should have the animated class
+    expect(mascot.className).toContain('mascotAnimated');
+
+    // The speech bubble should now contain one of the motivational phrases
+    const bubble = document.querySelector('[class*="speechBubble"]');
+    expect(bubble).toBeInTheDocument();
+    const containsPhrase = MASCOT_PHRASES.some(phrase => bubble?.textContent?.includes(phrase.ru));
+    expect(containsPhrase).toBe(true);
+
+    // After 4 seconds, the speech bubble should revert back to original greeting
+    act(() => {
+      vi.advanceTimersByTime(4000);
+    });
+    
+    // Bubble should go back to standard greeting
+    expect(screen.getByText('Привет! Давай попрактикуемся сегодня? Перейди в раздел практики и выбери тему!')).toBeInTheDocument();
+    
+    vi.useRealTimers();
   });
 });

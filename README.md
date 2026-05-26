@@ -68,7 +68,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to start pra
 
 ## Key Features
 
-- **Gamified Start Menu & Mascot**: Beautiful bobbing cup mascot 🍵 with adaptive Furigana speech bubble greetings depending on the user's current Japanification level. Includes 3D overlay modals for Stats (XP progress tracker) and a tabbed Help documentation guide.
+- **Gamified Start Menu & Mascot**: Beautiful bobbing cup mascot 🍵 that is interactive, wiggles, and shows random motivational phrases upon clicking. Features a persistent horizontal progression widget card (displaying levels, XP bar, and learning stats) embedded directly in the main column flow, a decorative grid pattern background, and 3D overlay modals for Help documentation and Profile management.
 - **Refined Chat Exit & Confirmation Flow**: Supports non-destructive back navigation from the active chat directly to the dashboard, and features a dedicated "Завершить" button with a custom 3D confirmation modal to transition into the Bonus Test.
 - **Anki Deck Integration**: Automatically imports cards from selected Anki decks, prioritizing new/learning status words. Supports configuring distinct Front, Back, Audio, and Image field mappings per deck to handle custom note templates.
 - **CSRF Protection**: All mutating API endpoints proxying requests to local Anki are protected by strict Origin/Referer verification checks.

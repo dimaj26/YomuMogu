@@ -14,6 +14,14 @@ import { sanitizeHtml } from '@/lib/sanitize';
 // Возвращает пороги очков для уровней на нормальной скорости (дефолтная скорость для отображения в профиле)
 const NORMAL_THRESHOLDS = [0, 20, 50, 100, 170, 280, 420];
 
+const MASCOT_PHRASES = [
+  { ja: "頑張って！", reading: "がんばって", ru: "Постарайся! / Удачи!" },
+  { ja: "お茶をどうぞ！", reading: "おちゃをどうぞ", ru: "Пожалуйста, выпей чаю!" },
+  { ja: "日本語は面白いですね！", reading: "にほんごはおもしろいですね", ru: "Японский язык интересный, не правда ли?" },
+  { ja: "一歩一歩進みましょう！", reading: "いっぽいっぽすすみましょう", ru: "Давай продвигаться шаг за шагом!" },
+  { ja: "今日も素晴らしい日です！", reading: "きょうмоすばらしいひです", ru: "Сегодня тоже отличный день!" }
+];
+
 export default function HomePage() {
   const router = useRouter();
   const { state: jState, t } = useJapanification();
@@ -34,6 +42,22 @@ export default function HomePage() {
   const [helpTab, setHelpTab] = useState<'about' | 'rules' | 'japanification'>('about');
 
   const [hasLoaded, setHasLoaded] = useState<boolean>(false);
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
+  const [customBubbleText, setCustomBubbleText] = useState<string | null>(null);
+
+  // Обработчик клика на маскота
+  const handleMascotClick = () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+
+    const phrase = MASCOT_PHRASES[Math.floor(Math.random() * MASCOT_PHRASES.length)];
+    const htmlText = `<ruby>${phrase.ja}<rt>${phrase.reading}</rt></ruby> — ${phrase.ru}`;
+    setCustomBubbleText(htmlText);
+
+    setTimeout(() => {
+      setCustomBubbleText(null);
+    }, 4000);
+  };
 
   // Загружаем данные профиля и сессии при монтировании (защита от несовпадений гидратации SSR)
   useEffect(() => {
@@ -96,6 +120,9 @@ export default function HomePage() {
 
   // Возвращает текст облачка речи в зависимости от уровня японизации и статуса сессии
   const getMascotBubbleHtml = (): { __html: string } => {
+    if (customBubbleText) {
+      return { __html: customBubbleText };
+    }
     const level = jState.level;
 
     if (hasActiveChat && activeSession) {
@@ -184,11 +211,51 @@ export default function HomePage() {
       <main className={styles.dashboardContainer}>
         {/* MASCOT & SPEECH BUBBLE */}
         <div className={styles.mascotSection}>
-          <div className={styles.mascotContainer} title={t("Кликни меня!", "クリックしてね！", 2)}>
+          <div 
+            className={`${styles.mascotContainer} ${isAnimating ? styles.mascotAnimated : ''}`} 
+            title={t("Кликни меня!", "クリックしてね！", 2)}
+            onClick={handleMascotClick}
+            onAnimationEnd={() => setIsAnimating(false)}
+          >
             🍵
           </div>
           <div className={styles.speechBubble}>
             <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(getMascotBubbleHtml().__html) }} />
+          </div>
+        </div>
+
+        {/* ВСТРОЕННЫЙ ВИДЖЕТ ПРОГРЕССА И СТАТИСТИКИ */}
+        <div className={styles.progressWidgetCard}>
+          <div className={styles.widgetHeader}>
+            <div className={styles.widgetTitle}>
+              <Award size={18} style={{ color: 'var(--color-yellow)', marginRight: 6 }} />
+              <span style={{ fontWeight: 800 }}>{t(`Уровень погружения: ${jState.level}`, `没入レベル: ${jState.level}`, 2)}</span>
+            </div>
+            <span className={styles.widgetXpText}>{jState.level >= 6 ? 'MAX' : `${jState.points} / ${xpStats.next} XP`}</span>
+          </div>
+          
+          <div className={styles.widgetBarContainer}>
+            <div 
+              className={styles.widgetBarFill} 
+              style={{ width: `${xpStats.percent}%` }}
+            />
+          </div>
+
+          <div className={styles.widgetStatsRow}>
+            <div className={styles.widgetStatItem}>
+              <span className={styles.widgetStatVal}>{jState.totalWordsUsed}</span>
+              <span className={styles.widgetStatLbl}>{t("слов использовано", "使用した単語数", 2)}</span>
+            </div>
+            <div className={styles.widgetDivider} />
+            <div className={styles.widgetStatItem}>
+              <span className={styles.widgetStatVal}>{jState.sessionsCompleted}</span>
+              <span className={styles.widgetStatLbl}>{t("сессий завершено", "完了セッション数", 2)}</span>
+            </div>
+            <div className={styles.widgetDivider} />
+            <div className={styles.widgetStatItem}>
+              <span className={styles.widgetStatVal}>{jState.chatLevel}</span>
+              <span className={styles.widgetStatLbl}>{t("сложность чата", "チャット難易度", 2)}</span>
+            </div>
           </div>
         </div>
 

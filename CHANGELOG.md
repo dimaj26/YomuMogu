@@ -2,6 +2,13 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.23.0] - 2026-05-26
+### Added
+- Added interactive mascot clicking mechanics in `src/app/page.tsx`, triggering a wiggle animation class and displaying random motivational Japanese phrases (with Furigana and Russian translations) in the speech bubble, reverting after 4 seconds.
+- Added a horizontal `Immersion Progress Card` widget directly inside the main dashboard flow of the homepage, displaying the user's immersion level, XP progress bar, and key learning statistics (words used, sessions completed, chat difficulty level).
+- Added a subtle decorative background grid pattern utilizing `radial-gradient` in `src/app/page.module.css` to reduce whitespace on wider screens.
+- Added a unit test suite in `src/app/__tests__/page.test.tsx` verifying the click handler, animation class addition, speech bubble text rotation, and timeout reset behavior.
+
 ## [1.22.0] - 2026-05-26
 ### Added
 - Added a split card layout on the Practice page (`/practice`), separating "Новые слова" (New words progress status card) and "Активное повторение" (Active review card).

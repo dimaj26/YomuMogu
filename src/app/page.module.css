@@ -10,6 +10,8 @@
   margin: 0 auto;
   text-align: center;
   flex: 1;
+  background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
 /* Секция маскота и речевого облака */
@@ -418,4 +420,109 @@
   color: var(--text-primary);
   margin: 8px 0;
   display: block;
+}
+
+/* Анимация покачивания маскота при клике */
+.mascotAnimated {
+  animation: wiggle 0.5s ease-in-out;
+}
+
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-12deg);
+  }
+  75% {
+    transform: rotate(12deg);
+  }
+}
+
+/* Встроенный виджет прогресса и статистики */
+.progressWidgetCard {
+  width: 100%;
+  max-width: 600px;
+  background-color: white;
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 16px 20px;
+  box-shadow: 0 4px 0 var(--border-color);
+  margin-bottom: 32px;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.widgetHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.widgetTitle {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.widgetXpText {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+.widgetBarContainer {
+  height: 16px;
+  background-color: var(--bg-tertiary);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.widgetBarFill {
+  height: 100%;
+  background-color: var(--color-green);
+  box-shadow: inset 0 -2px 0 var(--color-green-shadow);
+  border-radius: 6px;
+  transition: width 0.4s ease;
+}
+
+.widgetStatsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 2px solid var(--border-color);
+  padding-top: 12px;
+}
+
+.widgetStatItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.widgetStatVal {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.widgetStatLbl {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.widgetDivider {
+  width: 2px;
+  height: 28px;
+  background-color: var(--border-color);
+  margin: 0 12px;
 }
