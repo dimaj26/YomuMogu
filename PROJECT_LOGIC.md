@@ -93,6 +93,7 @@ src/
       ErrorBoundary.test.tsx
       ErrorFallback.test.tsx
       DebugDrawer.test.tsx # Unit tests for DebugDrawer component
+      JpUI.test.tsx        # Unit tests for JpUI component FSRS opacity
   resources/
     phonosemantics.json   # 50 phonosemantic keys and relative kanji data
   lib/
@@ -572,4 +573,4 @@ npm run test:integration:gemini # Live LLM integration tests (uses Gemini API, c
 
 ### [PL-9.4] Current Test Count
 
-199 unit tests across 29 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
+205 unit tests across 30 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).

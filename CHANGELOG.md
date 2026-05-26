@@ -2,6 +2,16 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.27.0] - 2026-05-26
+### Added
+- Added client-side reactive vector SVG mascot widget 🍵 in `/chat` page (`src/app/chat/page.tsx`, `src/app/chat/chat.module.css`) supporting animated states: `idle` (floating steam), `happy` (jumping upon target word hits), `worried` (shaking and tilting left towards grammar feedback cards on mistakes), and `cheering` (nodding on correct inputs).
+- Added 2D SVG Memory Decay Heatmap widget in landing dashboard page (`src/app/page.tsx`, `src/app/page.module.css`) rendering a traditional Japanese Kumiko woodworking lattice pattern (10x5 grid, 50 cells for 500 deck words) mapping FSRS memory stability levels (white, yellow, green, gold) and pulsating due cells.
+- Added new FSRS furigana opacity fade-out rules in `<JpUI>` component and styles (`src/components/JpUI.tsx`, `src/components/JpUI.module.css`) that fade out furigana based on FSRS intervals (opacity 1.0 for <3d, opacity 0.6 for <21d, opacity 0.0 for >=21d with hover support) to secure vertical line-height constraints and eliminate Cumulative Layout Shift (CLS).
+- Added unit tests for FSRS-based JpUI furigana opacity in `src/components/__tests__/JpUI.test.tsx` and updated page and chat page test suites in `src/app/__tests__/page.test.tsx` and `src/app/chat/__tests__/page.test.tsx`.
+
+### Fixed
+- Fixed Cyrillic typo in MASCOT_PHRASES (`きょうмоすばらしいひです` -> `きょうもすばらしいひです`) on the homepage, preventing Cyrillic leaks in Japanese text.
+
 ## [1.26.0] - 2026-05-26
 ### Fixed
 - Fixed FSRS due words query in the Debug HUD Side Drawer: words with status `'new'` are now properly filtered out, avoiding them incorrectly matching the due date filter (`due <= now`).

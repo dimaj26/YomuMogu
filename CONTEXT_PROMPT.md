@@ -49,6 +49,9 @@ You are an expert **TypeScript / Next.js 15** developer. Your specialty is App R
 - **Interactive Mnemonics & AI Etymology**: User notes / mnemonics saved to IndexedDB inside the Quiz, featuring a "✨ ИИ-Этимология" button to query radical breakdowns and origins using Gemini API, automatically auto-filling user notes.
 - **FSRS New Status Exclusions**: Due words calculation and scheduling filters explicitly exclude `new` status words from the due count to avoid initial vocabulary inflation.
 - **Debug HUD Side Drawer (Developer layer)**: Toggleable side drawer panel enabled only in development/testing mode. Displays FSRS trajectories (stability, difficulty, reps, lapses, due date) for active/passive cards, visualizes raw Gemini prompt templates and dialogue history, lists words studied today (reviews log), and provides developer utilities to switch profiles, inspect localStorage values, trigger database resets, or simulate XP progression.
+- **Interactive Mascot Widget**: Floating client-side vector SVG mascot 🍵 in `/chat` with custom animations (floating, bouncing, nodding, shaking) that reacts to target words detection (`happy`), grammar corrections (`worried` with a visual tilt/pointer to the feedback card), and correct inputs (`cheering`).
+- **Memory Decay Heatmap (Kumiko Grid)**: Landing page 2D SVG aggregator displaying 500 words of the starter deck in a 10x5 (50 cells) traditional Japanese Kumiko woodworking grid. Colors reflect memory stability (white, yellow, green, gold), and cells pulsate to flag due dates (memory cooling).
+- **Gradual Furigana Opacity (JpUI)**: Seamless `<ruby>` furigana opacity fade-outs based on FSRS intervals (<3d: opacity 1; <21d: opacity 0.6; >=21d: opacity 0, appearing on hover) built to secure vertical line-height constraints and prevent Cumulative Layout Shift (CLS).
 
 ---
 
