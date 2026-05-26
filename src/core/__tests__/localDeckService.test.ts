@@ -20,6 +20,8 @@ const {
   getLocalDeckStats,
   getDailyNewWordsLimit,
   getPriorityWordsCount,
+  getDailyNewWordsLimitOffset,
+  incrementDailyNewWordsLimitOffset,
 } = await import('../localDeckService');
 
 describe('LocalDeckService Unit Tests', () => {
@@ -496,6 +498,25 @@ describe('LocalDeckService Unit Tests', () => {
 
     const storedValue = localStorage.getItem(`yomumogu_profile_${profileId}_${LOCAL_STORAGE_KEY_PREFIX}_2026-05-22`);
     expect(storedValue).toBe('8');
+  });
+
+  it('incrementDailyNewWordsLimitOffset: updates limit offsets and recalculates limit correctly', async () => {
+    vi.setSystemTime(new Date('2026-05-22T10:00:00Z'));
+    expect(getDailyNewWordsLimitOffset(profileId)).toBe(0);
+    expect(getDailyNewWordsLimit(profileId)).toBe(10); // Standard limit is 10
+
+    incrementDailyNewWordsLimitOffset(profileId, 10);
+    expect(getDailyNewWordsLimitOffset(profileId)).toBe(10);
+    expect(getDailyNewWordsLimit(profileId)).toBe(20); // 10 base + 10 offset
+
+    incrementDailyNewWordsLimitOffset(profileId, 5);
+    expect(getDailyNewWordsLimitOffset(profileId)).toBe(15);
+    expect(getDailyNewWordsLimit(profileId)).toBe(25); // 10 base + 15 offset
+
+    // Проверяем, что на другую дату смещение сбрасывается
+    vi.setSystemTime(new Date('2026-05-23T10:00:00Z'));
+    expect(getDailyNewWordsLimitOffset(profileId)).toBe(0);
+    expect(getDailyNewWordsLimit(profileId)).toBe(10);
   });
 
   it('getLocalDeckStats: корректно считает total/new/learning/review/mature', async () => {

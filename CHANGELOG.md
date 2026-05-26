@@ -2,6 +2,14 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.22.0] - 2026-05-26
+### Added
+- Added a split card layout on the Practice page (`/practice`), separating "Новые слова" (New words progress status card) and "Активное повторение" (Active review card).
+- Added daily limit offset storage namespaces in `localStorage` namespaced by profile, allowing reactive daily limit offsets.
+- Added a "➕ Добавить +10" button on the Practice page to increment the daily limit offset by 10 and dynamically redraw the progress bar.
+- Added a completion state screen to the Warm-up trainer overlay with a "Закрепить новые слова (Квиз)" button routing to the Quiz page with target word list parameters in `mode=new`.
+- Added unit tests verifying daily limit offsets, UI card division, and completed warm-up flow redirections in `src/app/practice/__tests__/page.test.tsx`.
+
 ## [1.21.0] - 2026-05-26
 ### Added
 - Added client-only Warm-up Trainer (Priming) on the practice page, offering a 3-step learning overlay (Sight & Sound, Kana Check, Translation Check) for up to 10 new words from the local vocabulary without affecting FSRS intervals.

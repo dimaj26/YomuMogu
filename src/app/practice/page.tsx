@@ -17,7 +17,8 @@ import {
   getDailyNewWordsCount,
   incrementDailyNewWordsCount,
   syncExistingLocalWordsWithStarterDeck,
-  getPriorityWordsCount
+  getPriorityWordsCount,
+  incrementDailyNewWordsLimitOffset
 } from '@/core/localDeckService';
 import { db } from '@/core/db';
 import type { LocalWord } from '@/core/types';
@@ -61,7 +62,7 @@ function findPhonosemanticData(word: string): PhonosemanticData | null {
 }
 
 // === Warm-up типы и логика ===
-type WarmupStep = 'sight' | 'kana' | 'translation';
+type WarmupStep = 'sight' | 'kana' | 'translation' | 'finished';
 
 interface WarmupState {
   words: LocalWord[];
@@ -96,6 +97,7 @@ export default function PracticePage() {
   const [isLoadingSessions, setIsLoadingSessions] = useState<boolean>(false);
   const [isLocalInitialized, setIsLocalInitialized] = useState<boolean>(false);
   const [dailyNewWordsCount, setDailyNewWordsCount] = useState<number>(0);
+  const [dailyNewWordsLimit, setDailyNewWordsLimit] = useState<number>(10);
   const [dueActiveWordsCount, setDueActiveWordsCount] = useState<number>(0);
   const [newWordsCount, setNewWordsCount] = useState<number>(0);
   const [priorityWordsCount, setPriorityWordsCount] = useState<number>(0);
@@ -133,6 +135,7 @@ export default function PracticePage() {
         if (initialized) {
           await syncExistingLocalWordsWithStarterDeck(profileId);
           setDailyNewWordsCount(getDailyNewWordsCount(profileId));
+          setDailyNewWordsLimit(getDailyNewWordsLimit(profileId));
           const loadedLocalWords = await db.words
             .where('profileId')
             .equals(profileId)
@@ -230,13 +233,24 @@ export default function PracticePage() {
     return styles.sessionWordBadge;
   };
 
+  // === Limit Offset handler ===
+  const handleAddLimit = useCallback(() => {
+    incrementDailyNewWordsLimitOffset(activeProfileId, 10);
+    setDailyNewWordsLimit(getDailyNewWordsLimit(activeProfileId));
+  }, [activeProfileId]);
+
   // === Warm-up логика ===
   const startWarmup = useCallback(() => {
     const newWords = localWords.filter(w => w.active.status === 'new');
     if (newWords.length === 0) return;
 
-    // Берём первые N новых слов (лимит 10 за раз)
-    const limit = Math.min(newWords.length, 10);
+    // Берём min(dailyLimit - todayNewCount, totalNewWords, 10)
+    const limit = Math.min(
+      Math.max(0, dailyNewWordsLimit - dailyNewWordsCount),
+      newWords.length,
+      10
+    );
+    if (limit === 0) return;
     const wordsForWarmup = newWords.slice(0, limit);
 
     const state: WarmupState = {
@@ -248,7 +262,7 @@ export default function PracticePage() {
     };
     setWarmup(state);
     setWarmupOptions([]);
-  }, [localWords]);
+  }, [localWords, dailyNewWordsLimit, dailyNewWordsCount]);
 
   const advanceWarmup = useCallback(() => {
     if (!warmup) return;
@@ -277,9 +291,13 @@ export default function PracticePage() {
         });
         setWarmupOptions([]);
       } else {
-        // Разминка завершена
-        setWarmup(null);
-        setWarmupOptions([]);
+        // Разминка пройдена, переходим к завершающему экрану
+        setWarmup({
+          ...warmup,
+          step: 'finished',
+          selectedAnswer: null,
+          isCorrect: null
+        });
       }
     }
   }, [warmup]);
@@ -391,22 +409,23 @@ export default function PracticePage() {
   // Рендер Warm-up оверлея
   const renderWarmup = () => {
     if (!warmup) return null;
-    const currentWord = warmup.words[warmup.currentIndex];
-    const phonoData = findPhonosemanticData(currentWord.word);
+    const isFinished = warmup.step === 'finished';
+    const currentWord = !isFinished ? warmup.words[warmup.currentIndex] : null;
+    const phonoData = currentWord ? findPhonosemanticData(currentWord.word) : null;
 
     return (
       <div className={styles.warmupOverlay}>
         <div className={styles.warmupCard}>
           <div className={styles.warmupHeader}>
             <span className={styles.warmupProgress}>
-              {warmup.currentIndex + 1} / {warmup.words.length}
+              {isFinished ? 'Завершено' : `${warmup.currentIndex + 1} / ${warmup.words.length}`}
             </span>
             <button className={styles.warmupCloseBtn} onClick={() => setWarmup(null)} title="Закрыть">
               <X size={20} />
             </button>
           </div>
 
-          {warmup.step === 'sight' && (
+          {warmup.step === 'sight' && currentWord && (
             <>
               <span className={styles.warmupStep}>Знакомство</span>
               <div className={styles.warmupKanji}>{currentWord.word}</div>
@@ -427,7 +446,7 @@ export default function PracticePage() {
             </>
           )}
 
-          {warmup.step === 'kana' && (
+          {warmup.step === 'kana' && currentWord && (
             <>
               <span className={styles.warmupStep}>Проверка чтения</span>
               <div className={styles.warmupKanji}>{currentWord.word}</div>
@@ -438,8 +457,8 @@ export default function PracticePage() {
                 {warmupOptions.map((opt, i) => {
                   let cls = styles.warmupAnswerBtn;
                   if (warmup.selectedAnswer !== null) {
-                    if (opt === currentWord.reading) cls += ` ${styles.warmupCorrect}`;
-                    else if (opt === warmup.selectedAnswer && !warmup.isCorrect) cls += ` ${styles.warmupWrong}`;
+                     if (opt === currentWord.reading) cls += ` ${styles.warmupCorrect}`;
+                     else if (opt === warmup.selectedAnswer && !warmup.isCorrect) cls += ` ${styles.warmupWrong}`;
                   }
                   return (
                     <button
@@ -461,7 +480,7 @@ export default function PracticePage() {
             </>
           )}
 
-          {warmup.step === 'translation' && (
+          {warmup.step === 'translation' && currentWord && (
             <>
               <span className={styles.warmupStep}>Проверка перевода</span>
               <div className={styles.warmupKanji}>{currentWord.word}</div>
@@ -473,8 +492,8 @@ export default function PracticePage() {
                 {warmupOptions.map((opt, i) => {
                   let cls = styles.warmupAnswerBtn;
                   if (warmup.selectedAnswer !== null) {
-                    if (opt === currentWord.translation) cls += ` ${styles.warmupCorrect}`;
-                    else if (opt === warmup.selectedAnswer && !warmup.isCorrect) cls += ` ${styles.warmupWrong}`;
+                     if (opt === currentWord.translation) cls += ` ${styles.warmupCorrect}`;
+                     else if (opt === warmup.selectedAnswer && !warmup.isCorrect) cls += ` ${styles.warmupWrong}`;
                   }
                   return (
                     <button
@@ -493,6 +512,35 @@ export default function PracticePage() {
                   {warmup.currentIndex < warmup.words.length - 1 ? 'Следующее слово →' : 'Завершить разминку ✓'}
                 </button>
               )}
+            </>
+          )}
+
+          {warmup.step === 'finished' && (
+            <>
+              <span className={styles.warmupStep}>Разминка завершена!</span>
+              <div style={{ margin: '24px 0', textAlign: 'center' }}>
+                <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  Вы познакомились с {warmup.words.length} новыми словами.
+                </p>
+                <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                  Теперь закрепите их с помощью активного квиза, чтобы перевести в процесс интервального повторения.
+                </p>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <button
+                  className="btn-3d btn-green"
+                  onClick={() => {
+                    const wordsParam = warmup.words.map(w => w.word).join(',');
+                    router.push(`/practice/quiz?words=${encodeURIComponent(wordsParam)}&mode=new`);
+                    setWarmup(null);
+                  }}
+                >
+                  Закрепить новые слова (Квиз)
+                </button>
+                <button className="btn-3d" onClick={() => setWarmup(null)}>
+                  Закрыть
+                </button>
+              </div>
             </>
           )}
         </div>
@@ -552,43 +600,69 @@ export default function PracticePage() {
           </Link>
         </div>
 
-        {/* Кнопка разминки с новыми словами */}
-        {newWordsCount > 0 && deckMode === 'local' && (
-          <div className="card-friendly" style={{ marginBottom: '32px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-              <div>
-                <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', fontSize: '20px', fontWeight: 800 }}>
-                  <Target size={20} style={{ color: 'var(--color-blue)', marginRight: 8 }} />
-                  {t('Разминка с новыми словами', '新しい単語のウォームアップ')}
-                </h2>
-                <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                  {t(
-                    `У вас ${newWordsCount} новых слов. Познакомьтесь с ними перед практикой.`,
-                    `新しい単語が${newWordsCount}個あります。練習前にウォームアップしましょう。`
+        <div className={styles.practiceGrid}>
+          {/* Блок «Новые слова на сегодня» */}
+          {deckMode === 'local' && (
+            <div className="card-friendly" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', fontSize: '20px', fontWeight: 800 }}>
+                <Target size={20} style={{ color: 'var(--color-blue)', marginRight: 8 }} />
+                {t('Новые слова на сегодня', '今日の新しい単語')}
+              </h2>
+              
+              <div style={{ marginTop: '16px', flexGrow: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', fontWeight: 700 }}>
+                  <span>Изучено сегодня:</span>
+                  <span>{dailyNewWordsCount} из {dailyNewWordsLimit}</span>
+                </div>
+                
+                {/* Progress bar */}
+                <div style={{ width: '100%', height: '12px', backgroundColor: 'var(--bg-secondary)', borderRadius: '6px', overflow: 'hidden', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ width: `${Math.min(100, (dailyNewWordsCount / dailyNewWordsLimit) * 100)}%`, height: '100%', backgroundColor: 'var(--color-blue)', transition: 'width 0.3s ease' }} />
+                </div>
+
+                <p style={{ margin: '8px 0', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                  {dailyNewWordsCount >= dailyNewWordsLimit ? (
+                    <span style={{ color: 'var(--color-orange)' }}>Дневной лимит новых слов исчерпан.</span>
+                  ) : (
+                    `Осталось изучить по лимиту: ${Math.max(0, dailyNewWordsLimit - dailyNewWordsCount)}`
                   )}
                 </p>
+                <p style={{ margin: '8px 0', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                  Всего неизученных слов: {newWordsCount}
+                </p>
               </div>
-              <button
-                onClick={startWarmup}
-                className="btn-3d btn-blue"
-                style={{ padding: '10px 20px', fontSize: '15px' }}
-              >
-                🎯 {t('Начать разминку', 'ウォームアップ開始')}
-              </button>
-            </div>
-          </div>
-        )}
 
-        {/* Квизы на повторение слов */}
-        {words.length > 0 && (
-          <div className="card-friendly" style={{ marginBottom: '32px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-              <div>
-                <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', fontSize: '20px', fontWeight: 800 }}>
-                  <Sparkles size={20} style={{ color: 'var(--color-orange)', marginRight: 8 }} />
-                  {t('Активное повторение слов', '単語の活発な復習')}
-                </h2>
-                <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '24px', flexWrap: 'wrap' }}>
+                <button
+                  onClick={startWarmup}
+                  disabled={dailyNewWordsCount >= dailyNewWordsLimit || newWordsCount === 0}
+                  className="btn-3d btn-blue"
+                  style={{ flex: 1, padding: '10px 20px', fontSize: '14px' }}
+                >
+                  🎯 {t('Начать разминку', 'ウォームアップ開始')}
+                </button>
+                <button
+                  onClick={handleAddLimit}
+                  className="btn-3d"
+                  style={{ padding: '10px 16px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  title={t('Добавить +10 слов', 'さらに10単語追加')}
+                >
+                  ➕ Добавить +10
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Блок «Активное повторение» */}
+          {words.length > 0 && (
+            <div className="card-friendly" style={{ display: 'flex', flexDirection: 'column', height: '100%', gridColumn: deckMode !== 'local' ? '1 / -1' : undefined }}>
+              <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', fontSize: '20px', fontWeight: 800 }}>
+                <Sparkles size={20} style={{ color: 'var(--color-orange)', marginRight: 8 }} />
+                {t('Активное повторение слов', '単語의活発な復習')}
+              </h2>
+              
+              <div style={{ marginTop: '16px', flexGrow: 1 }}>
+                <p style={{ margin: '8px 0', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
                   {dueActiveWordsCount > 0 ? (
                     t(`У вас есть ${dueActiveWordsCount} слов(а), готовых к повторению по системе FSRS.`, `FSRSによる復習対象の単語が${dueActiveWordsCount}個あります。`)
                   ) : (
@@ -596,17 +670,20 @@ export default function PracticePage() {
                   )}
                 </p>
               </div>
-              <button
-                onClick={() => router.push('/practice/quiz')}
-                disabled={dueActiveWordsCount === 0}
-                className={`btn-3d ${dueActiveWordsCount > 0 ? 'btn-orange' : ''}`}
-                style={{ padding: '10px 20px', fontSize: '15px' }}
-              >
-                {t(`Повторить активные слова (Квиз) [${dueActiveWordsCount}]`, `単語の復習テストに進む [${dueActiveWordsCount}]`)}
-              </button>
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+                <button
+                  onClick={() => router.push('/practice/quiz?mode=review')}
+                  disabled={dueActiveWordsCount === 0}
+                  className={`btn-3d ${dueActiveWordsCount > 0 ? 'btn-orange' : ''}`}
+                  style={{ flex: 1, padding: '10px 20px', fontSize: '14px' }}
+                >
+                  🧠 {t('Начать повторение', '復習開始')} [{dueActiveWordsCount}]
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {error && (
           <div className={styles.errorAlert}>

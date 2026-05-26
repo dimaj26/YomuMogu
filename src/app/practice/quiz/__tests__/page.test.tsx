@@ -277,4 +277,60 @@ describe('QuizPage Component', () => {
       expect(screen.getByText('Все слова повторены!')).toBeInTheDocument();
     });
   });
+
+  it('loads new words in mode=new and increments daily new words count on check', async () => {
+    // Set query param mode=new
+    mockSearchParamsGet.mockImplementation((param) => {
+      if (param === 'mode') return 'new';
+      return null;
+    });
+
+    // Seed new status word
+    const newWord = {
+      profileId: 'default',
+      id: 50,
+      word: '犬',
+      reading: 'いぬ',
+      translation: 'собака',
+      category: 'Japanese',
+      source: 'starter' as const,
+      passive: createDefaultFsrsState(Date.now() - 5000),
+      active: createDefaultFsrsState(Date.now() - 5000),
+      contextExamples: []
+    };
+    await db.words.put(newWord);
+
+    render(
+      <JapanificationProvider>
+        <QuizPage />
+      </JapanificationProvider>
+    );
+
+    // Wait for the word to load (in mode=new, it should load 'newWord' since it is status 'new')
+    await waitFor(() => {
+      expect(screen.getByText('собака')).toBeInTheDocument();
+    });
+
+    // Verify daily counter is 0 initially
+    const dateStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
+    const key = `yomumogu_profile_default_daily_new_words_${dateStr}`;
+    expect(localStorage.getItem(key)).toBeNull();
+
+    // Enter answer and check
+    const input = screen.getByPlaceholderText('Введите ответ на японском...');
+    await waitFor(() => {
+      expect(input).toHaveFocus();
+    });
+    fireEvent.change(input, { target: { value: 'いぬ' } });
+
+    const checkButton = screen.getByRole('button', { name: 'Проверить' });
+    fireEvent.click(checkButton);
+
+    // Verify correct feedback and incremented daily count
+    await waitFor(() => {
+      expect(screen.getByText('Верно! Отличная работа.')).toBeInTheDocument();
+    });
+
+    expect(localStorage.getItem(key)).toBe('1');
+  });
 });

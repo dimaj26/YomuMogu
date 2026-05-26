@@ -146,6 +146,8 @@ Default profile ID: `default`
 | `chat_state_${sessionId}` | JSON `SavedChatState` | Saved chat session progress (messages, state, collected words) |
 | `quota_preset` | string | Preset selection for daily new words quota ('easy', 'standard', 'hard', 'custom') |
 | `daily_new_words_limit` | string | Custom daily limit of new words (validated between 1 and 50) |
+| `daily_new_words_${YYYY-MM-DD}` | string | Number of new words studied on a specific date |
+| `daily_new_words_limit_offset_${YYYY-MM-DD}` | string | Daily limit offset for new words on a specific date |
 | `deck_mappings` | JSON `Record<string, { frontField: string; backField: string; audioField?: string; imageField?: string }>` | Per-deck field mapping configurations |
 
 Profile metadata (not namespaced):
@@ -555,4 +557,4 @@ npm run test:integration:gemini # Live LLM integration tests (uses Gemini API, c
 
 ### [PL-9.4] Current Test Count
 
-186 unit tests across 28 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
+190 unit tests across 28 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).

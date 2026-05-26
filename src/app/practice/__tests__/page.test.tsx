@@ -243,10 +243,8 @@ describe('PracticePage Component', () => {
 
     // Verify statistics and words table display correct data
     await waitFor(() => {
-      // It should display that 1 word is ready for repetition in quiz: "Повторить активные слова (Квиз) [1]"
-      expect(screen.getByText(/Повторить активные слова/)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Повторить активные слова \(Квиз\) \[1\]/ })).toBeInTheDocument();
-      // It should say "Лимит новых слов сегодня" or "Импортировано слов" depending on local state initialization
+      expect(screen.getByText(/Активное повторение слов/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Начать повторение\s*\[1\]/ })).toBeInTheDocument();
       expect(screen.getByText(/Источник обучения:/)).toBeInTheDocument();
     });
   });
@@ -301,7 +299,111 @@ describe('PracticePage Component', () => {
 
     await waitFor(() => {
       // Должен показать только 2 due слова, а не 7
-      expect(screen.getByRole('button', { name: /Повторить активные слова \(Квиз\) \[2\]/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Начать повторение\s*\[2\]/ })).toBeInTheDocument();
     });
+  });
+
+  it('displays daily limit offset controls and updates limit dynamically', async () => {
+    localStorage.setItem('yomumogu_profile_default_deck_mode', 'local');
+    localStorage.setItem('yomumogu_profile_default_selected_deck', '__local_starter__');
+
+    // Добавим 5 новых слов в IndexedDB
+    const now = Date.now();
+    for (let i = 0; i < 5; i++) {
+      await db.words.put({
+        profileId: 'default',
+        id: 9000 + i,
+        word: `Слово${i}`,
+        reading: `読み${i}`,
+        translation: `Перевод${i}`,
+        category: '__local_starter__',
+        source: 'starter',
+        passive: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
+        active: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
+        contextExamples: []
+      });
+    }
+
+    render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+
+    // Ожидаем появление новых блоков
+    await waitFor(() => {
+      expect(screen.getByText('Новые слова на сегодня')).toBeInTheDocument();
+      expect(screen.getByText('Изучено сегодня:')).toBeInTheDocument();
+      expect(screen.getByText('0 из 10')).toBeInTheDocument();
+      expect(screen.getByText('Всего неизученных слов: 5')).toBeInTheDocument();
+    });
+
+    // Находим кнопку добавления лимита и кликаем
+    const addBtn = screen.getByRole('button', { name: /Добавить \+10/ });
+    fireEvent.click(addBtn);
+
+    // Должно обновиться значение лимита до 20
+    await waitFor(() => {
+      expect(screen.getByText('0 из 20')).toBeInTheDocument();
+    });
+  });
+
+  it('runs warm-up with correct limit and shows the закрепление button on finished state', async () => {
+    localStorage.setItem('yomumogu_profile_default_deck_mode', 'local');
+    localStorage.setItem('yomumogu_profile_default_selected_deck', '__local_starter__');
+
+    // Добавим 2 новых слова
+    const now = Date.now();
+    for (let i = 0; i < 2; i++) {
+      await db.words.put({
+        profileId: 'default',
+        id: 9100 + i,
+        word: `Вормуп${i}`,
+        reading: `ёми${i}`,
+        translation: `транс${i}`,
+        category: '__local_starter__',
+        source: 'starter',
+        passive: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
+        active: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
+        contextExamples: []
+      });
+    }
+
+    render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+
+    const warmupBtn = await screen.findByRole('button', { name: /Начать разминку/ });
+    fireEvent.click(warmupBtn);
+
+    // Первое слово - Знакомство
+    expect(await screen.findByText('Знакомство')).toBeInTheDocument();
+    expect(screen.getByText('Вормуп0')).toBeInTheDocument();
+    
+    // Клик по "Далее" -> Проверка чтения
+    fireEvent.click(screen.getByRole('button', { name: 'Далее →' }));
+    expect(await screen.findByText('Проверка чтения')).toBeInTheDocument();
+
+    // Отвечаем (выбираем правильное чтение "ёми0")
+    fireEvent.click(screen.getByRole('button', { name: 'ёми0' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Далее →' }));
+
+    // Проверка перевода
+    expect(await screen.findByText('Проверка перевода')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'транс0' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Следующее слово →' }));
+
+    // Второе слово - Знакомство
+    expect(await screen.findByText('Знакомство')).toBeInTheDocument();
+    expect(screen.getByText('Вормуп1')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Далее →' }));
+
+    // Проверка чтения
+    expect(await screen.findByText('Проверка чтения')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'ёми1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Далее →' }));
+
+    // Проверка перевода
+    expect(await screen.findByText('Проверка перевода')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'транс1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Завершить разминку ✓' }));
+
+    // Должен появиться экран завершения с кнопкой закрепления
+    expect(await screen.findByText('Разминка завершена!')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Закрепить новые слова (Квиз)' })).toBeInTheDocument();
   });
 });

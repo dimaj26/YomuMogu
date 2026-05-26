@@ -6,6 +6,7 @@ import { Check, X, ArrowLeft, AlertCircle, Loader2, Lightbulb, BookOpen, Award, 
 import { useJapanification } from '@/hooks/useJapanification';
 import { getActiveProfileId } from '@/lib/profile';
 import { db, addLocalReview } from '@/core/db';
+import { getDailyNewWordsCount, getDailyNewWordsLimit, incrementDailyNewWordsCount } from '@/core/localDeckService';
 import { calculateNextFsrsState, alignPassiveToActiveState, createDefaultFsrsState } from '@/core/scheduler';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { PhonosemanticHint, PhonosemanticData } from '@/components/PhonosemanticHint';
@@ -93,6 +94,7 @@ function QuizComponent() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const wordsParam = searchParams.get('words');
+  const modeParam = searchParams.get('mode');
 
   // Загрузка слов
   useEffect(() => {
@@ -134,6 +136,21 @@ function QuizComponent() {
               });
             }
           }
+        } else if (modeParam === 'new') {
+          // Режим закрепления новых слов: берем новые слова (status === 'new')
+          const matches = await db.words
+            .where('profileId')
+            .equals(activeProfile)
+            .filter(item => item.active && item.active.status === 'new')
+            .toArray();
+
+          const todayNewCount = getDailyNewWordsCount(activeProfile);
+          const limit = getDailyNewWordsLimit(activeProfile);
+          const remainingQuota = Math.max(0, limit - todayNewCount);
+
+          loadedWords = (matches as unknown as LocalWord[])
+            .sort((a, b) => a.id - b.id)
+            .slice(0, Math.max(remainingQuota, 10));
         } else {
           // Стандартный режим: due-слова по FSRS (исключая новые)
           const now = Date.now();
@@ -383,6 +400,10 @@ function QuizComponent() {
         setCorrectCount(prev => prev + 1);
         setXpGained(prev => prev + 1);
         addPoints(1); // +1 XP за правильный ответ в профиль
+      }
+
+      if (currentWord.active.status === 'new') {
+        incrementDailyNewWordsCount(profileId, 1);
       }
 
       // Сохраняем прогресс в IndexedDB

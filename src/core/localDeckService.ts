@@ -20,22 +20,37 @@ export interface DeckStats {
 /**
  * Возвращает дневной лимит новых слов для указанного профиля.
  */
+export function getDailyNewWordsLimitOffset(profileId: string): number {
+  if (typeof window === 'undefined') return 0;
+  const key = `${LOCAL_STORAGE_KEY_PREFIX}_limit_offset_${getLocalDateString()}`;
+  const val = getProfileItem(key, profileId);
+  return val ? parseInt(val, 10) : 0;
+}
+
+export function incrementDailyNewWordsLimitOffset(profileId: string, amount: number): void {
+  if (typeof window === 'undefined') return;
+  const key = `${LOCAL_STORAGE_KEY_PREFIX}_limit_offset_${getLocalDateString()}`;
+  const current = getDailyNewWordsLimitOffset(profileId);
+  setProfileItem(key, (current + amount).toString(), profileId);
+}
+
 export function getDailyNewWordsLimit(profileId: string): number {
   if (typeof window === 'undefined') return 10;
+  let baseLimit = 10;
   const preset = getProfileItem('quota_preset', profileId);
-  if (preset === 'easy') return 5;
-  if (preset === 'hard') return 20;
-  if (preset === 'custom') {
+  if (preset === 'easy') baseLimit = 5;
+  else if (preset === 'hard') baseLimit = 20;
+  else if (preset === 'custom') {
     const customLimitStr = getProfileItem('daily_new_words_limit', profileId);
     if (customLimitStr) {
       const parsed = parseInt(customLimitStr, 10);
       if (!isNaN(parsed) && parsed >= 1 && parsed <= 50) {
-        return parsed;
+        baseLimit = parsed;
       }
     }
-    return 10; // фоллбек при некорректном кастомном значении
   }
-  return 10; // 'standard' или если пресет не задан
+  const offset = getDailyNewWordsLimitOffset(profileId);
+  return baseLimit + offset;
 }
 
 /**
