@@ -576,234 +576,256 @@ export default function PracticePage() {
           </div>
         )}
 
-        {/* Информационная панель об источнике обучения */}
-        <div className="card-friendly" style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <h3 style={{ margin: '0 0 4px 0', fontSize: '18px', fontWeight: 800 }}>
-              Источник обучения:{' '}
-              <span style={{ color: 'var(--color-blue)' }}>
-                {deckMode === 'local' && 'Локальный список'}
-                {deckMode === 'standard' && 'Стандартная Anki'}
-                {deckMode === 'custom' && `Своя Anki (${selectedDeck})`}
-              </span>
-            </h3>
-            <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
-              {deckMode === 'local' ? (
-                `Лимит новых слов сегодня: ${dailyNewWordsCount} из ${getDailyNewWordsLimit(activeProfileId)}`
-              ) : (
-                `Импортировано слов: ${words.length}`
+        <div className={styles.layoutWrapper}>
+          {/* ЛЕВАЯ КОЛОНКА */}
+          <div className={styles.leftColumn}>
+            <div className={styles.practiceGrid}>
+              {/* Блок «Новые слова на сегодня» */}
+              {deckMode === 'local' && (
+                <div className="card-friendly" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                  <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', fontSize: '20px', fontWeight: 800 }}>
+                    <Target size={20} style={{ color: 'var(--color-blue)', marginRight: 8 }} />
+                    {t('Новые слова на сегодня', '今日の新しい単語')}
+                  </h2>
+                  
+                  <div style={{ marginTop: '16px', flexGrow: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', fontWeight: 700 }}>
+                      <span>Изучено сегодня:</span>
+                      <span>{dailyNewWordsCount} из {dailyNewWordsLimit}</span>
+                    </div>
+                    
+                    {/* Progress bar */}
+                    <div style={{ width: '100%', height: '12px', backgroundColor: 'var(--bg-secondary)', borderRadius: '6px', overflow: 'hidden', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
+                      <div style={{ width: `${Math.min(100, (dailyNewWordsCount / dailyNewWordsLimit) * 100)}%`, height: '100%', backgroundColor: 'var(--color-blue)', transition: 'width 0.3s ease' }} />
+                    </div>
+
+                    <p style={{ margin: '8px 0', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                      {dailyNewWordsCount >= dailyNewWordsLimit ? (
+                        <span style={{ color: 'var(--color-orange)' }}>Дневной лимит новых слов исчерпан.</span>
+                      ) : (
+                        `Осталось изучить по лимиту: ${Math.max(0, dailyNewWordsLimit - dailyNewWordsCount)}`
+                      )}
+                    </p>
+                    <p style={{ margin: '8px 0', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                      Всего неизученных слов: {newWordsCount}
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '24px', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={startWarmup}
+                      disabled={dailyNewWordsCount >= dailyNewWordsLimit || newWordsCount === 0}
+                      className="btn-3d btn-blue"
+                      style={{ flex: 1, padding: '10px 20px', fontSize: '14px' }}
+                    >
+                      🎯 {t('Начать разминку', 'ウォームアップ開始')}
+                    </button>
+                    <button
+                      onClick={handleAddLimit}
+                      className="btn-3d"
+                      style={{ padding: '10px 16px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      title={t('Добавить +10 слов', 'さらに10単語追加')}
+                    >
+                      ➕ Добавить +10
+                    </button>
+                  </div>
+                </div>
               )}
-            </p>
-          </div>
-          <Link href="/settings" className="btn-3d" style={{ fontSize: '14px', padding: '8px 16px' }}>
-            <Settings size={16} style={{ marginRight: 6 }} /> Настроить источник
-          </Link>
-        </div>
 
-        <div className={styles.practiceGrid}>
-          {/* Блок «Новые слова на сегодня» */}
-          {deckMode === 'local' && (
-            <div className="card-friendly" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', fontSize: '20px', fontWeight: 800 }}>
-                <Target size={20} style={{ color: 'var(--color-blue)', marginRight: 8 }} />
-                {t('Новые слова на сегодня', '今日の新しい単語')}
-              </h2>
-              
-              <div style={{ marginTop: '16px', flexGrow: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', fontWeight: 700 }}>
-                  <span>Изучено сегодня:</span>
-                  <span>{dailyNewWordsCount} из {dailyNewWordsLimit}</span>
+              {/* Блок «Активное повторение» */}
+              {words.length > 0 && (
+                <div className="card-friendly" style={{ display: 'flex', flexDirection: 'column', height: '100%', gridColumn: deckMode !== 'local' ? '1 / -1' : undefined }}>
+                  <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', fontSize: '20px', fontWeight: 800 }}>
+                    <Sparkles size={20} style={{ color: 'var(--color-orange)', marginRight: 8 }} />
+                    {t('Активное повторение слов', '単語の活発な復習')}
+                  </h2>
+                  
+                  <div style={{ marginTop: '16px', flexGrow: 1 }}>
+                    <p style={{ margin: '8px 0', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                      {dueActiveWordsCount > 0 ? (
+                        t(`У вас есть ${dueActiveWordsCount} слов(а), готовых к повторению по системе FSRS.`, `FSRSによる復習対象の単語が${dueActiveWordsCount}個あります。`)
+                      ) : (
+                        t('Все активные слова повторены! Отличная работа.', 'すべての単語の復習が完了しています！')
+                      )}
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+                    <button
+                      onClick={() => router.push('/practice/quiz?mode=review')}
+                      disabled={dueActiveWordsCount === 0}
+                      className={`btn-3d ${dueActiveWordsCount > 0 ? 'btn-orange' : ''}`}
+                      style={{ flex: 1, padding: '10px 20px', fontSize: '14px' }}
+                    >
+                      🧠 {t('Начать повторение', '復習開始')} [{dueActiveWordsCount}]
+                    </button>
+                  </div>
                 </div>
-                
-                {/* Progress bar */}
-                <div style={{ width: '100%', height: '12px', backgroundColor: 'var(--bg-secondary)', borderRadius: '6px', overflow: 'hidden', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
-                  <div style={{ width: `${Math.min(100, (dailyNewWordsCount / dailyNewWordsLimit) * 100)}%`, height: '100%', backgroundColor: 'var(--color-blue)', transition: 'width 0.3s ease' }} />
-                </div>
-
-                <p style={{ margin: '8px 0', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                  {dailyNewWordsCount >= dailyNewWordsLimit ? (
-                    <span style={{ color: 'var(--color-orange)' }}>Дневной лимит новых слов исчерпан.</span>
-                  ) : (
-                    `Осталось изучить по лимиту: ${Math.max(0, dailyNewWordsLimit - dailyNewWordsCount)}`
-                  )}
-                </p>
-                <p style={{ margin: '8px 0', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                  Всего неизученных слов: {newWordsCount}
-                </p>
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px', marginTop: '24px', flexWrap: 'wrap' }}>
-                <button
-                  onClick={startWarmup}
-                  disabled={dailyNewWordsCount >= dailyNewWordsLimit || newWordsCount === 0}
-                  className="btn-3d btn-blue"
-                  style={{ flex: 1, padding: '10px 20px', fontSize: '14px' }}
-                >
-                  🎯 {t('Начать разминку', 'ウォームアップ開始')}
-                </button>
-                <button
-                  onClick={handleAddLimit}
-                  className="btn-3d"
-                  style={{ padding: '10px 16px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  title={t('Добавить +10 слов', 'さらに10単語追加')}
-                >
-                  ➕ Добавить +10
-                </button>
-              </div>
+              )}
             </div>
-          )}
 
-          {/* Блок «Активное повторение» */}
-          {words.length > 0 && (
-            <div className="card-friendly" style={{ display: 'flex', flexDirection: 'column', height: '100%', gridColumn: deckMode !== 'local' ? '1 / -1' : undefined }}>
-              <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', fontSize: '20px', fontWeight: 800 }}>
-                <Sparkles size={20} style={{ color: 'var(--color-orange)', marginRight: 8 }} />
-                {t('Активное повторение слов', '単語의活発な復習')}
-              </h2>
-              
-              <div style={{ marginTop: '16px', flexGrow: 1 }}>
-                <p style={{ margin: '8px 0', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                  {dueActiveWordsCount > 0 ? (
-                    t(`У вас есть ${dueActiveWordsCount} слов(а), готовых к повторению по системе FSRS.`, `FSRSによる復習対象の単語が${dueActiveWordsCount}個あります。`)
-                  ) : (
-                    t('Все активные слова повторены! Отличная работа.', 'すべての単語の復習が完了しています！')
-                  )}
-                </p>
+            {error && (
+              <div className={styles.errorAlert}>
+                <AlertCircle size={18} />
+                <p>{error}</p>
               </div>
-
-              <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-                <button
-                  onClick={() => router.push('/practice/quiz?mode=review')}
-                  disabled={dueActiveWordsCount === 0}
-                  className={`btn-3d ${dueActiveWordsCount > 0 ? 'btn-orange' : ''}`}
-                  style={{ flex: 1, padding: '10px 20px', fontSize: '14px' }}
-                >
-                  🧠 {t('Начать повторение', '復習開始')} [{dueActiveWordsCount}]
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {error && (
-          <div className={styles.errorAlert}>
-            <AlertCircle size={18} />
-            <p>{error}</p>
-          </div>
-        )}
-
-        {/* Сетка сессий */}
-        <div className="card-friendly" style={{ minHeight: '300px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
-            <h2 className={styles.cardTitle} style={{ margin: 0 }}>
-              <Sparkles size={20} style={{ color: 'var(--color-blue)', marginRight: 8 }} />
-              Разговорные сессии с Gemini ИИ
-            </h2>
-            
-            {sessions.length === 0 && words.length > 0 && (
-              <button
-                onClick={generateSessions}
-                disabled={isLoadingSessions}
-                className="btn-3d btn-blue"
-                style={{ padding: '8px 16px', fontSize: '14px' }}
-              >
-                {isLoadingSessions ? 'Создание тем...' : 'Сгенерировать темы тренировок'}
-              </button>
             )}
+
+            {/* Сетка сессий */}
+            <div className="card-friendly" style={{ minHeight: '300px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
+                <h2 className={styles.cardTitle} style={{ margin: 0 }}>
+                  <Sparkles size={20} style={{ color: 'var(--color-blue)', marginRight: 8 }} />
+                  Разговорные сессии с Gemini ИИ
+                </h2>
+                
+                {sessions.length === 0 && words.length > 0 && (
+                  <button
+                    onClick={generateSessions}
+                    disabled={isLoadingSessions}
+                    className="btn-3d btn-blue"
+                    style={{ padding: '8px 16px', fontSize: '14px' }}
+                  >
+                    {isLoadingSessions ? 'Создание тем...' : 'Сгенерировать темы тренировок'}
+                  </button>
+                )}
+              </div>
+
+              {isLoadingSessions && (
+                <div className={styles.loadingText} style={{ padding: '48px 24px' }}>
+                  <RefreshCw size={28} className={`${styles.spin}`} style={{ margin: '0 auto 16px auto', color: 'var(--color-blue)', display: 'block' }} />
+                  <p style={{ margin: 0, fontWeight: 700, fontSize: '16px' }}>ИИ анализирует ваши слова и подбирает лучшие сценарии...</p>
+                </div>
+              )}
+
+              {words.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <XCircle size={48} className={styles.emptyIcon} />
+                  <p>
+                    {deckMode === 'local'
+                      ? 'Локальный список еще не инициализирован. Пожалуйста, пройдите диагностику в настройках.'
+                      : 'Слова из Anki не импортированы. Пожалуйста, выберите колоду и импортируйте слова в настройках.'
+                    }
+                  </p>
+                  <Link href="/settings" className="btn-3d btn-green" style={{ marginTop: '12px', padding: '10px 20px', fontSize: '15px' }}>
+                    Перейти в настройки
+                  </Link>
+                </div>
+              ) : (
+                !isLoadingSessions && sessions.length === 0 && (
+                  <div className={styles.emptyState}>
+                    <Sparkles size={48} className={styles.emptyIcon} style={{ color: 'var(--color-yellow-shadow)' }} />
+                    <p>Темы для диалогов еще не сгенерированы. Нажмите кнопку ниже, чтобы ИИ подготовил сценарии на основе ваших слов.</p>
+                    <button
+                      onClick={generateSessions}
+                      className="btn-3d btn-blue"
+                      style={{ marginTop: '12px', padding: '10px 20px', fontSize: '15px' }}
+                    >
+                      Сгенерировать темы тренировок
+                    </button>
+                  </div>
+                )
+              )}
+
+              {!isLoadingSessions && sessions.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  <div className={styles.sessionGrid}>
+                    {sessions.map((session) => (
+                      <div key={session.id} className={styles.sessionCard}>
+                        <h4 className={styles.sessionTitle}>{session.title}</h4>
+                        <p className={styles.sessionDescription}>{session.description}</p>
+                        <div className={styles.sessionWordsTitle}>Целевые слова:</div>
+                        <div className={styles.sessionWordList}>
+                          {session.targetWords.map((tw: any, idx: number) => (
+                            <span key={idx} className={getBadgeClass(tw.word)}>
+                              {tw.translation}
+                            </span>
+                          ))}
+                        </div>
+                        {inProgressSessions.has(session.id) ? (
+                          <div style={{ display: 'flex', gap: '8px', width: '100%', marginTop: 'auto' }}>
+                            <button
+                              onClick={() => startSession(session)}
+                              className="btn-3d btn-blue"
+                              style={{ flex: 1, padding: '8px 12px', fontSize: '14px' }}
+                            >
+                              Продолжить
+                            </button>
+                            <button
+                              onClick={() => handleDiscardSession(session.id)}
+                              className="btn-3d btn-red"
+                              style={{ padding: '8px 12px', fontSize: '14px' }}
+                              title="Сбросить прогресс сессии"
+                            >
+                              Сброс
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => startSession(session)}
+                            className="btn-3d btn-green"
+                            style={{ width: '100%', marginTop: 'auto', padding: '8px 16px', fontSize: '14px' }}
+                          >
+                            Начать практику
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={generateSessions}
+                    disabled={isLoadingSessions}
+                    className="btn-3d"
+                    style={{ padding: '10px 20px', fontSize: '14px', alignSelf: 'center' }}
+                  >
+                    Перегенерировать другие темы
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
-          {isLoadingSessions && (
-            <div className={styles.loadingText} style={{ padding: '48px 24px' }}>
-              <RefreshCw size={28} className={`${styles.spin}`} style={{ margin: '0 auto 16px auto', color: 'var(--color-blue)', display: 'block' }} />
-              <p style={{ margin: 0, fontWeight: 700, fontSize: '16px' }}>ИИ анализирует ваши слова и подбирает лучшие сценарии...</p>
-            </div>
-          )}
-
-          {words.length === 0 ? (
-            <div className={styles.emptyState}>
-              <XCircle size={48} className={styles.emptyIcon} />
-              <p>
-                {deckMode === 'local'
-                  ? 'Локальный список еще не инициализирован. Пожалуйста, пройдите диагностику в настройках.'
-                  : 'Слова из Anki не импортированы. Пожалуйста, выберите колоду и импортируйте слова в настройках.'
-                }
-              </p>
-              <Link href="/settings" className="btn-3d btn-green" style={{ marginTop: '12px', padding: '10px 20px', fontSize: '15px' }}>
-                Перейти в настройки
+          {/* ПРАВАЯ КОЛОНКА (САЙДБАР) */}
+          <div className={styles.rightColumn}>
+            {/* Информационная панель об источнике обучения */}
+            <div className="card-friendly" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 800 }}>
+                  Источник обучения:{' '}
+                  <span style={{ color: 'var(--color-blue)', display: 'block', marginTop: '4px' }}>
+                    {deckMode === 'local' && 'Локальный список'}
+                    {deckMode === 'standard' && 'Стандартная Anki'}
+                    {deckMode === 'custom' && `Своя Anki (${selectedDeck})`}
+                  </span>
+                </h3>
+                <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                  {deckMode === 'local' ? (
+                    `Лимит новых слов сегодня: ${dailyNewWordsCount} из ${getDailyNewWordsLimit(activeProfileId)}`
+                  ) : (
+                    `Импортировано слов: ${words.length}`
+                  )}
+                </p>
+              </div>
+              <Link href="/settings" className="btn-3d" style={{ fontSize: '14px', padding: '10px 16px', display: 'flex', justifyContent: 'center' }}>
+                <Settings size={16} style={{ marginRight: 6 }} /> Настроить источник
               </Link>
             </div>
-          ) : (
-            !isLoadingSessions && sessions.length === 0 && (
-              <div className={styles.emptyState}>
-                <Sparkles size={48} className={styles.emptyIcon} style={{ color: 'var(--color-yellow-shadow)' }} />
-                <p>Темы для диалогов еще не сгенерированы. Нажмите кнопку ниже, чтобы ИИ подготовил сценарии на основе ваших слов.</p>
-                <button
-                  onClick={generateSessions}
-                  className="btn-3d btn-blue"
-                  style={{ marginTop: '12px', padding: '10px 20px', fontSize: '15px' }}
-                >
-                  Сгенерировать темы тренировок
-                </button>
-              </div>
-            )
-          )}
 
-          {!isLoadingSessions && sessions.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <div className={styles.sessionGrid}>
-                {sessions.map((session) => (
-                  <div key={session.id} className={styles.sessionCard}>
-                    <h4 className={styles.sessionTitle}>{session.title}</h4>
-                    <p className={styles.sessionDescription}>{session.description}</p>
-                    <div className={styles.sessionWordsTitle}>Целевые слова:</div>
-                    <div className={styles.sessionWordList}>
-                      {session.targetWords.map((tw: any, idx: number) => (
-                        <span key={idx} className={getBadgeClass(tw.word)}>
-                          {tw.translation}
-                        </span>
-                      ))}
-                    </div>
-                    {inProgressSessions.has(session.id) ? (
-                      <div style={{ display: 'flex', gap: '8px', width: '100%', marginTop: 'auto' }}>
-                        <button
-                          onClick={() => startSession(session)}
-                          className="btn-3d btn-blue"
-                          style={{ flex: 1, padding: '8px 12px', fontSize: '14px' }}
-                        >
-                          Продолжить
-                        </button>
-                        <button
-                          onClick={() => handleDiscardSession(session.id)}
-                          className="btn-3d btn-red"
-                          style={{ padding: '8px 12px', fontSize: '14px' }}
-                          title="Сбросить прогресс сессии"
-                        >
-                          Сброс
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => startSession(session)}
-                        className="btn-3d btn-green"
-                        style={{ width: '100%', marginTop: 'auto', padding: '8px 16px', fontSize: '14px' }}
-                      >
-                        Начать практику
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <button
-                onClick={generateSessions}
-                disabled={isLoadingSessions}
-                className="btn-3d"
-                style={{ padding: '10px 20px', fontSize: '14px', alignSelf: 'center' }}
-              >
-                Перегенерировать другие темы
-              </button>
+            {/* Виджет советов по FSRS */}
+            <div className="card-friendly" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={18} style={{ color: 'var(--color-yellow-shadow)' }} />
+                Интервальные повторения
+              </h3>
+              <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.5', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                YomuMogu использует двухкритериальный алгоритм FSRS для раздельного отслеживания навыков чтения (пассивный) и письма (активный).
+              </p>
+              <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.5', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                Старайтесь регулярно проходить разминки и общаться в чате с Gemini, чтобы поддерживать стабильность вашей памяти на высоком уровне.
+              </p>
             </div>
-          )}
+          </div>
         </div>
       </main>
 

@@ -187,7 +187,7 @@ export default function HomePage() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--bg-secondary)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'transparent' }}>
       {/* HEADER */}
       <header className="navbar">
         <Link href="/" className="logo-container" style={{ textDecoration: 'none' }}>
