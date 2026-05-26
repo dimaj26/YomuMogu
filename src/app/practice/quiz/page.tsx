@@ -4,6 +4,7 @@ import React, { Suspense, useState, useEffect, useRef, useCallback } from 'react
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Check, X, ArrowLeft, AlertCircle, Loader2, Lightbulb, BookOpen, Award, Sparkles } from 'lucide-react';
 import { useJapanification } from '@/hooks/useJapanification';
+import { useQuests } from '@/hooks/useQuests';
 import { getActiveProfileId } from '@/lib/profile';
 import { db, addLocalReview } from '@/core/db';
 import { getDailyNewWordsCount, getDailyNewWordsLimit, incrementDailyNewWordsCount } from '@/core/localDeckService';
@@ -62,6 +63,7 @@ function QuizComponent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t, addPoints } = useJapanification();
+  const { incrementQuestProgress } = useQuests();
 
   const [profileId, setProfileId] = useState<string>('default');
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -209,16 +211,22 @@ function QuizComponent() {
   const saveMnemonic = useCallback(async (text: string) => {
     if (words.length === 0 || currentIndex >= words.length) return;
     const currentWord = words[currentIndex];
+    const cleanText = text.trim();
+    if (cleanText === (currentWord.mnemonic || '')) return; // Нет изменений
     
     setIsSavingMnemonic(true);
     try {
-      await db.words.update(currentWord.id, { mnemonic: text.trim() || undefined });
+      await db.words.update(currentWord.id, { mnemonic: cleanText || undefined });
+      currentWord.mnemonic = cleanText || undefined;
+      if (cleanText) {
+        incrementQuestProgress('mnemonics', 1);
+      }
     } catch (e) {
       console.error('Ошибка сохранения мнемоники:', e);
     } finally {
       setIsSavingMnemonic(false);
     }
-  }, [words, currentIndex]);
+  }, [words, currentIndex, incrementQuestProgress]);
 
   // Запрос ИИ-этимологии
   const fetchEtymology = useCallback(async () => {
@@ -240,6 +248,8 @@ function QuizComponent() {
         if (!mnemonicText.trim() && data.etymology) {
           setMnemonicText(data.etymology);
           await db.words.update(currentWord.id, { mnemonic: data.etymology });
+          currentWord.mnemonic = data.etymology;
+          incrementQuestProgress('mnemonics', 1);
         }
       } else {
         console.error('Ошибка API этимологии:', res.status);
@@ -249,7 +259,7 @@ function QuizComponent() {
     } finally {
       setIsLoadingEtymology(false);
     }
-  }, [isLoadingEtymology, etymologyData, words, currentIndex, mnemonicText]);
+  }, [isLoadingEtymology, etymologyData, words, currentIndex, mnemonicText, incrementQuestProgress]);
 
   if (isLoading) {
     return (
@@ -421,6 +431,9 @@ function QuizComponent() {
         synced: 0,
         reviewType: 'active'
       });
+
+      // Инкрементируем квест на повторения
+      incrementQuestProgress('reviews', 1);
     } catch (e) {
       console.error('Ошибка записи FSRS прогресса в квизе:', e);
     }

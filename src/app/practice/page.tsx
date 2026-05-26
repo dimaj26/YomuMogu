@@ -3,8 +3,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BookOpen, Settings, Sparkles, RefreshCw, AlertCircle, Play, XCircle, ArrowLeft, X, Volume2, Target } from 'lucide-react';
+import { BookOpen, Settings, Sparkles, RefreshCw, AlertCircle, Play, XCircle, ArrowLeft, X, Volume2, Target, Trophy, CheckCircle } from 'lucide-react';
 import { useJapanification } from '@/hooks/useJapanification';
+import { useQuests } from '@/hooks/useQuests';
+import { LearningTrack } from '@/components/LearningTrack';
 import { getProfileItem, setProfileItem, removeProfileItem, getActiveProfileId } from '@/lib/profile';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { JpUI } from '@/components/JpUI';
@@ -86,6 +88,7 @@ function generateOptions(correct: string, allWords: LocalWord[], field: 'reading
 export default function PracticePage() {
   const router = useRouter();
   const { state: jState, t } = useJapanification();
+  const { quests, claimQuestReward } = useQuests();
 
   const [activeProfileId, setActiveProfileId] = useState<string>('default');
   const [deckMode, setDeckMode] = useState<'standard' | 'custom' | 'local'>('local');
@@ -94,6 +97,8 @@ export default function PracticePage() {
   const [localWords, setLocalWords] = useState<LocalWord[]>([]); // Полные LocalWord для lookup статусов
   const [sessions, setSessions] = useState<any[]>([]);
   const [inProgressSessions, setInProgressSessions] = useState<Set<string>>(new Set());
+  const [completedSessions, setCompletedSessions] = useState<Set<string>>(new Set());
+  const [completedSessionsCountToday, setCompletedSessionsCountToday] = useState<number>(0);
 
   const [isLoadingSessions, setIsLoadingSessions] = useState<boolean>(false);
   const [isLocalInitialized, setIsLocalInitialized] = useState<boolean>(false);
@@ -195,25 +200,36 @@ export default function PracticePage() {
     loadProfileData();
   }, []);
 
-  // Отслеживаем прогресс сессий в процессе
+  // Отслеживаем прогресс сессий в процессе и выполненные сессии
   useEffect(() => {
     if (!hasLoaded || sessions.length === 0) return;
 
     const inProgress = new Set<string>();
+    const completed = new Set<string>();
+    let completedCount = 0;
+
     sessions.forEach(session => {
       try {
         const savedStateStr = getProfileItem(`chat_state_${session.id}`);
         if (savedStateStr) {
           const savedState = JSON.parse(savedStateStr);
-          if (savedState && savedState.messages && savedState.messages.length > 0) {
-            inProgress.add(session.id);
+          if (savedState) {
+            if (savedState.isComplete) {
+              completed.add(session.id);
+              completedCount++;
+            } else if (savedState.messages && savedState.messages.length > 0) {
+              inProgress.add(session.id);
+            }
           }
         }
       } catch (e) {
         // Ошибка чтения
       }
     });
+
     setInProgressSessions(inProgress);
+    setCompletedSessions(completed);
+    setCompletedSessionsCountToday(completedCount);
   }, [sessions, activeProfileId, hasLoaded]);
 
   // Lookup статуса слова по его text (word)
@@ -720,50 +736,16 @@ export default function PracticePage() {
               )}
 
               {!isLoadingSessions && sessions.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  <div className={styles.sessionGrid}>
-                    {sessions.map((session) => (
-                      <div key={session.id} className={styles.sessionCard}>
-                        <h4 className={styles.sessionTitle}>{session.title}</h4>
-                        <p className={styles.sessionDescription}>{session.description}</p>
-                        <div className={styles.sessionWordsTitle}>Целевые слова:</div>
-                        <div className={styles.sessionWordList}>
-                          {session.targetWords.map((tw: any, idx: number) => (
-                            <span key={idx} className={getBadgeClass(tw.word)}>
-                              {tw.translation}
-                            </span>
-                          ))}
-                        </div>
-                        {inProgressSessions.has(session.id) ? (
-                          <div style={{ display: 'flex', gap: '8px', width: '100%', marginTop: 'auto' }}>
-                            <button
-                              onClick={() => startSession(session)}
-                              className="btn-3d btn-blue"
-                              style={{ flex: 1, padding: '8px 12px', fontSize: '14px' }}
-                            >
-                              Продолжить
-                            </button>
-                            <button
-                              onClick={() => handleDiscardSession(session.id)}
-                              className="btn-3d btn-red"
-                              style={{ padding: '8px 12px', fontSize: '14px' }}
-                              title="Сбросить прогресс сессии"
-                            >
-                              Сброс
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => startSession(session)}
-                            className="btn-3d btn-green"
-                            style={{ width: '100%', marginTop: 'auto', padding: '8px 16px', fontSize: '14px' }}
-                          >
-                            Начать практику
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
+                  <LearningTrack
+                    sessions={sessions}
+                    inProgressSessions={inProgressSessions}
+                    completedSessions={completedSessions}
+                    dueReviewsCount={dueActiveWordsCount}
+                    completedSessionsCountToday={completedSessionsCountToday}
+                    onStartSession={startSession}
+                    onDiscardSession={handleDiscardSession}
+                  />
 
                   <button
                     onClick={generateSessions}
@@ -802,6 +784,62 @@ export default function PracticePage() {
               <Link href="/settings" className="btn-3d" style={{ fontSize: '14px', padding: '10px 16px', display: 'flex', justifyContent: 'center' }}>
                 <Settings size={16} style={{ marginRight: 6 }} /> Настроить источник
               </Link>
+            </div>
+
+            {/* Ежедневные квесты */}
+            <div className={styles.questsCard}>
+              <h3 className={styles.questsTitle}>
+                <Trophy size={20} style={{ color: 'var(--color-yellow-shadow)' }} />
+                <span>{t('Ежедневные квесты', 'デイリークエスト')}</span>
+              </h3>
+              <div className={styles.questList}>
+                {quests.map((quest) => {
+                  const percent = Math.min(100, (quest.current / quest.target) * 100);
+                  return (
+                    <div key={quest.id} className={styles.questItem}>
+                      <div className={styles.questHeader}>
+                        <div className={styles.questInfo}>
+                          <h4 className={styles.questItemTitle}>{quest.title}</h4>
+                          <p className={styles.questDesc}>{quest.description}</p>
+                        </div>
+                        <span className={styles.xpBadge}>+{quest.rewardXp} XP</span>
+                      </div>
+                      
+                      <div className={styles.questProgressContainer}>
+                        <div className={styles.questProgressTrack}>
+                          <div 
+                            className={`${styles.questProgressFill} ${quest.completed ? styles.questProgressFillCompleted : ''}`} 
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
+                        <span className={styles.questProgressText}>
+                          {quest.current} / {quest.target}
+                        </span>
+                      </div>
+
+                      {quest.completed && !quest.claimed && (
+                        <button
+                          type="button"
+                          onClick={() => claimQuestReward(quest.id)}
+                          className={`btn-3d btn-green ${styles.claimQuestBtn}`}
+                          style={{ marginTop: '8px', padding: '6px 12px', width: '100%', fontSize: '12px', fontWeight: 800 }}
+                        >
+                          {t('Забрать награду', '報酬を受け取る')}
+                        </button>
+                      )}
+
+                      {quest.claimed && (
+                        <div style={{ marginTop: '6px', textAlign: 'right' }}>
+                          <span className={styles.claimedLabel}>
+                            <CheckCircle size={14} />
+                            {t('Получено', '受取済')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Виджет советов по FSRS */}

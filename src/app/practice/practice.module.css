@@ -126,11 +126,149 @@
   box-shadow: 0 4px 0 var(--border-color);
   transition: transform 0.15s, box-shadow 0.15s;
 }
-
 .sessionCard:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 0 var(--border-color);
 }
+
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* === Daily Quests Styles === */
+.questsCard {
+  background-color: var(--bg-primary);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--border-radius-sm, 12px);
+  padding: 20px;
+  box-shadow: 0 4px 0 var(--border-color);
+}
+
+.questsTitle {
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.questList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.questItem {
+  border-bottom: 1.5px dashed var(--border-color);
+  padding-bottom: 12px;
+}
+
+.questItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.questHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+  gap: 8px;
+}
+
+.questInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.questItemTitle {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.questDesc {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.xpBadge {
+  font-size: 11px;
+  font-weight: 800;
+  background-color: rgba(254, 240, 138, 0.6); /* pale yellow */
+  border: 1px solid var(--color-yellow-shadow, #d97706);
+  color: var(--color-yellow-shadow, #d97706);
+  padding: 2px 6px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.questProgressContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.questProgressTrack {
+  flex-grow: 1;
+  height: 8px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.questProgressFill {
+  height: 100%;
+  background-color: var(--color-green, #22c55e);
+  transition: width 0.3s ease;
+}
+
+.questProgressFillCompleted {
+  background-color: var(--color-green, #22c55e);
+}
+
+.questProgressText {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  min-width: 35px;
+  text-align: right;
+}
+
+.claimQuestBtn {
+  margin-top: 6px;
+  width: 100%;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  animation: pulseClaimBtn 1.5s infinite;
+}
+
+.claimedLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--color-green, #22c55e);
+}
+
+@keyframes pulseClaimBtn {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
 
 .sessionTitle {
   font-size: 18px;

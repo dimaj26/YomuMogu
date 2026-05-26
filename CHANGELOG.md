@@ -2,6 +2,15 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.28.0] - 2026-05-27
+### Added
+- Added a winding, vertical Duolingo-style visual map/road on the practice page `/practice` (`src/components/LearningTrack.tsx`, `src/components/LearningTrack.module.css`) representing 5 interactive nodes (3 AI conversation practice sessions, 1 review marathon, and 1 bonus quiz) with locked/active/completed state transitions, dynamic winding SVG connectors, wiggling hover animations, and detail popovers.
+- Added a Daily Quests widget in the practice page sidebar (`src/app/practice/page.tsx`, `src/app/practice/practice.module.css`) to track Reviews (10 target), Chats (1 target), and Mnemonics (2 target), managed by a custom hook `useQuests` (`src/hooks/useQuests.ts`) with profile-namespaced local storage caching and daily resets at 4:00 AM local time.
+- Integrated daily quest completion triggers in the Quiz page (`src/app/practice/quiz/page.tsx`) to increment progress for reviews checked and mnemonics saved or auto-filled.
+- Integrated daily quest completion triggers in the Chat page (`src/app/chat/page.tsx`) to increment progress when a dialogue session reaches the 80% completion threshold.
+- Added unit tests for the visual track component in `src/components/__tests__/LearningTrack.test.tsx` and the daily quests hook in `src/hooks/__tests__/useQuests.test.ts`.
+- Updated the practice page test suite in `src/app/practice/__tests__/page.test.tsx` to handle the popover interactions and mock system dates cleanly.
+
 ## [1.27.0] - 2026-05-26
 ### Added
 - Added client-side reactive vector SVG mascot widget 🍵 in `/chat` page (`src/app/chat/page.tsx`, `src/app/chat/chat.module.css`) supporting animated states: `idle` (floating steam), `happy` (jumping upon target word hits), `worried` (shaking and tilting left towards grammar feedback cards on mistakes), and `cheering` (nodding on correct inputs).

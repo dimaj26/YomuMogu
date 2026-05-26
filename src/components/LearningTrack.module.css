@@ -1,0 +1,237 @@
+.trackContainer {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  background: var(--bg-secondary);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--card-border-radius, 16px);
+  box-shadow: 0 8px 0 var(--border-color);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.svgConnector {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.connectorLine {
+  stroke: var(--border-color, #a27b5c);
+  stroke-width: 12px;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.connectorLineDashed {
+  stroke: #d1d5db;
+  stroke-width: 12px;
+  stroke-linecap: round;
+  stroke-dasharray: 15 15;
+  fill: none;
+}
+
+.nodeList {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 700px; /* Фиксированная высота для стабильности SVG путей */
+}
+
+/* Сетка координат для каждого узла */
+.trackNodeWrapper {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 5;
+}
+
+.nodeBtn {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: var(--border-width) solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  position: relative;
+  outline: none;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.nodeBtn:active {
+  transform: scale(0.95);
+}
+
+/* 3D тени и цвета для разных статусов узлов */
+.nodeCompleted {
+  background-color: var(--color-green);
+  color: white;
+  box-shadow: 0 6px 0 var(--color-green-shadow);
+}
+
+.nodeInProgress {
+  background-color: var(--color-blue);
+  color: white;
+  box-shadow: 0 6px 0 var(--color-blue-shadow);
+  animation: pulseActive 2s infinite;
+}
+
+.nodeAvailable {
+  background-color: var(--color-orange);
+  color: white;
+  box-shadow: 0 6px 0 var(--color-orange-shadow);
+}
+
+.nodeLocked {
+  background-color: #d1d5db;
+  color: #9ca3af;
+  box-shadow: 0 6px 0 #9ca3af;
+  cursor: not-allowed;
+}
+
+.nodeLabel {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-primary);
+  text-align: center;
+  white-space: nowrap;
+  background: var(--bg-primary);
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-color);
+}
+
+/* Пульсация для активного узла */
+@keyframes pulseActive {
+  0% {
+    box-shadow: 0 6px 0 var(--color-blue-shadow), 0 0 0 0 rgba(59, 130, 246, 0.5);
+  }
+  70% {
+    box-shadow: 0 6px 0 var(--color-blue-shadow), 0 0 0 15px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 6px 0 var(--color-blue-shadow), 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+/* Всплывающее окно (Popover) */
+.popover {
+  position: absolute;
+  top: -150px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  background: var(--bg-primary);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 8px 0 var(--border-color);
+  padding: 16px;
+  box-sizing: border-box;
+  z-index: 100;
+  animation: popoverFadeIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.popoverHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.popoverTitle {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 4px;
+}
+
+.popoverDesc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 12px 0;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.wordsTitle {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.wordBadgeList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.wordBadge {
+  font-size: 11px;
+  font-weight: 800;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  padding: 3px 8px;
+  border-radius: 8px;
+  color: var(--text-primary);
+}
+
+.arrow {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid var(--border-color);
+}
+
+.arrowInner {
+  position: absolute;
+  bottom: 2.5px;
+  left: -9px;
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-top: 9px solid var(--bg-primary);
+}
+
+@keyframes popoverFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.85) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1) translateY(0);
+  }
+}

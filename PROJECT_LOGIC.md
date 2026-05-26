@@ -66,7 +66,10 @@ src/
         lookup/route.ts   # GET  /api/dict/lookup (offline JitenDex query)
   hooks/
     useJapanification.tsx # XP progression, level, speed, chatLevel state
-    __tests__/useJapanification.test.ts
+    useQuests.ts          # Daily quests state tracking (reviews, chats, mnemonics)
+    __tests__/
+      useJapanification.test.ts
+      useQuests.test.ts   # Unit tests for useQuests hook
   core/
     db.ts                 # Decoupled IndexedDB database
     localDeckService.ts   # Local word management
@@ -89,11 +92,14 @@ src/
     PhonosemanticHint.module.css # Styles for PhonosemanticHint accordion
     DebugDrawer.tsx       # Client component implementing the sliding debug drawer HUD
     DebugDrawer.module.css # Styles for the DebugDrawer
+    LearningTrack.tsx     # Duolingo winding SVG track client component
+    LearningTrack.module.css # Styles for the LearningTrack component
     __tests__/
       ErrorBoundary.test.tsx
       ErrorFallback.test.tsx
       DebugDrawer.test.tsx # Unit tests for DebugDrawer component
       JpUI.test.tsx        # Unit tests for JpUI component FSRS opacity
+      LearningTrack.test.tsx # Unit tests for LearningTrack component
   resources/
     phonosemantics.json   # 50 phonosemantic keys and relative kanji data
   lib/
@@ -130,6 +136,9 @@ src/
 | `lib/gemini/retry.ts` | Singleton wrapper implementing exponential backoffs and model fallback loops |
 | `lib/gemini/__tests__/scenarios.integration.test.ts` | Integration tests verifying multi-turn conversational scenarios against live Gemini API |
 | `scratch/SCRATCH_LOG.md` | Permanent historical audit registry tracking sandbox scripts and side effects |
+| `hooks/useQuests.ts` | React custom hook managing namespaced daily quest progression and XP rewards |
+| `components/LearningTrack.tsx` | Duolingo winding vertical pathway component with 3D nodes and popovers |
+| `components/__tests__/LearningTrack.test.tsx` | Unit tests for LearningTrack component rendering and popover triggers |
 
 
 ---
@@ -573,4 +582,4 @@ npm run test:integration:gemini # Live LLM integration tests (uses Gemini API, c
 
 ### [PL-9.4] Current Test Count
 
-205 unit tests across 30 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
+212 unit tests across 32 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).

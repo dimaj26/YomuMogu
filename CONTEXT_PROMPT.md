@@ -52,6 +52,8 @@ You are an expert **TypeScript / Next.js 15** developer. Your specialty is App R
 - **Interactive Mascot Widget**: Floating client-side vector SVG mascot 🍵 in `/chat` with custom animations (floating, bouncing, nodding, shaking) that reacts to target words detection (`happy`), grammar corrections (`worried` with a visual tilt/pointer to the feedback card), and correct inputs (`cheering`).
 - **Memory Decay Heatmap (Kumiko Grid)**: Landing page 2D SVG aggregator displaying 500 words of the starter deck in a 10x5 (50 cells) traditional Japanese Kumiko woodworking grid. Colors reflect memory stability (white, yellow, green, gold), and cells pulsate to flag due dates (memory cooling).
 - **Gradual Furigana Opacity (JpUI)**: Seamless `<ruby>` furigana opacity fade-outs based on FSRS intervals (<3d: opacity 1; <21d: opacity 0.6; >=21d: opacity 0, appearing on hover) built to secure vertical line-height constraints and prevent Cumulative Layout Shift (CLS).
+- **Visual Learning Tracks (Duolingo-style Path)**: A vertical winding roadmap on `/practice` mapping 5 nodes (3 AI sessions, 1 review marathon, 1 bonus quiz) with locked/active/completed state transitions, dynamic SVG background connectors, wiggling hover animations, and detail popovers.
+- **Daily Quests Widget**: Right-sidebar widget on `/practice` tracking Reviews (10 FSRS checks), Chats (1 conversation scenario), and Mnemonics (2 notes saved/edited) with a 4:00 AM local time daily boundary reset and reward XP claiming.
 
 ---
 

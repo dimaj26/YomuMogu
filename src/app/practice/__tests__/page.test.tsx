@@ -29,6 +29,9 @@ vi.mock('lucide-react', () => ({
   X: () => <span data-testid="icon-x-close" />,
   Volume2: () => <span data-testid="icon-volume" />,
   Target: () => <span data-testid="icon-target" />,
+  Trophy: () => <span data-testid="icon-trophy" />,
+  CheckCircle: () => <span data-testid="icon-check-circle" />,
+  Lock: () => <span data-testid="icon-lock" />,
 }));
 
 // Мокаем next/link и next/navigation
@@ -131,6 +134,13 @@ describe('PracticePage Component', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Тема кафе')).toBeInTheDocument();
+    });
+
+    // Кликаем по узлу, чтобы открыть popover
+    const nodeBtn = screen.getByTitle('Тема кафе');
+    fireEvent.click(nodeBtn);
+
+    await waitFor(() => {
       expect(screen.getByText('Диалог в кафе.')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Начать практику' })).toBeInTheDocument();
     });
@@ -168,6 +178,13 @@ describe('PracticePage Component', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Тема кафе')).toBeInTheDocument();
+    });
+
+    // Кликаем по узлу, чтобы открыть popover
+    const nodeBtn = screen.getByTitle('Тема кафе');
+    fireEvent.click(nodeBtn);
+
+    await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Продолжить' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Сброс' })).toBeInTheDocument();
     });
@@ -467,25 +484,35 @@ describe('PracticePage Component', () => {
   });
 
   it('initializes the daily new words count dynamically based on reviews in IndexedDB', async () => {
+    const baseTime = new Date('2026-05-27T12:00:00+06:00');
+    const originalNow = Date.now;
+    Date.now = () => baseTime.getTime();
+
+    const OriginalDate = globalThis.Date;
+    const dateSpy = vi.spyOn(globalThis, 'Date').mockImplementation(function (this: any, ...args: any[]) {
+      if (args.length === 0) return new OriginalDate(baseTime.getTime());
+      return new OriginalDate(...args as [any]);
+    } as any);
+
     localStorage.setItem('yomumogu_profile_default_deck_mode', 'local');
     localStorage.setItem('yomumogu_profile_default_daily_new_words_limit', '10');
     
     // Имитируем устаревший кэш в localStorage (якобы 10 из 10)
-    const dString = new Date().toISOString().split('T')[0];
+    const dString = '2026-05-27';
     localStorage.setItem(`yomumogu_profile_default_daily_new_words_${dString}`, '10');
 
     // Очистим reviews в БД
     await db.reviews.clear();
     await db.words.clear();
 
-    const now = Date.now();
+    const now = baseTime.getTime();
 
     // Инициализируем слово в db.words, чтобы isLocalDeckInitialized вернуло true
     await db.words.put({
       profileId: 'default',
       id: 100,
       word: '単語',
-      reading: 'たんго',
+      reading: 'たんご',
       translation: 'слово',
       category: '__local_starter__',
       source: 'starter',
@@ -535,5 +562,8 @@ describe('PracticePage Component', () => {
 
     // Ожидаем, что на основе БД значение пересчиталось в 1 и отображается "1 из 10" (игнорируя устаревший 10)
     expect(await screen.findByText('1 из 10')).toBeInTheDocument();
+
+    dateSpy.mockRestore();
+    Date.now = originalNow;
   });
 });

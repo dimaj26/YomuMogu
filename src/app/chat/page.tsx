@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Send, Lightbulb, X, Check, Loader2, ChevronDown, ChevronUp, RefreshCw, AlertCircle, Plus, BookOpen } from 'lucide-react';
 import { useJapanification } from '@/hooks/useJapanification';
+import { useQuests } from '@/hooks/useQuests';
 import { getProfileItem, setProfileItem, removeProfileItem, getActiveProfileId } from '@/lib/profile';
 import { db, addLocalReview, syncLocalDatabaseWithAnki } from '@/core/db';
 import { sanitizeHtml } from '@/lib/sanitize';
@@ -84,6 +85,7 @@ const stripRuby = (html: string) => {
 export default function ChatPage() {
   const router = useRouter();
   const { t, state, shouldShowTranslation, shouldGrammarBeJapanese, addPoints, trackWordUsed, completeSession } = useJapanification();
+  const { incrementQuestProgress } = useQuests();
 
   const [session, setSession] = useState<SessionData | null>(null);
   const [messages, setMessages] = useState<ChatMessageData[]>([]);
@@ -239,9 +241,10 @@ export default function ChatPage() {
       if (collectedWords.size >= threshold) {
         setIsComplete(true);
         completeSession();
+        incrementQuestProgress('chats', 1);
       }
     }
-  }, [collectedWords, session, isComplete, completeSession]);
+  }, [collectedWords, session, isComplete, completeSession, incrementQuestProgress]);
 
   const getHistory = useCallback(() => {
     return messages.map(m => ({
