@@ -2,6 +2,16 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.25.0] - 2026-05-26
+### Added
+- Added a global toggleable Debug HUD Side Drawer (`src/components/DebugDrawer.tsx`, `src/components/DebugDrawer.module.css`) to the root layout, enabled only in development and testing modes.
+- Added client-side telemetry to show FSRS parameter values (stability, difficulty, reps, lapses, due date) for passive and active trajectories of all words in IndexedDB.
+- Added list displays for words studied today (retrieved from `reviews` table log) and words currently due for FSRS review.
+- Added raw prompt and history display to inspect system instructions and payload formatting sent to Gemini API, populated from sessionStorage cache.
+- Added developer override controls to switch profiles dynamically, inspect raw profile localStorage keys, reset local FSRS databases, and add mock XP points.
+- Added debug prompt instrumentation inside the API chat routes (`/api/chat` and `/api/chat/hint`) to expose prompt structures under dev environments.
+- Added unit tests verifying DebugDrawer rendering, tab navigation, and overlay triggering in `src/components/__tests__/DebugDrawer.test.tsx`.
+
 ## [1.24.0] - 2026-05-26
 ### Added
 - Added a premium traditional Japanese Kumiko (Asanoha) geometric grid pattern fixed background to `body` in `src/app/globals.css`, featuring a warm washi paper textured background color and wood-colored lines for high contrast and modern styling.

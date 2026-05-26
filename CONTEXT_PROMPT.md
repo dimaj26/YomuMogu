@@ -48,6 +48,7 @@ You are an expert **TypeScript / Next.js 15** developer. Your specialty is App R
 - **Phonosemantic Hints (声符)**: Custom Accordion component displaying a phonetic key and relatives with meanings and readings to reinforce Kanji associations, integrated into both Warm-up trainer and Quiz screens.
 - **Interactive Mnemonics & AI Etymology**: User notes / mnemonics saved to IndexedDB inside the Quiz, featuring a "✨ ИИ-Этимология" button to query radical breakdowns and origins using Gemini API, automatically auto-filling user notes.
 - **FSRS New Status Exclusions**: Due words calculation and scheduling filters explicitly exclude `new` status words from the due count to avoid initial vocabulary inflation.
+- **Debug HUD Side Drawer (Developer layer)**: Toggleable side drawer panel enabled only in development/testing mode. Displays FSRS trajectories (stability, difficulty, reps, lapses, due date) for active/passive cards, visualizes raw Gemini prompt templates and dialogue history, lists words studied today (reviews log), and provides developer utilities to switch profiles, inspect localStorage values, trigger database resets, or simulate XP progression.
 
 ---
 

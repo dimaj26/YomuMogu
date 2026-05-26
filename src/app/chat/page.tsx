@@ -241,6 +241,9 @@ export default function ChatPage() {
         })
       });
       const data = await res.json();
+      if (data && data._debug && typeof window !== 'undefined') {
+        sessionStorage.setItem('yomumogu_last_gemini_prompt', JSON.stringify(data._debug));
+      }
       if (res.ok) {
         const aiMsg: ChatMessageData = {
           id: `msg-${Date.now()}`,
@@ -294,6 +297,9 @@ export default function ChatPage() {
         })
       });
       const data = await res.json();
+      if (data && data._debug && typeof window !== 'undefined') {
+        sessionStorage.setItem('yomumogu_last_gemini_prompt', JSON.stringify(data._debug));
+      }
       if (res.ok) {
         // Обновляем собранные слова
         const newCollected = new Set(collectedWords);
@@ -368,6 +374,9 @@ export default function ChatPage() {
         })
       });
       const data = await res.json();
+      if (data && data._debug && typeof window !== 'undefined') {
+        sessionStorage.setItem('yomumogu_last_gemini_prompt', JSON.stringify(data._debug));
+      }
       if (res.ok) {
         setHints(data.hints || []);
       }

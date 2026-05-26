@@ -3,6 +3,7 @@ import { Nunito } from "next/font/google";
 import "./globals.css";
 import { JpUIProvider } from "@/components/JpUIProvider";
 import { JapanificationProvider } from "@/hooks/useJapanification";
+import { DebugDrawer } from "@/components/DebugDrawer";
 
 const nunito = Nunito({
   variable: "--font-nunito",
@@ -26,6 +27,7 @@ export default function RootLayout({
         <JapanificationProvider>
           <JpUIProvider>
             {children}
+            <DebugDrawer />
           </JpUIProvider>
         </JapanificationProvider>
       </body>

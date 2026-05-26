@@ -24,6 +24,10 @@ export interface ChatResponse {
   translation: string;
   grammarFeedback: GrammarFeedback;
   wordsDetected: string[];
+  _debug?: {
+    systemInstruction: string;
+    contents: any;
+  };
 }
 
 export interface HintVariant {
@@ -34,6 +38,10 @@ export interface HintVariant {
 
 export interface HintResponse {
   hints: HintVariant[];
+  _debug?: {
+    systemInstruction: string;
+    contents: any;
+  };
 }
 
 /**
@@ -190,6 +198,12 @@ export class ChatService {
       });
 
       logger.info(`Ответ чата получен. Обнаружено целевых слов: ${parsed.wordsDetected?.length || 0}`);
+      if (process.env.NODE_ENV === 'development') {
+        parsed._debug = {
+          systemInstruction,
+          contents
+        };
+      }
       return parsed;
     } catch (error: any) {
       logger.error('Ошибка при отправке сообщения в чат Gemini', error);
@@ -301,6 +315,12 @@ export class ChatService {
       });
 
       logger.info(`Подсказки успешно сгенерированы: ${parsed.hints?.length || 0} вариантов`);
+      if (process.env.NODE_ENV === 'development') {
+        parsed._debug = {
+          systemInstruction,
+          contents
+        };
+      }
       return parsed;
     } catch (error: any) {
       logger.error('Ошибка при генерации подсказок в Gemini', error);

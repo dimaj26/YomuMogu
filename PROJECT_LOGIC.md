@@ -87,6 +87,12 @@ src/
     LanguageSwitcher.module.css # Styles for LanguageSwitcher dropdown
     PhonosemanticHint.tsx # Accordion component displaying phonosemantic keys and relatives
     PhonosemanticHint.module.css # Styles for PhonosemanticHint accordion
+    DebugDrawer.tsx       # Client component implementing the sliding debug drawer HUD
+    DebugDrawer.module.css # Styles for the DebugDrawer
+    __tests__/
+      ErrorBoundary.test.tsx
+      ErrorFallback.test.tsx
+      DebugDrawer.test.tsx # Unit tests for DebugDrawer component
   resources/
     phonosemantics.json   # 50 phonosemantic keys and relative kanji data
   lib/
@@ -112,6 +118,7 @@ src/
 | `app/api/gemini/etymology/route.ts` | POST endpoint to generate word etymologies and mnemonic hints |
 | `app/api/gemini/__tests__/etymology.test.ts` | Unit test for etymology route using mocked Gemini client |
 | `components/PhonosemanticHint.tsx` | Accordion component displaying phonosemantic keys and relative kanji |
+| `components/DebugDrawer.tsx` | Client component implementing the sliding debug drawer HUD |
 | `resources/phonosemantics.json` | 50 phonosemantic keys and relative kanji data |
 | `app/practice/quiz/page.tsx` | Gamified Active Recall quiz component supporting ad-hoc, FSRS modes, mnemonics, and phonosemantic hints |
 | `lib/dict/jitendex.ts` | `lookupWord(word)` — offline SQLite JitenDex dictionary lookup |
@@ -367,6 +374,10 @@ interface ChatResponse {
     explanation: string;  // Explanation in Russian (or Japanese if grammarInJapanese)
   };
   wordsDetected: string[]; // Target words found in user's message
+  _debug?: {
+    systemInstruction: string;
+    contents: any;
+  };
 }
 
 interface HintResponse {
@@ -375,6 +386,10 @@ interface HintResponse {
     japanese: string;    // May contain <ruby> tags on chat levels 1-3
     translation: string;
   }>;
+  _debug?: {
+    systemInstruction: string;
+    contents: any;
+  };
 }
 ```
 
@@ -557,4 +572,4 @@ npm run test:integration:gemini # Live LLM integration tests (uses Gemini API, c
 
 ### [PL-9.4] Current Test Count
 
-191 unit tests across 28 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
+194 unit tests across 29 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
