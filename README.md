@@ -80,10 +80,13 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to start pra
 - **Local-First Database Cache**: Caches imported decks and review logs locally using a Dexie.js (IndexedDB) database for high responsiveness and offline capability. Captures and saves user-generated contextual sentences under vocabulary entities.
 - **Bilateral FSRS Sync**: Synchronizes local review logs and card states with local Anki Desktop using a robust synchronizer featuring query deduplication (idempotence), FSRS parameter approximation (`stability = interval`, `difficulty = 5.0`, `reps = 1`) to preserve mature card history, and 4:00 AM day boundary alignment. Maintains dual `passive` and `active` scheduling state curves aligned via remote review replay, utilizing the active state as the primary sync anchor. Cleans and truncates HTML from imported card translations.
 - **Session Completion Flow**:
-  - *Bonus Test*: Interactive written translation quiz for unused target words.
+  - *Bonus Test*: Redirects to client-side Cloze Deletion active recall quiz.
   - *Gemini-Powered Chat Audit*: Automatically extracts new N4+ vocabulary used during practice.
   - *Offline Dictionary lookup*: Integrates JitenDex offline dictionary definitions (HTML).
   - *Anki Review Sync*: Seamlessly checks Anki card status to sync reviews or create new cards.
+- **Warm-up Trainer (Priming)**: Client-only React-overlay on `/practice` facilitating a 3-step learning warmup (Sight & Sound, Kana Check, Translation Check) for up to 10 new words without FSRS modifications.
+- **Phonosemantic Hints (声符)**: Custom Accordion component displaying Kanji phonetic components and semantic relative chips, aiding vocabulary association.
+- **Interactive Mnemonics & AI Etymology**: Offline notes editor in the Quiz with a "✨ ИИ-Этимология" action to fetch origin breakdowns from Gemini API.
 
 ---
 

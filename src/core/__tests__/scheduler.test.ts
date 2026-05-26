@@ -22,7 +22,7 @@ describe('FSRS Scheduling logic', () => {
   });
 
   it('should correctly map LocalWord to ts-fsrs Card', () => {
-    const word: LocalWord = {
+    const word: any = {
       profileId: 'test-user',
       id: 12345,
       word: '食べる',
@@ -50,7 +50,7 @@ describe('FSRS Scheduling logic', () => {
   });
 
   it('should correctly map LocalWord to ts-fsrs Card with a reference date', () => {
-    const word: LocalWord = {
+    const word: any = {
       profileId: 'test-user',
       id: 12345,
       word: '食べる',
@@ -73,7 +73,7 @@ describe('FSRS Scheduling logic', () => {
   });
 
   it('should calculate next state and return updated intervals', () => {
-    const word: LocalWord = {
+    const word: any = {
       profileId: 'test-user',
       id: 12345,
       word: '食べる',
@@ -111,7 +111,7 @@ describe('FSRS Scheduling logic', () => {
   });
 
   it('should always produce intervals in order: Again < Hard < Good < Easy for review cards', () => {
-    const reviewWord: LocalWord = {
+    const reviewWord: any = {
       profileId: 'test-user',
       id: 12345,
       word: '食べる',
@@ -140,7 +140,7 @@ describe('FSRS Scheduling logic', () => {
   });
 
   it('should always produce intervals in order: Again < Hard < Good < Easy for mature cards', () => {
-    const matureWord: LocalWord = {
+    const matureWord: any = {
       profileId: 'test-user',
       id: 12345,
       word: '食べる',
@@ -170,7 +170,7 @@ describe('FSRS Scheduling logic', () => {
 
   it('should not produce absurdly inflated intervals for overdue cards rated Good', () => {
     // Карта с interval=30д, но overdue на 33 дня (elapsed=63, scheduled=30)
-    const overdueWord: LocalWord = {
+    const overdueWord: any = {
       profileId: 'test-user',
       id: 12345,
       word: '食べる',
@@ -197,7 +197,7 @@ describe('FSRS Scheduling logic', () => {
   });
 
   it('should not produce absurdly inflated intervals for new cards on first Good', () => {
-    const newWord: LocalWord = {
+    const newWord: any = {
       profileId: 'test-user',
       id: 12345,
       word: '新しい',
@@ -223,7 +223,7 @@ describe('FSRS Scheduling logic', () => {
 
   it('should handle sequential reviews and maintain reasonable intervals', () => {
     // Симулируем: New → Good → Good → Good
-    let word: LocalWord = {
+    let word: any = {
       profileId: 'test-user',
       id: 12345,
       word: '走る',

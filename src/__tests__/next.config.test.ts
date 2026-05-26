@@ -6,11 +6,11 @@ describe('Конфигурация заголовков next.config.ts', () => {
 
   afterEach(() => {
     // Восстанавливаем оригинальное значение NODE_ENV после каждого теста
-    process.env.NODE_ENV = originalEnv;
+    (process.env as any).NODE_ENV = originalEnv;
   });
 
   it('должен возвращать CSP с unsafe-eval в режиме разработки (development)', async () => {
-    process.env.NODE_ENV = 'development';
+    (process.env as any).NODE_ENV = 'development';
 
     const headersConfig = await nextConfig.headers?.();
     expect(headersConfig).toBeDefined();
@@ -25,7 +25,7 @@ describe('Конфигурация заголовков next.config.ts', () => {
   });
 
   it('не должен возвращать CSP с unsafe-eval в режиме production', async () => {
-    process.env.NODE_ENV = 'production';
+    (process.env as any).NODE_ENV = 'production';
 
     const headersConfig = await nextConfig.headers?.();
     expect(headersConfig).toBeDefined();

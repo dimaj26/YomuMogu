@@ -85,14 +85,26 @@ describe('IndexedDB Key Validation & Safety Guards', () => {
           word: '猫',
           reading: 'ねこ',
           translation: 'кошка',
-          status: 'new',
-          deckName: 'TestDeck',
-          stability: 0,
-          difficulty: 0,
-          interval: 0,
-          due: Date.now(),
-          reps: 0,
-          lapses: 0
+          category: 'TestDeck',
+          source: 'anki',
+          passive: {
+            stability: 0,
+            difficulty: 0,
+            interval: 0,
+            due: Date.now(),
+            reps: 0,
+            lapses: 0,
+            status: 'new'
+          },
+          active: {
+            stability: 0,
+            difficulty: 0,
+            interval: 0,
+            due: Date.now(),
+            reps: 0,
+            lapses: 0,
+            status: 'new'
+          }
         },
         {
           profileId: validProfileId,
@@ -100,14 +112,26 @@ describe('IndexedDB Key Validation & Safety Guards', () => {
           word: '犬',
           reading: 'いぬ',
           translation: 'собака',
-          status: 'new',
-          deckName: 'TestDeck',
-          stability: 0,
-          difficulty: 0,
-          interval: 0,
-          due: Date.now(),
-          reps: 0,
-          lapses: 0
+          category: 'TestDeck',
+          source: 'anki',
+          passive: {
+            stability: 0,
+            difficulty: 0,
+            interval: 0,
+            due: Date.now(),
+            reps: 0,
+            lapses: 0,
+            status: 'new'
+          },
+          active: {
+            stability: 0,
+            difficulty: 0,
+            interval: 0,
+            due: Date.now(),
+            reps: 0,
+            lapses: 0,
+            status: 'new'
+          }
         },
         {
           profileId: '', // Невалидный профиль
@@ -115,14 +139,26 @@ describe('IndexedDB Key Validation & Safety Guards', () => {
           word: '水',
           reading: 'みず',
           translation: 'вода',
-          status: 'new',
-          deckName: 'TestDeck',
-          stability: 0,
-          difficulty: 0,
-          interval: 0,
-          due: Date.now(),
-          reps: 0,
-          lapses: 0
+          category: 'TestDeck',
+          source: 'anki',
+          passive: {
+            stability: 0,
+            difficulty: 0,
+            interval: 0,
+            due: Date.now(),
+            reps: 0,
+            lapses: 0,
+            status: 'new'
+          },
+          active: {
+            stability: 0,
+            difficulty: 0,
+            interval: 0,
+            due: Date.now(),
+            reps: 0,
+            lapses: 0,
+            status: 'new'
+          }
         }
       ];
 

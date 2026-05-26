@@ -44,6 +44,10 @@ You are an expert **TypeScript / Next.js 15** developer. Your specialty is App R
 - **Unified Error Handling Boundaries & API Hook**: Global class-based React `ErrorBoundary` and UI fallback component catch rendering exceptions, and a custom `useApiCall` hook consolidates client-side loading, error state, and retry logic.
 - **Dropdown Keyboard Accessibility (a11y)**: The LanguageSwitcher component is fully navigable using standard keyboard bindings (Arrows, Escape, Space, Enter) with active focus synchronization.
 - **Local Active Recall Quiz & FSRS Alignment**: Offline-first client-side quiz page (`/practice/quiz`) with Cloze Deletions, fallback direct translation, and dual hint systems (first character and JitenDex offline lookup with target word masking). Integrates with chat results via ad-hoc redirect (`?words=...`) and FSRS due-based reviews. Features bilateral scheduling curve alignment (`alignPassiveToActiveState`) to prevent passive curve lag, and skips passive log synchronization to Anki.
+- **Warm-up Trainer (Priming)**: Inline React-overlay trainer on the practice page, offering a 3-step learning warmup (Sight & Sound with TTS audio, Kana Check, Translation Check) for up to 10 new words without updating FSRS progress in IndexedDB.
+- **Phonosemantic Hints (声符)**: Custom Accordion component displaying a phonetic key and relatives with meanings and readings to reinforce Kanji associations, integrated into both Warm-up trainer and Quiz screens.
+- **Interactive Mnemonics & AI Etymology**: User notes / mnemonics saved to IndexedDB inside the Quiz, featuring a "✨ ИИ-Этимология" button to query radical breakdowns and origins using Gemini API, automatically auto-filling user notes.
+- **FSRS New Status Exclusions**: Due words calculation and scheduling filters explicitly exclude `new` status words from the due count to avoid initial vocabulary inflation.
 
 ---
 

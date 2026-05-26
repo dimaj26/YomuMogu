@@ -17,7 +17,7 @@ describe('useApiCall', () => {
     const onSuccess = vi.fn();
     const { result } = renderHook(() => useApiCall(mockApi, { onSuccess }));
 
-    let promise;
+    let promise: Promise<any>;
     act(() => {
       promise = result.current.execute('arg1');
     });
@@ -41,7 +41,7 @@ describe('useApiCall', () => {
     const onError = vi.fn();
     const { result } = renderHook(() => useApiCall(mockApi, { onError }));
 
-    let promise;
+    let promise: Promise<any>;
     act(() => {
       promise = result.current.execute();
     });
@@ -93,7 +93,7 @@ describe('useApiCall', () => {
 
     const { result } = renderHook(() => useApiCall(mockApi, { retryCount: 2, retryDelay: 5 }));
 
-    let promise;
+    let promise: Promise<any>;
     act(() => {
       promise = result.current.execute();
     });

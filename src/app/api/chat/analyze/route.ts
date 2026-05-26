@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
         deckWords = localWords.map(w => ({
           id: w.id,
           word: w.word,
-          status: w.status,
+          status: w.active.status,
           cardIds: [w.id]
         }));
         ankiConnected = true;

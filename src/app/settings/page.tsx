@@ -426,8 +426,8 @@ export default function SettingsPage() {
       const checkedIds = new Set<number>();
 
       existingWords.forEach(w => {
-        states[w.id] = w.status;
-        if (w.status === 'mature') {
+        states[w.id] = w.active.status;
+        if (w.active.status === 'mature') {
           checkedIds.add(w.id);
         }
       });

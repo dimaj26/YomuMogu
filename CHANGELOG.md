@@ -2,6 +2,20 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.21.0] - 2026-05-26
+### Added
+- Added client-only Warm-up Trainer (Priming) on the practice page, offering a 3-step learning overlay (Sight & Sound, Kana Check, Translation Check) for up to 10 new words from the local vocabulary without affecting FSRS intervals.
+- Added Phonosemantic Hints (声符) Accordion component showcasing phonetic components and semantic relatives (kanji, reading, meaning) for JLPT N5-N3 kanji, populated via a static `phonosemantics.json` file containing ~50 frequent keys.
+- Added interactive mnemonics and user notes editing directly in the Quiz page feedback screen, with automatic blur saving.
+- Added a POST API endpoint `/api/gemini/etymology` and corresponding unit test coverage in `src/app/api/gemini/__tests__/etymology.test.ts` mock-verifying etymology extraction.
+- Integrated a "✨ ИИ-Этимология" action in the Quiz note editor calling the etymology API to extract Kanji components and mnemonics using the Gemini API.
+- Integrated FSRS status filters to exclude `new` status words from active due counts and launcher loaders, solving the daily pool inflation bug.
+
+### Fixed
+- Fixed TypeScript compiler type checking errors across multiple files (`src/app/chat/page.tsx`, `src/app/settings/page.tsx`, `src/app/api/chat/analyze/route.ts`) caused by flat `LocalWord` property references.
+- Fixed TypeScript type constraints and compiler errors in legacy test cases in `src/core/__tests__/scheduler.test.ts` and `src/core/__tests__/db.test.ts` by introducing explicit type casting and mapping flat entities correctly.
+- Added missing Lucide React icon imports (e.g. `BookOpen`) on the chat page results.
+
 ## [1.20.0] - 2026-05-26
 ### Added
 - Added client-side active recall quiz page `/practice/quiz` with Cloze Deletions, fallback Russian-Japanese translation tests, and dual hint systems (first character reveal and offline JitenDex definitions lookup with target word masking `***`).

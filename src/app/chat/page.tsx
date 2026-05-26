@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Send, Lightbulb, X, Check, Loader2, ChevronDown, ChevronUp, RefreshCw, AlertCircle, Plus } from 'lucide-react';
+import { ArrowLeft, Send, Lightbulb, X, Check, Loader2, ChevronDown, ChevronUp, RefreshCw, AlertCircle, Plus, BookOpen } from 'lucide-react';
 import { useJapanification } from '@/hooks/useJapanification';
 import { getProfileItem, setProfileItem, removeProfileItem, getActiveProfileId } from '@/lib/profile';
 import { db, addLocalReview, syncLocalDatabaseWithAnki } from '@/core/db';
@@ -49,12 +49,12 @@ interface SavedChatState {
   messages: ChatMessageData[];
   collectedWords: string[];
   isComplete: boolean;
-  showBonusTest: boolean;
+  showBonusTest?: boolean;
   unusedTargetWords: TargetWord[];
-  currentBonusIndex: number;
-  bonusInput: string;
-  bonusChecked: boolean;
-  bonusFeedback: { isCorrect: boolean; message: string } | null;
+  currentBonusIndex?: number;
+  bonusInput?: string;
+  bonusChecked?: boolean;
+  bonusFeedback?: { isCorrect: boolean; message: string } | null;
   showSummaryScreen: boolean;
   analyzedWords: AnalyzedWord[];
   selectedSyncCards: number[];
@@ -556,15 +556,15 @@ export default function ChatPage() {
         for (const tw of session.targetWords) {
           if (!tw.word || typeof tw.word !== 'string') continue;
           const localWord = await db.words.where('word').equals(tw.word).first();
-          if (localWord && localWord.deckName && localWord.deckName !== '__all__') {
-            targetDeckName = localWord.deckName;
+          if (localWord && localWord.category && localWord.category !== '__all__') {
+            targetDeckName = localWord.category;
             break;
           }
         }
         if (targetDeckName === '__all__') {
           const anyWord = await db.words.where('profileId').equals(profileId).first();
-          if (anyWord && anyWord.deckName && anyWord.deckName !== '__all__') {
-            targetDeckName = anyWord.deckName;
+          if (anyWord && anyWord.category && anyWord.category !== '__all__') {
+            targetDeckName = anyWord.category;
           } else {
             targetDeckName = 'Japanese';
           }
@@ -607,7 +607,7 @@ export default function ChatPage() {
           const matchingExample = sessionExamples.find(ex => ex.word === wordObj.word && ex.enabled);
           if (matchingExample) {
             const examples = finalWord.contextExamples || [];
-            if (!examples.some(ex => ex.sentence === matchingExample.sentence)) {
+            if (!examples.some((ex: any) => ex.sentence === matchingExample.sentence)) {
               examples.push({
                 sentence: matchingExample.sentence,
                 translation: matchingExample.translation,
@@ -644,7 +644,7 @@ export default function ChatPage() {
       for (const cid of targetIds) {
         const localWord = await db.words.get([profileId, cid]);
         if (localWord) {
-          finalStatus = localWord.status;
+          finalStatus = localWord.active.status;
         }
       }
 
@@ -713,15 +713,15 @@ export default function ChatPage() {
         for (const tw of session.targetWords) {
           if (!tw.word || typeof tw.word !== 'string') continue;
           const localWord = await db.words.where('word').equals(tw.word).first();
-          if (localWord && localWord.deckName && localWord.deckName !== '__all__') {
-            targetDeckName = localWord.deckName;
+          if (localWord && localWord.category && localWord.category !== '__all__') {
+            targetDeckName = localWord.category;
             break;
           }
         }
         if (targetDeckName === '__all__') {
           const anyWord = await db.words.where('profileId').equals(profileId).first();
-          if (anyWord && anyWord.deckName && anyWord.deckName !== '__all__') {
-            targetDeckName = anyWord.deckName;
+          if (anyWord && anyWord.category && anyWord.category !== '__all__') {
+            targetDeckName = anyWord.category;
           } else {
             targetDeckName = 'Japanese';
           }
@@ -823,15 +823,15 @@ export default function ChatPage() {
         for (const tw of session.targetWords) {
           if (!tw.word || typeof tw.word !== 'string') continue;
           const localWord = await db.words.where('word').equals(tw.word).first();
-          if (localWord && localWord.deckName && localWord.deckName !== '__all__') {
-            targetDeckName = localWord.deckName;
+          if (localWord && localWord.category && localWord.category !== '__all__') {
+            targetDeckName = localWord.category;
             break;
           }
         }
         if (targetDeckName === '__all__') {
           const anyWord = await db.words.where('profileId').equals(profileId).first();
-          if (anyWord && anyWord.deckName && anyWord.deckName !== '__all__') {
-            targetDeckName = anyWord.deckName;
+          if (anyWord && anyWord.category && anyWord.category !== '__all__') {
+            targetDeckName = anyWord.category;
           } else {
             targetDeckName = 'Japanese';
           }
@@ -885,7 +885,7 @@ export default function ChatPage() {
                 const matchingExample = sessionExamples.find(ex => ex.word === wordObj.word && ex.enabled);
                 if (matchingExample) {
                   const examples = finalWord.contextExamples || [];
-                  if (!examples.some(ex => ex.sentence === matchingExample.sentence)) {
+                  if (!examples.some((ex: any) => ex.sentence === matchingExample.sentence)) {
                     examples.push({
                       sentence: matchingExample.sentence,
                       translation: matchingExample.translation,
@@ -961,7 +961,7 @@ export default function ChatPage() {
       for (const cid of syncedCardIds) {
         const localWord = await db.words.get([profileId, cid]);
         if (localWord) {
-          nextCardStatuses[cid] = localWord.status;
+          nextCardStatuses[cid] = localWord.active.status;
           setSyncCardStatus(prev => ({ ...prev, [cid]: 'success' }));
         }
       }

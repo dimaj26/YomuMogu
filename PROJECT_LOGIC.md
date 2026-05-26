@@ -54,7 +54,8 @@ src/
         __tests__/connect.test.ts, sync.test.ts, add.test.ts
       gemini/
         sessions/route.ts # POST /api/gemini/sessions
-        __tests__/sessions.test.ts
+        etymology/route.ts # POST /api/gemini/etymology
+        __tests__/sessions.test.ts, etymology.test.ts
       chat/
         route.ts          # POST /api/chat (send message)
         hint/route.ts     # POST /api/chat/hint (generate hints)
@@ -84,6 +85,10 @@ src/
     JpUI.module.css       # JpUI CSS module (tooltips, pulse animation)
     LanguageSwitcher.tsx  # Compact global Language Switcher dropdown component
     LanguageSwitcher.module.css # Styles for LanguageSwitcher dropdown
+    PhonosemanticHint.tsx # Accordion component displaying phonosemantic keys and relatives
+    PhonosemanticHint.module.css # Styles for PhonosemanticHint accordion
+  resources/
+    phonosemantics.json   # 50 phonosemantic keys and relative kanji data
   lib/
     logger.ts             # Structured logger (debug/info/warn/error → logs/)
     profile.ts            # localStorage profile helpers + multi-profile management
@@ -104,10 +109,14 @@ src/
 | `plugins/anki/filter.ts` | Functional filters classifying card statuses from raw Anki queue parameters |
 | `plugins/anki/wordSource.ts` | Implements `WordSource` utilizing Anki client for deck querying and sync |
 | `app/api/dict/lookup/route.ts` | GET endpoint for offline dictionary lookup |
-| `app/practice/quiz/page.tsx` | Gamified Active Recall quiz component supporting ad-hoc and FSRS standard modes |
+| `app/api/gemini/etymology/route.ts` | POST endpoint to generate word etymologies and mnemonic hints |
+| `app/api/gemini/__tests__/etymology.test.ts` | Unit test for etymology route using mocked Gemini client |
+| `components/PhonosemanticHint.tsx` | Accordion component displaying phonosemantic keys and relative kanji |
+| `resources/phonosemantics.json` | 50 phonosemantic keys and relative kanji data |
+| `app/practice/quiz/page.tsx` | Gamified Active Recall quiz component supporting ad-hoc, FSRS modes, mnemonics, and phonosemantic hints |
 | `lib/dict/jitendex.ts` | `lookupWord(word)` — offline SQLite JitenDex dictionary lookup |
 | `lib/dict/lookup.py` | Python script invoked via Node `execFile` to query SQLite dictionary database |
-| `lib/gemini/client.ts` | `GeminiClient.generateSessions(words)` — singleton `geminiClient` |
+| `lib/gemini/client.ts` | `GeminiClient.generateSessions(words)`, `generateEtymology(word)` — singleton `geminiClient` |
 | `lib/gemini/chat.ts` | `ChatService.sendMessage()`, `ChatService.generateHints()` — singleton `chatService` |
 | `lib/gemini/prompts.ts` | Centralized prompt templates for Gemini AI character persona and difficulty levels |
 | `lib/gemini/retry.ts` | Singleton wrapper implementing exponential backoffs and model fallback loops |
@@ -252,6 +261,7 @@ interface LocalWord {
   passive: FsrsState;
   active: FsrsState;
   contextExamples?: WordContextExample[];
+  mnemonic?: string; // User note / AI etymology
 }
 
 interface FsrsState {
@@ -338,6 +348,7 @@ All Anki routes proxy requests to AnkiConnect at `http://localhost:8765`.
 | Route | Method | Input | Output |
 |---|---|---|---|
 | `/api/gemini/sessions` | POST | `{ words: AnkiWord[] }` | `{ sessions: GeneratedSession[] }` |
+| `/api/gemini/etymology` | POST | `{ word }` | `{ components: string[], etymology: string }` |
 | `/api/chat` | POST | `{ scenario, targetWords, history, message, level, grammarInJapanese, collectedWords? }` | `ChatResponse` |
 | `/api/chat/hint` | POST | `{ scenario, targetWords, history, level }` | `HintResponse` |
 | `/api/chat/analyze` | POST | `{ history, deckName, frontField, backField, deckMappings? }` | `{ words: AnalyzedWord[] }` |
@@ -544,4 +555,4 @@ npm run test:integration:gemini # Live LLM integration tests (uses Gemini API, c
 
 ### [PL-9.4] Current Test Count
 
-177 unit tests across 27 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
+186 unit tests across 28 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
