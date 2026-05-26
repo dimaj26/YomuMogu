@@ -1,0 +1,148 @@
+/* === Обёртка блока === */
+.wrapper {
+  margin-top: 12px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(74, 144, 226, 0.08);
+  border: 1.5px solid var(--color-blue);
+}
+
+/* === Кнопка-триггер (accordion header) === */
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-nunito, 'Nunito', sans-serif);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-blue);
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.trigger:hover {
+  background: rgba(74, 144, 226, 0.1);
+}
+
+/* Иконка-стрелка — CSS-only rotate */
+.chevron {
+  margin-left: auto;
+  font-size: 0.75rem;
+  transition: transform 0.25s ease;
+  display: inline-block;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* === Тело accordion === */
+.body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+/* === Внутренняя компоновка === */
+.inner {
+  padding: 12px 14px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+/* === Блок ключа === */
+.keyBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.keyKanji {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--color-blue);
+  line-height: 1;
+}
+
+.keyReading {
+  font-size: 0.7rem;
+  color: var(--color-blue);
+  font-weight: 700;
+  margin-top: 2px;
+  opacity: 0.8;
+}
+
+/* === Разделитель → === */
+.arrow {
+  font-size: 1.2rem;
+  color: var(--color-orange);
+  align-self: center;
+  flex-shrink: 0;
+  font-weight: 900;
+}
+
+/* === Сетка родственных кандзи === */
+.relatives {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1;
+}
+
+/* === Чип родственного кандзи === */
+.chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: white;
+  border: 1.5px solid var(--color-blue);
+  min-width: 52px;
+  cursor: default;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.chip:hover {
+  background: var(--color-blue);
+}
+
+.chip:hover .chipKanji,
+.chip:hover .chipReading,
+.chip:hover .chipMeaning {
+  color: white;
+}
+
+.chipKanji {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: var(--color-blue);
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.chipReading {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--color-blue);
+  opacity: 0.85;
+  margin-top: 1px;
+  transition: color 0.15s ease;
+}
+
+.chipMeaning {
+  font-size: 0.6rem;
+  color: #555;
+  text-align: center;
+  max-width: 56px;
+  line-height: 1.2;
+  margin-top: 2px;
+  transition: color 0.15s ease;
+}

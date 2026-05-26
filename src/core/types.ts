@@ -38,6 +38,7 @@ export interface LocalWord {
   passive: FsrsState;
   active: FsrsState;
   contextExamples?: WordContextExample[];
+  mnemonic?: string; // Пользовательская мнемоника / ИИ-этимология
 }
 
 export interface LocalReview {

@@ -226,9 +226,9 @@ export async function getDailyActivePool(profileId: string, category: string): P
     }
   }
 
-  // Если все еще меньше 15, добираем mature-слова с наименьшим интервалом
-  if (pool.length < MIN_WORDS_FOR_3_SESSIONS) {
-    const neededFallbackCount = MIN_WORDS_FOR_3_SESSIONS - pool.length;
+  // Mature-добор только при ПОЛНОСТЬЮ пустом пуле (ни due, ни new)
+  if (pool.length === 0) {
+    const neededFallbackCount = MIN_WORDS_FOR_3_SESSIONS;
     const added = matureFallbackWords.slice(0, neededFallbackCount);
     pool.push(...added);
   }
@@ -341,3 +341,35 @@ export async function syncExistingLocalWordsWithStarterDeck(profileId: string): 
   }
 }
 
+/**
+ * Возвращает количество приоритетных слов (due + новые в рамках дневного лимита).
+ * Используется для предупреждающего баннера при генерации сессий.
+ */
+export async function getPriorityWordsCount(profileId: string, category: string): Promise<number> {
+  if (typeof window === 'undefined') return 0;
+
+  const allWords = await db.words
+    .where('profileId')
+    .equals(profileId)
+    .filter(w => w.category === category)
+    .toArray();
+
+  const now = Date.now();
+
+  // Due-слова: не 'new' и просрочены
+  const dueCount = allWords.filter(w =>
+    w.active.status !== 'new' &&
+    (w.passive.due <= now || w.active.due <= now)
+  ).length;
+
+  // Новые слова в рамках дневного лимита
+  const newWords = allWords.filter(w =>
+    w.passive.status === 'new' && w.active.status === 'new'
+  );
+  const todayNewCount = getDailyNewWordsCount(profileId);
+  const limit = getDailyNewWordsLimit(profileId);
+  const remainingNewQuota = Math.max(0, limit - todayNewCount);
+  const newCount = Math.min(newWords.length, remainingNewQuota);
+
+  return dueCount + newCount;
+}

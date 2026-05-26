@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BookOpen, Settings, Sparkles, RefreshCw, AlertCircle, Play, XCircle, ArrowLeft } from 'lucide-react';
+import { BookOpen, Settings, Sparkles, RefreshCw, AlertCircle, Play, XCircle, ArrowLeft, X, Volume2, Target } from 'lucide-react';
 import { useJapanification } from '@/hooks/useJapanification';
 import { getProfileItem, setProfileItem, removeProfileItem, getActiveProfileId } from '@/lib/profile';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { JpUI } from '@/components/JpUI';
+import { PhonosemanticHint, PhonosemanticData } from '@/components/PhonosemanticHint';
 import { 
   LOCAL_DECK_NAME,
   isLocalDeckInitialized,
@@ -15,11 +16,70 @@ import {
   getDailyNewWordsLimit,
   getDailyNewWordsCount,
   incrementDailyNewWordsCount,
-  syncExistingLocalWordsWithStarterDeck
+  syncExistingLocalWordsWithStarterDeck,
+  getPriorityWordsCount
 } from '@/core/localDeckService';
 import { db } from '@/core/db';
+import type { LocalWord } from '@/core/types';
 import { AnkiWord } from '@/plugins/anki/filter';
+import phonosemanticsData from '@/resources/phonosemantics.json';
 import styles from './practice.module.css';
+
+// Типизация phonosemantics.json
+interface PhonosemanticEntry {
+  reading: string;
+  meaning: string;
+  relatives: Array<{ kanji: string; reading: string; meaning: string }>;
+}
+const phonoMap: Record<string, PhonosemanticEntry> = phonosemanticsData;
+
+/**
+ * Ищет фоносемантические данные для слова по его кандзи.
+ */
+function findPhonosemanticData(word: string): PhonosemanticData | null {
+  for (const char of word) {
+    if (phonoMap[char]) {
+      const entry = phonoMap[char];
+      return {
+        key: char,
+        reading: entry.reading,
+        relatives: entry.relatives
+      };
+    }
+    // Проверяем, есть ли символ среди relatives какого-либо ключа
+    for (const [key, entry] of Object.entries(phonoMap)) {
+      if (entry.relatives.some(r => r.kanji === char)) {
+        return {
+          key,
+          reading: entry.reading,
+          relatives: entry.relatives
+        };
+      }
+    }
+  }
+  return null;
+}
+
+// === Warm-up типы и логика ===
+type WarmupStep = 'sight' | 'kana' | 'translation';
+
+interface WarmupState {
+  words: LocalWord[];
+  currentIndex: number;
+  step: WarmupStep;
+  selectedAnswer: string | null;
+  isCorrect: boolean | null;
+}
+
+function generateOptions(correct: string, allWords: LocalWord[], field: 'reading' | 'translation'): string[] {
+  const others = allWords
+    .filter(w => w[field] !== correct)
+    .map(w => w[field]);
+  // Перемешиваем и берём 2 дистрактора
+  const shuffled = others.sort(() => Math.random() - 0.5).slice(0, 2);
+  const options = [...shuffled, correct].sort(() => Math.random() - 0.5);
+  return options;
+}
 
 export default function PracticePage() {
   const router = useRouter();
@@ -29,6 +89,7 @@ export default function PracticePage() {
   const [deckMode, setDeckMode] = useState<'standard' | 'custom' | 'local'>('local');
   const [selectedDeck, setSelectedDeck] = useState<string>('__all__');
   const [words, setWords] = useState<AnkiWord[]>([]);
+  const [localWords, setLocalWords] = useState<LocalWord[]>([]); // Полные LocalWord для lookup статусов
   const [sessions, setSessions] = useState<any[]>([]);
   const [inProgressSessions, setInProgressSessions] = useState<Set<string>>(new Set());
 
@@ -36,8 +97,14 @@ export default function PracticePage() {
   const [isLocalInitialized, setIsLocalInitialized] = useState<boolean>(false);
   const [dailyNewWordsCount, setDailyNewWordsCount] = useState<number>(0);
   const [dueActiveWordsCount, setDueActiveWordsCount] = useState<number>(0);
+  const [newWordsCount, setNewWordsCount] = useState<number>(0);
+  const [priorityWordsCount, setPriorityWordsCount] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [hasLoaded, setHasLoaded] = useState<boolean>(false);
+
+  // Warm-up состояние
+  const [warmup, setWarmup] = useState<WarmupState | null>(null);
+  const [warmupOptions, setWarmupOptions] = useState<string[]>([]);
 
   // Загружаем данные профиля и сессий
   const loadProfileData = async () => {
@@ -66,12 +133,13 @@ export default function PracticePage() {
         if (initialized) {
           await syncExistingLocalWordsWithStarterDeck(profileId);
           setDailyNewWordsCount(getDailyNewWordsCount(profileId));
-          const localWords = await db.words
+          const loadedLocalWords = await db.words
             .where('profileId')
             .equals(profileId)
             .filter(w => w.category === LOCAL_DECK_NAME)
             .toArray();
-          const mapped = localWords.map(w => ({
+          setLocalWords(loadedLocalWords);
+          const mapped = loadedLocalWords.map(w => ({
             id: w.id,
             word: w.word,
             translation: w.translation,
@@ -83,8 +151,17 @@ export default function PracticePage() {
             cardIds: [w.id]
           }));
           setWords(mapped);
+
+          // Считаем новые слова
+          const newCount = loadedLocalWords.filter(w => w.active.status === 'new').length;
+          setNewWordsCount(newCount);
+
+          // Считаем приоритетные слова для баннера
+          const pCount = await getPriorityWordsCount(profileId, LOCAL_DECK_NAME);
+          setPriorityWordsCount(pCount);
         } else {
           setWords([]);
+          setLocalWords([]);
         }
       } else {
         const savedWords = getProfileItem('words');
@@ -95,12 +172,12 @@ export default function PracticePage() {
         }
       }
 
-      // Загружаем количество due слов для активного квиза
+      // Загружаем количество due слов для активного квиза (исключая новые)
       const now = Date.now();
       const count = await db.words
         .where('profileId')
         .equals(profileId)
-        .filter(w => w.active && w.active.due <= now)
+        .filter(w => w.active && w.active.status !== 'new' && w.active.due <= now)
         .count();
       setDueActiveWordsCount(count);
     } catch (e) {
@@ -134,6 +211,92 @@ export default function PracticePage() {
     });
     setInProgressSessions(inProgress);
   }, [sessions, activeProfileId, hasLoaded]);
+
+  // Lookup статуса слова по его text (word)
+  const wordStatusMap = useMemo(() => {
+    const map = new Map<string, string>();
+    localWords.forEach(w => {
+      map.set(w.word, w.active.status);
+    });
+    return map;
+  }, [localWords]);
+
+  // Получить CSS-класс бейджа по статусу
+  const getBadgeClass = (wordText: string): string => {
+    const status = wordStatusMap.get(wordText);
+    if (status === 'new') return `${styles.sessionWordBadge} ${styles.sessionWordBadgeNew}`;
+    if (status === 'learning' || status === 'review') return `${styles.sessionWordBadge} ${styles.sessionWordBadgeLearning}`;
+    if (status === 'mature') return `${styles.sessionWordBadge} ${styles.sessionWordBadgeMature}`;
+    return styles.sessionWordBadge;
+  };
+
+  // === Warm-up логика ===
+  const startWarmup = useCallback(() => {
+    const newWords = localWords.filter(w => w.active.status === 'new');
+    if (newWords.length === 0) return;
+
+    // Берём первые N новых слов (лимит 10 за раз)
+    const limit = Math.min(newWords.length, 10);
+    const wordsForWarmup = newWords.slice(0, limit);
+
+    const state: WarmupState = {
+      words: wordsForWarmup,
+      currentIndex: 0,
+      step: 'sight',
+      selectedAnswer: null,
+      isCorrect: null,
+    };
+    setWarmup(state);
+    setWarmupOptions([]);
+  }, [localWords]);
+
+  const advanceWarmup = useCallback(() => {
+    if (!warmup) return;
+    const { step, currentIndex, words: wWords } = warmup;
+    const currentWord = wWords[currentIndex];
+
+    if (step === 'sight') {
+      // Переход к kana check
+      const options = generateOptions(currentWord.reading, wWords, 'reading');
+      setWarmupOptions(options);
+      setWarmup({ ...warmup, step: 'kana', selectedAnswer: null, isCorrect: null });
+    } else if (step === 'kana') {
+      // Переход к translation check
+      const options = generateOptions(currentWord.translation, wWords, 'translation');
+      setWarmupOptions(options);
+      setWarmup({ ...warmup, step: 'translation', selectedAnswer: null, isCorrect: null });
+    } else {
+      // Следующее слово или завершение
+      if (currentIndex < wWords.length - 1) {
+        setWarmup({
+          ...warmup,
+          currentIndex: currentIndex + 1,
+          step: 'sight',
+          selectedAnswer: null,
+          isCorrect: null
+        });
+        setWarmupOptions([]);
+      } else {
+        // Разминка завершена
+        setWarmup(null);
+        setWarmupOptions([]);
+      }
+    }
+  }, [warmup]);
+
+  const handleWarmupAnswer = useCallback((answer: string) => {
+    if (!warmup || warmup.selectedAnswer !== null) return;
+    const currentWord = warmup.words[warmup.currentIndex];
+    const correctAnswer = warmup.step === 'kana' ? currentWord.reading : currentWord.translation;
+    const correct = answer === correctAnswer;
+    setWarmup({ ...warmup, selectedAnswer: answer, isCorrect: correct });
+  }, [warmup]);
+
+  const playTTS = useCallback((word: string) => {
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ja&q=${encodeURIComponent(word)}`;
+    const audio = new Audio(url);
+    audio.play().catch(() => {});
+  }, []);
 
   // Сгенерировать темы диалогов при помощи Gemini
   const generateSessions = async () => {
@@ -225,6 +388,118 @@ export default function PracticePage() {
     );
   }
 
+  // Рендер Warm-up оверлея
+  const renderWarmup = () => {
+    if (!warmup) return null;
+    const currentWord = warmup.words[warmup.currentIndex];
+    const phonoData = findPhonosemanticData(currentWord.word);
+
+    return (
+      <div className={styles.warmupOverlay}>
+        <div className={styles.warmupCard}>
+          <div className={styles.warmupHeader}>
+            <span className={styles.warmupProgress}>
+              {warmup.currentIndex + 1} / {warmup.words.length}
+            </span>
+            <button className={styles.warmupCloseBtn} onClick={() => setWarmup(null)} title="Закрыть">
+              <X size={20} />
+            </button>
+          </div>
+
+          {warmup.step === 'sight' && (
+            <>
+              <span className={styles.warmupStep}>Знакомство</span>
+              <div className={styles.warmupKanji}>{currentWord.word}</div>
+              <div className={styles.warmupReading}>{currentWord.reading}</div>
+              <div className={styles.warmupTranslation}>{currentWord.translation}</div>
+              <button
+                className={styles.warmupAudioBtn}
+                onClick={() => playTTS(currentWord.word)}
+                type="button"
+              >
+                <Volume2 size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} />
+                Послушать
+              </button>
+              {phonoData && <PhonosemanticHint data={phonoData} />}
+              <button className="btn-3d btn-blue" onClick={advanceWarmup} style={{ marginTop: 8 }}>
+                Далее →
+              </button>
+            </>
+          )}
+
+          {warmup.step === 'kana' && (
+            <>
+              <span className={styles.warmupStep}>Проверка чтения</span>
+              <div className={styles.warmupKanji}>{currentWord.word}</div>
+              <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)', margin: 0 }}>
+                Выберите правильное чтение:
+              </p>
+              <div className={styles.warmupAnswerGrid}>
+                {warmupOptions.map((opt, i) => {
+                  let cls = styles.warmupAnswerBtn;
+                  if (warmup.selectedAnswer !== null) {
+                    if (opt === currentWord.reading) cls += ` ${styles.warmupCorrect}`;
+                    else if (opt === warmup.selectedAnswer && !warmup.isCorrect) cls += ` ${styles.warmupWrong}`;
+                  }
+                  return (
+                    <button
+                      key={i}
+                      className={cls}
+                      onClick={() => handleWarmupAnswer(opt)}
+                      disabled={warmup.selectedAnswer !== null}
+                    >
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+              {warmup.selectedAnswer !== null && (
+                <button className="btn-3d btn-blue" onClick={advanceWarmup} style={{ marginTop: 8 }}>
+                  Далее →
+                </button>
+              )}
+            </>
+          )}
+
+          {warmup.step === 'translation' && (
+            <>
+              <span className={styles.warmupStep}>Проверка перевода</span>
+              <div className={styles.warmupKanji}>{currentWord.word}</div>
+              <div className={styles.warmupReading}>{currentWord.reading}</div>
+              <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)', margin: 0 }}>
+                Выберите правильный перевод:
+              </p>
+              <div className={styles.warmupAnswerGrid}>
+                {warmupOptions.map((opt, i) => {
+                  let cls = styles.warmupAnswerBtn;
+                  if (warmup.selectedAnswer !== null) {
+                    if (opt === currentWord.translation) cls += ` ${styles.warmupCorrect}`;
+                    else if (opt === warmup.selectedAnswer && !warmup.isCorrect) cls += ` ${styles.warmupWrong}`;
+                  }
+                  return (
+                    <button
+                      key={i}
+                      className={cls}
+                      onClick={() => handleWarmupAnswer(opt)}
+                      disabled={warmup.selectedAnswer !== null}
+                    >
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+              {warmup.selectedAnswer !== null && (
+                <button className="btn-3d btn-blue" onClick={advanceWarmup} style={{ marginTop: 8 }}>
+                  {warmup.currentIndex < warmup.words.length - 1 ? 'Следующее слово →' : 'Завершить разминку ✓'}
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={styles.container}>
       <header className="navbar">
@@ -244,6 +519,14 @@ export default function PracticePage() {
           </Link>
           <h1 className={styles.title} style={{ margin: 0 }}>Практика диалога</h1>
         </div>
+
+        {/* Предупреждающий баннер: мало приоритетных слов */}
+        {deckMode === 'local' && isLocalInitialized && priorityWordsCount > 0 && priorityWordsCount < 12 && (
+          <div className={styles.warningBanner}>
+            <AlertCircle size={18} />
+            <p>Доступно только {priorityWordsCount} слов(а) для генерации сессий. При нехватке слов сессии могут содержать повторяющиеся слова.</p>
+          </div>
+        )}
 
         {/* Информационная панель об источнике обучения */}
         <div className="card-friendly" style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
@@ -268,6 +551,33 @@ export default function PracticePage() {
             <Settings size={16} style={{ marginRight: 6 }} /> Настроить источник
           </Link>
         </div>
+
+        {/* Кнопка разминки с новыми словами */}
+        {newWordsCount > 0 && deckMode === 'local' && (
+          <div className="card-friendly" style={{ marginBottom: '32px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', fontSize: '20px', fontWeight: 800 }}>
+                  <Target size={20} style={{ color: 'var(--color-blue)', marginRight: 8 }} />
+                  {t('Разминка с новыми словами', '新しい単語のウォームアップ')}
+                </h2>
+                <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                  {t(
+                    `У вас ${newWordsCount} новых слов. Познакомьтесь с ними перед практикой.`,
+                    `新しい単語が${newWordsCount}個あります。練習前にウォームアップしましょう。`
+                  )}
+                </p>
+              </div>
+              <button
+                onClick={startWarmup}
+                className="btn-3d btn-blue"
+                style={{ padding: '10px 20px', fontSize: '15px' }}
+              >
+                🎯 {t('Начать разминку', 'ウォームアップ開始')}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Квизы на повторение слов */}
         {words.length > 0 && (
@@ -371,7 +681,7 @@ export default function PracticePage() {
                     <div className={styles.sessionWordsTitle}>Целевые слова:</div>
                     <div className={styles.sessionWordList}>
                       {session.targetWords.map((tw: any, idx: number) => (
-                        <span key={idx} className={styles.sessionWordBadge}>
+                        <span key={idx} className={getBadgeClass(tw.word)}>
                           {tw.translation}
                         </span>
                       ))}
@@ -419,6 +729,9 @@ export default function PracticePage() {
           )}
         </div>
       </main>
+
+      {/* Warm-up оверлей */}
+      {renderWarmup()}
     </div>
   );
 }

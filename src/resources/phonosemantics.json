@@ -1,0 +1,471 @@
+{
+  "青": {
+    "reading": "せい",
+    "meaning": "зелёный/синий",
+    "relatives": [
+      { "kanji": "晴", "reading": "せい", "meaning": "ясная погода" },
+      { "kanji": "静", "reading": "せい", "meaning": "тихий" },
+      { "kanji": "清", "reading": "せい", "meaning": "чистый" },
+      { "kanji": "精", "reading": "せい", "meaning": "дух/энергия" },
+      { "kanji": "請", "reading": "せい", "meaning": "просить" }
+    ]
+  },
+  "寺": {
+    "reading": "じ",
+    "meaning": "храм",
+    "relatives": [
+      { "kanji": "持", "reading": "じ", "meaning": "держать" },
+      { "kanji": "時", "reading": "じ", "meaning": "время" },
+      { "kanji": "待", "reading": "たい", "meaning": "ждать" },
+      { "kanji": "特", "reading": "とく", "meaning": "особый" },
+      { "kanji": "詩", "reading": "し", "meaning": "стихи" }
+    ]
+  },
+  "工": {
+    "reading": "こう",
+    "meaning": "ремесло",
+    "relatives": [
+      { "kanji": "空", "reading": "くう", "meaning": "небо/пустой" },
+      { "kanji": "紅", "reading": "こう", "meaning": "алый" },
+      { "kanji": "功", "reading": "こう", "meaning": "заслуга" },
+      { "kanji": "攻", "reading": "こう", "meaning": "атака" }
+    ]
+  },
+  "門": {
+    "reading": "もん",
+    "meaning": "ворота",
+    "relatives": [
+      { "kanji": "聞", "reading": "ぶん", "meaning": "слышать" },
+      { "kanji": "問", "reading": "もん", "meaning": "спрашивать" },
+      { "kanji": "間", "reading": "かん", "meaning": "промежуток" },
+      { "kanji": "開", "reading": "かい", "meaning": "открывать" },
+      { "kanji": "閉", "reading": "へい", "meaning": "закрывать" }
+    ]
+  },
+  "分": {
+    "reading": "ぶん",
+    "meaning": "делить",
+    "relatives": [
+      { "kanji": "粉", "reading": "ふん", "meaning": "порошок" },
+      { "kanji": "紛", "reading": "ふん", "meaning": "путаница" },
+      { "kanji": "貧", "reading": "ひん", "meaning": "бедный" }
+    ]
+  },
+  "包": {
+    "reading": "ほう",
+    "meaning": "обёртка",
+    "relatives": [
+      { "kanji": "抱", "reading": "ほう", "meaning": "обнимать" },
+      { "kanji": "泡", "reading": "ほう", "meaning": "пена" },
+      { "kanji": "砲", "reading": "ほう", "meaning": "пушка" },
+      { "kanji": "飽", "reading": "ほう", "meaning": "пресыщаться" }
+    ]
+  },
+  "化": {
+    "reading": "か",
+    "meaning": "превращение",
+    "relatives": [
+      { "kanji": "花", "reading": "か", "meaning": "цветок" },
+      { "kanji": "貨", "reading": "か", "meaning": "валюта" },
+      { "kanji": "靴", "reading": "か", "meaning": "обувь" }
+    ]
+  },
+  "反": {
+    "reading": "はん",
+    "meaning": "против",
+    "relatives": [
+      { "kanji": "返", "reading": "へん", "meaning": "возвращать" },
+      { "kanji": "販", "reading": "はん", "meaning": "продажа" },
+      { "kanji": "板", "reading": "はん", "meaning": "доска" },
+      { "kanji": "飯", "reading": "はん", "meaning": "рис/еда" }
+    ]
+  },
+  "交": {
+    "reading": "こう",
+    "meaning": "обмен",
+    "relatives": [
+      { "kanji": "校", "reading": "こう", "meaning": "школа" },
+      { "kanji": "効", "reading": "こう", "meaning": "эффект" },
+      { "kanji": "郊", "reading": "こう", "meaning": "пригород" }
+    ]
+  },
+  "生": {
+    "reading": "せい",
+    "meaning": "жизнь",
+    "relatives": [
+      { "kanji": "星", "reading": "せい", "meaning": "звезда" },
+      { "kanji": "性", "reading": "せい", "meaning": "характер" },
+      { "kanji": "姓", "reading": "せい", "meaning": "фамилия" },
+      { "kanji": "牲", "reading": "せい", "meaning": "жертва" }
+    ]
+  },
+  "白": {
+    "reading": "はく",
+    "meaning": "белый",
+    "relatives": [
+      { "kanji": "拍", "reading": "はく", "meaning": "хлопок/ритм" },
+      { "kanji": "迫", "reading": "はく", "meaning": "приближаться" },
+      { "kanji": "泊", "reading": "はく", "meaning": "ночёвка" }
+    ]
+  },
+  "方": {
+    "reading": "ほう",
+    "meaning": "направление",
+    "relatives": [
+      { "kanji": "放", "reading": "ほう", "meaning": "отпускать" },
+      { "kanji": "訪", "reading": "ほう", "meaning": "навещать" },
+      { "kanji": "防", "reading": "ぼう", "meaning": "защита" },
+      { "kanji": "坊", "reading": "ぼう", "meaning": "мальчишка" },
+      { "kanji": "妨", "reading": "ぼう", "meaning": "мешать" }
+    ]
+  },
+  "見": {
+    "reading": "けん",
+    "meaning": "видеть",
+    "relatives": [
+      { "kanji": "現", "reading": "げん", "meaning": "действительность" },
+      { "kanji": "親", "reading": "しん", "meaning": "родитель" },
+      { "kanji": "規", "reading": "き", "meaning": "правило" }
+    ]
+  },
+  "各": {
+    "reading": "かく",
+    "meaning": "каждый",
+    "relatives": [
+      { "kanji": "客", "reading": "きゃく", "meaning": "гость" },
+      { "kanji": "格", "reading": "かく", "meaning": "статус" },
+      { "kanji": "閣", "reading": "かく", "meaning": "палата" },
+      { "kanji": "額", "reading": "がく", "meaning": "сумма/лоб" },
+      { "kanji": "略", "reading": "りゃく", "meaning": "сокращение" }
+    ]
+  },
+  "可": {
+    "reading": "か",
+    "meaning": "допустимо",
+    "relatives": [
+      { "kanji": "何", "reading": "か", "meaning": "что" },
+      { "kanji": "河", "reading": "か", "meaning": "река" },
+      { "kanji": "歌", "reading": "か", "meaning": "песня" },
+      { "kanji": "荷", "reading": "か", "meaning": "груз" }
+    ]
+  },
+  "合": {
+    "reading": "ごう",
+    "meaning": "совпадение",
+    "relatives": [
+      { "kanji": "答", "reading": "とう", "meaning": "ответ" },
+      { "kanji": "給", "reading": "きゅう", "meaning": "зарплата" },
+      { "kanji": "拾", "reading": "しゅう", "meaning": "подбирать" }
+    ]
+  },
+  "安": {
+    "reading": "あん",
+    "meaning": "спокойствие",
+    "relatives": [
+      { "kanji": "案", "reading": "あん", "meaning": "план/идея" },
+      { "kanji": "按", "reading": "あん", "meaning": "нажимать" }
+    ]
+  },
+  "正": {
+    "reading": "せい",
+    "meaning": "правильный",
+    "relatives": [
+      { "kanji": "政", "reading": "せい", "meaning": "политика" },
+      { "kanji": "整", "reading": "せい", "meaning": "упорядочивать" },
+      { "kanji": "征", "reading": "せい", "meaning": "поход" },
+      { "kanji": "証", "reading": "しょう", "meaning": "доказательство" }
+    ]
+  },
+  "予": {
+    "reading": "よ",
+    "meaning": "заранее",
+    "relatives": [
+      { "kanji": "預", "reading": "よ", "meaning": "вкладывать" },
+      { "kanji": "野", "reading": "や", "meaning": "поле" },
+      { "kanji": "序", "reading": "じょ", "meaning": "порядок" }
+    ]
+  },
+  "付": {
+    "reading": "ふ",
+    "meaning": "прикреплять",
+    "relatives": [
+      { "kanji": "府", "reading": "ふ", "meaning": "столица" },
+      { "kanji": "符", "reading": "ふ", "meaning": "символ" },
+      { "kanji": "附", "reading": "ふ", "meaning": "прилагать" }
+    ]
+  },
+  "少": {
+    "reading": "しょう",
+    "meaning": "мало",
+    "relatives": [
+      { "kanji": "省", "reading": "しょう", "meaning": "экономить" },
+      { "kanji": "抄", "reading": "しょう", "meaning": "копировать" },
+      { "kanji": "秒", "reading": "びょう", "meaning": "секунда" },
+      { "kanji": "砂", "reading": "さ", "meaning": "песок" }
+    ]
+  },
+  "召": {
+    "reading": "しょう",
+    "meaning": "призывать",
+    "relatives": [
+      { "kanji": "招", "reading": "しょう", "meaning": "приглашать" },
+      { "kanji": "照", "reading": "しょう", "meaning": "освещать" },
+      { "kanji": "紹", "reading": "しょう", "meaning": "знакомить" },
+      { "kanji": "超", "reading": "ちょう", "meaning": "превышать" },
+      { "kanji": "沼", "reading": "しょう", "meaning": "болото" }
+    ]
+  },
+  "成": {
+    "reading": "せい",
+    "meaning": "достижение",
+    "relatives": [
+      { "kanji": "城", "reading": "じょう", "meaning": "замок" },
+      { "kanji": "盛", "reading": "せい", "meaning": "процветание" },
+      { "kanji": "誠", "reading": "せい", "meaning": "искренность" }
+    ]
+  },
+  "申": {
+    "reading": "しん",
+    "meaning": "заявлять",
+    "relatives": [
+      { "kanji": "神", "reading": "しん", "meaning": "бог" },
+      { "kanji": "伸", "reading": "しん", "meaning": "тянуть" },
+      { "kanji": "紳", "reading": "しん", "meaning": "джентльмен" }
+    ]
+  },
+  "共": {
+    "reading": "きょう",
+    "meaning": "вместе",
+    "relatives": [
+      { "kanji": "供", "reading": "きょう", "meaning": "подношение" },
+      { "kanji": "洪", "reading": "こう", "meaning": "наводнение" }
+    ]
+  },
+  "半": {
+    "reading": "はん",
+    "meaning": "половина",
+    "relatives": [
+      { "kanji": "判", "reading": "はん", "meaning": "решение/суд" },
+      { "kanji": "伴", "reading": "はん", "meaning": "спутник" },
+      { "kanji": "畔", "reading": "はん", "meaning": "берег" }
+    ]
+  },
+  "次": {
+    "reading": "じ",
+    "meaning": "следующий",
+    "relatives": [
+      { "kanji": "資", "reading": "し", "meaning": "ресурсы" },
+      { "kanji": "姿", "reading": "し", "meaning": "облик" },
+      { "kanji": "盗", "reading": "とう", "meaning": "красть" }
+    ]
+  },
+  "同": {
+    "reading": "どう",
+    "meaning": "одинаковый",
+    "relatives": [
+      { "kanji": "銅", "reading": "どう", "meaning": "медь" },
+      { "kanji": "洞", "reading": "どう", "meaning": "пещера" },
+      { "kanji": "胴", "reading": "どう", "meaning": "туловище" },
+      { "kanji": "筒", "reading": "とう", "meaning": "цилиндр" }
+    ]
+  },
+  "回": {
+    "reading": "かい",
+    "meaning": "вращение",
+    "relatives": [
+      { "kanji": "壊", "reading": "かい", "meaning": "разрушать" },
+      { "kanji": "懐", "reading": "かい", "meaning": "карман/тоска" }
+    ]
+  },
+  "台": {
+    "reading": "だい",
+    "meaning": "подставка",
+    "relatives": [
+      { "kanji": "治", "reading": "じ", "meaning": "управлять" },
+      { "kanji": "始", "reading": "し", "meaning": "начинать" },
+      { "kanji": "怠", "reading": "たい", "meaning": "лениться" }
+    ]
+  },
+  "令": {
+    "reading": "れい",
+    "meaning": "приказ",
+    "relatives": [
+      { "kanji": "冷", "reading": "れい", "meaning": "холодный" },
+      { "kanji": "齢", "reading": "れい", "meaning": "возраст" },
+      { "kanji": "零", "reading": "れい", "meaning": "ноль" },
+      { "kanji": "鈴", "reading": "れい", "meaning": "колокольчик" },
+      { "kanji": "領", "reading": "りょう", "meaning": "владение" }
+    ]
+  },
+  "代": {
+    "reading": "だい",
+    "meaning": "поколение",
+    "relatives": [
+      { "kanji": "袋", "reading": "たい", "meaning": "мешок" },
+      { "kanji": "貸", "reading": "たい", "meaning": "одалживать" },
+      { "kanji": "帯", "reading": "たい", "meaning": "пояс" }
+    ]
+  },
+  "氏": {
+    "reading": "し",
+    "meaning": "род/фамилия",
+    "relatives": [
+      { "kanji": "紙", "reading": "し", "meaning": "бумага" },
+      { "kanji": "婚", "reading": "こん", "meaning": "брак" }
+    ]
+  },
+  "相": {
+    "reading": "そう",
+    "meaning": "взаимный",
+    "relatives": [
+      { "kanji": "想", "reading": "そう", "meaning": "мысль" },
+      { "kanji": "箱", "reading": "はこ", "meaning": "коробка" },
+      { "kanji": "霜", "reading": "そう", "meaning": "иней" }
+    ]
+  },
+  "取": {
+    "reading": "しゅ",
+    "meaning": "брать",
+    "relatives": [
+      { "kanji": "趣", "reading": "しゅ", "meaning": "вкус/интерес" },
+      { "kanji": "最", "reading": "さい", "meaning": "самый" }
+    ]
+  },
+  "里": {
+    "reading": "り",
+    "meaning": "деревня",
+    "relatives": [
+      { "kanji": "理", "reading": "り", "meaning": "логика" },
+      { "kanji": "裏", "reading": "り", "meaning": "изнанка" },
+      { "kanji": "狸", "reading": "り", "meaning": "тануки" }
+    ]
+  },
+  "良": {
+    "reading": "りょう",
+    "meaning": "хороший",
+    "relatives": [
+      { "kanji": "食", "reading": "しょく", "meaning": "еда" },
+      { "kanji": "朗", "reading": "ろう", "meaning": "ясный/весёлый" },
+      { "kanji": "浪", "reading": "ろう", "meaning": "волна" },
+      { "kanji": "郎", "reading": "ろう", "meaning": "юноша" }
+    ]
+  },
+  "義": {
+    "reading": "ぎ",
+    "meaning": "справедливость",
+    "relatives": [
+      { "kanji": "議", "reading": "ぎ", "meaning": "обсуждение" },
+      { "kanji": "犠", "reading": "ぎ", "meaning": "жертва" },
+      { "kanji": "儀", "reading": "ぎ", "meaning": "церемония" }
+    ]
+  },
+  "古": {
+    "reading": "こ",
+    "meaning": "старый",
+    "relatives": [
+      { "kanji": "湖", "reading": "こ", "meaning": "озеро" },
+      { "kanji": "故", "reading": "こ", "meaning": "причина" },
+      { "kanji": "固", "reading": "こ", "meaning": "твёрдый" },
+      { "kanji": "個", "reading": "こ", "meaning": "штука" },
+      { "kanji": "枯", "reading": "こ", "meaning": "засыхать" }
+    ]
+  },
+  "己": {
+    "reading": "き",
+    "meaning": "себя",
+    "relatives": [
+      { "kanji": "起", "reading": "き", "meaning": "вставать" },
+      { "kanji": "記", "reading": "き", "meaning": "запись" },
+      { "kanji": "紀", "reading": "き", "meaning": "эпоха" },
+      { "kanji": "忌", "reading": "き", "meaning": "избегать" }
+    ]
+  },
+  "者": {
+    "reading": "しゃ",
+    "meaning": "человек",
+    "relatives": [
+      { "kanji": "都", "reading": "と", "meaning": "столица" },
+      { "kanji": "暑", "reading": "しょ", "meaning": "жарко" },
+      { "kanji": "署", "reading": "しょ", "meaning": "учреждение" },
+      { "kanji": "諸", "reading": "しょ", "meaning": "различные" }
+    ]
+  },
+  "馬": {
+    "reading": "ば",
+    "meaning": "лошадь",
+    "relatives": [
+      { "kanji": "駅", "reading": "えき", "meaning": "станция" },
+      { "kanji": "験", "reading": "けん", "meaning": "опыт" },
+      { "kanji": "駐", "reading": "ちゅう", "meaning": "стоянка" }
+    ]
+  },
+  "才": {
+    "reading": "さい",
+    "meaning": "талант",
+    "relatives": [
+      { "kanji": "材", "reading": "ざい", "meaning": "материал" },
+      { "kanji": "財", "reading": "ざい", "meaning": "богатство" },
+      { "kanji": "閉", "reading": "へい", "meaning": "закрывать" }
+    ]
+  },
+  "由": {
+    "reading": "ゆう",
+    "meaning": "причина",
+    "relatives": [
+      { "kanji": "油", "reading": "ゆ", "meaning": "масло" },
+      { "kanji": "届", "reading": "とどく", "meaning": "доставить" },
+      { "kanji": "宙", "reading": "ちゅう", "meaning": "космос" }
+    ]
+  },
+  "直": {
+    "reading": "ちょく",
+    "meaning": "прямой",
+    "relatives": [
+      { "kanji": "植", "reading": "しょく", "meaning": "сажать" },
+      { "kanji": "値", "reading": "ち", "meaning": "стоимость" },
+      { "kanji": "殖", "reading": "しょく", "meaning": "размножать" }
+    ]
+  },
+  "中": {
+    "reading": "ちゅう",
+    "meaning": "середина",
+    "relatives": [
+      { "kanji": "仲", "reading": "ちゅう", "meaning": "отношения" },
+      { "kanji": "忠", "reading": "ちゅう", "meaning": "верность" },
+      { "kanji": "虫", "reading": "ちゅう", "meaning": "насекомое" }
+    ]
+  },
+  "長": {
+    "reading": "ちょう",
+    "meaning": "длинный",
+    "relatives": [
+      { "kanji": "張", "reading": "ちょう", "meaning": "натягивать" },
+      { "kanji": "帳", "reading": "ちょう", "meaning": "блокнот" },
+      { "kanji": "腸", "reading": "ちょう", "meaning": "кишечник" }
+    ]
+  },
+  "早": {
+    "reading": "そう",
+    "meaning": "ранний",
+    "relatives": [
+      { "kanji": "草", "reading": "そう", "meaning": "трава" }
+    ]
+  },
+  "用": {
+    "reading": "よう",
+    "meaning": "употребление",
+    "relatives": [
+      { "kanji": "通", "reading": "つう", "meaning": "проходить" },
+      { "kanji": "痛", "reading": "つう", "meaning": "боль" },
+      { "kanji": "備", "reading": "び", "meaning": "подготовка" }
+    ]
+  },
+  "原": {
+    "reading": "げん",
+    "meaning": "равнина",
+    "relatives": [
+      { "kanji": "源", "reading": "げん", "meaning": "источник" },
+      { "kanji": "願", "reading": "がん", "meaning": "желание" }
+    ]
+  }
+}

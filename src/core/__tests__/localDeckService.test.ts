@@ -19,6 +19,7 @@ const {
   getDailyActivePool,
   getLocalDeckStats,
   getDailyNewWordsLimit,
+  getPriorityWordsCount,
 } = await import('../localDeckService');
 
 describe('LocalDeckService Unit Tests', () => {
@@ -355,60 +356,17 @@ describe('LocalDeckService Unit Tests', () => {
     expect(pool.filter(w => w.status === 'new').length).toBe(12);
   });
 
-  it('getDailyActivePool: добирает mature (по возрастанию interval) если due+new < 15', async () => {
+  it('getDailyActivePool: добирает mature (по возрастанию interval) если пул полностью пуст', async () => {
     vi.setSystemTime(new Date('2026-05-22T10:00:00Z'));
     const now = Date.now();
 
     const wordsData: import('../db').LocalWord[] = [];
-    // 3 due слов
-    for (let i = 1; i <= 3; i++) {
-      const fsrs = {
-        status: 'learning' as any,
-        stability: 5,
-        difficulty: 5,
-        interval: 5,
-        due: now - 10000,
-        reps: 2,
-        lapses: 0,
-      };
-      wordsData.push({
-        profileId,
-        id: i,
-        word: `Слово${i}`,
-        reading: `Чтение${i}`,
-        translation: `Перевод${i}`,
-        category: LOCAL_DECK_NAME,
-        source: 'starter',
-        passive: { ...fsrs },
-        active: { ...fsrs },
-        contextExamples: []
-      });
-    }
 
-    // 2 new слов
-    for (let i = 4; i <= 5; i++) {
-      const fsrs = {
-        status: 'new' as any,
-        stability: 0,
-        difficulty: 0,
-        interval: 0,
-        due: now,
-        reps: 0,
-        lapses: 0,
-      };
-      wordsData.push({
-        profileId,
-        id: i,
-        word: `Слово${i}`,
-        reading: `Чтение${i}`,
-        translation: `Перевод${i}`,
-        category: LOCAL_DECK_NAME,
-        source: 'starter',
-        passive: { ...fsrs },
-        active: { ...fsrs },
-        contextExamples: []
-      });
-    }
+    // 0 due-слов, 0 new-слов (квота уже исчерпана)
+    // Устанавливаем лимит = 0 (исчерпана квота)
+    localStorage.setItem(`yomumogu_profile_${profileId}_quota_preset`, 'custom');
+    localStorage.setItem(`yomumogu_profile_${profileId}_daily_new_words_limit`, '1');
+    incrementDailyNewWordsCount(profileId, 1); // уже использовано 1 из 1
 
     // 15 mature слов с разным интервалом (due в будущем)
     for (let i = 6; i <= 20; i++) {
@@ -437,12 +395,11 @@ describe('LocalDeckService Unit Tests', () => {
 
     await db.words.bulkPut(wordsData);
 
-    // due(3) + new(2) = 5. Нужно добрать 10 mature.
-    // Сортировка по возрастанию interval.
+    // Пул пуст (0 due, 0 new с оставшейся квотой) → добираем до 15 mature
     const pool = await getDailyActivePool(profileId, LOCAL_DECK_NAME);
     expect(pool.length).toBe(15);
     const matureInPool = pool.filter(w => w.status === 'mature');
-    expect(matureInPool.length).toBe(10);
+    expect(matureInPool.length).toBe(15);
     // Проверим, что отсортированы по возрастанию интервала
     expect(matureInPool[0].interval).toBeLessThan(matureInPool[1].interval);
   });
@@ -586,5 +543,114 @@ describe('LocalDeckService Unit Tests', () => {
       review: 1,
       mature: 2,
     });
+  });
+
+  it('getDailyActivePool: mature fallback added only if pool is empty', async () => {
+    vi.setSystemTime(new Date('2026-05-22T10:00:00Z'));
+    const now = Date.now();
+
+    const wordsData: import('../db').LocalWord[] = [];
+    // 5 due-слов (learning)
+    for (let i = 1; i <= 5; i++) {
+      const fsrs = {
+        status: 'learning' as any,
+        stability: 5,
+        difficulty: 5,
+        interval: 5,
+        due: now - 10000,
+        reps: 2,
+        lapses: 0,
+      };
+      wordsData.push({
+        profileId,
+        id: i,
+        word: `Слово${i}`,
+        reading: `Чтение${i}`,
+        translation: `Перевод${i}`,
+        category: LOCAL_DECK_NAME,
+        source: 'starter',
+        passive: { ...fsrs },
+        active: { ...fsrs },
+        contextExamples: []
+      });
+    }
+
+    // 20 mature слов с due в будущем (NOT due — только для fallback)
+    for (let i = 6; i <= 25; i++) {
+      const fsrs = {
+        status: 'mature' as any,
+        stability: 200,
+        difficulty: 5,
+        interval: 200,
+        due: now + 500000,
+        reps: 1,
+        lapses: 0,
+      };
+      wordsData.push({
+        profileId,
+        id: i,
+        word: `Слово${i}`,
+        reading: `Чтение${i}`,
+        translation: `Перевод${i}`,
+        category: LOCAL_DECK_NAME,
+        source: 'starter',
+        passive: { ...fsrs },
+        active: { ...fsrs },
+        contextExamples: []
+      });
+    }
+
+    await db.words.bulkPut(wordsData);
+
+    const pool = await getDailyActivePool(profileId, LOCAL_DECK_NAME);
+    // Должно быть 5 due-слов. Mature НЕ добираются, т.к. pool НЕ пуст (5 > 0).
+    // Старое поведение добрало бы до 15, новое — нет.
+    expect(pool.length).toBe(5);
+    expect(pool.every(w => w.status === 'learning')).toBe(true);
+  });
+
+  it('getPriorityWordsCount: не считает new-слова как due даже если due <= now', async () => {
+    vi.setSystemTime(new Date('2026-05-22T10:00:00Z'));
+    const now = Date.now();
+
+    const wordsData: import('../db').LocalWord[] = [];
+
+    // 3 learning слова с due <= now (это настоящие due)
+    for (let i = 1; i <= 3; i++) {
+      wordsData.push({
+        profileId,
+        id: i,
+        word: `Слово${i}`,
+        reading: `Чтение${i}`,
+        translation: `Перевод${i}`,
+        category: LOCAL_DECK_NAME,
+        source: 'starter',
+        passive: { status: 'learning', stability: 5, difficulty: 5, interval: 5, due: now - 10000, reps: 2, lapses: 0 },
+        active: { status: 'learning', stability: 5, difficulty: 5, interval: 5, due: now - 10000, reps: 2, lapses: 0 },
+        contextExamples: []
+      });
+    }
+
+    // 10 new слов с due = now (ошибочно могут считаться due)
+    for (let i = 4; i <= 13; i++) {
+      wordsData.push({
+        profileId,
+        id: i,
+        word: `Слово${i}`,
+        reading: `Чтение${i}`,
+        translation: `Перевод${i}`,
+        category: LOCAL_DECK_NAME,
+        source: 'starter',
+        passive: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
+        active: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
+        contextExamples: []
+      });
+    }
+
+    await db.words.bulkPut(wordsData);
+
+    // due = 3 (learning) + new в рамках лимита (10, лимит по умолчанию = 10) = 13
+    const count = await getPriorityWordsCount(profileId, LOCAL_DECK_NAME);
+    expect(count).toBe(13);
   });
 });

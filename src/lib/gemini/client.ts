@@ -136,6 +136,73 @@ export class GeminiClient {
       throw error;
     }
   }
+
+  /**
+   * Генерирует этимологическую справку для японского слова/кандзи.
+   * Возвращает разбор на компоненты и историческое происхождение на русском.
+   */
+  async generateEtymology(word: string): Promise<EtymologyResponse> {
+    if (!this.ai) {
+      logger.error('Инициализация Gemini: отсутствует GEMINI_API_KEY');
+      throw new Error('Ключ GEMINI_API_KEY не задан в переменных окружения.');
+    }
+
+    const systemInstruction = `Вы — эксперт по японской этимологии и структуре иероглифов.
+Для переданного японского слова или кандзи:
+1. Разложите каждый иероглиф на составные радикалы (компоненты). Укажите значение каждого радикала.
+2. Объясните происхождение слова и его иероглифов: как исторически сложилось значение из компонентов.
+3. Если уместно, дайте мнемоническую ассоциацию для запоминания.
+Ответ должен быть на русском языке, лаконичный (2-4 предложения).`;
+
+    try {
+      logger.info(`Запрос этимологии для слова: ${word}`);
+
+      const result = await withRetry(async (model: GeminiModel) => {
+        const response = await this.ai!.models.generateContent({
+          model,
+          contents: `Слово: ${word}`,
+          config: {
+            systemInstruction,
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: 'OBJECT',
+              properties: {
+                components: {
+                  type: 'ARRAY',
+                  description: 'Список компонентов/радикалов с их значениями',
+                  items: { type: 'STRING' }
+                },
+                etymology: {
+                  type: 'STRING',
+                  description: 'Этимологическая справка и мнемоника на русском'
+                }
+              },
+              required: ['components', 'etymology']
+            }
+          }
+        });
+
+        const responseText = response.text;
+        if (!responseText) {
+          throw new Error('Gemini API вернул пустой ответ для этимологии');
+        }
+
+        return JSON.parse(responseText) as EtymologyResponse;
+      });
+
+      logger.info(`Этимология для "${word}" успешно сгенерирована`);
+      return result;
+    } catch (error: any) {
+      logger.error(`Ошибка генерации этимологии для "${word}"`, error);
+      throw error;
+    }
+  }
+}
+
+// Интерфейс ответа этимологии
+export interface EtymologyResponse {
+  components: string[];
+  etymology: string;
 }
 
 export const geminiClient = new GeminiClient();

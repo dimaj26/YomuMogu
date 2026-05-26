@@ -346,3 +346,108 @@
   from { transform: translateY(0); }
   to { transform: translateY(-10px); }
 }
+
+/* === Мнемоника и Этимология === */
+.mnemonicSection {
+  margin-top: 16px;
+  width: 100%;
+}
+
+.mnemonicTextarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 12px;
+  border: 2px dashed var(--color-blue, #1899eb);
+  border-radius: 12px;
+  background: rgba(74, 144, 226, 0.05);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-nunito, 'Nunito', sans-serif);
+  color: var(--text-primary, #3c3c3c);
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.mnemonicTextarea:focus {
+  outline: none;
+  border-color: var(--color-blue, #1899eb);
+  border-style: solid;
+}
+
+.mnemonicTextarea::placeholder {
+  color: var(--text-light, #ccc);
+  font-style: italic;
+}
+
+.mnemonicLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary, #afafaf);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.etymologyBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--color-yellow-shadow, #ffc800);
+  background: rgba(255, 200, 0, 0.08);
+  color: var(--color-yellow-shadow, #c79700);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.etymologyBtn:hover:not(:disabled) {
+  background: rgba(255, 200, 0, 0.18);
+}
+
+.etymologyBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.etymologyContent {
+  margin-top: 10px;
+  padding: 12px 16px;
+  background: rgba(255, 200, 0, 0.08);
+  border: 1.5px solid var(--color-yellow-shadow, #ffc800);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #3c3c3c);
+  line-height: 1.5;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.etymologyComponents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.etymologyChip {
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: rgba(255, 200, 0, 0.15);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-yellow-shadow, #c79700);
+}
+
+.spin {
+  animation: spin-anim 1s linear infinite;
+}
+
+@keyframes spin-anim {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

@@ -16,6 +16,7 @@ vi.mock('lucide-react', () => ({
   Lightbulb: () => <span data-testid="icon-lightbulb" />,
   BookOpen: () => <span data-testid="icon-book" />,
   Award: () => <span data-testid="icon-award" />,
+  Sparkles: () => <span data-testid="icon-sparkles" />,
 }));
 
 // Mock router and searchParams
@@ -63,7 +64,7 @@ describe('QuizPage Component', () => {
   });
 
   it('loads due words in standard mode and allows checking correct answer', async () => {
-    // Seed due word
+    // Seed due word with non-new status (новые слова исключены из квиза)
     const dueWord = {
       profileId: 'default',
       id: 1,
@@ -72,8 +73,8 @@ describe('QuizPage Component', () => {
       translation: 'кошка',
       category: 'Japanese',
       source: 'anki' as const,
-      passive: createDefaultFsrsState(Date.now() - 5000),
-      active: createDefaultFsrsState(Date.now() - 5000),
+      passive: { status: 'learning' as const, stability: 2, difficulty: 5, interval: 1, due: Date.now() - 5000, reps: 1, lapses: 0 },
+      active: { status: 'learning' as const, stability: 2, difficulty: 5, interval: 1, due: Date.now() - 5000, reps: 1, lapses: 0 },
       contextExamples: [
         { sentence: '私は猫が好きです。', translation: 'Я люблю кошек.', timestamp: Date.now() }
       ]
@@ -169,7 +170,7 @@ describe('QuizPage Component', () => {
   });
 
   it('shows first character hint on request', async () => {
-    // Seed due word
+    // Seed due word with non-new status
     const dueWord = {
       profileId: 'default',
       id: 3,
@@ -178,8 +179,8 @@ describe('QuizPage Component', () => {
       translation: 'яблоко',
       category: 'Japanese',
       source: 'anki' as const,
-      passive: createDefaultFsrsState(Date.now() - 5000),
-      active: createDefaultFsrsState(Date.now() - 5000),
+      passive: { status: 'review' as const, stability: 5, difficulty: 5, interval: 3, due: Date.now() - 5000, reps: 2, lapses: 0 },
+      active: { status: 'review' as const, stability: 5, difficulty: 5, interval: 3, due: Date.now() - 5000, reps: 2, lapses: 0 },
     };
     await db.words.put(dueWord);
 
@@ -220,8 +221,8 @@ describe('QuizPage Component', () => {
       translation: 'кошка',
       category: 'Japanese',
       source: 'anki' as const,
-      passive: createDefaultFsrsState(Date.now() - 5000),
-      active: createDefaultFsrsState(Date.now() - 5000),
+      passive: { status: 'learning' as const, stability: 2, difficulty: 5, interval: 1, due: Date.now() - 5000, reps: 1, lapses: 0 },
+      active: { status: 'learning' as const, stability: 2, difficulty: 5, interval: 1, due: Date.now() - 5000, reps: 1, lapses: 0 },
     };
     await db.words.put(dueWord);
 
@@ -246,5 +247,34 @@ describe('QuizPage Component', () => {
     });
 
     expect(fetchSpy).toHaveBeenCalledWith('/api/dict/lookup?word=%E7%8C%AB');
+  });
+
+  it('ignores new status words in standard quiz mode', async () => {
+    // Seed 3 new-status words with due = now (should be ignored)
+    for (let i = 10; i < 13; i++) {
+      await db.words.put({
+        profileId: 'default',
+        id: i,
+        word: `新${i}`,
+        reading: `しん${i}`,
+        translation: `新しい${i}`,
+        category: 'Japanese',
+        source: 'starter' as const,
+        passive: createDefaultFsrsState(Date.now() - 5000),
+        active: createDefaultFsrsState(Date.now() - 5000),
+        contextExamples: []
+      });
+    }
+
+    render(
+      <JapanificationProvider>
+        <QuizPage />
+      </JapanificationProvider>
+    );
+
+    // Should show empty state since all words have status 'new'
+    await waitFor(() => {
+      expect(screen.getByText('Все слова повторены!')).toBeInTheDocument();
+    });
   });
 });

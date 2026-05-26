@@ -161,3 +161,190 @@
   border-radius: 20px;
   color: var(--text-primary);
 }
+
+/* === Цветные бейджи слов по статусу === */
+.sessionWordBadgeNew {
+  background-color: rgba(74, 144, 226, 0.15);
+  border-color: var(--color-blue);
+  color: var(--color-blue);
+}
+
+.sessionWordBadgeLearning {
+  background-color: rgba(255, 165, 0, 0.15);
+  border-color: var(--color-orange);
+  color: var(--color-orange);
+}
+
+.sessionWordBadgeMature {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+/* === Предупреждающий баннер === */
+.warningBanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background-color: rgba(255, 165, 0, 0.1);
+  border: 1.5px solid var(--color-orange);
+  border-radius: 12px;
+  color: var(--color-orange);
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.warningBanner p {
+  margin: 0;
+}
+
+/* === Warm-up оверлей === */
+.warmupOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  backdrop-filter: blur(4px);
+}
+
+.warmupCard {
+  background: var(--bg-primary);
+  border-radius: 20px;
+  padding: 32px 28px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: warmupSlideIn 0.3s ease;
+}
+
+@keyframes warmupSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.warmupStep {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.warmupKanji {
+  font-size: 4rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.warmupReading {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-blue);
+}
+
+.warmupTranslation {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.warmupAnswerGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.warmupAnswerBtn {
+  padding: 12px 16px;
+  border: 2px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--bg-primary);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  color: var(--text-primary);
+}
+
+.warmupAnswerBtn:hover:not(:disabled) {
+  border-color: var(--color-blue);
+  transform: translateY(-1px);
+}
+
+.warmupAnswerBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.warmupCorrect {
+  border-color: var(--color-green) !important;
+  background: rgba(88, 204, 2, 0.1) !important;
+  color: var(--color-green-shadow) !important;
+}
+
+.warmupWrong {
+  border-color: var(--color-red) !important;
+  background: rgba(255, 75, 75, 0.1) !important;
+  color: var(--color-red) !important;
+}
+
+.warmupProgress {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+.warmupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.warmupCloseBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 4px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.warmupCloseBtn:hover {
+  background: var(--bg-secondary);
+}
+
+.warmupAudioBtn {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1.5px solid var(--color-blue);
+  background: rgba(74, 144, 226, 0.08);
+  color: var(--color-blue);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.warmupAudioBtn:hover {
+  background: rgba(74, 144, 226, 0.18);
+}

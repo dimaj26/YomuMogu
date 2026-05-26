@@ -1,14 +1,42 @@
 'use client';
 
-import React, { Suspense, useState, useEffect, useRef } from 'react';
+import React, { Suspense, useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Check, X, ArrowLeft, AlertCircle, Loader2, Lightbulb, BookOpen, Award } from 'lucide-react';
+import { Check, X, ArrowLeft, AlertCircle, Loader2, Lightbulb, BookOpen, Award, Sparkles } from 'lucide-react';
 import { useJapanification } from '@/hooks/useJapanification';
 import { getActiveProfileId } from '@/lib/profile';
 import { db, addLocalReview } from '@/core/db';
 import { calculateNextFsrsState, alignPassiveToActiveState, createDefaultFsrsState } from '@/core/scheduler';
 import { sanitizeHtml } from '@/lib/sanitize';
+import { PhonosemanticHint, PhonosemanticData } from '@/components/PhonosemanticHint';
+import phonosemanticsData from '@/resources/phonosemantics.json';
 import styles from './quiz.module.css';
+
+// Типизация phonosemantics.json
+interface PhonosemanticEntry {
+  reading: string;
+  meaning: string;
+  relatives: Array<{ kanji: string; reading: string; meaning: string }>;
+}
+const phonoMap: Record<string, PhonosemanticEntry> = phonosemanticsData;
+
+/**
+ * Ищет фоносемантические данные для слова.
+ */
+function findPhonosemanticData(word: string): PhonosemanticData | null {
+  for (const char of word) {
+    if (phonoMap[char]) {
+      const entry = phonoMap[char];
+      return { key: char, reading: entry.reading, relatives: entry.relatives };
+    }
+    for (const [key, entry] of Object.entries(phonoMap)) {
+      if (entry.relatives.some(r => r.kanji === char)) {
+        return { key, reading: entry.reading, relatives: entry.relatives };
+      }
+    }
+  }
+  return null;
+}
 
 interface TargetWord {
   word: string;
@@ -26,6 +54,7 @@ interface LocalWord {
   passive: any;
   active: any;
   contextExamples?: Array<{ sentence: string; translation?: string; timestamp: number }>;
+  mnemonic?: string;
 }
 
 function QuizComponent() {
@@ -52,6 +81,14 @@ function QuizComponent() {
   const [xpGained, setXpGained] = useState<number>(0);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Мнемоника
+  const [mnemonicText, setMnemonicText] = useState<string>('');
+  const [isSavingMnemonic, setIsSavingMnemonic] = useState<boolean>(false);
+
+  // ИИ-Этимология
+  const [etymologyData, setEtymologyData] = useState<{ components: string[]; etymology: string } | null>(null);
+  const [isLoadingEtymology, setIsLoadingEtymology] = useState<boolean>(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -98,12 +135,12 @@ function QuizComponent() {
             }
           }
         } else {
-          // Стандартный режим: due-слова по FSRS
+          // Стандартный режим: due-слова по FSRS (исключая новые)
           const now = Date.now();
           const matches = await db.words
             .where('profileId')
             .equals(activeProfile)
-            .filter(item => item.active && item.active.due <= now)
+            .filter(item => item.active && item.active.status !== 'new' && item.active.due <= now)
             .toArray();
 
           loadedWords = matches as unknown as LocalWord[];
@@ -136,7 +173,13 @@ function QuizComponent() {
       setIsAnswered(false);
       setShowFirstChar(false);
       setDictDefinition(null);
+      setEtymologyData(null);
+      setIsLoadingEtymology(false);
       setStartTime(Date.now());
+      
+      // Загружаем сохранённую мнемонику
+      const currentWord = words[currentIndex];
+      setMnemonicText(currentWord.mnemonic || '');
       
       // Фокусируемся на вводе
       setTimeout(() => {
@@ -144,6 +187,52 @@ function QuizComponent() {
       }, 50);
     }
   }, [currentIndex, words]);
+
+  // Сохранение мнемоники в IndexedDB
+  const saveMnemonic = useCallback(async (text: string) => {
+    if (words.length === 0 || currentIndex >= words.length) return;
+    const currentWord = words[currentIndex];
+    
+    setIsSavingMnemonic(true);
+    try {
+      await db.words.update(currentWord.id, { mnemonic: text.trim() || undefined });
+    } catch (e) {
+      console.error('Ошибка сохранения мнемоники:', e);
+    } finally {
+      setIsSavingMnemonic(false);
+    }
+  }, [words, currentIndex]);
+
+  // Запрос ИИ-этимологии
+  const fetchEtymology = useCallback(async () => {
+    if (isLoadingEtymology || etymologyData || words.length === 0) return;
+    const currentWord = words[currentIndex];
+    
+    setIsLoadingEtymology(true);
+    try {
+      const res = await fetch('/api/gemini/etymology', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ word: currentWord.word })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEtymologyData(data);
+        
+        // Автозаполняем мнемонику, если пользователь не написал свою
+        if (!mnemonicText.trim() && data.etymology) {
+          setMnemonicText(data.etymology);
+          await db.words.update(currentWord.id, { mnemonic: data.etymology });
+        }
+      } else {
+        console.error('Ошибка API этимологии:', res.status);
+      }
+    } catch (e) {
+      console.error('Ошибка запроса этимологии:', e);
+    } finally {
+      setIsLoadingEtymology(false);
+    }
+  }, [isLoadingEtymology, etymologyData, words, currentIndex, mnemonicText]);
 
   if (isLoading) {
     return (
@@ -249,10 +338,13 @@ function QuizComponent() {
   const examples = currentWord.contextExamples || [];
   const matchedExample = examples.find(ex => ex.sentence && ex.sentence.includes(currentWord.word));
   
+  // Фоносемантические данные
+  const phonoData = findPhonosemanticData(currentWord.word);
+
   // Функция для создания Cloze Deletion (пропуска)
   const getClozeSentence = (sentence: string, word: string) => {
     // Очищаем от rt-тегов фуриганы для проверки вхождения
-    const cleanSentence = sentence.replace(/<rt>[\s\S]*?<\/rt>/gi, '').replace(/<\/?[^>]+(>|$)/g, '');
+    const cleanSentence = sentence.replace(/<rt>[\s\S]*?<\/rt>/gi, '').replace(/<\/?[^>]+(\>|$)/g, '');
     
     if (cleanSentence.includes(word)) {
       return sentence.replace(word, '_______');
@@ -276,7 +368,7 @@ function QuizComponent() {
     const normalizedWord = currentWord.word.trim().replace(/[\s\u3000]+/g, '');
     const normalizedReading = currentWord.reading ? currentWord.reading.trim().replace(/[\s\u3000]+/g, '') : '';
 
-    const correct = normalizedInput === normalizedWord || (normalizedReading && normalizedInput === normalizedReading);
+    const correct = normalizedInput === normalizedWord || (!!normalizedReading && normalizedInput === normalizedReading);
     setIsCorrect(correct);
     setIsAnswered(true);
 
@@ -313,7 +405,12 @@ function QuizComponent() {
     }
   };
 
-  const handleNextWord = () => {
+  const handleNextWord = async () => {
+    // Сохраняем мнемонику при переходе
+    if (mnemonicText.trim() && mnemonicText !== (currentWord.mnemonic || '')) {
+      await saveMnemonic(mnemonicText);
+    }
+
     if (currentIndex < words.length - 1) {
       setCurrentIndex(prev => prev + 1);
     } else {
@@ -476,6 +573,54 @@ function QuizComponent() {
                   </>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* PHONOSEMANTIC HINT — показываем после ответа */}
+          {isAnswered && phonoData && (
+            <PhonosemanticHint data={phonoData} />
+          )}
+
+          {/* MNEMONIC SECTION — показываем после ответа */}
+          {isAnswered && (
+            <div className={styles.mnemonicSection}>
+              <span className={styles.mnemonicLabel}>📝 {t('Заметка / мнемоника', 'メモ / ニーモニック')}</span>
+              <textarea
+                className={styles.mnemonicTextarea}
+                value={mnemonicText}
+                onChange={e => setMnemonicText(e.target.value)}
+                onBlur={() => saveMnemonic(mnemonicText)}
+                placeholder={t('Запишите ассоциацию для запоминания...', '覚えるための連想メモを書いてください...')}
+              />
+              
+              {/* Кнопка ИИ-Этимологии */}
+              <button
+                className={styles.etymologyBtn}
+                onClick={fetchEtymology}
+                disabled={isLoadingEtymology || !!etymologyData}
+                type="button"
+              >
+                {isLoadingEtymology ? (
+                  <Loader2 className={styles.spin} size={14} />
+                ) : (
+                  <Sparkles size={14} />
+                )}
+                ✨ {t('ИИ-Этимология', 'AI語源')}
+              </button>
+
+              {/* Результат этимологии */}
+              {etymologyData && (
+                <div className={styles.etymologyContent}>
+                  {etymologyData.components.length > 0 && (
+                    <div className={styles.etymologyComponents}>
+                      {etymologyData.components.map((comp, i) => (
+                        <span key={i} className={styles.etymologyChip}>{comp}</span>
+                      ))}
+                    </div>
+                  )}
+                  <div>{etymologyData.etymology}</div>
+                </div>
+              )}
             </div>
           )}
 

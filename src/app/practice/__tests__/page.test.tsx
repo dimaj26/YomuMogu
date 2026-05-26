@@ -25,6 +25,9 @@ vi.mock('lucide-react', () => ({
   Globe: () => <span data-testid="icon-globe" />,
   ChevronDown: () => <span data-testid="icon-chevron-down" />,
   Check: () => <span data-testid="icon-check" />,
+  X: () => <span data-testid="icon-x-close" />,
+  Volume2: () => <span data-testid="icon-volume" />,
+  Target: () => <span data-testid="icon-target" />,
 }));
 
 // Мокаем next/link и next/navigation
@@ -245,6 +248,60 @@ describe('PracticePage Component', () => {
       expect(screen.getByRole('button', { name: /Повторить активные слова \(Квиз\) \[1\]/ })).toBeInTheDocument();
       // It should say "Лимит новых слов сегодня" or "Импортировано слов" depending on local state initialization
       expect(screen.getByText(/Источник обучения:/)).toBeInTheDocument();
+    });
+  });
+
+  it('does not count new status words even if due <= now', async () => {
+    localStorage.setItem('yomumogu_profile_default_deck_mode', 'local');
+    localStorage.setItem('yomumogu_profile_default_selected_deck', '__local_starter__');
+
+    const now = Date.now();
+    // 2 learning слова с due <= now (настоящие due)
+    await db.words.put({
+      profileId: 'default',
+      id: 100,
+      word: '食べる',
+      reading: 'たべる',
+      translation: 'есть',
+      category: '__local_starter__',
+      source: 'starter',
+      passive: { status: 'learning', stability: 5, difficulty: 5, interval: 5, due: now - 10000, reps: 2, lapses: 0 },
+      active: { status: 'learning', stability: 5, difficulty: 5, interval: 5, due: now - 10000, reps: 2, lapses: 0 },
+      contextExamples: []
+    });
+    await db.words.put({
+      profileId: 'default',
+      id: 101,
+      word: '飲む',
+      reading: 'のむ',
+      translation: 'пить',
+      category: '__local_starter__',
+      source: 'starter',
+      passive: { status: 'review', stability: 10, difficulty: 5, interval: 10, due: now - 5000, reps: 3, lapses: 0 },
+      active: { status: 'review', stability: 10, difficulty: 5, interval: 10, due: now - 5000, reps: 3, lapses: 0 },
+      contextExamples: []
+    });
+    // 5 new слов с due = now (НЕ должны считаться)
+    for (let i = 200; i < 205; i++) {
+      await db.words.put({
+        profileId: 'default',
+        id: i,
+        word: `新${i}`,
+        reading: `しん${i}`,
+        translation: `новое${i}`,
+        category: '__local_starter__',
+        source: 'starter',
+        passive: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
+        active: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
+        contextExamples: []
+      });
+    }
+
+    render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+
+    await waitFor(() => {
+      // Должен показать только 2 due слова, а не 7
+      expect(screen.getByRole('button', { name: /Повторить активные слова \(Квиз\) \[2\]/ })).toBeInTheDocument();
     });
   });
 });
