@@ -2,6 +2,14 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.24.0] - 2026-05-26
+### Added
+- Added a premium traditional Japanese Kumiko (Asanoha) geometric grid pattern fixed background to `body` in `src/app/globals.css`, featuring a warm washi paper textured background color and wood-colored lines for high contrast and modern styling.
+
+### Changed
+- Changed main page wrappers `.main` in `src/app/practice/practice.module.css` and `src/app/settings/settings.module.css` to be transparent, ensuring the background pattern shows through between widgets.
+- Refactored the `/practice` page layout into an adaptive two-column sidebar grid, shifting the "Источник обучения" card into a desktop sidebar on the right side and keeping the main workouts in a left column.
+
 ## [1.23.0] - 2026-05-26
 ### Added
 - Added interactive mascot clicking mechanics in `src/app/page.tsx`, triggering a wiggle animation class and displaying random motivational Japanese phrases (with Furigana and Russian translations) in the speech bubble, reverting after 4 seconds.
