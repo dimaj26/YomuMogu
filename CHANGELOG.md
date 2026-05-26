@@ -6,6 +6,7 @@ All notable changes to the YomuMogu project are documented in this file. The for
 ### Fixed
 - Fixed FSRS due words query in the Debug HUD Side Drawer: words with status `'new'` are now properly filtered out, avoiding them incorrectly matching the due date filter (`due <= now`).
 - Fixed premature daily new words limit exhaustion in local mode: generating chat scenarios no longer consumes the daily limit. The daily limit is now consumed when words with status `'new'` are actually reviewed and saved during Chat session results sync.
+- Fixed daily new words limit exhaustion cache issues by adding dynamic database-backed synchronization (`syncDailyNewWordsCountWithDb`): the daily study count in localStorage is now recalculated and synced on page mount/load with the actual number of new words studied today (first reviews today) in IndexedDB, preventing stale cache mismatches.
 
 ## [1.25.0] - 2026-05-26
 ### Added

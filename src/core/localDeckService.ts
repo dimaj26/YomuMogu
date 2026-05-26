@@ -388,3 +388,52 @@ export async function getPriorityWordsCount(profileId: string, category: string)
 
   return dueCount + newCount;
 }
+
+/**
+ * Синхронизирует счетчик изученных за сегодня слов в localStorage с базой данных IndexedDB.
+ */
+export async function syncDailyNewWordsCountWithDb(profileId: string): Promise<number> {
+  if (typeof window === 'undefined') return 0;
+
+  // Вычисляем границу дня (с 4:00 утра текущего дня)
+  const now = new Date();
+  const boundary = new Date(now);
+  boundary.setHours(4, 0, 0, 0);
+  if (now.getHours() < 4) {
+    boundary.setDate(boundary.getDate() - 1);
+  }
+  const startTimestamp = boundary.getTime();
+
+  let dbCount = 0;
+
+  try {
+    const todayReviews = await db.reviews
+      .where('profileId')
+      .equals(profileId)
+      .filter(r => r.timestamp >= startTimestamp)
+      .toArray();
+
+    if (todayReviews.length > 0) {
+      const uniqueCardIds = Array.from(new Set(todayReviews.map(r => r.cardId)));
+
+      for (const cardId of uniqueCardIds) {
+        const pastReviewsCount = await db.reviews
+          .where('[profileId+cardId]')
+          .equals([profileId, cardId])
+          .filter(r => r.timestamp < startTimestamp)
+          .count();
+
+        if (pastReviewsCount === 0) {
+          dbCount++;
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Ошибка в syncDailyNewWordsCountWithDb:', e);
+  }
+
+  const key = `${LOCAL_STORAGE_KEY_PREFIX}_${getLocalDateString()}`;
+  setProfileItem(key, dbCount.toString(), profileId);
+
+  return dbCount;
+}

@@ -18,7 +18,8 @@ import {
   incrementDailyNewWordsCount,
   syncExistingLocalWordsWithStarterDeck,
   getPriorityWordsCount,
-  incrementDailyNewWordsLimitOffset
+  incrementDailyNewWordsLimitOffset,
+  syncDailyNewWordsCountWithDb
 } from '@/core/localDeckService';
 import { db } from '@/core/db';
 import type { LocalWord } from '@/core/types';
@@ -134,7 +135,7 @@ export default function PracticePage() {
         setIsLocalInitialized(initialized);
         if (initialized) {
           await syncExistingLocalWordsWithStarterDeck(profileId);
-          setDailyNewWordsCount(getDailyNewWordsCount(profileId));
+          setDailyNewWordsCount(await syncDailyNewWordsCountWithDb(profileId));
           setDailyNewWordsLimit(getDailyNewWordsLimit(profileId));
           const loadedLocalWords = await db.words
             .where('profileId')

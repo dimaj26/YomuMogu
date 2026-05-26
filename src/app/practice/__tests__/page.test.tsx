@@ -465,4 +465,75 @@ describe('PracticePage Component', () => {
 
     fetchSpy.mockRestore();
   });
+
+  it('initializes the daily new words count dynamically based on reviews in IndexedDB', async () => {
+    localStorage.setItem('yomumogu_profile_default_deck_mode', 'local');
+    localStorage.setItem('yomumogu_profile_default_daily_new_words_limit', '10');
+    
+    // Имитируем устаревший кэш в localStorage (якобы 10 из 10)
+    const dString = new Date().toISOString().split('T')[0];
+    localStorage.setItem(`yomumogu_profile_default_daily_new_words_${dString}`, '10');
+
+    // Очистим reviews в БД
+    await db.reviews.clear();
+    await db.words.clear();
+
+    const now = Date.now();
+
+    // Инициализируем слово в db.words, чтобы isLocalDeckInitialized вернуло true
+    await db.words.put({
+      profileId: 'default',
+      id: 100,
+      word: '単語',
+      reading: 'たんго',
+      translation: 'слово',
+      category: '__local_starter__',
+      source: 'starter',
+      passive: { status: 'learning', stability: 2, difficulty: 5, interval: 2, due: now, reps: 1, lapses: 0 },
+      active: { status: 'learning', stability: 2, difficulty: 5, interval: 2, due: now, reps: 1, lapses: 0 },
+      contextExamples: []
+    });
+    const boundary = new Date(now);
+    boundary.setHours(4, 0, 0, 0);
+    const startTimestamp = boundary.getTime();
+
+    // Добавим одно новое слово, изученное сегодня (первый отзыв сегодня)
+    await db.reviews.add({
+      profileId: 'default',
+      cardId: 100,
+      ease: 3,
+      interval: 1,
+      lastInterval: 0,
+      duration: 1000,
+      timestamp: startTimestamp + 5000,
+      synced: 0
+    });
+
+    // Добавим другое слово, повторенное сегодня (но у него был отзыв вчера)
+    await db.reviews.add({
+      profileId: 'default',
+      cardId: 200,
+      ease: 3,
+      interval: 3,
+      lastInterval: 1,
+      duration: 1000,
+      timestamp: startTimestamp - 100000, // Вчера
+      synced: 1
+    });
+    await db.reviews.add({
+      profileId: 'default',
+      cardId: 200,
+      ease: 3,
+      interval: 5,
+      lastInterval: 3,
+      duration: 1000,
+      timestamp: startTimestamp + 10000, // Сегодня
+      synced: 0
+    });
+
+    render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+
+    // Ожидаем, что на основе БД значение пересчиталось в 1 и отображается "1 из 10" (игнорируя устаревший 10)
+    expect(await screen.findByText('1 из 10')).toBeInTheDocument();
+  });
 });

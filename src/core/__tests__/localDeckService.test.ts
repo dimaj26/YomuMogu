@@ -22,6 +22,7 @@ const {
   getPriorityWordsCount,
   getDailyNewWordsLimitOffset,
   incrementDailyNewWordsLimitOffset,
+  syncDailyNewWordsCountWithDb,
 } = await import('../localDeckService');
 
 describe('LocalDeckService Unit Tests', () => {
@@ -673,5 +674,80 @@ describe('LocalDeckService Unit Tests', () => {
     // due = 3 (learning) + new в рамках лимита (10, лимит по умолчанию = 10) = 13
     const count = await getPriorityWordsCount(profileId, LOCAL_DECK_NAME);
     expect(count).toBe(13);
+  });
+
+  describe('syncDailyNewWordsCountWithDb', () => {
+    it('returns 0 and updates localStorage when there are no reviews in DB, ignoring stale cache', async () => {
+      // Имитируем устаревший кэш в localStorage
+      vi.setSystemTime(new Date('2026-05-22T10:00:00Z'));
+      localStorage.setItem(`yomumogu_profile_${profileId}_${LOCAL_STORAGE_KEY_PREFIX}_2026-05-22`, '10');
+
+      // База пуста
+      const count = await syncDailyNewWordsCountWithDb(profileId);
+      expect(count).toBe(0);
+
+      // Проверяем, что localStorage сбросился в "0"
+      expect(localStorage.getItem(`yomumogu_profile_${profileId}_${LOCAL_STORAGE_KEY_PREFIX}_2026-05-22`)).toBe('0');
+    });
+
+    it('returns the correct number of new words studied today based on reviews in DB', async () => {
+      vi.setSystemTime(new Date('2026-05-22T10:00:00Z'));
+      const now = Date.now();
+      const boundary = new Date(now);
+      boundary.setHours(4, 0, 0, 0);
+      const startTimestamp = boundary.getTime();
+
+      // Добавим слово 1 (первый отзыв сегодня) -> должно считаться новым словом сегодня
+      await db.reviews.add({
+        profileId,
+        cardId: 1,
+        ease: 3,
+        interval: 1,
+        lastInterval: 0,
+        duration: 1000,
+        timestamp: startTimestamp + 1000,
+        synced: 0
+      });
+
+      // Добавим слово 2 (отзыв сегодня, но был отзыв вчера) -> НЕ должно считаться новым сегодня
+      await db.reviews.add({
+        profileId,
+        cardId: 2,
+        ease: 3,
+        interval: 3,
+        lastInterval: 1,
+        duration: 1000,
+        timestamp: startTimestamp - 50000, // Вчерашний отзыв
+        synced: 1
+      });
+      await db.reviews.add({
+        profileId,
+        cardId: 2,
+        ease: 3,
+        interval: 5,
+        lastInterval: 3,
+        duration: 1000,
+        timestamp: startTimestamp + 2000, // Сегодняшний отзыв
+        synced: 0
+      });
+
+      // Добавим слово 3 (отзыв только вчера) -> НЕ должно считаться сегодня
+      await db.reviews.add({
+        profileId,
+        cardId: 3,
+        ease: 3,
+        interval: 1,
+        lastInterval: 0,
+        duration: 1000,
+        timestamp: startTimestamp - 100000,
+        synced: 1
+      });
+
+      const count = await syncDailyNewWordsCountWithDb(profileId);
+      expect(count).toBe(1); // Только слово 1 изучено сегодня впервые
+
+      // Убеждаемся, что localStorage обновился
+      expect(localStorage.getItem(`yomumogu_profile_${profileId}_${LOCAL_STORAGE_KEY_PREFIX}_2026-05-22`)).toBe('1');
+    });
   });
 });
