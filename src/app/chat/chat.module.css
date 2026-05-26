@@ -1116,3 +1116,193 @@
   background-color: #fff8f8;
 }
 
+/* === FLOATING INTERACTIVE MASCOT WIDGET === */
+.mascotWidget {
+  position: fixed;
+  bottom: 90px;
+  right: 24px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none; /* Allows clicks to pass through around the mascot */
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.mascotImageContainer {
+  pointer-events: auto; /* Allows clicking the mascot itself */
+  cursor: pointer;
+  width: 80px;
+  height: 80px;
+}
+
+.mascotSvg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+/* Speech bubble styling */
+.mascotSpeechBubble {
+  pointer-events: auto;
+  position: relative;
+  background: var(--bg-primary, #ffffff);
+  border: var(--border-width, 2px) solid var(--border-color, #e5e7eb);
+  border-radius: var(--border-radius-md, 12px);
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary, #1f2937);
+  max-width: 220px;
+  line-height: 1.4;
+  text-align: center;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  animation: bubbleFadeIn 0.3s ease-out;
+}
+
+.mascotSpeechBubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 8px;
+  border-style: solid;
+  border-color: var(--bg-primary, #ffffff) transparent transparent transparent;
+  z-index: 2;
+}
+
+.mascotSpeechBubble::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 10px;
+  border-style: solid;
+  border-color: var(--border-color, #e5e7eb) transparent transparent transparent;
+  z-index: 1;
+}
+
+/* --- Animations & States --- */
+
+/* Idle Float Animation */
+.idle {
+  animation: mascotFloat 4s ease-in-out infinite;
+}
+
+@keyframes mascotFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* Happy Hop & Glow Pulse */
+.happy {
+  animation: mascotHappyHop 0.6s ease infinite alternate, mascotGoldPulse 2s infinite;
+}
+
+@keyframes mascotHappyHop {
+  0% {
+    transform: translateY(0) scaleY(1);
+  }
+  100% {
+    transform: translateY(-16px) scaleY(0.95);
+  }
+}
+
+@keyframes mascotGoldPulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.8));
+  }
+}
+
+/* Worried Shake & Tilt Left pointing towards grammar feedback cards */
+.worried {
+  animation: mascotWorriedShake 0.4s ease-in-out infinite, mascotPointLeft 1s ease-in-out infinite alternate;
+}
+
+@keyframes mascotWorriedShake {
+  0%, 100% {
+    transform: translateX(0) translateY(0);
+  }
+  25% {
+    transform: translateX(-3px) translateY(-1px);
+  }
+  75% {
+    transform: translateX(3px) translateY(1px);
+  }
+}
+
+@keyframes mascotPointLeft {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  100% {
+    transform: rotate(-15deg) scale(1.05); /* Leans/tilts left and grows slightly to direct user attention */
+  }
+}
+
+/* Cheering Nod */
+.cheering {
+  animation: mascotNod 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes mascotNod {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(8deg) translateY(-2px);
+  }
+}
+
+/* Animated Steam Lines */
+.steamLine1 {
+  animation: steamRise 2s linear infinite;
+  opacity: 0;
+}
+
+.steamLine2 {
+  animation: steamRise 2s linear infinite 1s;
+  opacity: 0;
+}
+
+@keyframes steamRise {
+  0% {
+    transform: translateY(4px);
+    stroke-dashoffset: 20;
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.8;
+  }
+  70% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(-8px);
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes bubbleFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+

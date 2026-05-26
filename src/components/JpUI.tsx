@@ -86,8 +86,21 @@ export function JpUI({ id, ru, ja, reading, className = '', interactive = true }
   }
 
   // Слово изучено (японизировано). Рендерим на японском с интерактивным тултипом
-  const showFurigana = wordState.reps <= 2 && !!reading;
   const justUpgraded = upgradedThisSession === id;
+  const hasReading = !!reading;
+
+  // Вычисляем класс прозрачности фуриганы на основе FSRS интервала
+  let furiganaClass = styles.furiganaFull;
+  if (wordState) {
+    const ivl = wordState.interval || 0;
+    if (ivl < 3) {
+      furiganaClass = styles.furiganaFull;
+    } else if (ivl < 21) {
+      furiganaClass = styles.furiganaReview;
+    } else {
+      furiganaClass = styles.furiganaMature;
+    }
+  }
 
   if (!interactive) {
     return (
@@ -95,10 +108,10 @@ export function JpUI({ id, ru, ja, reading, className = '', interactive = true }
         className={`${styles.jpWord} ${justUpgraded ? styles.justUpgraded : ''} ${className}`}
         title={`Перевод: ${ru}${reading ? ` (Чтение: ${reading})` : ''}`}
       >
-        {showFurigana ? (
+        {hasReading ? (
           <ruby>
             {ja}
-            <rt>{reading}</rt>
+            <rt className={furiganaClass}>{reading}</rt>
           </ruby>
         ) : (
           ja
@@ -134,10 +147,10 @@ export function JpUI({ id, ru, ja, reading, className = '', interactive = true }
         className={`${styles.jpWord} ${justUpgraded ? styles.justUpgraded : ''}`}
         title="Нажми, чтобы увидеть русский перевод"
       >
-        {showFurigana ? (
+        {hasReading ? (
           <ruby>
             {ja}
-            <rt>{reading}</rt>
+            <rt className={furiganaClass}>{reading}</rt>
           </ruby>
         ) : (
           ja

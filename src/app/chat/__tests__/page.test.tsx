@@ -160,4 +160,75 @@ describe('ChatPage Component', () => {
       expect(screen.getByText('Итоги практики')).toBeInTheDocument();
     });
   });
+
+  it('updates mascot state and shows visual feedback on chat interaction', async () => {
+    setupActiveSession();
+
+    // 1. Initial conversation message
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          reply: 'こんにちは！猫が好きですか？',
+          translation: 'Привет! Вы любите кошек?',
+          wordsDetected: [],
+          grammarFeedback: { isCorrect: true },
+        }),
+      } as Response)
+      // 2. Mock response with detected words -> happy state
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          reply: '素晴らしい！',
+          translation: 'Замечательно!',
+          wordsDetected: ['猫'],
+          grammarFeedback: { isCorrect: true },
+        }),
+      } as Response)
+      // 3. Mock response with grammar error -> worried state
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          reply: '猫は好きですか？',
+          translation: 'Вы любите кошек?',
+          wordsDetected: [],
+          grammarFeedback: { isCorrect: false, correction: '猫が好きですか', explanation: 'Use が instead of は' },
+        }),
+      } as Response);
+
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    // Wait for chat to render
+    await waitFor(() => {
+      expect(screen.getByText('Тема тренировки')).toBeInTheDocument();
+    });
+
+    const mascot = screen.getByTestId('chat-mascot');
+    expect(mascot).toBeInTheDocument();
+    expect(mascot.getAttribute('data-state')).toBe('idle');
+
+    // Send first user message (detects word '猫')
+    const textarea = screen.getByPlaceholderText('Напишите на японском...');
+    fireEvent.change(textarea, { target: { value: '猫が好きです。' } });
+    
+    const sendBtn = screen.getByRole('button', { name: /Отправить/i });
+    fireEvent.click(sendBtn);
+
+    // Wait for the AI message to appear and check that mascot became happy
+    await waitFor(() => {
+      expect(screen.getByText('素晴らしい！')).toBeInTheDocument();
+    });
+    expect(mascot.getAttribute('data-state')).toBe('happy');
+
+    // Send second user message (triggers grammar error)
+    fireEvent.change(textarea, { target: { value: '猫は好きです。' } });
+    fireEvent.click(sendBtn);
+
+    // Wait for the next AI message and check that mascot became worried
+    await waitFor(() => {
+      expect(screen.getByText('猫は好きですか？')).toBeInTheDocument();
+    });
+    expect(mascot.getAttribute('data-state')).toBe('worried');
+  });
 });
+

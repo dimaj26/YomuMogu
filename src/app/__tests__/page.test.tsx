@@ -1,8 +1,15 @@
 import React from 'react';
+import fakeIndexedDB, { IDBKeyRange } from 'fake-indexeddb';
+
+// Инициализируем полифилл IndexedDB до загрузки Dexie
+globalThis.indexedDB = fakeIndexedDB;
+globalThis.IDBKeyRange = IDBKeyRange;
+
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import HomePage from '../page';
+import HomePage, { MASCOT_PHRASES } from '../page';
 import { JapanificationProvider } from '@/hooks/useJapanification';
+import { db } from '@/core/db';
 
 // Mock Lucide icons
 vi.mock('lucide-react', () => ({
@@ -171,4 +178,58 @@ describe('HomePage Component', () => {
     
     vi.useRealTimers();
   });
+
+  it('checks MASCOT_PHRASES for Cyrillic characters in Japanese text fields', () => {
+    // Регулярное выражение для поиска кириллицы (диапазон \u0400-\u04FF)
+    const cyrillicRegex = /[\u0400-\u04FF]/;
+    expect(MASCOT_PHRASES).toBeDefined();
+    MASCOT_PHRASES.forEach((phrase) => {
+      const containsCyrillicInJa = cyrillicRegex.test(phrase.ja);
+      const containsCyrillicInReading = cyrillicRegex.test(phrase.reading);
+      expect(containsCyrillicInJa).toBe(false);
+      expect(containsCyrillicInReading).toBe(false);
+    });
+  });
+
+  it('renders memory decay heatmap with Kumiko grid elements', async () => {
+    // Вставляем тестовые слова в fakeIndexedDB перед рендерингом страницы
+    await db.words.bulkPut([
+      {
+        profileId: 'default',
+        id: 1,
+        word: '一',
+        reading: 'いち',
+        translation: 'один',
+        category: 'Japanese',
+        source: 'anki',
+        passive: { stability: 1.0, difficulty: 5.0, interval: 1, due: Date.now(), reps: 1, lapses: 0, status: 'learning' },
+        active: { stability: 1.0, difficulty: 5.0, interval: 1, due: Date.now(), reps: 1, lapses: 0, status: 'learning' },
+        contextExamples: []
+      },
+      {
+        profileId: 'default',
+        id: 2,
+        word: '二',
+        reading: 'に',
+        translation: 'два',
+        category: 'Japanese',
+        source: 'anki',
+        passive: { stability: 25.0, difficulty: 3.0, interval: 25, due: Date.now() + 1000000, reps: 3, lapses: 0, status: 'mature' },
+        active: { stability: 25.0, difficulty: 3.0, interval: 25, due: Date.now() + 1000000, reps: 3, lapses: 0, status: 'mature' },
+        contextExamples: []
+      }
+    ]);
+
+    render(<JapanificationProvider><HomePage /></JapanificationProvider>);
+
+    // Проверяем наличие SVG-тепловой карты
+    await waitFor(() => {
+      const svgGrid = document.querySelector('svg[data-testid="kumiko-grid"]');
+      expect(svgGrid).toBeInTheDocument();
+    });
+
+    // Очищаем БД после теста
+    await db.words.clear();
+  });
 });
+

@@ -123,3 +123,26 @@
 .confirmBtn {
   background-color: #10b981; /* Зеленый */
 }
+
+/* FSRS Furigana Opacity States */
+.furiganaFull {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.furiganaReview {
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.furiganaMature {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Hover effects to smoothly show furigana */
+.jpWord:hover .furiganaReview,
+.jpWord:hover .furiganaMature {
+  opacity: 1;
+}
+

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { BookOpen, Settings, User, HelpCircle, X, Check, Award, BarChart2, BookOpen as BookIcon } from 'lucide-react';
+import { db } from '@/core/db';
 import { useJapanification } from '@/hooks/useJapanification';
 import { getProfileItem, removeProfileItem, getProfilesList, getActiveProfileId, setActiveProfileId, ProfileInfo } from '@/lib/profile';
 import { JpUI } from '@/components/JpUI';
@@ -14,12 +15,12 @@ import { sanitizeHtml } from '@/lib/sanitize';
 // Возвращает пороги очков для уровней на нормальной скорости (дефолтная скорость для отображения в профиле)
 const NORMAL_THRESHOLDS = [0, 20, 50, 100, 170, 280, 420];
 
-const MASCOT_PHRASES = [
+export const MASCOT_PHRASES = [
   { ja: "頑張って！", reading: "がんばって", ru: "Постарайся! / Удачи!" },
   { ja: "お茶をどうぞ！", reading: "おちゃをどうぞ", ru: "Пожалуйста, выпей чаю!" },
   { ja: "日本語は面白いですね！", reading: "にほんごはおもしろいですね", ru: "Японский язык интересный, не правда ли?" },
   { ja: "一歩一歩進みましょう！", reading: "いっぽいっぽすすみましょう", ru: "Давай продвигаться шаг за шагом!" },
-  { ja: "今日も素晴らしい日です！", reading: "きょうмоすばらしいひです", ru: "Сегодня тоже отличный день!" }
+  { ja: "今日も素晴らしい日です！", reading: "きょうもすばらしいひです", ru: "Сегодня тоже отличный день!" }
 ];
 
 export default function HomePage() {
@@ -44,6 +45,78 @@ export default function HomePage() {
   const [hasLoaded, setHasLoaded] = useState<boolean>(false);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [customBubbleText, setCustomBubbleText] = useState<string | null>(null);
+  const [heatmapCells, setHeatmapCells] = useState<Array<{ status: string; isDue: boolean; avgStability: number }>>([]);
+
+  // Загружаем слова из базы данных для тепловой карты памяти при изменении активного профиля
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    db.words
+      .where('profileId')
+      .equals(activeProfileId)
+      .toArray()
+      .then((words) => {
+        const cells = Array.from({ length: 50 }, (_, cellIndex) => {
+          const startIdx = cellIndex * 10;
+          const group = words.slice(startIdx, startIdx + 10);
+          
+          if (group.length === 0) {
+            return { status: 'new', isDue: false, avgStability: 0 };
+          }
+          
+          let newCount = 0;
+          let learningCount = 0;
+          let reviewCount = 0;
+          let matureCount = 0;
+          let dueCount = 0;
+          let totalStability = 0;
+          const now = Date.now();
+          
+          group.forEach(w => {
+            const activeState = w.active || w;
+            const status = activeState.status || 'new';
+            const due = activeState.due || now;
+            const stability = activeState.stability || 0;
+            
+            totalStability += stability;
+            
+            if (status === 'new') newCount++;
+            else if (status === 'learning') learningCount++;
+            else if (status === 'review') reviewCount++;
+            else if (status === 'mature') matureCount++;
+            
+            if (due <= now && status !== 'new') {
+              dueCount++;
+            }
+          });
+          
+          let dominantStatus = 'new';
+          let maxCount = newCount;
+          if (learningCount > maxCount) {
+            dominantStatus = 'learning';
+            maxCount = learningCount;
+          }
+          if (reviewCount > maxCount) {
+            dominantStatus = 'review';
+            maxCount = reviewCount;
+          }
+          if (matureCount > maxCount) {
+            dominantStatus = 'mature';
+            maxCount = matureCount;
+          }
+          
+          return {
+            status: dominantStatus,
+            isDue: dueCount > 0,
+            avgStability: totalStability / group.length
+          };
+        });
+        setHeatmapCells(cells);
+      })
+      .catch((err) => {
+        console.error('Ошибка загрузки слов для тепловой карты', err);
+      });
+  }, [activeProfileId]);
 
   // Обработчик клика на маскота
   const handleMascotClick = () => {
@@ -302,6 +375,9 @@ export default function HomePage() {
           )}
         </div>
 
+        {/* MEMORY DECAY HEATMAP */}
+        <MemoryDecayHeatmap cells={heatmapCells} />
+
         {/* SECONDARY CONTROL GRID */}
         <div className={styles.secondaryGrid}>
           <Link href="/settings" className={`btn-3d ${styles.secondaryBtn}`}>
@@ -537,6 +613,115 @@ export default function HomePage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function MemoryDecayHeatmap({ cells }: { cells: Array<{ status: string; isDue: boolean; avgStability: number }> }) {
+  const { t } = useJapanification();
+
+  if (cells.length === 0) return null;
+
+  return (
+    <div className={styles.heatmapCard}>
+      <h3 className={styles.heatmapTitle}>
+        <BarChart2 size={20} />
+        <span>{t("Очаги памяти (Сетка Кумико)", "記憶の格子（組子格子）", 2)}</span>
+      </h3>
+      <p className={styles.heatmapDescription}>
+        {t(
+          "50 ячеек отображают состояние 500 слов вашей стартовой колоды. Цвета отражают уровень стабильности памяти. Пульсация означает остывание памяти и необходимость повторения.",
+          "50の格子がスターターデッキの500語の状態を表します。色は記憶の安定性を示し、点滅は復習が必要なシグナルです。",
+          2
+        )}
+      </p>
+      <div className={styles.heatmapSvgContainer}>
+        <svg 
+          data-testid="kumiko-grid" 
+          viewBox="0 0 500 250" 
+          className={styles.kumikoSvg}
+        >
+          {cells.map((cell, idx) => {
+            const col = idx % 10;
+            const row = Math.floor(idx / 10);
+            const cellSize = 50;
+            const x = col * cellSize;
+            const y = row * cellSize;
+            
+            // Выбираем цвет фона в зависимости от статуса ячейки
+            let fillColor = '#faf8f5'; // new / washi paper
+            let statusLabel = 'Новые';
+            if (cell.status === 'learning') {
+              fillColor = '#fef3c7'; // pale warm amber
+              statusLabel = 'Изучаемые';
+            } else if (cell.status === 'review') {
+              fillColor = '#d1fae5'; // minty green
+              statusLabel = 'Повторяемые';
+            } else if (cell.status === 'mature') {
+              fillColor = '#f59e0b'; // rich golden yellow
+              statusLabel = 'Усвоенные';
+            }
+
+            const cellTitle = `Группа ${idx + 1}: ${statusLabel}${cell.isDue ? ' (Требует повторения)' : ''}, Стабильность: ${cell.avgStability.toFixed(1)}дн`;
+
+            return (
+              <g 
+                key={idx} 
+                className={`${styles.kumikoCell} ${cell.isDue ? styles.dueCell : ''}`}
+              >
+                <title>{cellTitle}</title>
+                {/* Фоновая ячейка */}
+                <rect 
+                  x={x} 
+                  y={y} 
+                  width={cellSize} 
+                  height={cellSize} 
+                  fill={fillColor} 
+                  stroke="#a27b5c" 
+                  strokeWidth="1.5" 
+                  className={styles.cellRect}
+                />
+                
+                {/* Геометрический орнамент Кумико */}
+                {/* Ромб внутри */}
+                <path 
+                  d={`M ${x} ${y + cellSize/2} L ${x + cellSize/2} ${y} L ${x + cellSize} ${y + cellSize/2} L ${x + cellSize/2} ${y + cellSize} Z`} 
+                  stroke="rgba(162, 123, 92, 0.25)" 
+                  strokeWidth="1" 
+                  fill="none" 
+                />
+                {/* Диагонали */}
+                <line x1={x} y1={y} x2={x + cellSize} y2={y + cellSize} stroke="rgba(162, 123, 92, 0.15)" strokeWidth="0.5" />
+                <line x1={x + cellSize} y1={y} x2={x} y2={y + cellSize} stroke="rgba(162, 123, 92, 0.15)" strokeWidth="0.5" />
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+      
+      {/* Легенда тепловой карты */}
+      <div className={styles.legendRow}>
+        <div className={styles.legendItem}>
+          <span className={styles.legendColor} style={{ backgroundColor: '#faf8f5', border: '1px solid #a27b5c' }} />
+          <span>{t("Новые (0%)", "新規 (0%)", 2)}</span>
+        </div>
+        <div className={styles.legendItem}>
+          <span className={styles.legendColor} style={{ backgroundColor: '#fef3c7', border: '1px solid #a27b5c' }} />
+          <span>{t("Изучаемые", "学習中", 2)}</span>
+        </div>
+        <div className={styles.legendItem}>
+          <span className={styles.legendColor} style={{ backgroundColor: '#d1fae5', border: '1px solid #a27b5c' }} />
+          <span>{t("Повторяемые", "復習中", 2)}</span>
+        </div>
+        <div className={styles.legendItem}>
+          <span className={styles.legendColor} style={{ backgroundColor: '#f59e0b', border: '1px solid #a27b5c' }} />
+          <span>{t("Усвоенные", "修得済", 2)}</span>
+        </div>
+        <div className={styles.legendItem}>
+          <span className={`${styles.legendColor} ${styles.legendDuePulse}`} style={{ border: '1.5px dashed var(--color-orange, #f97316)' }} />
+          <span>{t("Требует повторения", "復習が必要", 2)}</span>
+        </div>
+      </div>
     </div>
   );
 }

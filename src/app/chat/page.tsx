@@ -119,6 +119,31 @@ export default function ChatPage() {
   const [isStateLoaded, setIsStateLoaded] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
+  // Состояния для интерактивного маскота 🍵
+  const [mascotState, setMascotState] = useState<'idle' | 'happy' | 'worried' | 'cheering'>('idle');
+  const [mascotBubble, setMascotBubble] = useState<string | null>(null);
+  const mascotTimerRef = useRef<any>(null);
+
+  const triggerMascotReaction = (state: 'happy' | 'worried' | 'cheering', text: string) => {
+    if (mascotTimerRef.current) {
+      clearTimeout(mascotTimerRef.current);
+    }
+    setMascotState(state);
+    setMascotBubble(text);
+    mascotTimerRef.current = setTimeout(() => {
+      setMascotState('idle');
+      setMascotBubble(null);
+    }, 4000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (mascotTimerRef.current) {
+        clearTimeout(mascotTimerRef.current);
+      }
+    };
+  }, []);
+
   const messageEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -321,6 +346,23 @@ export default function ChatPage() {
         if (data.grammarFeedback?.isCorrect) {
           addPoints(1); // Бонус за правильную грамматику
         }
+
+        // Определяем реакцию маскота
+        let nextMascotState: 'happy' | 'worried' | 'cheering' = 'cheering';
+        let bubbleText = t('Отличный ответ! Продолжай в том же духе! 🌟', '素晴らしい返事！その調子で続けましょう！ 🌟');
+
+        const hasNewDetectedWords = detectedWords.some((w: string) => !collectedWords.has(w));
+        const isGrammarCorrect = data.grammarFeedback?.isCorrect !== false;
+
+        if (hasNewDetectedWords) {
+          nextMascotState = 'happy';
+          bubbleText = t('Ура! Новое слово успешно усвоено! 🎉', 'やった！新しい言葉をマスターしました！ 🎉');
+        } else if (!isGrammarCorrect) {
+          nextMascotState = 'worried';
+          bubbleText = t('Хмм, тут есть грамматическая неточность. Обрати внимание на разбор! ⚠️', 'うーん、文法に誤りがあります。以下の解説を確認してください！ ⚠️');
+        }
+
+        triggerMascotReaction(nextMascotState, bubbleText);
 
         const aiMsg: ChatMessageData = {
           id: `msg-${Date.now() + 1}`,
@@ -1624,6 +1666,75 @@ export default function ChatPage() {
         )}
 
         <div ref={messageEndRef} />
+      </div>
+
+      {/* FLOATING INTERACTIVE MASCOT */}
+      <div 
+        data-testid="chat-mascot"
+        data-state={mascotState}
+        className={`${styles.mascotWidget} ${styles[mascotState]}`}
+      >
+        {mascotBubble && (
+          <div className={styles.mascotSpeechBubble}>
+            {mascotBubble}
+          </div>
+        )}
+        <div className={styles.mascotImageContainer}>
+          <svg className={styles.mascotSvg} viewBox="0 0 100 100" width="80" height="80">
+            {/* Steam (always animated) */}
+            <g className={styles.steamGroup}>
+              <path d="M45,25 Q48,15 45,5" stroke="var(--text-light, #9ca3af)" strokeWidth="2" strokeLinecap="round" fill="none" className={styles.steamLine1} />
+              <path d="M55,25 Q58,15 55,5" stroke="var(--text-light, #9ca3af)" strokeWidth="2" strokeLinecap="round" fill="none" className={styles.steamLine2} />
+            </g>
+            
+            {/* Spout */}
+            <path d="M 25 55 Q 12 50 15 42 Q 18 42 24 49 Z" fill="#3b82f6" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" />
+            
+            {/* Handle */}
+            <path d="M 75 48 C 88 48 88 68 75 68" fill="none" stroke="var(--border-color, #e5e7eb)" strokeWidth="4" strokeLinecap="round" />
+            
+            {/* Main Body (Teapot / Cup) */}
+            <circle cx="50" cy="58" r="26" fill="#3b82f6" stroke="var(--border-color, #e5e7eb)" strokeWidth="3" />
+            <ellipse cx="50" cy="33" rx="18" ry="4" fill="#1e3a8a" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" />
+            
+            {/* Lid knob */}
+            <circle cx="50" cy="28" r="5" fill="#f59e0b" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" />
+            
+            {/* Face expressions */}
+            {mascotState === 'idle' && (
+              <g>
+                <path d="M 40 55 Q 44 58 48 55" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" fill="none" strokeLinecap="round" />
+                <path d="M 52 55 Q 56 58 60 55" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" fill="none" strokeLinecap="round" />
+                <path d="M 48 64 Q 50 67 52 64" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" fill="none" strokeLinecap="round" />
+              </g>
+            )}
+            {mascotState === 'happy' && (
+              <g>
+                <path d="M 38 58 Q 43 52 48 58" stroke="var(--border-color, #e5e7eb)" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                <path d="M 52 58 Q 57 52 62 58" stroke="var(--border-color, #e5e7eb)" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                <path d="M 46 64 Q 50 72 54 64 Z" fill="#f59e0b" stroke="var(--border-color, #e5e7eb)" strokeWidth="1.5" />
+                <circle cx="34" cy="62" r="3" fill="rgba(239, 68, 68, 0.4)" />
+                <circle cx="66" cy="62" r="3" fill="rgba(239, 68, 68, 0.4)" />
+              </g>
+            )}
+            {mascotState === 'worried' && (
+              <g>
+                <path d="M 40 56 Q 44 52 48 56" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" fill="none" strokeLinecap="round" />
+                <path d="M 52 56 Q 56 52 60 56" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" fill="none" strokeLinecap="round" />
+                <path d="M 47 67 Q 50 63 53 67" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" fill="none" strokeLinecap="round" />
+                <path d="M 32 50 C 32 50 30 55 32 57 C 34 57 34 55 34 50 Z" fill="#60a5fa" />
+              </g>
+            )}
+            {mascotState === 'cheering' && (
+              <g>
+                <path d="M 38 58 Q 43 52 48 58" stroke="var(--border-color, #e5e7eb)" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                <path d="M 52 58 L 62 55" stroke="var(--border-color, #e5e7eb)" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M 46 63 Q 50 68 54 63" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" fill="none" strokeLinecap="round" />
+                <circle cx="34" cy="62" r="3" fill="rgba(239, 68, 68, 0.4)" />
+              </g>
+            )}
+          </svg>
+        </div>
       </div>
 
       {/* HINT PANEL */}
