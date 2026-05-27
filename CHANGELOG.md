@@ -12,6 +12,9 @@ All notable changes to the YomuMogu project are documented in this file. The for
 - Integrated results screen Leitner confidence grading checkboxes ("Забыл", "Плохо помню", "Хорошо помню") on dialogue complete in `/chat/page.tsx` that write scheduling steps to the `grammar_progress` DB store.
 - Added comprehensive unit testing coverage for grammar verify routes in `src/app/api/gemini/__tests__/grammar-verify.test.ts` and updated page unit tests in `src/app/chat/__tests__/page.test.tsx`.
 
+### Fixed
+- Fixed layout overlapping issue in Grammar Roadmap (`src/components/GrammarTrack.tsx` and module.css): popovers now display to the left or right of the nodes (left nodes show popover on the left, right/center nodes show popover on the right) utilizing side viewport empty spaces, active node wrapper z-index is elevated to 100 to prevent stacking context clipping, and arrow pointer directions match the respective sides.
+
 ## [1.28.0] - 2026-05-27
 ### Added
 - Added a winding, vertical Duolingo-style visual map/road on the practice page `/practice` (`src/components/LearningTrack.tsx`, `src/components/LearningTrack.module.css`) representing 5 interactive nodes (3 AI conversation practice sessions, 1 review marathon, and 1 bonus quiz) with locked/active/completed state transitions, dynamic winding SVG connectors, wiggling hover animations, and detail popovers.

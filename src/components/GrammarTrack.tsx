@@ -123,10 +123,15 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
           else if (isLearning) nodeClass += ` ${styles.learning}`;
           else nodeClass += ` ${styles.new}`;
 
+          const isPopoverLeft = node.coords.x < 200;
+          const popoverClassName = isPopoverLeft 
+            ? `${styles.popoverCard} ${styles.popoverLeft}`
+            : `${styles.popoverCard} ${styles.popoverRight}`;
+
           return (
             <div
               key={node.id}
-              className={styles.nodeWrapper}
+              className={`${styles.nodeWrapper} ${activePopover === idx ? styles.activeWrapper : ''}`}
               style={{ left: node.coords.x, top: node.coords.y }}
             >
               <button
@@ -151,7 +156,7 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
 
               {/* POPOVER DETAIL CARD */}
               {activePopover === idx && (
-                <div className={styles.popoverCard}>
+                <div className={popoverClassName}>
                   <div className={styles.popoverHeader}>
                     <h4 className={styles.popoverTitle}>{node.construction}</h4>
                     <span className={styles.popoverTopic}>{node.topic}</span>
