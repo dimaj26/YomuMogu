@@ -239,7 +239,7 @@ describe('ChatPage Component', () => {
       scenario: 'Сценарий разговора',
       targetWords: [],
       grammarFocus: {
-        id: 'g_n5_01',
+        id: 'g_n5_s6',
         construction: '〜てください',
         topic: 'Вежливая просьба',
         explanation: 'Объяснение',
@@ -273,7 +273,7 @@ describe('ChatPage Component', () => {
       scenario: 'Сценарий разговора',
       targetWords: [],
       grammarFocus: {
-        id: 'g_n5_01',
+        id: 'g_n5_s6',
         construction: '〜てください',
         topic: 'Вежливая просьба',
         explanation: 'Объяснение',

@@ -2,6 +2,23 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.30.0] - 2026-05-27
+### Changed
+- **Grammar Curriculum Alignment**: Replaced all 5 grammar rules in `src/resources/grammar_rules.json` with a strict 7-step N5 curriculum aligned with the Morphology-Before-Syntax pedagogy defined in `_nogit_philosophy.md §6.1`:
+  - Step 1.1: Noun Predicate & Particles (`AはBです`)
+  - Step 1.2: Adjective Morphology (い/な classes, 4 forms each)
+  - Step 2: Verb Classification (Godan/Ichidan/Irregular)
+  - Step 3: Polite Conjugation (ます-form)
+  - Step 4: Negative Form (ない-form) — **new step**, prerequisite for て-form
+  - Step 5: て-form Morphology (Gerund)
+  - Step 6: て-form Constructions (〜てください, 〜ている, 〜てもいい)
+- Rule IDs migrated from `g_n5_01`–`g_n5_05` to `g_n5_s1_1`–`g_n5_s6` (resets existing `grammar_progress` IndexedDB data).
+- Rewrote `GrammarTrack.tsx` with a data-driven linear unlock chain (`UNLOCK_CHAIN` map), snake-pattern SVG coordinates for 11 nodes (7 active + 4 placeholders), and step labels (1.1, 1.2, 2–6).
+- Updated placeholders to post-ladder constructions: た-form, 〜たりする, 〜ながら, N5 Final Exam.
+- Updated all test files referencing old grammar rule IDs (`GrammarTrack.test.tsx`, `grammar-verify.test.ts`, `page.test.tsx`) to use new IDs.
+- Added 3 new unlock chain tests: 1.1→1.2 blocking, ます→ない blocking, ない→て unlocking.
+- Test suite: 224 tests across 34 files, all passing.
+
 ## [1.29.0] - 2026-05-27
 ### Added
 - Added Grammar Roadmap (`src/components/GrammarTrack.tsx`, `GrammarTrack.module.css`) mapping JLPT N5 grammar progression rules dynamically using a visual SVG winding pathway on the practice page `/practice`. Features parallel branching paths (allowing left/right paths chosen by the user) and 5 extra locked placeholder nodes showing future N5 rules ("В разработке").

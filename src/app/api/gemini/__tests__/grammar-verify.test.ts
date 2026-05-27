@@ -23,7 +23,7 @@ describe('API Route POST /api/gemini/grammar-verify', () => {
     process.env.GEMINI_API_KEY = '';
     const request = new NextRequest('http://localhost/api/gemini/grammar-verify', {
       method: 'POST',
-      body: JSON.stringify({ ruleId: 'g_n5_01', userInput: '本を読んでください。' }),
+      body: JSON.stringify({ ruleId: 'g_n5_s1_1', userInput: '本を読んでください。' }),
     });
 
     const response = await grammarVerifyPost(request);
@@ -55,7 +55,7 @@ describe('API Route POST /api/gemini/grammar-verify', () => {
     process.env.GEMINI_API_KEY = 'test-key';
     const request = new NextRequest('http://localhost/api/gemini/grammar-verify', {
       method: 'POST',
-      body: JSON.stringify({ ruleId: 'g_n5_01' }),
+      body: JSON.stringify({ ruleId: 'g_n5_s1_1' }),
     });
 
     const response = await grammarVerifyPost(request);
@@ -95,7 +95,7 @@ describe('API Route POST /api/gemini/grammar-verify', () => {
 
     const request = new NextRequest('http://localhost/api/gemini/grammar-verify', {
       method: 'POST',
-      body: JSON.stringify({ ruleId: 'g_n5_01', userInput: '本を読んでください。' }),
+      body: JSON.stringify({ ruleId: 'g_n5_s1_1', userInput: '本を読んでください。' }),
     });
 
     const response = await grammarVerifyPost(request);

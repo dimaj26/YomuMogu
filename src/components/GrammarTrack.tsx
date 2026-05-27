@@ -12,9 +12,26 @@ interface GrammarTrackProps {
   onSelectRule: (ruleId: string) => void;
 }
 
+// Плейсхолдеры для конструкций, которые следуют ПОСЛЕ основной лестницы ступеней 1–6
 const placeholders = [
   {
-    id: 'g_n5_06',
+    id: 'g_n5_s7',
+    construction: '〜た / 〜たことがある',
+    topic: 'Прошедшее простое (た-форма)',
+    translation: 'Делал / Приходилось делать...',
+    explanation: 'Прошедшее простое время образуется по тем же правилам, что и て-форма, с заменой て→た, で→だ. Конструкция 〜たことがある выражает опыт в прошлом.',
+    isPlaceholder: true,
+  },
+  {
+    id: 'g_n5_s8',
+    construction: '〜たり...たりする',
+    topic: 'Перечисление действий',
+    translation: 'Делать то одно, то другое',
+    explanation: 'Конструкция для неисчерпывающего перечисления действий: V-た + り...V-た + りする.',
+    isPlaceholder: true,
+  },
+  {
+    id: 'g_n5_s9',
     construction: '〜ながら',
     topic: 'Одновременность',
     translation: 'Делая одновременно...',
@@ -22,31 +39,7 @@ const placeholders = [
     isPlaceholder: true,
   },
   {
-    id: 'g_n5_07',
-    construction: '〜たことがある',
-    topic: 'Опыт в прошлом',
-    translation: 'Приходилось делать...',
-    explanation: 'Используется для выражения опыта совершения какого-либо действия в прошлом (V-ta + ことがある).',
-    isPlaceholder: true,
-  },
-  {
-    id: 'g_n5_08',
-    construction: '〜つもり',
-    topic: 'Намерения',
-    translation: 'Собираюсь сделать...',
-    explanation: 'Выражает намерение или план совершить действие в будущем (V-plain + つもり).',
-    isPlaceholder: true,
-  },
-  {
-    id: 'g_n5_09',
-    construction: '〜ほうがいい',
-    topic: 'Совет / Рекомендация',
-    translation: 'Лучше сделать...',
-    explanation: 'Используется для того, чтобы дать совет или порекомендовать действие собеседнику.',
-    isPlaceholder: true,
-  },
-  {
-    id: 'g_n5_10',
+    id: 'g_n5_exam',
     construction: 'JLPT N5 Финал',
     topic: 'Аттестация',
     translation: 'Итоговый экзамен',
@@ -55,35 +48,66 @@ const placeholders = [
   },
 ];
 
+// Координаты узлов на SVG-канвасе (змейковый маршрут)
 const getCoords = (id: string) => {
   switch (id) {
-    case 'g_n5_01': return { x: 250, y: 80 };
-    case 'g_n5_02': return { x: 130, y: 200 };
-    case 'g_n5_04': return { x: 130, y: 320 };
-    case 'g_n5_03': return { x: 370, y: 200 };
-    case 'g_n5_05': return { x: 370, y: 320 };
-    case 'g_n5_06': return { x: 250, y: 440 };
-    case 'g_n5_07': return { x: 250, y: 560 };
-    case 'g_n5_08': return { x: 130, y: 680 };
-    case 'g_n5_09': return { x: 370, y: 680 };
-    case 'g_n5_10': return { x: 250, y: 800 };
+    // Активные ступени (1.1 → 1.2 → 2 → 3 → 4 → 5 → 6) — змейка
+    case 'g_n5_s1_1': return { x: 250, y: 80 };    // Центр — старт
+    case 'g_n5_s1_2': return { x: 130, y: 200 };    // Влево
+    case 'g_n5_s2':   return { x: 370, y: 320 };    // Вправо
+    case 'g_n5_s3':   return { x: 130, y: 440 };    // Влево
+    case 'g_n5_s4':   return { x: 370, y: 560 };    // Вправо
+    case 'g_n5_s5':   return { x: 130, y: 680 };    // Влево
+    case 'g_n5_s6':   return { x: 370, y: 800 };    // Вправо
+
+    // Плейсхолдеры — продолжение змейки
+    case 'g_n5_s7':   return { x: 250, y: 920 };    // Центр
+    case 'g_n5_s8':   return { x: 130, y: 1040 };   // Влево
+    case 'g_n5_s9':   return { x: 370, y: 1040 };   // Вправо
+    case 'g_n5_exam': return { x: 250, y: 1160 };   // Центр — финал
+
     default: return { x: 250, y: 80 };
   }
 };
 
+// SVG-пути соединений между узлами (Безье-кривые для красивой змейки)
 const connections = [
-  { from: 'g_n5_01', to: 'g_n5_02', d: 'M 250 80 C 250 140, 130 140, 130 200' },
-  { from: 'g_n5_02', to: 'g_n5_04', d: 'M 130 200 L 130 320' },
-  { from: 'g_n5_01', to: 'g_n5_03', d: 'M 250 80 C 250 140, 370 140, 370 200' },
-  { from: 'g_n5_03', to: 'g_n5_05', d: 'M 370 200 L 370 320' },
-  { from: 'g_n5_04', to: 'g_n5_06', d: 'M 130 320 C 130 380, 250 380, 250 440' },
-  { from: 'g_n5_05', to: 'g_n5_06', d: 'M 370 320 C 370 380, 250 380, 250 440' },
-  { from: 'g_n5_06', to: 'g_n5_07', d: 'M 250 440 L 250 560' },
-  { from: 'g_n5_07', to: 'g_n5_08', d: 'M 250 560 C 250 620, 130 620, 130 680' },
-  { from: 'g_n5_07', to: 'g_n5_09', d: 'M 250 560 C 250 620, 370 620, 370 680' },
-  { from: 'g_n5_08', to: 'g_n5_10', d: 'M 130 680 C 130 740, 250 740, 250 800' },
-  { from: 'g_n5_09', to: 'g_n5_10', d: 'M 370 680 C 370 740, 250 740, 250 800' },
+  // Основная лестница: линейная цепь 1.1 → 1.2 → 2 → 3 → 4 → 5 → 6
+  { from: 'g_n5_s1_1', to: 'g_n5_s1_2', d: 'M 250 80 C 250 140, 130 140, 130 200' },
+  { from: 'g_n5_s1_2', to: 'g_n5_s2',   d: 'M 130 200 C 130 260, 370 260, 370 320' },
+  { from: 'g_n5_s2',   to: 'g_n5_s3',   d: 'M 370 320 C 370 380, 130 380, 130 440' },
+  { from: 'g_n5_s3',   to: 'g_n5_s4',   d: 'M 130 440 C 130 500, 370 500, 370 560' },
+  { from: 'g_n5_s4',   to: 'g_n5_s5',   d: 'M 370 560 C 370 620, 130 620, 130 680' },
+  { from: 'g_n5_s5',   to: 'g_n5_s6',   d: 'M 130 680 C 130 740, 370 740, 370 800' },
+
+  // Плейсхолдеры: 6 → 7 → (8, 9) → экзамен
+  { from: 'g_n5_s6',   to: 'g_n5_s7',   d: 'M 370 800 C 370 860, 250 860, 250 920' },
+  { from: 'g_n5_s7',   to: 'g_n5_s8',   d: 'M 250 920 C 250 980, 130 980, 130 1040' },
+  { from: 'g_n5_s7',   to: 'g_n5_s9',   d: 'M 250 920 C 250 980, 370 980, 370 1040' },
+  { from: 'g_n5_s8',   to: 'g_n5_exam', d: 'M 130 1040 C 130 1100, 250 1100, 250 1160' },
+  { from: 'g_n5_s9',   to: 'g_n5_exam', d: 'M 370 1040 C 370 1100, 250 1100, 250 1160' },
 ];
+
+// Строгая линейная цепь разблокировки: каждая ступень требует завершения предыдущей
+const UNLOCK_CHAIN: Record<string, string> = {
+  'g_n5_s1_2': 'g_n5_s1_1',  // 1.2 разблокируется после 1.1
+  'g_n5_s2':   'g_n5_s1_2',  // 2 разблокируется после 1.2
+  'g_n5_s3':   'g_n5_s2',    // 3 разблокируется после 2
+  'g_n5_s4':   'g_n5_s3',    // 4 (ない) разблокируется после 3 (ます)
+  'g_n5_s5':   'g_n5_s4',    // 5 (て) разблокируется после 4 (ない)
+  'g_n5_s6':   'g_n5_s5',    // 6 (конструкции на て) разблокируется после 5 (て-форма)
+};
+
+// Метки для нумерации ступеней (1.1, 1.2, 2, 3, 4, 5, 6)
+const STEP_LABELS: Record<string, string> = {
+  'g_n5_s1_1': '1.1',
+  'g_n5_s1_2': '1.2',
+  'g_n5_s2':   '2',
+  'g_n5_s3':   '3',
+  'g_n5_s4':   '4',
+  'g_n5_s5':   '5',
+  'g_n5_s6':   '6',
+};
 
 export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onSelectRule }) => {
   const { t } = useJapanification();
@@ -91,7 +115,7 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
 
   const intervals = [1, 3, 7, 14, 30];
 
-  // Создаем единый список узлов
+  // Создаем единый список узлов из правил + плейсхолдеров
   const allRules = [
     ...grammarRules.map(r => ({ ...r, isPlaceholder: false })),
     ...placeholders
@@ -101,21 +125,17 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
     const progress = grammarProgress[rule.id];
     let isLocked = false;
 
-    // Условия разблокировки ветвей:
-    if (rule.id === 'g_n5_02') {
-      const p1 = grammarProgress['g_n5_01'];
-      isLocked = !p1 || p1.status === 'new';
-    } else if (rule.id === 'g_n5_04') {
-      const p2 = grammarProgress['g_n5_02'];
-      isLocked = !p2 || p2.status === 'new';
-    } else if (rule.id === 'g_n5_03') {
-      const p1 = grammarProgress['g_n5_01'];
-      isLocked = !p1 || p1.status === 'new';
-    } else if (rule.id === 'g_n5_05') {
-      const p3 = grammarProgress['g_n5_03'];
-      isLocked = !p3 || p3.status === 'new';
-    } else if (rule.isPlaceholder) {
+    // Плейсхолдеры всегда заблокированы
+    if (rule.isPlaceholder) {
       isLocked = true;
+    } else {
+      // Проверяем цепь разблокировки: предыдущая ступень должна быть начата
+      const prerequisiteId = UNLOCK_CHAIN[rule.id];
+      if (prerequisiteId) {
+        const prerequisite = grammarProgress[prerequisiteId];
+        isLocked = !prerequisite || prerequisite.status === 'new';
+      }
+      // g_n5_s1_1 — всегда разблокирован (нет пререквизита)
     }
 
     let status: 'locked' | 'new' | 'learning' | 'review' | 'mature' = 'locked';
@@ -156,16 +176,16 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
 
   return (
     <div className={styles.trackContainer}>
-      <div className={styles.nodeList} style={{ width: '500px', height: '900px' }}>
+      <div className={styles.nodeList} style={{ width: '500px', height: '1260px' }}>
         {/* SVG Соединительные линии на фоне */}
-        <svg className={styles.svgConnector} viewBox="0 0 500 900">
+        <svg className={styles.svgConnector} viewBox="0 0 500 1260">
           {connections.map((conn, cIdx) => {
             const active = isConnectionActive(conn.to);
             return (
               <g key={cIdx}>
-                {/* Dashed base line (gray) */}
+                {/* Пунктирная базовая линия (серая) */}
                 <path d={conn.d} className={styles.connectorLineDashed} />
-                {/* Active progress line (green) */}
+                {/* Активная линия прогресса (зелёная) */}
                 {active && <path d={conn.d} className={styles.connectorLine} />}
               </g>
             );
@@ -190,6 +210,9 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
             ? `${styles.popoverCard} ${styles.popoverLeft}`
             : `${styles.popoverCard} ${styles.popoverRight}`;
 
+          // Определяем метку узла: для активных ступеней — номер ступени, иначе порядковый индекс
+          const stepLabel = STEP_LABELS[node.id];
+
           return (
             <div
               key={node.id}
@@ -209,7 +232,7 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
                   ) : isCompleted ? (
                     <Check size={22} className={styles.checkIcon} />
                   ) : (
-                    <span className={styles.nodeNumber}>{idx + 1}</span>
+                    <span className={styles.nodeNumber}>{stepLabel || (idx + 1)}</span>
                   )}
                 </div>
               </button>
@@ -227,7 +250,7 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
                   <div className={styles.popoverContent}>
                     <p className={styles.popoverDesc}>{node.explanation}</p>
                     <div className={styles.popoverStatus}>
-                      <span className={styles.statusLabel}>{t('Статус:', 'ステータс:')}</span>
+                      <span className={styles.statusLabel}>{t('Статус:', 'ステータス:')}</span>
                       <span className={`${styles.statusVal} ${styles[node.status]}`}>
                         {getStatusText(node.status, node.progress?.stepIndex)}
                       </span>
