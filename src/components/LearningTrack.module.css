@@ -1,18 +1,8 @@
 .trackContainer {
-  position: relative;
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 40px 20px;
-  background: var(--bg-secondary);
-  border: var(--border-width) solid var(--border-color);
-  border-radius: var(--card-border-radius, 16px);
-  box-shadow: 0 8px 0 var(--border-color);
-  overflow: hidden;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-sizing: border-box;
+  justify-content: center;
+  padding: 40px 20px;
+  position: relative;
 }
 
 .svgConnector {
@@ -51,9 +41,8 @@
 .trackNodeWrapper {
   position: absolute;
   transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  width: 68px;
+  height: 68px;
   z-index: 5;
 }
 
@@ -62,8 +51,8 @@
 }
 
 .nodeBtn {
-  width: 68px;
-  height: 68px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   border: var(--border-width) solid var(--border-color);
   display: flex;
@@ -115,7 +104,10 @@
 }
 
 .nodeLabel {
-  margin-top: 10px;
+  position: absolute;
+  top: 78px;
+  left: 50%;
+  transform: translateX(-50%);
   font-size: 13px;
   font-weight: 800;
   color: var(--text-primary);
@@ -125,6 +117,7 @@
   padding: 4px 10px;
   border-radius: 12px;
   border: 1.5px solid var(--border-color);
+  pointer-events: none;
 }
 
 /* Пульсация для активного узла */
@@ -154,7 +147,7 @@
 }
 
 .popoverRight {
-  left: 80px;
+  left: 90px;
   top: 50%;
   transform: translateY(-50%);
   animation: popoverFadeRight 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -164,9 +157,9 @@
   content: '';
   position: absolute;
   top: 50%;
-  left: -16px;
+  left: -12px;
   transform: translateY(-50%);
-  border-width: 10px 16px 10px 0;
+  border-width: 8px 12px 8px 0;
   border-style: solid;
   border-color: transparent var(--border-color, #e5e7eb) transparent transparent;
   width: 0;
@@ -177,9 +170,9 @@
   content: '';
   position: absolute;
   top: 50%;
-  left: -12px;
+  left: -8px;
   transform: translateY(-50%);
-  border-width: 8px 12px 8px 0;
+  border-width: 6px 8px 6px 0;
   border-style: solid;
   border-color: transparent var(--bg-primary) transparent transparent;
   width: 0;
@@ -187,7 +180,7 @@
 }
 
 .popoverLeft {
-  right: 80px;
+  right: 90px;
   left: auto;
   top: 50%;
   transform: translateY(-50%);
@@ -198,9 +191,9 @@
   content: '';
   position: absolute;
   top: 50%;
-  right: -16px;
+  right: -12px;
   transform: translateY(-50%);
-  border-width: 10px 0 10px 16px;
+  border-width: 8px 0 8px 12px;
   border-style: solid;
   border-color: transparent transparent transparent var(--border-color, #e5e7eb);
   width: 0;
@@ -211,9 +204,9 @@
   content: '';
   position: absolute;
   top: 50%;
-  right: -12px;
+  right: -8px;
   transform: translateY(-50%);
-  border-width: 8px 0 8px 12px;
+  border-width: 6px 0 6px 8px;
   border-style: solid;
   border-color: transparent transparent transparent var(--bg-primary);
   width: 0;
