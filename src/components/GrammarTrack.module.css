@@ -7,7 +7,7 @@
 
 .nodeList {
   position: relative;
-  height: 720px;
+  height: 900px;
 }
 
 .svgConnector {
@@ -60,11 +60,11 @@
   position: relative;
   outline: none;
   box-shadow: 0 6px 0 var(--border-color, #d1d5db);
-  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .trackNode:active:not(:disabled) {
-  transform: translate(0, 4px) scale(0.95);
+  transform: translateY(4px) scale(0.95);
   box-shadow: 0 2px 0 var(--border-color, #d1d5db);
 }
 
@@ -135,15 +135,10 @@
   color: white;
 }
 
-/* HOVER EFFECT WIGGLE */
+/* HOVER EFFECT GLOW & SCALE */
 .trackNode:hover:not(:disabled) {
-  transform: scale(1.08);
-  animation: wiggle 0.5s ease-in-out infinite alternate;
-}
-
-@keyframes wiggle {
-  0% { transform: scale(1.08) rotate(-3deg); }
-  100% { transform: scale(1.08) rotate(3deg); }
+  transform: scale(1.1);
+  box-shadow: 0 8px 0 var(--border-color, #d1d5db), 0 10px 20px rgba(0, 0, 0, 0.08);
 }
 
 /* DETAILS POPOVER */
@@ -162,7 +157,7 @@
 }
 
 .popoverRight {
-  left: 54px;
+  left: 72px;
   top: 50%;
   transform: translateY(-50%);
   animation: popoverFadeRight 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -172,9 +167,9 @@
   content: '';
   position: absolute;
   top: 50%;
-  left: -12px;
+  left: -20px;
   transform: translateY(-50%);
-  border-width: 12px 12px 12px 0;
+  border-width: 10px 20px 10px 0;
   border-style: solid;
   border-color: transparent var(--border-color, #e5e7eb) transparent transparent;
   width: 0;
@@ -185,9 +180,9 @@
   content: '';
   position: absolute;
   top: 50%;
-  left: -8px;
+  left: -16px;
   transform: translateY(-50%);
-  border-width: 10px 10px 10px 0;
+  border-width: 8px 16px 8px 0;
   border-style: solid;
   border-color: transparent var(--card-bg, #ffffff) transparent transparent;
   width: 0;
@@ -195,7 +190,7 @@
 }
 
 .popoverLeft {
-  right: 54px;
+  right: 72px;
   left: auto;
   top: 50%;
   transform: translateY(-50%);
@@ -206,9 +201,9 @@
   content: '';
   position: absolute;
   top: 50%;
-  right: -12px;
+  right: -20px;
   transform: translateY(-50%);
-  border-width: 12px 0 12px 12px;
+  border-width: 10px 0 10px 20px;
   border-style: solid;
   border-color: transparent transparent transparent var(--border-color, #e5e7eb);
   width: 0;
@@ -219,9 +214,9 @@
   content: '';
   position: absolute;
   top: 50%;
-  right: -8px;
+  right: -16px;
   transform: translateY(-50%);
-  border-width: 10px 0 10px 10px;
+  border-width: 8px 0 8px 16px;
   border-style: solid;
   border-color: transparent transparent transparent var(--card-bg, #ffffff);
   width: 0;

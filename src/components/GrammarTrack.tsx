@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Lock, Check, Play, BookOpen } from 'lucide-react';
+import { Lock, Check, BookOpen } from 'lucide-react';
 import grammarRules from '@/resources/grammar_rules.json';
 import { useJapanification } from '@/hooks/useJapanification';
 import type { GrammarProgress } from '@/core/db';
@@ -12,32 +12,110 @@ interface GrammarTrackProps {
   onSelectRule: (ruleId: string) => void;
 }
 
+const placeholders = [
+  {
+    id: 'g_n5_06',
+    construction: '〜ながら',
+    topic: 'Одновременность',
+    translation: 'Делая одновременно...',
+    explanation: 'Используется для описания двух действий, совершаемых одновременно одним лицом (V-masu + ながら).',
+    isPlaceholder: true,
+  },
+  {
+    id: 'g_n5_07',
+    construction: '〜たことがある',
+    topic: 'Опыт в прошлом',
+    translation: 'Приходилось делать...',
+    explanation: 'Используется для выражения опыта совершения какого-либо действия в прошлом (V-ta + ことがある).',
+    isPlaceholder: true,
+  },
+  {
+    id: 'g_n5_08',
+    construction: '〜つもり',
+    topic: 'Намерения',
+    translation: 'Собираюсь сделать...',
+    explanation: 'Выражает намерение или план совершить действие в будущем (V-plain + つもり).',
+    isPlaceholder: true,
+  },
+  {
+    id: 'g_n5_09',
+    construction: '〜ほうがいい',
+    topic: 'Совет / Рекомендация',
+    translation: 'Лучше сделать...',
+    explanation: 'Используется для того, чтобы дать совет или порекомендовать действие собеседнику.',
+    isPlaceholder: true,
+  },
+  {
+    id: 'g_n5_10',
+    construction: 'JLPT N5 Финал',
+    topic: 'Аттестация',
+    translation: 'Итоговый экзамен',
+    explanation: 'Комплексный экзамен на знание всей грамматики и лексики уровня N5.',
+    isPlaceholder: true,
+  },
+];
+
+const getCoords = (id: string) => {
+  switch (id) {
+    case 'g_n5_01': return { x: 250, y: 80 };
+    case 'g_n5_02': return { x: 130, y: 200 };
+    case 'g_n5_04': return { x: 130, y: 320 };
+    case 'g_n5_03': return { x: 370, y: 200 };
+    case 'g_n5_05': return { x: 370, y: 320 };
+    case 'g_n5_06': return { x: 250, y: 440 };
+    case 'g_n5_07': return { x: 250, y: 560 };
+    case 'g_n5_08': return { x: 130, y: 680 };
+    case 'g_n5_09': return { x: 370, y: 680 };
+    case 'g_n5_10': return { x: 250, y: 800 };
+    default: return { x: 250, y: 80 };
+  }
+};
+
+const connections = [
+  { from: 'g_n5_01', to: 'g_n5_02', d: 'M 250 80 C 250 140, 130 140, 130 200' },
+  { from: 'g_n5_02', to: 'g_n5_04', d: 'M 130 200 L 130 320' },
+  { from: 'g_n5_01', to: 'g_n5_03', d: 'M 250 80 C 250 140, 370 140, 370 200' },
+  { from: 'g_n5_03', to: 'g_n5_05', d: 'M 370 200 L 370 320' },
+  { from: 'g_n5_04', to: 'g_n5_06', d: 'M 130 320 C 130 380, 250 380, 250 440' },
+  { from: 'g_n5_05', to: 'g_n5_06', d: 'M 370 320 C 370 380, 250 380, 250 440' },
+  { from: 'g_n5_06', to: 'g_n5_07', d: 'M 250 440 L 250 560' },
+  { from: 'g_n5_07', to: 'g_n5_08', d: 'M 250 560 C 250 620, 130 620, 130 680' },
+  { from: 'g_n5_07', to: 'g_n5_09', d: 'M 250 560 C 250 620, 370 620, 370 680' },
+  { from: 'g_n5_08', to: 'g_n5_10', d: 'M 130 680 C 130 740, 250 740, 250 800' },
+  { from: 'g_n5_09', to: 'g_n5_10', d: 'M 370 680 C 370 740, 250 740, 250 800' },
+];
+
 export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onSelectRule }) => {
   const { t } = useJapanification();
   const [activePopover, setActivePopover] = useState<number | null>(null);
 
-  // Определение координат узлов на сетке 500x700
-  const coordinates = [
-    { x: 250, y: 80 },  // Узел 1 (g_n5_01)
-    { x: 130, y: 220 }, // Узел 2 (g_n5_02)
-    { x: 370, y: 360 }, // Узел 3 (g_n5_03)
-    { x: 130, y: 500 }, // Узел 4 (g_n5_04)
-    { x: 250, y: 620 }, // Узел 5 (g_n5_05)
-  ];
-
   const intervals = [1, 3, 7, 14, 30];
 
-  // Вычисление статусов и построение узлов
-  const nodes = grammarRules.map((rule, idx) => {
+  // Создаем единый список узлов
+  const allRules = [
+    ...grammarRules.map(r => ({ ...r, isPlaceholder: false })),
+    ...placeholders
+  ];
+
+  const nodes = allRules.map((rule) => {
     const progress = grammarProgress[rule.id];
-    
-    // Правило 1 разблокировано по умолчанию
     let isLocked = false;
-    if (idx > 0) {
-      const prevRule = grammarRules[idx - 1];
-      const prevProgress = grammarProgress[prevRule.id];
-      // Разблокировано если у предыдущего есть прогресс и он не new
-      isLocked = !prevProgress || prevProgress.status === 'new';
+
+    // Условия разблокировки ветвей:
+    if (rule.id === 'g_n5_02') {
+      const p1 = grammarProgress['g_n5_01'];
+      isLocked = !p1 || p1.status === 'new';
+    } else if (rule.id === 'g_n5_04') {
+      const p2 = grammarProgress['g_n5_02'];
+      isLocked = !p2 || p2.status === 'new';
+    } else if (rule.id === 'g_n5_03') {
+      const p1 = grammarProgress['g_n5_01'];
+      isLocked = !p1 || p1.status === 'new';
+    } else if (rule.id === 'g_n5_05') {
+      const p3 = grammarProgress['g_n5_03'];
+      isLocked = !p3 || p3.status === 'new';
+    } else if (rule.isPlaceholder) {
+      isLocked = true;
     }
 
     let status: 'locked' | 'new' | 'learning' | 'review' | 'mature' = 'locked';
@@ -54,7 +132,7 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
       status,
       isLocked,
       progress,
-      coords: coordinates[idx] || { x: 250, y: 80 },
+      coords: getCoords(rule.id),
     };
   });
 
@@ -71,43 +149,27 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
     return t(`На изучении (Шаг ${step}/5)`, `学習中 (ステップ ${step}/5)`);
   };
 
-  // Подсчет пройденного прогресса для отображения закрашенной линии
-  const getProgressOffset = () => {
-    let completedCount = 0;
-    for (let i = 0; i < nodes.length; i++) {
-      if (nodes[i].status !== 'locked' && nodes[i].status !== 'new') {
-        completedCount++;
-      } else {
-        break;
-      }
-    }
-    
-    // Возвращаем strokeDashoffset для SVG линии прогресса
-    if (completedCount === 5) return '0';
-    if (completedCount === 4) return '150';
-    if (completedCount === 3) return '330';
-    if (completedCount === 2) return '510';
-    if (completedCount === 1) return '690';
-    return '850';
+  const isConnectionActive = (toId: string) => {
+    const toProgress = grammarProgress[toId];
+    return toProgress && toProgress.status !== 'new';
   };
 
   return (
     <div className={styles.trackContainer}>
-      <div className={styles.nodeList} style={{ width: '500px' }}>
+      <div className={styles.nodeList} style={{ width: '500px', height: '900px' }}>
         {/* SVG Соединительные линии на фоне */}
-        <svg className={styles.svgConnector} viewBox="0 0 500 700">
-          <path
-            d="M 250 80 C 250 150, 130 150, 130 220 C 130 290, 370 290, 370 360 C 370 430, 130 430, 130 500 C 130 570, 250 570, 250 620"
-            className={styles.connectorLineDashed}
-          />
-          {/* Линия пройденного прогресса */}
-          <path
-            d="M 250 80 C 250 150, 130 150, 130 220 C 130 290, 370 290, 370 360 C 370 430, 130 430, 130 500 C 130 570, 250 570, 250 620"
-            className={styles.connectorLine}
-            strokeDasharray="850"
-            strokeDashoffset={getProgressOffset()}
-            style={{ transition: 'stroke-dashoffset 0.8s ease-in-out' }}
-          />
+        <svg className={styles.svgConnector} viewBox="0 0 500 900">
+          {connections.map((conn, cIdx) => {
+            const active = isConnectionActive(conn.to);
+            return (
+              <g key={cIdx}>
+                {/* Dashed base line (gray) */}
+                <path d={conn.d} className={styles.connectorLineDashed} />
+                {/* Active progress line (green) */}
+                {active && <path d={conn.d} className={styles.connectorLine} />}
+              </g>
+            );
+          })}
         </svg>
 
         {/* Узлы на дорожке */}
@@ -165,7 +227,7 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
                   <div className={styles.popoverContent}>
                     <p className={styles.popoverDesc}>{node.explanation}</p>
                     <div className={styles.popoverStatus}>
-                      <span className={styles.statusLabel}>{t('Статус:', 'ステータス:')}</span>
+                      <span className={styles.statusLabel}>{t('Статус:', 'ステータс:')}</span>
                       <span className={`${styles.statusVal} ${styles[node.status]}`}>
                         {getStatusText(node.status, node.progress?.stepIndex)}
                       </span>

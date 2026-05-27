@@ -4,7 +4,7 @@ All notable changes to the YomuMogu project are documented in this file. The for
 
 ## [1.29.0] - 2026-05-27
 ### Added
-- Added Grammar Roadmap (`src/components/GrammarTrack.tsx`, `GrammarTrack.module.css`) mapping JLPT N5 grammar progression rules dynamically using a visual SVG winding pathway on the practice page `/practice`. Nodes unlock sequentially based on user progress in IndexedDB.
+- Added Grammar Roadmap (`src/components/GrammarTrack.tsx`, `GrammarTrack.module.css`) mapping JLPT N5 grammar progression rules dynamically using a visual SVG winding pathway on the practice page `/practice`. Features parallel branching paths (allowing left/right paths chosen by the user) and 5 extra locked placeholder nodes showing future N5 rules ("В разработке").
 - Added client-side interactive Grammar Trainer overlay modal (`src/components/GrammarTrainer.tsx`, `GrammarTrainer.module.css`) featuring grammar theory explanations, conjugations lists, clickable sentence suggestions, and a verification form calling a dedicated Gemini API verify endpoint.
 - Added database schema Version 4 migration in `src/core/db.ts` introducing `grammar_progress` IndexedDB table mapping profile and rule ID compounds to track Leitner spaced repetition progress step levels `[1, 3, 7, 14, 30]` days.
 - Added dynamic AI grammar sentence verification endpoint `/api/gemini/grammar-verify` (`src/app/api/gemini/grammar-verify/route.ts`) validating Japanese sentences, wrapping corrections in 100% Furigana tags for levels 1-2, explaining grammatical mistakes, and suggesting Russian translation scaffold fallbacks.
@@ -13,7 +13,8 @@ All notable changes to the YomuMogu project are documented in this file. The for
 - Added comprehensive unit testing coverage for grammar verify routes in `src/app/api/gemini/__tests__/grammar-verify.test.ts` and updated page unit tests in `src/app/chat/__tests__/page.test.tsx`.
 
 ### Fixed
-- Fixed layout overlapping issue in Grammar Roadmap (`src/components/GrammarTrack.tsx` and module.css): popovers now display to the left or right of the nodes (left nodes show popover on the left, right/center nodes show popover on the right) utilizing side viewport empty spaces, active node wrapper z-index is elevated to 100 to prevent stacking context clipping, and arrow pointer directions match the respective sides.
+- Fixed layout overlapping issue in Grammar Roadmap (`src/components/GrammarTrack.tsx` and module.css): popovers now display to the left or right of the nodes (left nodes show popover on the left at `72px` offset, right/center nodes show popover on the right at `72px` offset) utilizing side viewport empty spaces without overlapping labels. Pointer arrows are extended to 20px length to bridge gaps, active node wrapper z-index is elevated to 100 to prevent clipping, and SVG connectors are colored per-segment based on target node completion.
+- Replaced glitchy node wiggling hover rotation with smooth scale-up transitions.
 
 ## [1.28.0] - 2026-05-27
 ### Added
