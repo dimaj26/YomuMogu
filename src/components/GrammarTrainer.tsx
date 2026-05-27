@@ -66,7 +66,52 @@ const Mascot: React.FC<{ state: 'idle' | 'happy' | 'worried' | 'cheering' }> = (
   );
 };
 
-export const GrammarTrainer: React.FC<GrammarTrainerProps> = ({ ruleId, onClose, onComplete }) => {
+  interface SandboxCard {
+    id: string;
+    label: string;
+    value: any;
+    tooltipKey: string;
+  }
+
+  interface SandboxConfig {
+    toneLabels?: string[];
+    polarityLabels?: string[];
+    cards: SandboxCard[];
+    explanationTips: Record<string, string>;
+    spokenSecrets: string;
+  }
+
+  interface SandboxCardValue {
+    polite?: string | { affirmative?: string; negative?: string };
+    plain?: string | { affirmative?: string; negative?: string };
+    dropped?: string | { affirmative?: string; negative?: string } | null;
+    [key: string]: any;
+  }
+
+  const resolveCardValue = (
+    cardValue: string | SandboxCardValue,
+    tone: 'polite' | 'plain' | 'dropped',
+    polarity: 'affirmative' | 'negative'
+  ): string | null => {
+    if (!cardValue) return null;
+    if (typeof cardValue === 'string') return cardValue;
+
+    let byTone = cardValue[tone];
+    if (byTone === undefined) {
+      byTone = cardValue['polite'] !== undefined ? cardValue['polite'] : cardValue['plain'];
+    }
+
+    if (byTone === null || byTone === undefined) return null;
+    if (typeof byTone === 'string') return byTone;
+
+    const val = byTone[polarity];
+    if (val === undefined) {
+      return byTone['affirmative'] || null;
+    }
+    return val;
+  };
+
+  export const GrammarTrainer: React.FC<GrammarTrainerProps> = ({ ruleId, onClose, onComplete }) => {
   const rule = grammarRules.find(r => r.id === ruleId);
 
   // Стейты песочницы предложений
@@ -156,88 +201,60 @@ export const GrammarTrainer: React.FC<GrammarTrainerProps> = ({ ruleId, onClose,
     audio.play().catch(() => {});
   };
 
-  // Метод динамического рендеринга предложения в песочнице
-  const renderSandboxSentence = () => {
-    const isPolite = tone === 'polite';
-    const isPlain = tone === 'plain';
-    const isDropped = tone === 'dropped';
-    const isAffirmative = polarity === 'affirmative';
+    // Метод динамического рендеринга предложения в песочнице
+    const renderSandboxSentence = () => {
+      const sandbox = rule.sandbox as unknown as SandboxConfig | undefined;
+      if (!sandbox || !sandbox.cards) return null;
 
-    // Формируем частицы и связки
-    let subject = isPlain ? '俺 (оре)' : '私 (ватаси)';
-    if (isDropped) subject = '私'; // Разговорное опускание
-    
-    return (
-      <div className={styles.sandboxSentence}>
-        {/* Субъект */}
-        <div className={styles.sandboxCard} title="Тема предложения">
-          <span className={styles.sandboxWord}>{subject}</span>
-          <span className={styles.sandboxLabel}>Я</span>
+      return (
+        <div className={styles.sandboxSentence}>
+          {sandbox.cards.map((card) => {
+            const resolvedValue = resolveCardValue(card.value, tone, polarity);
+            if (!resolvedValue) return null;
+
+            const isClickable = sandbox.explanationTips && sandbox.explanationTips[card.tooltipKey];
+
+            if (isClickable) {
+              return (
+                <button 
+                  key={card.id}
+                  type="button" 
+                  onClick={() => setActiveTooltip(activeTooltip === card.tooltipKey ? null : card.tooltipKey)}
+                  className={`${styles.sandboxCard} ${card.id === 'wa' || card.id === 'particle' ? styles.particle : (card.id === 'desu' || card.id === 'auxiliary' || card.id === 'te_suffix' || card.id === 'masu' || card.id === 'nai_suffix' || card.id === 'copula') ? styles.copula : ''} ${activeTooltip === card.tooltipKey ? styles.activeCard : ''}`}
+                >
+                  <span className={styles.sandboxWord}>{resolvedValue}</span>
+                  <span className={styles.sandboxLabel}>{card.label}</span>
+                </button>
+              );
+            }
+
+            return (
+              <div key={card.id} className={styles.sandboxCard}>
+                <span className={styles.sandboxWord}>{resolvedValue}</span>
+                <span className={styles.sandboxLabel}>{card.label}</span>
+              </div>
+            );
+          })}
         </div>
+      );
+    };
 
-        {/* Тематическая частица は */}
-        {!isDropped && (
-          <button 
-            type="button" 
-            onClick={() => setActiveTooltip(activeTooltip === 'wa' ? null : 'wa')}
-            className={`${styles.sandboxCard} ${styles.particle} ${activeTooltip === 'wa' ? styles.activeCard : ''}`}
-          >
-            <span className={styles.sandboxWord}>は</span>
-            <span className={styles.sandboxLabel}>тема (ва)</span>
-          </button>
-        )}
+    const getTooltipContent = () => {
+      if (!activeTooltip) return null;
+      const sandbox = rule.sandbox as unknown as SandboxConfig | undefined;
+      if (!sandbox) return null;
 
-        {/* Объект (Студент) */}
-        <div className={styles.sandboxCard} title="Описание темы">
-          <span className={styles.sandboxWord}>学生</span>
-          <span className={styles.sandboxLabel}>студент</span>
-        </div>
+      const explanation = sandbox.explanationTips?.[activeTooltip];
+      if (!explanation) return null;
 
-        {/* Грамматическая связка です / だ */}
-        {!isDropped && (
-          <button 
-            type="button" 
-            onClick={() => setActiveTooltip(activeTooltip === 'desu' ? null : 'desu')}
-            className={`${styles.sandboxCard} ${styles.copula} ${activeTooltip === 'desu' ? styles.activeCard : ''}`}
-          >
-            <span className={styles.sandboxWord}>
-              {isPolite ? (isAffirmative ? 'です' : 'ではありません') : (isAffirmative ? 'だ' : 'じゃない')}
-            </span>
-            <span className={styles.sandboxLabel}>
-              {isAffirmative ? 'есть' : 'не есть'}
-            </span>
-          </button>
-        )}
+      const card = sandbox.cards.find(c => c.tooltipKey === activeTooltip);
+      const title = card ? card.label : 'Подсказка';
 
-        {isDropped && !isAffirmative && (
-          <button 
-            type="button" 
-            onClick={() => setActiveTooltip(activeTooltip === 'desu' ? null : 'desu')}
-            className={`${styles.sandboxCard} ${styles.copula} ${activeTooltip === 'desu' ? styles.activeCard : ''}`}
-          >
-            <span className={styles.sandboxWord}>じゃない</span>
-            <span className={styles.sandboxLabel}>не есть</span>
-          </button>
-        )}
-      </div>
-    );
-  };
-
-  const getTooltipContent = () => {
-    if (activeTooltip === 'wa') {
       return {
-        title: 'Частица は (тема)',
-        text: rule.sandbox?.explanationTips?.wa || 'Выделяет тему высказывания. В устной дружеской речи часто заменяется паузой.'
+        title,
+        text: explanation
       };
-    }
-    if (activeTooltip === 'desu') {
-      return {
-        title: 'Связка です / だ (быть)',
-        text: rule.sandbox?.explanationTips?.desu || 'Склеивает тему и описание в предложении. です — вежливо, だ — дружески, опускание — разговорный стиль.'
-      };
-    }
-    return null;
-  };
+    };
 
   const tooltip = getTooltipContent();
 
@@ -281,54 +298,78 @@ export const GrammarTrainer: React.FC<GrammarTrainerProps> = ({ ruleId, onClose,
             )}
 
             {/* Пульт управления тумблерами */}
-            <div className={styles.sandboxControls}>
-              <div className={styles.controlGroup}>
-                <span className={styles.controlLabel}>Тон общения:</span>
-                <div className={styles.pillContainer}>
-                  <button 
-                    type="button" 
-                    onClick={() => { setTone('polite'); setActiveTooltip(null); }}
-                    className={`${styles.pillBtn} ${tone === 'polite' ? styles.pillBtnActive : ''}`}
-                  >
-                    Вежливо
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => { setTone('plain'); setActiveTooltip(null); }}
-                    className={`${styles.pillBtn} ${tone === 'plain' ? styles.pillBtnActive : ''}`}
-                  >
-                    Дружески
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => { setTone('dropped'); setActiveTooltip(null); }}
-                    className={`${styles.pillBtn} ${tone === 'dropped' ? styles.pillBtnActive : ''}`}
-                  >
-                    Устный пропуск
-                  </button>
-                </div>
-              </div>
+            {(() => {
+              const sandbox = rule.sandbox as unknown as SandboxConfig | undefined;
+              const toneLabel1 = sandbox?.toneLabels?.[0] || 'Вежливо';
+              const toneLabel2 = sandbox?.toneLabels?.[1] || 'Дружески';
+              const toneLabel3 = sandbox?.toneLabels?.[2] || 'Устный пропуск';
 
-              <div className={styles.controlGroup}>
-                <span className={styles.controlLabel}>Полярность:</span>
-                <div className={styles.pillContainer}>
-                  <button 
-                    type="button" 
-                    onClick={() => { setPolarity('affirmative'); setActiveTooltip(null); }}
-                    className={`${styles.pillBtn} ${polarity === 'affirmative' ? styles.pillBtnActive : ''}`}
-                  >
-                    Утверждение (+)
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => { setPolarity('negative'); setActiveTooltip(null); }}
-                    className={`${styles.pillBtn} ${polarity === 'negative' ? styles.pillBtnActive : ''}`}
-                  >
-                    Отрицание (-)
-                  </button>
+              const polarityLabel1 = sandbox?.polarityLabels?.[0] || 'Утверждение (+)';
+              const polarityLabel2 = sandbox?.polarityLabels?.[1] || 'Отрицание (-)';
+
+              const toneGroupLabel = (ruleId === 'g_n5_s2' || ruleId === 'g_n5_s3' || ruleId === 'g_n5_s4' || ruleId === 'g_n5_s5') 
+                ? 'Выбор глагола:' 
+                : (ruleId === 'g_n5_s6')
+                ? 'Конструкция:'
+                : 'Тон общения:';
+
+              const polarityGroupLabel = (ruleId === 'g_n5_s2')
+                ? 'Форма:'
+                : (ruleId === 'g_n5_s6')
+                ? 'Стиль:'
+                : 'Полярность:';
+
+              return (
+                <div className={styles.sandboxControls}>
+                  <div className={styles.controlGroup}>
+                    <span className={styles.controlLabel}>{toneGroupLabel}</span>
+                    <div className={styles.pillContainer}>
+                      <button 
+                        type="button" 
+                        onClick={() => { setTone('polite'); setActiveTooltip(null); }}
+                        className={`${styles.pillBtn} ${tone === 'polite' ? styles.pillBtnActive : ''}`}
+                      >
+                        {toneLabel1}
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={() => { setTone('plain'); setActiveTooltip(null); }}
+                        className={`${styles.pillBtn} ${tone === 'plain' ? styles.pillBtnActive : ''}`}
+                      >
+                        {toneLabel2}
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={() => { setTone('dropped'); setActiveTooltip(null); }}
+                        className={`${styles.pillBtn} ${tone === 'dropped' ? styles.pillBtnActive : ''}`}
+                      >
+                        {toneLabel3}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className={styles.controlGroup}>
+                    <span className={styles.controlLabel}>{polarityGroupLabel}</span>
+                    <div className={styles.pillContainer}>
+                      <button 
+                        type="button" 
+                        onClick={() => { setPolarity('affirmative'); setActiveTooltip(null); }}
+                        className={`${styles.pillBtn} ${polarity === 'affirmative' ? styles.pillBtnActive : ''}`}
+                      >
+                        {polarityLabel1}
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={() => { setPolarity('negative'); setActiveTooltip(null); }}
+                        className={`${styles.pillBtn} ${polarity === 'negative' ? styles.pillBtnActive : ''}`}
+                      >
+                        {polarityLabel2}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              );
+            })()}
 
             <div className={styles.sandboxInstruction}>
               💡 Кликайте по элементам предложения выше (например, на <strong>は</strong> или <strong>です</strong>), чтобы открыть секреты живого японского языка.
@@ -403,20 +444,12 @@ export const GrammarTrainer: React.FC<GrammarTrainerProps> = ({ ruleId, onClose,
               {activeTab === 'secrets' && (
                 <div className={styles.tabPane}>
                   <div className={styles.secretsCard}>
-                    <h4 className={styles.secretsTitle}>🤫 Секреты устного языка: Опускание частиц</h4>
-                    <p className={styles.secretsText}>
-                      Японцы в реальной разговорной речи стремятся сократить любые длинные фразы. Именно поэтому тематическую частицу <strong>は (ва)</strong> и связку <strong>です (дэсу)</strong> практически всегда опускают в диалогах с друзьями. 
-                      Вместо <em>«Корэ ва мидзу дэсу»</em> (Это вода) японец скажет просто: <strong>«Корэ, мидзу»</strong> (Это, вода).
-                    </p>
-                  </div>
-
-                  <div className={styles.secretsCard} style={{ marginTop: '12px' }}>
-                    <h4 className={styles.secretsTitle}>👥 Местоимения «Я»</h4>
-                    <p className={styles.secretsText}>
-                      В зависимости от вежливости и вашего пола слово «Я» меняется:
-                      <br />• <strong>私 (ватаси)</strong> — нейтрально, вежливо для всех.
-                      <br />• <strong>俺 (орэ)</strong> — грубое мужское «Я» в кругу друзей.
-                      <br />• <strong>僕 (боку)</strong> — скромное мужское «Я», часто используется парнями.
+                    <h4 className={styles.secretsTitle}>🤫 Секреты устного языка</h4>
+                    <p className={styles.secretsText} style={{ whiteSpace: 'pre-line' }}>
+                      {(() => {
+                        const sandbox = rule.sandbox as unknown as SandboxConfig | undefined;
+                        return sandbox?.spokenSecrets || 'Секреты устной речи для этого правила скоро появятся.';
+                      })()}
                     </p>
                   </div>
                 </div>
@@ -438,7 +471,7 @@ export const GrammarTrainer: React.FC<GrammarTrainerProps> = ({ ruleId, onClose,
                           setUserInput(e.target.value);
                           if (result) setResult(null);
                         }}
-                        placeholder="Пример: 私は学生です。"
+                        placeholder={rule.suggestions?.[0]?.sampleAnswer ? `Пример: ${rule.suggestions[0].sampleAnswer}` : 'Введите предложение на японском'}
                         className={styles.textInput}
                         disabled={isChecking}
                         autoComplete="off"
