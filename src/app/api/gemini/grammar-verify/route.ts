@@ -4,6 +4,18 @@ import { logger } from '@/lib/logger';
 import grammarRules from '@/resources/grammar_rules.json';
 
 /**
+ * Очищает японский текст от пробелов, пунктуации и HTML-тегов для точного сравнения.
+ */
+function cleanJapanese(text: string): string {
+  return text
+    .replace(/<rt>[\s\S]*?<\/rt>/gi, '') // удаляем фуригану
+    .replace(/<\/?[^>]+(>|$)/g, '')      // удаляем теги ruby
+    .replace(/[\s\t\r\n\u3000]/g, '')     // удаляем пробелы
+    .replace(/[。、？！・.?!,]/g, '')     // удаляем знаки препинания
+    .trim();
+}
+
+/**
  * POST /api/gemini/grammar-verify
  * Проверяет пользовательское предложение на соответствие грамматической конструкции N5.
  * Тело: { ruleId: string, userInput: string }
@@ -50,6 +62,19 @@ export async function POST(request: NextRequest) {
         { error: `Грамматическое правило с id "${ruleId}" не существует в базе данных` },
         { status: 400 }
       );
+    }
+
+    // Быстрая проверка на точное совпадение с готовыми примерами
+    const cleanedInput = cleanJapanese(userInput);
+    const matchesSuggestion = rule.suggestions.some(s => cleanJapanese(s.sampleAnswer) === cleanedInput);
+
+    if (matchesSuggestion) {
+      logger.info(`[API] Обнаружено точное совпадение с примером для "${ruleId}". Пропуск вызова Gemini.`);
+      return NextResponse.json({
+        isCorrect: true,
+        correction: '',
+        explanation: ''
+      });
     }
 
     const result = await geminiClient.verifyGrammar(

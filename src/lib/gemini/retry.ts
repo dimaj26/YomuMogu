@@ -12,9 +12,10 @@ interface RetryOptions {
   maxRetries?: number;
   baseDelayMs?: number;
   retryableStatusCodes?: number[];
+  models?: readonly GeminiModel[];
 }
 
-const DEFAULT_RETRY_OPTIONS: Required<RetryOptions> = {
+const DEFAULT_RETRY_OPTIONS: Required<Omit<RetryOptions, 'models'>> = {
   maxRetries: 3,
   baseDelayMs: 1000,
   retryableStatusCodes: [429, 500, 503],
@@ -29,10 +30,11 @@ export async function withRetry<T>(
   options?: RetryOptions
 ): Promise<T> {
   const opts = { ...DEFAULT_RETRY_OPTIONS, ...options };
+  const models = options?.models || GEMINI_MODELS;
   let lastError: any = null;
 
   // Пробуем каждую модель
-  for (const model of GEMINI_MODELS) {
+  for (const model of models) {
     // Для каждой модели — несколько попыток
     for (let attempt = 0; attempt < opts.maxRetries; attempt++) {
       try {
@@ -59,8 +61,9 @@ export async function withRetry<T>(
     }
 
     // Все попытки для этой модели исчерпаны — пробуем следующую
-    if (GEMINI_MODELS.indexOf(model) < GEMINI_MODELS.length - 1) {
-      const nextModel = GEMINI_MODELS[GEMINI_MODELS.indexOf(model) + 1];
+    const modelIdx = models.indexOf(model);
+    if (modelIdx < models.length - 1) {
+      const nextModel = models[modelIdx + 1];
       logger.info(`Переключение на запасную модель: ${nextModel}`);
     }
   }

@@ -275,6 +275,8 @@ export class GeminiClient {
         }
 
         return JSON.parse(responseText) as GrammarVerifyResponse;
+      }, {
+        models: ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro']
       });
 
       logger.info(`Проверка грамматики завершена. Результат корректности: ${result.isCorrect}`);

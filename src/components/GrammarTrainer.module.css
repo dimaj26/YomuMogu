@@ -379,3 +379,210 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* Стили для пошагового обучения и конструктора предложений */
+.stepContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-secondary, #4b5563);
+}
+
+.badge {
+  background-color: var(--bg-secondary, #f3f4f6);
+  border: 1.5px solid var(--border-color, #e5e7eb);
+  border-radius: 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  color: var(--text-secondary, #4b5563);
+}
+
+.progressDots {
+  display: flex;
+  gap: 6px;
+  height: 6px;
+  width: 100%;
+}
+
+.dot {
+  flex: 1;
+  border-radius: 4px;
+  background-color: var(--border-color, #e5e7eb);
+  transition: all 0.2s ease;
+}
+
+.activeDot {
+  background-color: var(--color-blue, #3b82f6);
+}
+
+.passedDot {
+  background-color: var(--color-green, #22c55e);
+}
+
+.theorySlide {
+  background-color: var(--bg-secondary, #f9fafb);
+  border: 2.5px solid var(--border-color, #e5e7eb);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: left;
+}
+
+.slideTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary, #111827);
+  margin: 0 0 10px 0;
+}
+
+.slideText {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-secondary, #4b5563);
+  margin: 0;
+}
+
+.navigationBtns {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.navBtn {
+  flex: 1;
+  padding: 12px 0;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.instructionBox {
+  background-color: rgba(59, 130, 246, 0.05);
+  border: 2px solid rgba(59, 130, 246, 0.2);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.instructionLabel {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--color-blue, #3b82f6);
+}
+
+.instructionText {
+  font-size: 15px;
+  font-weight: 750;
+  color: var(--text-primary, #111827);
+  margin: 0;
+}
+
+.baseWordsHint {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-light, #9ca3af);
+}
+
+.workspace {
+  min-height: 70px;
+  border: 2.5px dashed var(--border-color, #e5e7eb);
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-primary, #ffffff);
+}
+
+.workspacePlaceholder {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-light, #9ca3af);
+  text-align: center;
+}
+
+.tokenList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.tokenPool {
+  min-height: 80px;
+  border: 2.5px solid var(--border-color, #e5e7eb);
+  background-color: var(--bg-secondary, #f9fafb);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-content: flex-start;
+}
+
+.token {
+  background-color: var(--card-bg, #ffffff);
+  border: 2px solid var(--border-color, #e5e7eb);
+  border-bottom: 4px solid var(--border-color, #e5e7eb);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 750;
+  color: var(--text-primary, #111827);
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.1s ease, border-bottom-width 0.1s ease;
+}
+
+.token:active {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+}
+
+.selectedToken {
+  border-color: var(--color-blue, #3b82f6);
+  border-bottom-color: var(--color-blue-shadow, #1d4ed8);
+}
+
+.usedToken {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+
+.successBanner {
+  background-color: rgba(34, 197, 94, 0.08);
+  border: 2px solid var(--color-green, #22c55e);
+  color: var(--color-green, #22c55e);
+}
+
+.constructorControls {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.controlBtn {
+  flex: 1;
+  padding: 12px 0;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+

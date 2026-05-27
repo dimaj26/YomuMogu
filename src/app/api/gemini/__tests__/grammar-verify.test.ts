@@ -107,4 +107,27 @@ describe('API Route POST /api/gemini/grammar-verify', () => {
 
     process.env = originalEnv;
   });
+
+  it('should bypass geminiClient and return true instantly if user input matches suggestion sampleAnswer', async () => {
+    process.env.GEMINI_API_KEY = 'test-key';
+
+    // userInput matches suggestion: "私は学生です。" (suggestion 1 of g_n5_s1_1)
+    const request = new NextRequest('http://localhost/api/gemini/grammar-verify', {
+      method: 'POST',
+      body: JSON.stringify({ ruleId: 'g_n5_s1_1', userInput: '私は学生です' }), // without final dot to test clean matching
+    });
+
+    const response = await grammarVerifyPost(request);
+    expect(response.status).toBe(200);
+
+    const data = await response.json();
+    expect(data.isCorrect).toBe(true);
+    expect(data.correction).toBe('');
+    expect(data.explanation).toBe('');
+    
+    // verifyGrammar should NOT be called at all
+    expect(geminiClient.verifyGrammar).not.toHaveBeenCalled();
+
+    process.env = originalEnv;
+  });
 });
