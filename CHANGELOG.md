@@ -2,6 +2,16 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.29.0] - 2026-05-27
+### Added
+- Added Grammar Roadmap (`src/components/GrammarTrack.tsx`, `GrammarTrack.module.css`) mapping JLPT N5 grammar progression rules dynamically using a visual SVG winding pathway on the practice page `/practice`. Nodes unlock sequentially based on user progress in IndexedDB.
+- Added client-side interactive Grammar Trainer overlay modal (`src/components/GrammarTrainer.tsx`, `GrammarTrainer.module.css`) featuring grammar theory explanations, conjugations lists, clickable sentence suggestions, and a verification form calling a dedicated Gemini API verify endpoint.
+- Added database schema Version 4 migration in `src/core/db.ts` introducing `grammar_progress` IndexedDB table mapping profile and rule ID compounds to track Leitner spaced repetition progress step levels `[1, 3, 7, 14, 30]` days.
+- Added dynamic AI grammar sentence verification endpoint `/api/gemini/grammar-verify` (`src/app/api/gemini/grammar-verify/route.ts`) validating Japanese sentences, wrapping corrections in 100% Furigana tags for levels 1-2, explaining grammatical mistakes, and suggesting Russian translation scaffold fallbacks.
+- Integrated grammar focus badges in `/chat` viewport and dynamic dialogue character prompt nudging in `src/lib/gemini/prompts.ts` and `src/lib/gemini/chat.ts`.
+- Integrated results screen Leitner confidence grading checkboxes ("Забыл", "Плохо помню", "Хорошо помню") on dialogue complete in `/chat/page.tsx` that write scheduling steps to the `grammar_progress` DB store.
+- Added comprehensive unit testing coverage for grammar verify routes in `src/app/api/gemini/__tests__/grammar-verify.test.ts` and updated page unit tests in `src/app/chat/__tests__/page.test.tsx`.
+
 ## [1.28.0] - 2026-05-27
 ### Added
 - Added a winding, vertical Duolingo-style visual map/road on the practice page `/practice` (`src/components/LearningTrack.tsx`, `src/components/LearningTrack.module.css`) representing 5 interactive nodes (3 AI conversation practice sessions, 1 review marathon, and 1 bonus quiz) with locked/active/completed state transitions, dynamic winding SVG connectors, wiggling hover animations, and detail popovers.

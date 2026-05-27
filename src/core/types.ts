@@ -70,3 +70,12 @@ export interface UiWord {
   lapses: number;
 }
 
+export interface GrammarProgress {
+  profileId: string;
+  ruleId: string;
+  stepIndex: number; // индекс шага в интервалах Leitner: 0-4 (интервалы: 1, 3, 7, 14, 30 дней)
+  lastReviewed?: number; // timestamp последнего повторения
+  due: number; // timestamp даты следующего повторения (ms)
+  status: 'new' | 'learning' | 'review' | 'mature';
+}
+

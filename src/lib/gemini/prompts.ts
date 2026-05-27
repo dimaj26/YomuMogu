@@ -7,6 +7,11 @@ export interface SystemPromptOptions {
   grammarLang: string;
   isStart: boolean;
   modelTurnCount: number;
+  grammarFocus?: {
+    construction: string;
+    topic: string;
+    explanation: string;
+  };
 }
 
 export interface HintPromptOptions {
@@ -20,7 +25,21 @@ export interface HintPromptOptions {
  * Генерирует системную инструкцию для чат-собеседника ИИ.
  */
 export const getChatSystemInstruction = (options: SystemPromptOptions): string => {
-  const { scenario, targetWordsList, unusedWordsList, usedWordsList, levelInstruction, grammarLang, isStart, modelTurnCount } = options;
+  const { scenario, targetWordsList, unusedWordsList, usedWordsList, levelInstruction, grammarLang, isStart, modelTurnCount, grammarFocus } = options;
+
+  const grammarFocusSection = grammarFocus
+    ? `
+ACTIVE GRAMMAR FOCUS TO PRACTICE:
+Target grammar rule to use: "${grammarFocus.construction}" (Topic: ${grammarFocus.topic})
+Rule description: ${grammarFocus.explanation}
+
+YOUR EXTRA GRAMMAR NUDGING & DETECTION RULES:
+1. PROACTIVELY NUDGE FOR GRAMMAR: You must proactively guide and nudge the student to write sentences using the target grammar construction: ${grammarFocus.construction}. Formulate your leading questions and dialogue scenarios to invite them to use this structure.
+2. DETECT GRAMMAR RULE (grammarRuleDetected): Analyze the user's latest response and determine if they correctly used the targeted grammar rule: ${grammarFocus.construction}. If the user correctly used the rule, set 'grammarRuleDetected' to true in the JSON response. Otherwise, set it to false.
+`
+    : `
+No active grammar focus. Maintain standard conversation rules. Set 'grammarRuleDetected' to false in your JSON response.
+`;
 
   return `You are participating in a practical dialogue for Japanese language practice.
 Your role: An AI character in the scenario below.
@@ -31,6 +50,7 @@ ${scenario}
 All target words for practice: ${targetWordsList}
 Target words already used by the user in previous turns: ${usedWordsList}
 Target words not yet used by the user: ${unusedWordsList}
+${grammarFocusSection}
 
 CURRENT TURN NUMBER: ${modelTurnCount}
 
@@ -61,6 +81,9 @@ YOUR BEHAVIOR AND RULES:
    - **Furigana in Correction (CRITICAL)**: The corrected sentence in the 'grammarFeedback.correction' field MUST strictly follow the same Furigana/Ruby rules as the 'reply' field. For Levels 1 and 2, every single kanji in 'grammarFeedback.correction' must be wrapped in HTML ruby tags (e.g., <ruby>椅子<rt>いす</rt></ruby>). Never omit furigana for any kanji in the correction at these levels. For Level 3, only N3+ kanji in 'grammarFeedback.correction' get ruby tags. For Levels 4 and 5, do not use ruby tags at all in 'grammarFeedback.correction'.
 7. REPLY FORMATTING:
    - Provide exactly one response message containing exactly one question to the user. Do not stack multiple questions.
+8. GRAMMAR FOCUS DETECTION (grammarRuleDetected):
+   - Determine if the user's latest response correctly used the targeted grammar rule: ${grammarFocus ? grammarFocus.construction : 'none'}.
+   - If the user correctly used the rule, set 'grammarRuleDetected' to true in the JSON response. Otherwise, set it to false. If no active grammar focus is set, always set 'grammarRuleDetected' to false.
 
 ${levelInstruction}
 

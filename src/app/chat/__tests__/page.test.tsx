@@ -230,5 +230,117 @@ describe('ChatPage Component', () => {
     });
     expect(mascot.getAttribute('data-state')).toBe('worried');
   });
+
+  it('renders grammar focus badge in the chat interface', async () => {
+    const session = {
+      id: 'grammar-test-session',
+      title: 'Грамматика: 〜てください',
+      description: 'Свободный диалог с фокусом',
+      scenario: 'Сценарий разговора',
+      targetWords: [],
+      grammarFocus: {
+        id: 'g_n5_01',
+        construction: '〜てください',
+        topic: 'Вежливая просьба',
+        explanation: 'Объяснение',
+      },
+    };
+    localStorage.setItem('yomumogu_profile_default_active_session', JSON.stringify(session));
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        reply: 'こんにちは！',
+        translation: 'Привет!',
+        wordsDetected: [],
+        grammarRuleDetected: false,
+        grammarFeedback: { isCorrect: true },
+      }),
+    } as Response);
+
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    await waitFor(() => {
+      expect(screen.getByText('〜てください (Вежливая просьба)')).toBeInTheDocument();
+    });
+  });
+
+  it('renders grammar confidence buttons in results screen and saves progress correctly', async () => {
+    const session = {
+      id: 'grammar-test-session-2',
+      title: 'Грамматика: 〜てください',
+      description: 'Свободный диалог с фокусом',
+      scenario: 'Сценарий разговора',
+      targetWords: [],
+      grammarFocus: {
+        id: 'g_n5_01',
+        construction: '〜てください',
+        topic: 'Вежливая просьба',
+        explanation: 'Объяснение',
+      },
+    };
+    localStorage.setItem('yomumogu_profile_default_active_session', JSON.stringify(session));
+
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          reply: 'こんにちは！',
+          translation: 'Привет!',
+          wordsDetected: [],
+          grammarRuleDetected: true,
+          grammarFeedback: { isCorrect: true },
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          words: [],
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+        }),
+      } as Response);
+
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    await waitFor(() => {
+      expect(screen.getByText('〜てください (Вежливая просьба)')).toBeInTheDocument();
+    });
+
+    // Complete dialogue
+    const completeBtn = screen.getAllByRole('button', { name: 'Завершить' })[0];
+    fireEvent.click(completeBtn);
+
+    // Confirm exit
+    const confirmBtn = screen.getAllByRole('button', { name: 'Завершить' })[1];
+    fireEvent.click(confirmBtn);
+
+    // Wait for the results screen to render
+    await waitFor(() => {
+      expect(screen.getByText('Закрепление грамматики')).toBeInTheDocument();
+    });
+
+    // Verify grading buttons exist
+    expect(screen.getByText('Забыл')).toBeInTheDocument();
+    expect(screen.getByText('Плохо помню')).toBeInTheDocument();
+    expect(screen.getByText('Хорошо помню')).toBeInTheDocument();
+
+    // Click "Плохо помню"
+    const hardBtn = screen.getByText('Плохо помню');
+    fireEvent.click(hardBtn);
+
+    // Click Save (Сохранить прогресс)
+    const saveBtn = screen.getByText('Сохранить прогресс');
+    fireEvent.click(saveBtn);
+
+    // Verify saving triggers loading state
+    await waitFor(() => {
+      expect(saveBtn).toBeDisabled();
+    });
+  });
 });
 

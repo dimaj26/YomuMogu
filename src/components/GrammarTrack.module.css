@@ -1,0 +1,268 @@
+.trackContainer {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+  position: relative;
+}
+
+.nodeList {
+  position: relative;
+  height: 720px;
+}
+
+.svgConnector {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.connectorLineDashed {
+  fill: none;
+  stroke: var(--border-color, #e5e7eb);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 12 12;
+}
+
+.connectorLine {
+  fill: none;
+  stroke: var(--color-green, #22c55e);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nodeWrapper {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.trackNode {
+  background-color: var(--card-bg, #ffffff);
+  border: 4px solid var(--border-color, #e5e7eb);
+  border-radius: 50%;
+  width: 68px;
+  height: 68px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  outline: none;
+  box-shadow: 0 6px 0 var(--border-color, #d1d5db);
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
+}
+
+.trackNode:active:not(:disabled) {
+  transform: translate(0, 4px) scale(0.95);
+  box-shadow: 0 2px 0 var(--border-color, #d1d5db);
+}
+
+.trackNode:disabled {
+  cursor: not-allowed;
+}
+
+/* Node label / construction text directly below node */
+.nodeLabel {
+  position: absolute;
+  top: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-secondary, #4b5563);
+  white-space: nowrap;
+  background-color: var(--card-bg, #ffffff);
+  border: 2px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  padding: 2px 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  pointer-events: none;
+}
+
+.nodeInner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nodeNumber {
+  font-size: 20px;
+  font-weight: 900;
+  color: white;
+}
+
+/* NODE STATUS COLOR MODIFIERS */
+.locked {
+  background-color: var(--border-color, #e5e7eb);
+  border-color: var(--text-light, #d1d5db);
+  box-shadow: 0 6px 0 var(--text-light, #c4c7cc);
+}
+
+.locked .nodeInner {
+  color: var(--text-light, #9ca3af);
+}
+
+.new {
+  background-color: var(--color-blue, #3b82f6);
+  border-color: var(--color-blue-shadow, #1d4ed8);
+  box-shadow: 0 6px 0 var(--color-blue-shadow, #1d4ed8);
+}
+
+.learning {
+  background-color: var(--color-orange, #f59e0b);
+  border-color: var(--color-orange-shadow, #d97706);
+  box-shadow: 0 6px 0 var(--color-orange-shadow, #d97706);
+}
+
+.completed {
+  background-color: var(--color-green, #10b981);
+  border-color: var(--color-green-shadow, #047857);
+  box-shadow: 0 6px 0 var(--color-green-shadow, #047857);
+}
+
+.checkIcon {
+  color: white;
+}
+
+/* HOVER EFFECT WIGGLE */
+.trackNode:hover:not(:disabled) {
+  transform: scale(1.08);
+  animation: wiggle 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes wiggle {
+  0% { transform: scale(1.08) rotate(-3deg); }
+  100% { transform: scale(1.08) rotate(3deg); }
+}
+
+/* DETAILS POPOVER */
+.popoverCard {
+  position: absolute;
+  top: 86px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--card-bg, #ffffff);
+  border: 3px solid var(--border-color, #e5e7eb);
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  width: 260px;
+  padding: 16px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: popoverFade 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.popoverCard::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 12px 12px 12px;
+  border-style: solid;
+  border-color: transparent transparent var(--border-color, #e5e7eb) transparent;
+  width: 0;
+  height: 0;
+}
+
+.popoverCard::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 10px 10px 10px;
+  border-style: solid;
+  border-color: transparent transparent var(--card-bg, #ffffff) transparent;
+  width: 0;
+  height: 0;
+}
+
+.popoverHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-bottom: 2px solid var(--bg-secondary, #f3f4f6);
+  padding-bottom: 8px;
+}
+
+.popoverTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary, #111827);
+  margin: 0;
+}
+
+.popoverTopic {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-light, #9ca3af);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.popoverContent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.popoverDesc {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary, #4b5563);
+  margin: 0;
+  font-weight: 600;
+}
+
+.popoverStatus {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.statusLabel {
+  font-weight: 750;
+  color: var(--text-light, #9ca3af);
+}
+
+.statusVal {
+  font-weight: 800;
+  color: var(--text-primary, #111827);
+}
+
+.statusVal.locked {
+  color: var(--text-light, #9ca3af);
+}
+
+.statusVal.new {
+  color: var(--color-blue, #3b82f6);
+}
+
+.statusVal.learning,
+.statusVal.review {
+  color: var(--color-orange, #f59e0b);
+}
+
+.statusVal.mature {
+  color: var(--color-green, #10b981);
+}
+
+.popoverActions {
+  margin-top: 4px;
+}
+
+@keyframes popoverFade {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0.95); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}

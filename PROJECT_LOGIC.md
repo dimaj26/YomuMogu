@@ -55,7 +55,9 @@ src/
       gemini/
         sessions/route.ts # POST /api/gemini/sessions
         etymology/route.ts # POST /api/gemini/etymology
-        __tests__/sessions.test.ts, etymology.test.ts
+        grammar-verify/
+          route.ts        # POST /api/gemini/grammar-verify
+        __tests__/sessions.test.ts, etymology.test.ts, grammar-verify.test.ts
       chat/
         route.ts          # POST /api/chat (send message)
         hint/route.ts     # POST /api/chat/hint (generate hints)
@@ -94,6 +96,10 @@ src/
     DebugDrawer.module.css # Styles for the DebugDrawer
     LearningTrack.tsx     # Duolingo winding SVG track client component
     LearningTrack.module.css # Styles for the LearningTrack component
+    GrammarTrack.tsx      # Duolingo winding SVG path client component for grammar rules
+    GrammarTrack.module.css # Styles for the GrammarTrack component
+    GrammarTrainer.tsx    # Interactive overlays displaying theory and AI feedback for grammar rules
+    GrammarTrainer.module.css # Styles for the GrammarTrainer component
     __tests__/
       ErrorBoundary.test.tsx
       ErrorFallback.test.tsx
@@ -139,6 +145,11 @@ src/
 | `hooks/useQuests.ts` | React custom hook managing namespaced daily quest progression and XP rewards |
 | `components/LearningTrack.tsx` | Duolingo winding vertical pathway component with 3D nodes and popovers |
 | `components/__tests__/LearningTrack.test.tsx` | Unit tests for LearningTrack component rendering and popover triggers |
+| `components/GrammarTrack.tsx` | Duolingo winding SVG path component for grammar rules progression |
+| `components/GrammarTrainer.tsx` | Interactive overlays explaining grammar theory and prompting user custom sentences checked by AI |
+| `src/resources/grammar_rules.json` | Curriculum JSON of JLPT N5 grammar rules containing formula, guides, example sentences |
+| `app/api/gemini/grammar-verify/route.ts` | POST endpoint using Gemini client to verify user Japanese sentences against grammar rules |
+| `app/api/gemini/__tests__/grammar-verify.test.ts` | Unit tests verifying the grammar verification API route behavior under standard inputs |
 
 
 ---
@@ -334,7 +345,7 @@ interface UiWord {
 
 ### [PL-3.4] IndexedDB Schema
 
-For local-first operation and off-session scheduling, YomuMogu maintains client-side storage using Dexie.js:
+For local-first operation and off-session scheduling, YomuMogu maintains client-side storage using Dexie.js (upgraded to Schema Version 4):
 - **`words` Table** (`[profileId+id]` compound key):
   - Stores the local replication of Anki cards including calculated FSRS variables.
   - Indexes: `id`, `word`, `category`, `passive.due`, `active.due`, `profileId`.
@@ -344,6 +355,9 @@ For local-first operation and off-session scheduling, YomuMogu maintains client-
 - **`ui_words` Table** (`[profileId+id]` compound key):
   - Stores local FSRS progression metrics for each localized UI text snippet.
   - Indexes: `id`, `status`, `due`, `profileId`.
+- **`grammar_progress` Table** (`[profileId+ruleId]` compound key):
+  - Stores user grammar Leitner progress step intervals.
+  - Indexes: `ruleId`, `status`, `due`, `profileId`.
 
 ---
 
@@ -368,6 +382,7 @@ All Anki routes proxy requests to AnkiConnect at `http://localhost:8765`.
 |---|---|---|---|
 | `/api/gemini/sessions` | POST | `{ words: AnkiWord[] }` | `{ sessions: GeneratedSession[] }` |
 | `/api/gemini/etymology` | POST | `{ word }` | `{ components: string[], etymology: string }` |
+| `/api/gemini/grammar-verify` | POST | `{ ruleId, userInput }` | `{ isCorrect: boolean, correction: string, explanation: string }` |
 | `/api/chat` | POST | `{ scenario, targetWords, history, message, level, grammarInJapanese, collectedWords? }` | `ChatResponse` |
 | `/api/chat/hint` | POST | `{ scenario, targetWords, history, level }` | `HintResponse` |
 | `/api/chat/analyze` | POST | `{ history, deckName, frontField, backField, deckMappings? }` | `{ words: AnalyzedWord[] }` |
@@ -582,4 +597,4 @@ npm run test:integration:gemini # Live LLM integration tests (uses Gemini API, c
 
 ### [PL-9.4] Current Test Count
 
-212 unit tests across 32 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
+219 unit tests across 33 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).

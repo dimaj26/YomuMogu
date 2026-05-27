@@ -23,7 +23,10 @@ import {
   incrementDailyNewWordsLimitOffset,
   syncDailyNewWordsCountWithDb
 } from '@/core/localDeckService';
-import { db } from '@/core/db';
+import { db, getGrammarProgressList, type GrammarProgress } from '@/core/db';
+import { GrammarTrack } from '@/components/GrammarTrack';
+import { GrammarTrainer } from '@/components/GrammarTrainer';
+import grammarRules from '@/resources/grammar_rules.json';
 import type { LocalWord } from '@/core/types';
 import { AnkiWord } from '@/plugins/anki/filter';
 import phonosemanticsData from '@/resources/phonosemantics.json';
@@ -114,6 +117,11 @@ export default function PracticePage() {
   const [warmup, setWarmup] = useState<WarmupState | null>(null);
   const [warmupOptions, setWarmupOptions] = useState<string[]>([]);
 
+  // Грамматические состояния
+  const [activeTab, setActiveTab] = useState<'words' | 'grammar'>('words');
+  const [grammarProgress, setGrammarProgress] = useState<Record<string, GrammarProgress>>({});
+  const [activeGrammarRuleId, setActiveGrammarRuleId] = useState<string | null>(null);
+
   // Загружаем данные профиля и сессий
   const loadProfileData = async () => {
     try {
@@ -189,6 +197,14 @@ export default function PracticePage() {
         .filter(w => w.active && w.active.status !== 'new' && w.active.due <= now)
         .count();
       setDueActiveWordsCount(count);
+
+      // Загружаем прогресс по грамматике
+      const progressList = await getGrammarProgressList(profileId);
+      const progressMap: Record<string, GrammarProgress> = {};
+      progressList.forEach(p => {
+        progressMap[p.ruleId] = p;
+      });
+      setGrammarProgress(progressMap);
     } catch (e) {
       console.error('Ошибка загрузки данных профиля для практики', e);
     } finally {
@@ -679,15 +695,27 @@ export default function PracticePage() {
               </div>
             )}
 
-            {/* Сетка сессий */}
+            {/* Сетка сессий / дорожка грамматики */}
             <div className="card-friendly" style={{ minHeight: '300px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
-                <h2 className={styles.cardTitle} style={{ margin: 0 }}>
-                  <Sparkles size={20} style={{ color: 'var(--color-blue)', marginRight: 8 }} />
-                  Разговорные сессии с Gemini ИИ
-                </h2>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '24px', borderBottom: '3px solid var(--border-color)', paddingBottom: '16px' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => setActiveTab('words')}
+                    className={`btn-3d ${activeTab === 'words' ? 'btn-blue' : ''}`}
+                    style={{ padding: '8px 16px', fontSize: '14px', textTransform: 'none' }}
+                  >
+                    Карта слов
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('grammar')}
+                    className={`btn-3d ${activeTab === 'grammar' ? 'btn-blue' : ''}`}
+                    style={{ padding: '8px 16px', fontSize: '14px', textTransform: 'none' }}
+                  >
+                    Карта грамматики
+                  </button>
+                </div>
                 
-                {sessions.length === 0 && words.length > 0 && (
+                {activeTab === 'words' && sessions.length === 0 && words.length > 0 && (
                   <button
                     onClick={generateSessions}
                     disabled={isLoadingSessions}
@@ -699,63 +727,72 @@ export default function PracticePage() {
                 )}
               </div>
 
-              {isLoadingSessions && (
-                <div className={styles.loadingText} style={{ padding: '48px 24px' }}>
-                  <RefreshCw size={28} className={`${styles.spin}`} style={{ margin: '0 auto 16px auto', color: 'var(--color-blue)', display: 'block' }} />
-                  <p style={{ margin: 0, fontWeight: 700, fontSize: '16px' }}>ИИ анализирует ваши слова и подбирает лучшие сценарии...</p>
-                </div>
-              )}
+              {activeTab === 'words' ? (
+                <>
+                  {isLoadingSessions && (
+                    <div className={styles.loadingText} style={{ padding: '48px 24px' }}>
+                      <RefreshCw size={28} className={`${styles.spin}`} style={{ margin: '0 auto 16px auto', color: 'var(--color-blue)', display: 'block' }} />
+                      <p style={{ margin: 0, fontWeight: 700, fontSize: '16px' }}>ИИ анализирует ваши слова и подбирает лучшие сценарии...</p>
+                    </div>
+                  )}
 
-              {words.length === 0 ? (
-                <div className={styles.emptyState}>
-                  <XCircle size={48} className={styles.emptyIcon} />
-                  <p>
-                    {deckMode === 'local'
-                      ? 'Локальный список еще не инициализирован. Пожалуйста, пройдите диагностику в настройках.'
-                      : 'Слова из Anki не импортированы. Пожалуйста, выберите колоду и импортируйте слова в настройках.'
-                    }
-                  </p>
-                  <Link href="/settings" className="btn-3d btn-green" style={{ marginTop: '12px', padding: '10px 20px', fontSize: '15px' }}>
-                    Перейти в настройки
-                  </Link>
-                </div>
+                  {words.length === 0 ? (
+                    <div className={styles.emptyState}>
+                      <XCircle size={48} className={styles.emptyIcon} />
+                      <p>
+                        {deckMode === 'local'
+                          ? 'Локальный список еще не инициализирован. Пожалуйста, пройдите диагностику в настройках.'
+                          : 'Слова из Anki не импортированы. Пожалуйста, выберите колоду и импортируйте слова в настройках.'
+                        }
+                      </p>
+                      <Link href="/settings" className="btn-3d btn-green" style={{ marginTop: '12px', padding: '10px 20px', fontSize: '15px' }}>
+                        Перейти в настройки
+                      </Link>
+                    </div>
+                  ) : (
+                    !isLoadingSessions && sessions.length === 0 && (
+                      <div className={styles.emptyState}>
+                        <Sparkles size={48} className={styles.emptyIcon} style={{ color: 'var(--color-yellow-shadow)' }} />
+                        <p>Темы для диалогов еще не сгенерированы. Нажмите кнопку ниже, чтобы ИИ подготовил сценарии на основе ваших слов.</p>
+                        <button
+                          onClick={generateSessions}
+                          className="btn-3d btn-blue"
+                          style={{ marginTop: '12px', padding: '10px 20px', fontSize: '15px' }}
+                        >
+                          Сгенерировать темы тренировок
+                        </button>
+                      </div>
+                    )
+                  )}
+
+                  {!isLoadingSessions && sessions.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
+                      <LearningTrack
+                        sessions={sessions}
+                        inProgressSessions={inProgressSessions}
+                        completedSessions={completedSessions}
+                        dueReviewsCount={dueActiveWordsCount}
+                        completedSessionsCountToday={completedSessionsCountToday}
+                        onStartSession={startSession}
+                        onDiscardSession={handleDiscardSession}
+                      />
+
+                      <button
+                        onClick={generateSessions}
+                        disabled={isLoadingSessions}
+                        className="btn-3d"
+                        style={{ padding: '10px 20px', fontSize: '14px', alignSelf: 'center' }}
+                      >
+                        Перегенерировать другие темы
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
-                !isLoadingSessions && sessions.length === 0 && (
-                  <div className={styles.emptyState}>
-                    <Sparkles size={48} className={styles.emptyIcon} style={{ color: 'var(--color-yellow-shadow)' }} />
-                    <p>Темы для диалогов еще не сгенерированы. Нажмите кнопку ниже, чтобы ИИ подготовил сценарии на основе ваших слов.</p>
-                    <button
-                      onClick={generateSessions}
-                      className="btn-3d btn-blue"
-                      style={{ marginTop: '12px', padding: '10px 20px', fontSize: '15px' }}
-                    >
-                      Сгенерировать темы тренировок
-                    </button>
-                  </div>
-                )
-              )}
-
-              {!isLoadingSessions && sessions.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
-                  <LearningTrack
-                    sessions={sessions}
-                    inProgressSessions={inProgressSessions}
-                    completedSessions={completedSessions}
-                    dueReviewsCount={dueActiveWordsCount}
-                    completedSessionsCountToday={completedSessionsCountToday}
-                    onStartSession={startSession}
-                    onDiscardSession={handleDiscardSession}
-                  />
-
-                  <button
-                    onClick={generateSessions}
-                    disabled={isLoadingSessions}
-                    className="btn-3d"
-                    style={{ padding: '10px 20px', fontSize: '14px', alignSelf: 'center' }}
-                  >
-                    Перегенерировать другие темы
-                  </button>
-                </div>
+                <GrammarTrack
+                  grammarProgress={grammarProgress}
+                  onSelectRule={(ruleId) => setActiveGrammarRuleId(ruleId)}
+                />
               )}
             </div>
           </div>
@@ -861,6 +898,53 @@ export default function PracticePage() {
 
       {/* Warm-up оверлей */}
       {renderWarmup()}
+
+      {/* Grammar trainer modal */}
+      {activeGrammarRuleId && (
+        <GrammarTrainer
+          ruleId={activeGrammarRuleId}
+          onClose={() => setActiveGrammarRuleId(null)}
+          onComplete={async () => {
+            const rule = grammarRules.find(r => r.id === activeGrammarRuleId);
+            if (rule) {
+              // Создаем сессию грамматического фокуса
+              const grammarSession = {
+                id: `grammar_${rule.id}`,
+                title: `Грамматика: ${rule.construction}`,
+                description: `Свободный диалог с фокусом на: ${rule.topic}`,
+                scenario: `Мы ведем практический диалог. Главная задача пользователя — использовать в диалоге грамматическую конструкцию "${rule.construction}" (${rule.topic}: ${rule.translation}). Вы помогаете пользователю практиковаться и отвечаете вежливо на японском.`,
+                targetWords: [],
+                grammarFocus: {
+                  id: rule.id,
+                  construction: rule.construction,
+                  topic: rule.topic,
+                  explanation: rule.explanation
+                }
+              };
+              setProfileItem('active_session', JSON.stringify(grammarSession));
+              removeProfileItem(`chat_state_grammar_${rule.id}`);
+              
+              // Записываем начальный статус в IndexedDB
+              const pId = getActiveProfileId();
+              if (pId) {
+                const progress = await db.grammar_progress.get([pId, rule.id]);
+                if (!progress) {
+                  await db.grammar_progress.put({
+                    profileId: pId,
+                    ruleId: rule.id,
+                    stepIndex: 0,
+                    due: Date.now(),
+                    status: 'new'
+                  });
+                }
+              }
+              
+              router.push('/chat');
+            }
+            setActiveGrammarRuleId(null);
+          }}
+        />
+      )}
     </div>
   );
 }

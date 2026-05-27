@@ -54,6 +54,7 @@ You are an expert **TypeScript / Next.js 15** developer. Your specialty is App R
 - **Gradual Furigana Opacity (JpUI)**: Seamless `<ruby>` furigana opacity fade-outs based on FSRS intervals (<3d: opacity 1; <21d: opacity 0.6; >=21d: opacity 0, appearing on hover) built to secure vertical line-height constraints and prevent Cumulative Layout Shift (CLS).
 - **Visual Learning Tracks (Duolingo-style Path)**: A vertical winding roadmap on `/practice` mapping 5 nodes (3 AI sessions, 1 review marathon, 1 bonus quiz) with locked/active/completed state transitions, dynamic SVG background connectors, wiggling hover animations, and detail popovers.
 - **Daily Quests Widget**: Right-sidebar widget on `/practice` tracking Reviews (10 FSRS checks), Chats (1 conversation scenario), and Mnemonics (2 notes saved/edited) with a 4:00 AM local time daily boundary reset and reward XP claiming.
+- **Grammar Roadmap & Trainer**: A winding vertical roadmap (Duolingo-style SVG path) on the Practice page that sequentially unlocks 30+ N5 grammar rules. Practicing a rule launches the interactive client Grammar Trainer modal, offering formula theory breakdown, interactive conjugation cards, and sentence composition verified by a dedicated Gemini API route. Active grammar practice routes dynamically prompt the AI to focus on dialogue usage and trigger Leitner spaced repetition updates (`[1, 3, 7, 14, 30]` days step scheduling) with user confidence grading checkboxes upon exit.
 
 ---
 

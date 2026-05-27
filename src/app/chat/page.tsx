@@ -6,7 +6,7 @@ import { ArrowLeft, Send, Lightbulb, X, Check, Loader2, ChevronDown, ChevronUp, 
 import { useJapanification } from '@/hooks/useJapanification';
 import { useQuests } from '@/hooks/useQuests';
 import { getProfileItem, setProfileItem, removeProfileItem, getActiveProfileId } from '@/lib/profile';
-import { db, addLocalReview, syncLocalDatabaseWithAnki } from '@/core/db';
+import { db, addLocalReview, syncLocalDatabaseWithAnki, updateGrammarProgress } from '@/core/db';
 import { sanitizeHtml } from '@/lib/sanitize';
 import Link from 'next/link';
 import { calculateNextFsrsState, createDefaultFsrsState, alignPassiveToActiveState, isGoodContextExample } from '@/core/scheduler';
@@ -45,6 +45,12 @@ interface SessionData {
   description: string;
   scenario: string;
   targetWords: TargetWord[];
+  grammarFocus?: {
+    id: string;
+    construction: string;
+    topic: string;
+    explanation: string;
+  };
 }
 
 interface SavedChatState {
@@ -120,6 +126,7 @@ export default function ChatPage() {
 
   const [isStateLoaded, setIsStateLoaded] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [selectedGrammarGrade, setSelectedGrammarGrade] = useState<'forgot' | 'hard' | 'good'>('good');
 
   // Состояния для интерактивного маскота 🍵
   const [mascotState, setMascotState] = useState<'idle' | 'happy' | 'worried' | 'cheering'>('idle');
@@ -266,7 +273,8 @@ export default function ChatPage() {
           history: [],
           message: '__START__',
           level: state.chatLevel,
-          grammarInJapanese: shouldGrammarBeJapanese()
+          grammarInJapanese: shouldGrammarBeJapanese(),
+          grammarFocus: session.grammarFocus
         })
       });
       const data = await res.json();
@@ -322,7 +330,8 @@ export default function ChatPage() {
           message: userText,
           level: state.chatLevel,
           grammarInJapanese: shouldGrammarBeJapanese(),
-          collectedWords: Array.from(collectedWords)
+          collectedWords: Array.from(collectedWords),
+          grammarFocus: session.grammarFocus
         })
       });
       const data = await res.json();
@@ -475,7 +484,11 @@ export default function ChatPage() {
       removeProfileItem(`chat_state_${session.id}`);
       removeProfileItem('active_session');
     }
-    router.push('/settings');
+    if (session?.id?.startsWith('grammar_')) {
+      router.push('/practice');
+    } else {
+      router.push('/settings');
+    }
   };
 
   const handleForceDiscardSession = () => {
@@ -483,7 +496,11 @@ export default function ChatPage() {
     if (session?.id) {
       removeProfileItem(`chat_state_${session.id}`);
     }
-    router.push('/settings');
+    if (session?.id?.startsWith('grammar_')) {
+      router.push('/practice');
+    } else {
+      router.push('/settings');
+    }
   };
 
   const handleConfirmExit = () => {
@@ -898,6 +915,11 @@ export default function ChatPage() {
         }
       }
 
+      // Обновляем прогресс по грамматике
+      if (session.grammarFocus && profileId) {
+        await updateGrammarProgress(profileId, session.grammarFocus.id, selectedGrammarGrade);
+      }
+
       // 1. Синхронизируем карточки (повторение) через локальную БД и FSRS
       if (selectedSyncCards.size > 0) {
         for (const cardId of Array.from(selectedSyncCards)) {
@@ -1199,6 +1221,44 @@ export default function ChatPage() {
                 </div>
               )}
 
+              {/* GRAMMAR MASTERY SECTION */}
+              {session.grammarFocus && (
+                <div className={styles.summarySection} style={{ border: '2.5px solid var(--color-blue)', backgroundColor: 'rgba(59, 130, 246, 0.04)', padding: '16px', borderRadius: '16px', marginBottom: '24px' }}>
+                  <h3 className={styles.sectionTitle} style={{ color: 'var(--color-blue)', margin: '0 0 4px 0' }}>
+                    Закрепление грамматики
+                  </h3>
+                  <p className={styles.sectionSubtitle} style={{ margin: '0 0 12px 0' }}>
+                    Оцените, насколько хорошо вы запомнили конструкцию: <strong>{session.grammarFocus.construction}</strong> ({session.grammarFocus.topic})
+                  </p>
+                  <div className={styles.gradeSelector} style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedGrammarGrade('forgot')}
+                      className={`${styles.gradeBtn} ${styles.again} ${selectedGrammarGrade === 'forgot' ? styles.active : ''}`}
+                      disabled={isSubmittingSync}
+                    >
+                      Забыл
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedGrammarGrade('hard')}
+                      className={`${styles.gradeBtn} ${styles.hard} ${selectedGrammarGrade === 'hard' ? styles.active : ''}`}
+                      disabled={isSubmittingSync}
+                    >
+                      Плохо помню
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedGrammarGrade('good')}
+                      className={`${styles.gradeBtn} ${styles.good} ${selectedGrammarGrade === 'good' ? styles.active : ''}`}
+                      disabled={isSubmittingSync}
+                    >
+                      Хорошо помню
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* REPEAT WORDS SECTION */}
               {analyzedWords.some(w => w.inAnki) && (
                 <div className={styles.summarySection}>
@@ -1477,19 +1537,19 @@ export default function ChatPage() {
                 >
                   {t('Вернуться в настройки', '設定に戻る')}
                 </button>
-                {analyzedWords.length > 0 && (
+                {(analyzedWords.length > 0 || session.grammarFocus) && (
                   <button
                     onClick={handleSyncAndAdd}
                     className="btn-3d btn-green"
-                    disabled={isSubmittingSync || (selectedSyncCards.size === 0 && selectedAddWords.size === 0)}
+                    disabled={isSubmittingSync || (selectedSyncCards.size === 0 && selectedAddWords.size === 0 && !session.grammarFocus)}
                   >
                     {isSubmittingSync ? (
                       <>
                         <Loader2 className={styles.spinner} size={16} style={{ marginRight: 8 }} />
-                        {t('Синхронизация...', '同期中...')}
+                        {t('Сохранение...', '保存中...')}
                       </>
                     ) : (
-                      t('Синхронизировать с Anki', 'Ankiと同期する')
+                      t('Сохранить прогресс', '進捗を保存')
                     )}
                   </button>
                 )}
@@ -1532,21 +1592,33 @@ export default function ChatPage() {
       </header>
 
       {/* WORD TRACKER */}
-      <div className={styles.wordTracker}>
-        <span className={styles.wordTrackerLabel}>{t('Цели:', '目標:')}</span>
-        {session.targetWords.map((tw, idx) => {
-          const isCollected = collectedWords.has(tw.word);
-          return (
-            <span
-              key={idx}
-              className={`${styles.wordChip} ${isCollected ? styles.collected : ''}`}
-            >
-              {isCollected ? `${tw.word} (${tw.translation})` : tw.translation}
-              {isCollected && <span className={styles.wordChipCheck}>✓</span>}
-            </span>
-          );
-        })}
-      </div>
+      {session.targetWords && session.targetWords.length > 0 && (
+        <div className={styles.wordTracker}>
+          <span className={styles.wordTrackerLabel}>{t('Цели:', '目標:')}</span>
+          {session.targetWords.map((tw, idx) => {
+            const isCollected = collectedWords.has(tw.word);
+            return (
+              <span
+                key={idx}
+                className={`${styles.wordChip} ${isCollected ? styles.collected : ''}`}
+              >
+                {isCollected ? `${tw.word} (${tw.translation})` : tw.translation}
+                {isCollected && <span className={styles.wordChipCheck}>✓</span>}
+              </span>
+            );
+          })}
+        </div>
+      )}
+
+      {/* GRAMMAR TARGET BADGE */}
+      {session.grammarFocus && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', backgroundColor: 'rgba(59, 130, 246, 0.08)', borderBottom: '2.5px solid var(--border-color)' }}>
+          <span style={{ fontSize: '13px', fontWeight: 805, color: 'var(--color-blue)' }}>Грамматика:</span>
+          <span className={styles.wordChip} style={{ border: '2.5px solid var(--color-blue-shadow)', backgroundColor: 'var(--card-bg)', cursor: 'default' }}>
+            {session.grammarFocus.construction} ({session.grammarFocus.topic})
+          </span>
+        </div>
+      )}
 
       {/* COMPLETION BANNER */}
       {isComplete && (

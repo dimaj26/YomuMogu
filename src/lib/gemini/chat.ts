@@ -24,6 +24,7 @@ export interface ChatResponse {
   translation: string;
   grammarFeedback: GrammarFeedback;
   wordsDetected: string[];
+  grammarRuleDetected: boolean;
   _debug?: {
     systemInstruction: string;
     contents: any;
@@ -67,7 +68,12 @@ export class ChatService {
     message: string,
     level: number = 1,
     grammarInJapanese: boolean = false,
-    collectedWords?: string[]
+    collectedWords?: string[],
+    grammarFocus?: {
+      construction: string;
+      topic: string;
+      explanation: string;
+    }
   ): Promise<ChatResponse> {
     if (!this.ai) {
       const apiKey = process.env.GEMINI_API_KEY;
@@ -124,7 +130,8 @@ export class ChatService {
       levelInstruction,
       grammarLang,
       isStart,
-      modelTurnCount
+      modelTurnCount,
+      grammarFocus
     });
 
     // Ограничиваем историю диалога для Gemini до последних 20 сообщений для экономии токенов и сохранения контекста
@@ -182,9 +189,13 @@ export class ChatService {
                   type: 'ARRAY',
                   description: 'Список целевых слов, использованных пользователем',
                   items: { type: 'STRING' }
+                },
+                grammarRuleDetected: {
+                  type: 'BOOLEAN',
+                  description: 'Использовал ли пользователь целевую грамматическую конструкцию'
                 }
               },
-              required: ['reply', 'translation', 'grammarFeedback', 'wordsDetected']
+              required: ['reply', 'translation', 'grammarFeedback', 'wordsDetected', 'grammarRuleDetected']
             }
           }
         });

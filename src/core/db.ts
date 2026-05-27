@@ -2,15 +2,16 @@ import Dexie, { type Table } from 'dexie';
 import { calculateNextFsrsState, createDefaultFsrsState, alignPassiveToActiveState } from './scheduler';
 import { getProfileItem } from '../lib/profile';
 import { logger } from '../lib/logger';
-import { LocalWord, LocalReview, UiWord } from './types';
+import { LocalWord, LocalReview, UiWord, GrammarProgress } from './types';
 
-export type { LocalWord, LocalReview, UiWord };
+export type { LocalWord, LocalReview, UiWord, GrammarProgress };
 
 
 class YomuMoguDatabase extends Dexie {
   words!: Table<LocalWord>;
   reviews!: Table<LocalReview>;
   ui_words!: Table<UiWord>;
+  grammar_progress!: Table<GrammarProgress>;
 
   constructor() {
     super('YomuMoguDatabase');
@@ -61,6 +62,13 @@ class YomuMoguDatabase extends Dexie {
         delete word.status;
         delete word.deckName;
       });
+    });
+
+    this.version(4).stores({
+      words: '[profileId+id], id, word, category, [profileId+category], passive.due, active.due, profileId',
+      reviews: '++id, [profileId+cardId], cardId, timestamp, synced, profileId',
+      ui_words: '[profileId+id], id, status, due, profileId',
+      grammar_progress: '[profileId+ruleId], ruleId, status, due, profileId',
     });
   }
 }
@@ -444,5 +452,81 @@ export async function resetLocalUiWords(profileId: string): Promise<void> {
   }
   await db.ui_words.where('profileId').equals(profileId).delete();
 }
+
+/**
+ * Получение всего прогресса по грамматике для указанного профиля
+ */
+export async function getGrammarProgressList(profileId: string): Promise<GrammarProgress[]> {
+  if (typeof window === 'undefined') return [];
+  if (!isValidIndexedDbKey(profileId)) {
+    logger.warn('getGrammarProgressList: Невалидный profileId', { profileId });
+    return [];
+  }
+  return db.grammar_progress
+    .where('profileId')
+    .equals(profileId)
+    .toArray();
+}
+
+/**
+ * Обновление интервала грамматического правила по системе Leitner.
+ * Шаги интервалов в днях: [1, 3, 7, 14, 30].
+ * Оценки:
+ *  - 'forgot' (совсем забыл): откат на шаг 0 (интервал 1 день).
+ *  - 'hard' (плохо помню): уменьшение шага на 1 (минимум 0).
+ *  - 'good' (хорошо помню / по умолчанию): увеличение шага на 1 (максимум 4).
+ */
+export async function updateGrammarProgress(
+  profileId: string,
+  ruleId: string,
+  grade: 'forgot' | 'hard' | 'good'
+): Promise<void> {
+  if (typeof window === 'undefined') return;
+  if (!isValidIndexedDbKey([profileId, ruleId])) {
+    logger.warn('updateGrammarProgress: Невалидные ключи', { profileId, ruleId });
+    return;
+  }
+
+  const intervals = [1, 3, 7, 14, 30];
+  const now = Date.now();
+
+  let progress = await db.grammar_progress.get([profileId, ruleId]);
+
+  if (!progress) {
+    progress = {
+      profileId,
+      ruleId,
+      stepIndex: 0,
+      due: now,
+      status: 'new',
+    };
+  }
+
+  let nextStep = progress.stepIndex;
+
+  if (grade === 'forgot') {
+    nextStep = 0;
+  } else if (grade === 'hard') {
+    nextStep = Math.max(0, nextStep - 1);
+  } else {
+    nextStep = Math.min(4, nextStep + 1);
+  }
+
+  const intervalDays = intervals[nextStep];
+  const due = now + intervalDays * 24 * 60 * 60 * 1000;
+  const status = nextStep >= 3 ? 'mature' : nextStep >= 1 ? 'learning' : 'review';
+
+  await db.grammar_progress.put({
+    profileId,
+    ruleId,
+    stepIndex: nextStep,
+    lastReviewed: now,
+    due,
+    status,
+  });
+
+  logger.info(`Грамматический прогресс обновлен: ruleId=${ruleId}, stepIndex=${nextStep}, due=${new Date(due).toISOString()}`);
+}
+
 
 

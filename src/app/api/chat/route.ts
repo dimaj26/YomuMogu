@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { scenario, targetWords, history, message, level, grammarInJapanese, collectedWords } = body;
+    const { scenario, targetWords, history, message, level, grammarInJapanese, collectedWords, grammarFocus } = body;
 
     // 2. Валидация обязательных полей
     if (!scenario || typeof scenario !== 'string') {
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     const grammarInJa = typeof grammarInJapanese === 'boolean' ? grammarInJapanese : false;
 
     logger.info(`Запрос на отправку сообщения в чат (сложность: ${chatLevel}, сообщение: "${message.substring(0, 50)}...")`);
-    const chatResponse = await chatService.sendMessage(scenario, targetWords, history, message, chatLevel, grammarInJa, collectedWords);
+    const chatResponse = await chatService.sendMessage(scenario, targetWords, history, message, chatLevel, grammarInJa, collectedWords, grammarFocus);
 
     return NextResponse.json(chatResponse);
   } catch (error: any) {

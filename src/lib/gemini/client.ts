@@ -197,12 +197,106 @@ export class GeminiClient {
       throw error;
     }
   }
+
+  /**
+   * Проверяет предложение пользователя на соответствие грамматической конструкции N5.
+   * Возвращает результат проверки, исправление (с фуриганой) и объяснение на русском.
+   */
+  async verifyGrammar(
+    construction: string,
+    topic: string,
+    explanation: string,
+    conjugationGuide: string,
+    userInput: string,
+    suggestions: { hint: string; baseWords: string; sampleAnswer: string }[]
+  ): Promise<GrammarVerifyResponse> {
+    if (!this.ai) {
+      logger.error('Инициализация Gemini: отсутствует GEMINI_API_KEY');
+      throw new Error('Ключ GEMINI_API_KEY не задан в переменных окружения.');
+    }
+
+    const systemInstruction = `Вы — ассистент по проверке японской грамматики для русскоязычных студентов.
+Проверьте, правильно ли пользователь составил предложение на японском языке с использованием следующего грамматического правила:
+Конструкция: ${construction}
+Тема: ${topic}
+Описание: ${explanation}
+Инструкция по спряжению: ${conjugationGuide}
+Примеры правильных ответов: ${suggestions.map(s => `"${s.sampleAnswer}" (подсказка: ${s.hint})`).join(', ')}
+
+Ваши правила проверки:
+1. Проверьте предложение пользователя (${userInput}) на предмет правильного использования указанной грамматической конструкции и общей грамматической корректности японского языка.
+2. ВЕРНИТЕ JSON-ответ со следующими полями:
+   - isCorrect: boolean (true, если предложение грамматически корректно, нет опечаток и полностью написано на японском; false в противном случае).
+   - correction: string (исправленный вариант предложения на японском языке. Если предложение правильное, оставьте это поле пустым "").
+   - explanation: string (объяснение ошибок на русском языке. Укажите, что именно не так со спряжением, частицами или порядком слов. Если предложение правильное, оставьте пустым "").
+
+3. Специфические правила для ошибок ввода:
+   - Смешанный ввод (кириллические плейсхолдеры): Если пользователь вставил русские слова в японское предложение вместо забытых слов (например, "Стулの座って" или "Стулは座ります"), установите isCorrect = false. В поле correction вставьте ПОЛНОСТЬЮ исправленное предложение на японском языке, переведя русское слово (например, "椅子に座いて" или "椅子に座って"). Объясните перевод в поле explanation на русском.
+   - Полностью русский ввод: Если пользователь написал сообщение полностью на русском (например, "я хочу прочитать книгу"), установите isCorrect = false. В поле correction верните полный корректный перевод предложения на японский язык. В поле explanation объясните на русском языке, что нужно писать на японском, и разберите перевод.
+   
+4. ПРАВИЛО ФУРИГАНЫ (КРИТИЧЕСКИ ВАЖНО):
+   - Так как мы изучаем базовые правила уровня N5, в поле "correction" ВСЕ иероглифы (kanji) без исключения должны быть обернуты в HTML-теги ruby с хираганой. Пример: <ruby>本<rt>ほん</rt></ruby>を<ruby>読<rt>よ</rt></ruby>んでください。
+   - Никогда не оставляйте кандзи без фуриганы в исправленном предложении correction.`;
+
+    try {
+      logger.info(`Запрос на проверку грамматики конструкции "${construction}" для ввода: "${userInput}"`);
+
+      const result = await withRetry(async (model: GeminiModel) => {
+        const response = await this.ai!.models.generateContent({
+          model,
+          contents: `Пользовательский ввод: ${userInput}`,
+          config: {
+            systemInstruction,
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: 'OBJECT',
+              properties: {
+                isCorrect: {
+                  type: 'BOOLEAN',
+                  description: 'Соответствует ли ввод правилам грамматики и контексту'
+                },
+                correction: {
+                  type: 'STRING',
+                  description: 'Исправленный вариант предложения на японском языке с HTML ruby-тегами для кандзи'
+                },
+                explanation: {
+                  type: 'STRING',
+                  description: 'Подробное объяснение ошибок на русском языке'
+                }
+              },
+              required: ['isCorrect', 'correction', 'explanation']
+            }
+          }
+        });
+
+        const responseText = response.text;
+        if (!responseText) {
+          throw new Error('Gemini API вернул пустой ответ при проверке грамматики');
+        }
+
+        return JSON.parse(responseText) as GrammarVerifyResponse;
+      });
+
+      logger.info(`Проверка грамматики завершена. Результат корректности: ${result.isCorrect}`);
+      return result;
+    } catch (error: any) {
+      logger.error(`Ошибка проверки грамматики для ввода "${userInput}"`, error);
+      throw error;
+    }
+  }
 }
 
 // Интерфейс ответа этимологии
 export interface EtymologyResponse {
   components: string[];
   etymology: string;
+}
+
+// Интерфейс ответа проверки грамматики
+export interface GrammarVerifyResponse {
+  isCorrect: boolean;
+  correction: string;
+  explanation: string;
 }
 
 export const geminiClient = new GeminiClient();
