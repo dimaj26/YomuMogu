@@ -1,0 +1,1607 @@
+{
+  "水": [
+    "restaurant",
+    "home"
+  ],
+  "本": [
+    "education",
+    "hobbies"
+  ],
+  "車": [
+    "travel"
+  ],
+  "友達": [
+    "social"
+  ],
+  "先生": [
+    "education",
+    "work"
+  ],
+  "学生": [
+    "education"
+  ],
+  "学校": [
+    "education"
+  ],
+  "会社": [
+    "work"
+  ],
+  "電話": [
+    "social",
+    "work",
+    "home"
+  ],
+  "部屋": [
+    "home"
+  ],
+  "家": [
+    "home"
+  ],
+  "庭": [
+    "home",
+    "hobbies"
+  ],
+  "食堂": [
+    "restaurant",
+    "home"
+  ],
+  "教室": [
+    "education"
+  ],
+  "駅": [
+    "travel"
+  ],
+  "空港": [
+    "travel"
+  ],
+  "国": [
+    "travel"
+  ],
+  "日本": [
+    "travel"
+  ],
+  "英語": [
+    "education"
+  ],
+  "日本語": [
+    "education"
+  ],
+  "時計": [
+    "universal"
+  ],
+  "傘": [
+    "weather",
+    "shopping"
+  ],
+  "鞄": [
+    "shopping",
+    "travel"
+  ],
+  "靴": [
+    "shopping"
+  ],
+  "服": [
+    "shopping"
+  ],
+  "帽子": [
+    "shopping"
+  ],
+  "手紙": [
+    "social"
+  ],
+  "写真": [
+    "hobbies",
+    "social"
+  ],
+  "映画": [
+    "hobbies",
+    "social"
+  ],
+  "音楽": [
+    "hobbies"
+  ],
+  "旅行": [
+    "travel"
+  ],
+  "勉強": [
+    "education"
+  ],
+  "仕事": [
+    "work"
+  ],
+  "料理": [
+    "home",
+    "restaurant"
+  ],
+  "買い物": [
+    "shopping"
+  ],
+  "猫": [
+    "home",
+    "universal"
+  ],
+  "犬": [
+    "home",
+    "universal"
+  ],
+  "鳥": [
+    "universal"
+  ],
+  "魚": [
+    "restaurant",
+    "universal"
+  ],
+  "花": [
+    "home",
+    "universal"
+  ],
+  "木": [
+    "universal"
+  ],
+  "空": [
+    "travel",
+    "weather"
+  ],
+  "海": [
+    "travel",
+    "weather"
+  ],
+  "山": [
+    "travel",
+    "weather"
+  ],
+  "川": [
+    "travel",
+    "weather"
+  ],
+  "天気": [
+    "weather"
+  ],
+  "雨": [
+    "weather"
+  ],
+  "雪": [
+    "weather"
+  ],
+  "風": [
+    "weather"
+  ],
+  "今日": [
+    "universal"
+  ],
+  "明日": [
+    "universal"
+  ],
+  "昨日": [
+    "universal"
+  ],
+  "今週": [
+    "universal"
+  ],
+  "来週": [
+    "universal"
+  ],
+  "先週": [
+    "universal"
+  ],
+  "毎日": [
+    "universal"
+  ],
+  "朝": [
+    "universal"
+  ],
+  "昼": [
+    "universal"
+  ],
+  "晩": [
+    "universal"
+  ],
+  "夜": [
+    "universal"
+  ],
+  "行く": [
+    "universal"
+  ],
+  "来る": [
+    "universal"
+  ],
+  "帰る": [
+    "universal"
+  ],
+  "食べる": [
+    "universal",
+    "restaurant",
+    "home"
+  ],
+  "飲む": [
+    "universal",
+    "restaurant",
+    "home"
+  ],
+  "見る": [
+    "universal"
+  ],
+  "聞く": [
+    "universal"
+  ],
+  "読む": [
+    "universal"
+  ],
+  "書く": [
+    "universal"
+  ],
+  "話す": [
+    "universal"
+  ],
+  "買う": [
+    "universal",
+    "shopping"
+  ],
+  "する": [
+    "universal"
+  ],
+  "会う": [
+    "universal"
+  ],
+  "遊ぶ": [
+    "universal",
+    "social",
+    "hobbies"
+  ],
+  "泳ぐ": [
+    "universal",
+    "health",
+    "hobbies"
+  ],
+  "歌う": [
+    "universal",
+    "hobbies"
+  ],
+  "走る": [
+    "universal",
+    "health",
+    "hobbies"
+  ],
+  "歩く": [
+    "universal"
+  ],
+  "立つ": [
+    "universal"
+  ],
+  "座る": [
+    "universal"
+  ],
+  "寝る": [
+    "universal"
+  ],
+  "起きる": [
+    "universal"
+  ],
+  "乗る": [
+    "universal"
+  ],
+  "降りる": [
+    "universal"
+  ],
+  "入る": [
+    "universal"
+  ],
+  "出る": [
+    "universal"
+  ],
+  "開ける": [
+    "universal"
+  ],
+  "閉める": [
+    "universal"
+  ],
+  "待つ": [
+    "universal"
+  ],
+  "呼ぶ": [
+    "universal"
+  ],
+  "使う": [
+    "universal"
+  ],
+  "作る": [
+    "universal"
+  ],
+  "撮る": [
+    "universal"
+  ],
+  "貸す": [
+    "universal"
+  ],
+  "借りる": [
+    "universal"
+  ],
+  "教える": [
+    "universal"
+  ],
+  "習う": [
+    "universal"
+  ],
+  "忘れる": [
+    "universal"
+  ],
+  "洗う": [
+    "universal"
+  ],
+  "引く": [
+    "universal"
+  ],
+  "大きい": [
+    "universal"
+  ],
+  "小さい": [
+    "universal"
+  ],
+  "新しい": [
+    "universal"
+  ],
+  "古い": [
+    "universal"
+  ],
+  "いい": [
+    "universal"
+  ],
+  "悪い": [
+    "universal"
+  ],
+  "高い": [
+    "universal"
+  ],
+  "安い": [
+    "universal"
+  ],
+  "暑い": [
+    "universal"
+  ],
+  "寒い": [
+    "universal"
+  ],
+  "暖かい": [
+    "universal"
+  ],
+  "涼しい": [
+    "universal"
+  ],
+  "面白い": [
+    "universal"
+  ],
+  "つまらない": [
+    "universal"
+  ],
+  "忙しい": [
+    "universal"
+  ],
+  "易しい": [
+    "universal"
+  ],
+  "難しい": [
+    "universal"
+  ],
+  "近い": [
+    "universal"
+  ],
+  "遠い": [
+    "universal"
+  ],
+  "早い": [
+    "universal"
+  ],
+  "遅い": [
+    "universal"
+  ],
+  "おいしい": [
+    "universal"
+  ],
+  "甘い": [
+    "universal"
+  ],
+  "辛い": [
+    "universal"
+  ],
+  "静か": [
+    "universal"
+  ],
+  "賑やか": [
+    "universal"
+  ],
+  "親切": [
+    "universal"
+  ],
+  "元気": [
+    "universal"
+  ],
+  "好き": [
+    "universal"
+  ],
+  "嫌い": [
+    "universal"
+  ],
+  "はい": [
+    "universal"
+  ],
+  "いいえ": [
+    "universal"
+  ],
+  "ありがとう": [
+    "universal"
+  ],
+  "すみません": [
+    "universal"
+  ],
+  "おはよう": [
+    "universal"
+  ],
+  "こんにちは": [
+    "universal"
+  ],
+  "こんばんは": [
+    "universal"
+  ],
+  "さようなら": [
+    "universal"
+  ],
+  "はじめまして": [
+    "universal"
+  ],
+  "よろしく": [
+    "universal"
+  ],
+  "ただいま": [
+    "universal"
+  ],
+  "おかえり": [
+    "universal"
+  ],
+  "いただきます": [
+    "universal"
+  ],
+  "ごちそうさま": [
+    "universal"
+  ],
+  "大丈夫": [
+    "universal"
+  ],
+  "いってきます": [
+    "universal"
+  ],
+  "いってらっしゃい": [
+    "universal"
+  ],
+  "おめでとう": [
+    "universal"
+  ],
+  "失礼します": [
+    "universal"
+  ],
+  "お邪魔します": [
+    "universal"
+  ],
+  "辞書": [
+    "education"
+  ],
+  "地図": [
+    "travel"
+  ],
+  "運転手": [
+    "travel",
+    "work"
+  ],
+  "留学生": [
+    "education"
+  ],
+  "公園": [
+    "social",
+    "hobbies"
+  ],
+  "図書館": [
+    "education"
+  ],
+  "郵便局": [
+    "social",
+    "work"
+  ],
+  "銀行": [
+    "shopping",
+    "work"
+  ],
+  "病院": [
+    "health"
+  ],
+  "警察": [
+    "social"
+  ],
+  "美術館": [
+    "hobbies",
+    "travel"
+  ],
+  "動物園": [
+    "hobbies",
+    "travel"
+  ],
+  "科学": [
+    "education"
+  ],
+  "歴史": [
+    "education"
+  ],
+  "文学": [
+    "education"
+  ],
+  "地理": [
+    "education"
+  ],
+  "社会": [
+    "work",
+    "education"
+  ],
+  "法律": [
+    "work",
+    "education"
+  ],
+  "経済": [
+    "work",
+    "education"
+  ],
+  "政治": [
+    "work",
+    "education"
+  ],
+  "機械": [
+    "work",
+    "home"
+  ],
+  "道具": [
+    "work",
+    "home"
+  ],
+  "趣味": [
+    "hobbies"
+  ],
+  "運動": [
+    "health",
+    "hobbies"
+  ],
+  "試合": [
+    "hobbies",
+    "social"
+  ],
+  "散歩": [
+    "hobbies",
+    "health"
+  ],
+  "運転": [
+    "travel"
+  ],
+  "用事": [
+    "social",
+    "work"
+  ],
+  "約束": [
+    "social",
+    "work"
+  ],
+  "予定": [
+    "social",
+    "work"
+  ],
+  "計画": [
+    "social",
+    "work"
+  ],
+  "準備": [
+    "social",
+    "work"
+  ],
+  "案内": [
+    "social",
+    "work"
+  ],
+  "紹介": [
+    "social",
+    "work"
+  ],
+  "相談": [
+    "social",
+    "work"
+  ],
+  "連絡": [
+    "social",
+    "work"
+  ],
+  "説明": [
+    "social",
+    "work"
+  ],
+  "翻訳": [
+    "education",
+    "work"
+  ],
+  "通訳": [
+    "education",
+    "work"
+  ],
+  "授業": [
+    "education"
+  ],
+  "講義": [
+    "education"
+  ],
+  "試験": [
+    "education"
+  ],
+  "宿題": [
+    "education"
+  ],
+  "作文": [
+    "education"
+  ],
+  "発音": [
+    "education"
+  ],
+  "意味": [
+    "universal"
+  ],
+  "意見": [
+    "universal"
+  ],
+  "理由": [
+    "universal"
+  ],
+  "原因": [
+    "universal"
+  ],
+  "結果": [
+    "universal"
+  ],
+  "秘密": [
+    "social"
+  ],
+  "嘘": [
+    "social"
+  ],
+  "泥棒": [
+    "social"
+  ],
+  "事故": [
+    "health",
+    "travel"
+  ],
+  "事件": [
+    "social"
+  ],
+  "地震": [
+    "weather",
+    "health"
+  ],
+  "火事": [
+    "weather",
+    "health"
+  ],
+  "台風": [
+    "weather"
+  ],
+  "洪水": [
+    "weather"
+  ],
+  "雲": [
+    "weather"
+  ],
+  "霧": [
+    "weather"
+  ],
+  "氷": [
+    "weather"
+  ],
+  "森": [
+    "travel",
+    "hobbies"
+  ],
+  "林": [
+    "travel",
+    "hobbies"
+  ],
+  "畑": [
+    "travel",
+    "hobbies"
+  ],
+  "温泉": [
+    "travel",
+    "health"
+  ],
+  "港": [
+    "travel",
+    "work"
+  ],
+  "貿易": [
+    "travel",
+    "work"
+  ],
+  "工場": [
+    "work"
+  ],
+  "事務所": [
+    "work"
+  ],
+  "会議": [
+    "work"
+  ],
+  "社長": [
+    "work"
+  ],
+  "規則": [
+    "education",
+    "work"
+  ],
+  "習慣": [
+    "education",
+    "hobbies"
+  ],
+  "伝統": [
+    "education",
+    "hobbies"
+  ],
+  "文化": [
+    "education",
+    "hobbies"
+  ],
+  "芸術": [
+    "education",
+    "hobbies"
+  ],
+  "ガス": [
+    "home"
+  ],
+  "電気": [
+    "home"
+  ],
+  "水道": [
+    "home"
+  ],
+  "考える": [
+    "universal"
+  ],
+  "決める": [
+    "universal"
+  ],
+  "始める": [
+    "universal"
+  ],
+  "終わる": [
+    "universal"
+  ],
+  "続ける": [
+    "universal"
+  ],
+  "送る": [
+    "universal"
+  ],
+  "届ける": [
+    "universal"
+  ],
+  "運ぶ": [
+    "universal"
+  ],
+  "動く": [
+    "universal"
+  ],
+  "止める": [
+    "universal"
+  ],
+  "渡る": [
+    "universal"
+  ],
+  "過ぎる": [
+    "universal"
+  ],
+  "遅れる": [
+    "universal"
+  ],
+  "間に合う": [
+    "universal"
+  ],
+  "急ぐ": [
+    "universal"
+  ],
+  "助ける": [
+    "universal"
+  ],
+  "頼む": [
+    "universal"
+  ],
+  "祈る": [
+    "universal"
+  ],
+  "祝う": [
+    "universal"
+  ],
+  "片付ける": [
+    "universal"
+  ],
+  "汚す": [
+    "universal"
+  ],
+  "壊す": [
+    "universal"
+  ],
+  "直す": [
+    "universal"
+  ],
+  "治る": [
+    "universal"
+  ],
+  "包む": [
+    "universal"
+  ],
+  "貼る": [
+    "universal"
+  ],
+  "掛ける": [
+    "universal"
+  ],
+  "飾る": [
+    "universal"
+  ],
+  "植える": [
+    "universal"
+  ],
+  "育てる": [
+    "universal"
+  ],
+  "集める": [
+    "universal"
+  ],
+  "捨てる": [
+    "universal"
+  ],
+  "選ぶ": [
+    "universal"
+  ],
+  "比べる": [
+    "universal"
+  ],
+  "調べる": [
+    "universal"
+  ],
+  "確かめる": [
+    "universal"
+  ],
+  "覚える": [
+    "universal"
+  ],
+  "思い出す": [
+    "universal"
+  ],
+  "伝える": [
+    "universal"
+  ],
+  "信じる": [
+    "universal"
+  ],
+  "怒る": [
+    "universal"
+  ],
+  "泣く": [
+    "universal"
+  ],
+  "笑う": [
+    "universal"
+  ],
+  "驚く": [
+    "universal"
+  ],
+  "困る": [
+    "universal"
+  ],
+  "慣れる": [
+    "universal"
+  ],
+  "諦める": [
+    "universal"
+  ],
+  "頑張る": [
+    "universal"
+  ],
+  "払う": [
+    "universal"
+  ],
+  "消す": [
+    "universal"
+  ],
+  "広い": [
+    "universal"
+  ],
+  "狭い": [
+    "universal"
+  ],
+  "深い": [
+    "universal"
+  ],
+  "浅い": [
+    "universal"
+  ],
+  "太い": [
+    "universal"
+  ],
+  "細い": [
+    "universal"
+  ],
+  "重い": [
+    "universal"
+  ],
+  "軽い": [
+    "universal"
+  ],
+  "強い": [
+    "universal"
+  ],
+  "弱い": [
+    "universal"
+  ],
+  "暗い": [
+    "universal"
+  ],
+  "明るい": [
+    "universal"
+  ],
+  "汚い": [
+    "universal"
+  ],
+  "珍しい": [
+    "universal"
+  ],
+  "懐かしい": [
+    "universal"
+  ],
+  "恥ずかしい": [
+    "universal"
+  ],
+  "怖い": [
+    "universal"
+  ],
+  "悲しい": [
+    "universal"
+  ],
+  "嬉しい": [
+    "universal"
+  ],
+  "楽しい": [
+    "universal"
+  ],
+  "厳しい": [
+    "universal"
+  ],
+  "正しい": [
+    "universal"
+  ],
+  "丁寧": [
+    "universal"
+  ],
+  "簡単": [
+    "universal"
+  ],
+  "複雑": [
+    "universal"
+  ],
+  "安全": [
+    "universal"
+  ],
+  "危険": [
+    "universal"
+  ],
+  "必要": [
+    "universal"
+  ],
+  "十分": [
+    "universal"
+  ],
+  "盛ん": [
+    "universal"
+  ],
+  "邪魔": [
+    "universal"
+  ],
+  "残念": [
+    "universal"
+  ],
+  "無理": [
+    "universal"
+  ],
+  "特別": [
+    "universal"
+  ],
+  "適当": [
+    "universal"
+  ],
+  "自由": [
+    "universal"
+  ],
+  "不便": [
+    "universal"
+  ],
+  "熱心": [
+    "universal"
+  ],
+  "冷たい": [
+    "universal"
+  ],
+  "便利": [
+    "universal"
+  ],
+  "もちろん": [
+    "universal"
+  ],
+  "やはり": [
+    "universal"
+  ],
+  "例えば": [
+    "universal"
+  ],
+  "特に": [
+    "universal"
+  ],
+  "実は": [
+    "universal"
+  ],
+  "絶対に": [
+    "universal"
+  ],
+  "急に": [
+    "universal"
+  ],
+  "ずっと": [
+    "universal"
+  ],
+  "ほとんど": [
+    "universal"
+  ],
+  "ずいぶん": [
+    "universal"
+  ],
+  "とうとう": [
+    "universal"
+  ],
+  "やっと": [
+    "universal"
+  ],
+  "ついに": [
+    "universal"
+  ],
+  "ようやく": [
+    "universal"
+  ],
+  "もしかしたら": [
+    "universal"
+  ],
+  "もし": [
+    "universal"
+  ],
+  "確かに": [
+    "universal"
+  ],
+  "なるほど": [
+    "universal"
+  ],
+  "お疲れ様": [
+    "universal"
+  ],
+  "お大事に": [
+    "universal"
+  ],
+  "気をつけて": [
+    "universal"
+  ],
+  "かまいません": [
+    "universal"
+  ],
+  "おかげさまで": [
+    "universal"
+  ],
+  "よろしくお伝えください": [
+    "universal"
+  ],
+  "ごめんなさい": [
+    "universal"
+  ],
+  "申し訳ありません": [
+    "universal"
+  ],
+  "しばらくです": [
+    "universal"
+  ],
+  "お待たせしました": [
+    "universal"
+  ],
+  "お先に失礼します": [
+    "universal"
+  ],
+  "ご遠慮ください": [
+    "universal"
+  ],
+  "スマホ": [
+    "home",
+    "work",
+    "social"
+  ],
+  "ネット": [
+    "home",
+    "work",
+    "social"
+  ],
+  "アプリ": [
+    "home",
+    "work",
+    "social"
+  ],
+  "パスワード": [
+    "home",
+    "work",
+    "social"
+  ],
+  "メール": [
+    "social",
+    "work"
+  ],
+  "メッセージ": [
+    "social",
+    "work"
+  ],
+  "バイト": [
+    "work"
+  ],
+  "パート": [
+    "work"
+  ],
+  "コンビニ": [
+    "shopping"
+  ],
+  "スーパー": [
+    "shopping"
+  ],
+  "レストラン": [
+    "restaurant"
+  ],
+  "カフェ": [
+    "restaurant"
+  ],
+  "メニュー": [
+    "restaurant",
+    "home"
+  ],
+  "ラーメン": [
+    "restaurant",
+    "home"
+  ],
+  "お茶": [
+    "restaurant",
+    "home"
+  ],
+  "ビール": [
+    "restaurant",
+    "home"
+  ],
+  "ワイン": [
+    "restaurant",
+    "home"
+  ],
+  "コーヒー": [
+    "restaurant",
+    "home"
+  ],
+  "パン": [
+    "restaurant",
+    "home"
+  ],
+  "ケーキ": [
+    "restaurant",
+    "home"
+  ],
+  "デザート": [
+    "restaurant",
+    "home"
+  ],
+  "ランチ": [
+    "restaurant",
+    "home"
+  ],
+  "ディナー": [
+    "restaurant",
+    "home"
+  ],
+  "イベント": [
+    "hobbies",
+    "social"
+  ],
+  "チケット": [
+    "hobbies",
+    "social"
+  ],
+  "コンサート": [
+    "hobbies",
+    "social"
+  ],
+  "デート": [
+    "social"
+  ],
+  "ライブ": [
+    "hobbies",
+    "social"
+  ],
+  "アニメ": [
+    "hobbies",
+    "social"
+  ],
+  "漫画": [
+    "hobbies",
+    "social"
+  ],
+  "ゲーム": [
+    "hobbies",
+    "social"
+  ],
+  "ユーチューブ": [
+    "social",
+    "hobbies"
+  ],
+  "チャンネル": [
+    "social",
+    "hobbies"
+  ],
+  "ログイン": [
+    "universal"
+  ],
+  "シェア": [
+    "social"
+  ],
+  "コメント": [
+    "social"
+  ],
+  "グループ": [
+    "social"
+  ],
+  "チャット": [
+    "social"
+  ],
+  "グルメ": [
+    "restaurant"
+  ],
+  "ショッピング": [
+    "shopping"
+  ],
+  "セール": [
+    "shopping"
+  ],
+  "プレゼント": [
+    "shopping",
+    "social"
+  ],
+  "ギフト": [
+    "shopping",
+    "social"
+  ],
+  "サプライズ": [
+    "social"
+  ],
+  "トラブル": [
+    "universal"
+  ],
+  "キャンセル": [
+    "universal"
+  ],
+  "キャッシュ": [
+    "shopping"
+  ],
+  "カード": [
+    "shopping"
+  ],
+  "ポイント": [
+    "shopping"
+  ],
+  "レシート": [
+    "shopping"
+  ],
+  "ググる": [
+    "universal"
+  ],
+  "バズる": [
+    "universal"
+  ],
+  "シェアする": [
+    "universal"
+  ],
+  "コピペする": [
+    "universal"
+  ],
+  "スルーする": [
+    "universal"
+  ],
+  "サボる": [
+    "universal"
+  ],
+  "ハマる": [
+    "universal"
+  ],
+  "ビビる": [
+    "universal"
+  ],
+  "ウケる": [
+    "universal"
+  ],
+  "テンパる": [
+    "universal"
+  ],
+  "ミスる": [
+    "universal"
+  ],
+  "メモる": [
+    "universal"
+  ],
+  "コラボする": [
+    "universal"
+  ],
+  "ツイートする": [
+    "universal"
+  ],
+  "アップする": [
+    "universal"
+  ],
+  "ダウンロードする": [
+    "universal"
+  ],
+  "チェックする": [
+    "universal"
+  ],
+  "リセットする": [
+    "universal"
+  ],
+  "スタートする": [
+    "universal"
+  ],
+  "クリアする": [
+    "universal"
+  ],
+  "キャンセルする": [
+    "universal"
+  ],
+  "パスする": [
+    "universal"
+  ],
+  "キープする": [
+    "universal"
+  ],
+  "サポートする": [
+    "universal"
+  ],
+  "アドバイスする": [
+    "universal"
+  ],
+  "リラックスする": [
+    "universal"
+  ],
+  "イライラする": [
+    "universal"
+  ],
+  "ワクワクする": [
+    "universal"
+  ],
+  "ドキドキする": [
+    "universal"
+  ],
+  "ガッカリする": [
+    "universal"
+  ],
+  "ホッとする": [
+    "universal"
+  ],
+  "スッキリする": [
+    "universal"
+  ],
+  "ノリノリになる": [
+    "universal"
+  ],
+  "チャレンジする": [
+    "universal"
+  ],
+  "カットする": [
+    "universal"
+  ],
+  "コピーする": [
+    "universal"
+  ],
+  "ペーストする": [
+    "universal"
+  ],
+  "クリックする": [
+    "universal"
+  ],
+  "タップする": [
+    "universal"
+  ],
+  "スワイプする": [
+    "universal"
+  ],
+  "ヤバい": [
+    "universal"
+  ],
+  "エモい": [
+    "universal"
+  ],
+  "ウザい": [
+    "universal"
+  ],
+  "キモい": [
+    "universal"
+  ],
+  "ダサい": [
+    "universal"
+  ],
+  "ムズい": [
+    "universal"
+  ],
+  "エグい": [
+    "universal"
+  ],
+  "リアル": [
+    "universal"
+  ],
+  "ガチ": [
+    "universal"
+  ],
+  "ラフ": [
+    "universal"
+  ],
+  "シンプル": [
+    "universal"
+  ],
+  "スマート": [
+    "universal"
+  ],
+  "カジュアル": [
+    "universal"
+  ],
+  "フレッシュ": [
+    "universal"
+  ],
+  "ユニーク": [
+    "universal"
+  ],
+  "トレンディ": [
+    "universal"
+  ],
+  "メンタル": [
+    "universal"
+  ],
+  "ポジティブ": [
+    "universal"
+  ],
+  "ネガティブ": [
+    "universal"
+  ],
+  "アクティブ": [
+    "universal"
+  ],
+  "ロマンチック": [
+    "universal"
+  ],
+  "クール": [
+    "universal"
+  ],
+  "ドライ": [
+    "universal"
+  ],
+  "ウェット": [
+    "universal"
+  ],
+  "ヘルシー": [
+    "universal"
+  ],
+  "カラフル": [
+    "universal"
+  ],
+  "ファンシー": [
+    "universal"
+  ],
+  "クラシック": [
+    "universal"
+  ],
+  "モダン": [
+    "universal"
+  ],
+  "ハッピー": [
+    "universal"
+  ],
+  "またね": [
+    "universal"
+  ],
+  "バイバイ": [
+    "universal"
+  ],
+  "じゃあね": [
+    "universal"
+  ],
+  "そうだね": [
+    "universal"
+  ],
+  "本当に": [
+    "universal"
+  ],
+  "ガチで": [
+    "universal"
+  ],
+  "マジで": [
+    "universal"
+  ],
+  "ちなみに": [
+    "universal"
+  ],
+  "ところで": [
+    "universal"
+  ],
+  "だから": [
+    "universal"
+  ],
+  "でも": [
+    "universal"
+  ],
+  "しかし": [
+    "universal"
+  ],
+  "それから": [
+    "universal"
+  ],
+  "それで": [
+    "universal"
+  ],
+  "要するに": [
+    "universal"
+  ],
+  "つまり": [
+    "universal"
+  ],
+  "そういえば": [
+    "universal"
+  ],
+  "どういたしまして": [
+    "universal"
+  ],
+  "とりあえず": [
+    "universal"
+  ],
+  "わかる": [
+    "universal"
+  ],
+  "そうなんだ": [
+    "universal"
+  ],
+  "そりゃそうだ": [
+    "universal"
+  ],
+  "やっぱ": [
+    "universal"
+  ],
+  "やっぱり": [
+    "universal"
+  ],
+  "ええと": [
+    "universal"
+  ],
+  "あのう": [
+    "universal"
+  ],
+  "たぶん": [
+    "universal"
+  ],
+  "全然": [
+    "universal"
+  ],
+  "まあまあ": [
+    "universal"
+  ],
+  "おっけー": [
+    "universal"
+  ]
+}

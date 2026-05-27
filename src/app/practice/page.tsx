@@ -78,13 +78,40 @@ interface WarmupState {
   isCorrect: boolean | null;
 }
 
-function generateOptions(correct: string, allWords: LocalWord[], field: 'reading' | 'translation'): string[] {
-  const others = allWords
-    .filter(w => w[field] !== correct)
-    .map(w => w[field]);
-  // Перемешиваем и берём 2 дистрактора
-  const shuffled = others.sort(() => Math.random() - 0.5).slice(0, 2);
-  const options = [...shuffled, correct].sort(() => Math.random() - 0.5);
+function generateOptions(
+  correct: string,
+  currentWord: LocalWord,
+  allWords: LocalWord[],
+  field: 'reading' | 'translation'
+): string[] {
+  const targetTags = currentWord.tags || [];
+  
+  // Отбираем слова с пересекающимися ситуационными тегами (исключая universal)
+  const sameTagWords = allWords.filter(w => 
+    w.word !== currentWord.word && 
+    w[field] !== correct &&
+    w.tags && 
+    w.tags.some(t => t !== 'universal' && targetTags.includes(t))
+  );
+
+  let distractors = sameTagWords.map(w => w[field]);
+
+  // Убираем дубликаты среди дистракторов
+  distractors = Array.from(new Set(distractors));
+
+  // Если слов с тем же тегом не хватает, добираем из всех остальных слов
+  if (distractors.length < 2) {
+    const others = allWords
+      .filter(w => w.word !== currentWord.word && w[field] !== correct && !distractors.includes(w[field]))
+      .map(w => w[field]);
+    const uniqueOthers = Array.from(new Set(others));
+    const needed = 2 - distractors.length;
+    distractors = [...distractors, ...uniqueOthers.sort(() => Math.random() - 0.5).slice(0, needed)];
+  } else {
+    distractors = distractors.sort(() => Math.random() - 0.5).slice(0, 2);
+  }
+
+  const options = [...distractors, correct].sort(() => Math.random() - 0.5);
   return options;
 }
 
@@ -304,12 +331,12 @@ export default function PracticePage() {
 
     if (step === 'sight') {
       // Переход к kana check
-      const options = generateOptions(currentWord.reading, wWords, 'reading');
+      const options = generateOptions(currentWord.reading, currentWord, wWords, 'reading');
       setWarmupOptions(options);
       setWarmup({ ...warmup, step: 'kana', selectedAnswer: null, isCorrect: null });
     } else if (step === 'kana') {
       // Переход к translation check
-      const options = generateOptions(currentWord.translation, wWords, 'translation');
+      const options = generateOptions(currentWord.translation, currentWord, wWords, 'translation');
       setWarmupOptions(options);
       setWarmup({ ...warmup, step: 'translation', selectedAnswer: null, isCorrect: null });
     } else {

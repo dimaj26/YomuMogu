@@ -86,6 +86,12 @@ export async function importStarterDeck(profileId: string, knownWordIds: Set<num
 
   // Ленивый динамический импорт
   const deckData = (await import('../resources/starter_deck.json')).default;
+  let dictionary: Record<string, string[]> = {};
+  try {
+    dictionary = (await import('../resources/situational_dictionary.json')).default as Record<string, string[]>;
+  } catch (e) {
+    console.error('Ошибка загрузки ситуационного словаря:', e);
+  }
 
   // Извлекаем существующие слова для этого профиля и колоды
   const existingWords = await db.words
@@ -110,6 +116,9 @@ export async function importStarterDeck(profileId: string, knownWordIds: Set<num
     }
 
     const isKnown = knownWordIds.has(wordId);
+    
+    // Получаем ситуационные теги из словаря
+    const tags = dictionary[item.word] || ["universal"];
     
     const wordRecord: LocalWord = {
       profileId,
@@ -139,7 +148,8 @@ export async function importStarterDeck(profileId: string, knownWordIds: Set<num
         status: 'mature',
         lastReview: now
       } : createDefaultFsrsState(now),
-      contextExamples: []
+      contextExamples: [],
+      tags
     };
 
     wordsToSave.push(wordRecord);
@@ -185,6 +195,7 @@ export function localWordToAnkiWord(word: LocalWord): AnkiWord {
     rawFront: word.word,
     rawBack: word.translation,
     cardIds: [word.id],
+    tags: word.tags
   };
 }
 
@@ -248,6 +259,9 @@ export async function getDailyActivePool(profileId: string, category: string): P
     pool.push(...added);
   }
 
+  // Лениво классифицируем слова в пуле, у которых нет тегов
+  await classifyMissingWords(profileId, pool);
+
   return pool.map(localWordToAnkiWord);
 }
 
@@ -294,6 +308,16 @@ export async function addWord(
 
   const wordId = Date.now();
   
+  let tags: string[] = ["universal"];
+  try {
+    const dictionary = (await import('../resources/situational_dictionary.json')).default as Record<string, string[]>;
+    if (dictionary[word]) {
+      tags = dictionary[word];
+    }
+  } catch (e) {
+    console.error('Ошибка загрузки ситуационного словаря при добавлении слова:', e);
+  }
+  
   const wordRecord: LocalWord = {
     profileId,
     id: wordId,
@@ -304,7 +328,8 @@ export async function addWord(
     source: 'manual',
     passive: createDefaultFsrsState(Date.now()),
     active: createDefaultFsrsState(Date.now()),
-    contextExamples: []
+    contextExamples: [],
+    tags
   };
 
   try {
@@ -436,4 +461,82 @@ export async function syncDailyNewWordsCountWithDb(profileId: string): Promise<n
   setProfileItem(key, dbCount.toString(), profileId);
 
   return dbCount;
+}
+
+/**
+ * Проверяет слова на наличие тегов. Если тегов нет, пытается найти их в статическом словаре.
+ * Если слова нет в словаре, обращается к Gemini API для классификации.
+ * Обновляет слова в БД.
+ */
+export async function classifyMissingWords(profileId: string, words: LocalWord[]): Promise<void> {
+  if (typeof window === 'undefined' || words.length === 0) return;
+
+  const missing = words.filter(w => !w.tags || w.tags.length === 0);
+  if (missing.length === 0) return;
+
+  // Загружаем статический словарь
+  let dictionary: Record<string, string[]> = {};
+  try {
+    dictionary = (await import('../resources/situational_dictionary.json')).default as Record<string, string[]>;
+  } catch (e) {
+    console.error('Ошибка загрузки ситуационного словаря при ленивой классификации:', e);
+  }
+
+  const wordsToClassifyOnline: LocalWord[] = [];
+  const wordsToSaveLocally: LocalWord[] = [];
+
+  for (const w of missing) {
+    const staticTags = dictionary[w.word];
+    if (staticTags && staticTags.length > 0) {
+      w.tags = staticTags;
+      wordsToSaveLocally.push(w);
+    } else {
+      wordsToClassifyOnline.push(w);
+    }
+  }
+
+  // Если есть слова для онлайн-классификации через Gemini
+  if (wordsToClassifyOnline.length > 0) {
+    try {
+      const response = await fetch('/api/gemini/classify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          words: wordsToClassifyOnline.map(w => w.word)
+        })
+      });
+
+      if (response.ok) {
+        const { classifications } = await response.json() as { classifications: { word: string; tags: string[] }[] };
+        const classMap = new Map(classifications.map(c => [c.word, c.tags]));
+        
+        for (const w of wordsToClassifyOnline) {
+          const tags = classMap.get(w.word) || ['universal'];
+          w.tags = tags;
+          wordsToSaveLocally.push(w);
+        }
+      } else {
+        console.error('Ошибка вызова API классификации:', response.statusText);
+        // Фолбек на universal при ошибке API, чтобы не спамить
+        for (const w of wordsToClassifyOnline) {
+          w.tags = ['universal'];
+          wordsToSaveLocally.push(w);
+        }
+      }
+    } catch (e) {
+      console.error('Ошибка при онлайн-классификации слов:', e);
+      // Фолбек на universal при ошибке сети
+      for (const w of wordsToClassifyOnline) {
+        w.tags = ['universal'];
+        wordsToSaveLocally.push(w);
+      }
+    }
+  }
+
+  if (wordsToSaveLocally.length > 0) {
+    await db.words.bulkPut(wordsToSaveLocally);
+    console.log(`[LazyTagger] Классифицировано слов: ${wordsToSaveLocally.length}`);
+  }
 }

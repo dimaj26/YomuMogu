@@ -18,6 +18,99 @@ export interface GeneratedSessionsResponse {
   sessions: GeneratedSession[];
 }
 
+export interface GroupedSessionInput {
+  theme: string;
+  words: { word: string; translation: string }[];
+}
+
+export function groupWordsIntoThemes(words: AnkiWord[]): GroupedSessionInput[] {
+  // Исключаем дубликаты слов по полю word
+  const uniqueWords = Array.from(new Map(words.map(w => [w.word, w])).values());
+
+  const themes = ['shopping', 'restaurant', 'travel', 'home', 'work', 'hobbies', 'social', 'health', 'weather', 'education'];
+  
+  // Разделяем на ситуационные слова (у которых есть хотя бы один тег из themes) и универсальные слова (у которых только universal или нет тегов)
+  const situationalWords = uniqueWords.filter(w => w.tags && w.tags.some(t => themes.includes(t)));
+  const universalWords = uniqueWords.filter(w => !w.tags || w.tags.every(t => t === 'universal'));
+
+  // Подсчитываем количество ситуационных слов для каждой темы
+  const themeCounts: Record<string, number> = {};
+  themes.forEach(t => {
+    themeCounts[t] = situationalWords.filter(w => w.tags && w.tags.includes(t)).length;
+  });
+
+  // Сортируем темы по популярности (количеству слов)
+  const sortedThemes = themes
+    .map(t => ({ theme: t, count: themeCounts[t] }))
+    .sort((a, b) => b.count - a.count);
+
+  // Выбираем топ-3 темы. Если слов мало, дополняем дефолтными темами (social, home, shopping)
+  const chosenThemes: string[] = [];
+  for (let i = 0; i < 3; i++) {
+    if (i < sortedThemes.length && sortedThemes[i].count > 0) {
+      chosenThemes.push(sortedThemes[i].theme);
+    } else {
+      const fallback = ['social', 'home', 'shopping'].find(t => !chosenThemes.includes(t));
+      if (fallback) chosenThemes.push(fallback);
+    }
+  }
+
+  // Наборы слов для каждой выбранной темы
+  const result: GroupedSessionInput[] = [];
+  const usedWords = new Set<string>();
+
+  for (const theme of chosenThemes) {
+    // 1. Сначала отбираем слова, которые содержат этот тег и еще не использованы
+    const matchingNouns = situationalWords.filter(w => w.tags && w.tags.includes(theme) && !usedWords.has(w.word));
+    
+    // Сортируем matchingNouns: сначала те, у которых статус не mature (приоритетные)
+    const priorityNouns = matchingNouns.filter(w => w.status !== 'mature');
+    const matureNouns = matchingNouns.filter(w => w.status === 'mature');
+    const sortedMatchingNouns = [...priorityNouns, ...matureNouns];
+
+    // Берем до 4 существительных для этой темы
+    const selectedNouns = sortedMatchingNouns.slice(0, 4);
+    selectedNouns.forEach(w => usedWords.add(w.word));
+
+    // 2. Добираем универсальные слова (глаголы/прилагательные) до общего числа 5 слов (или от 4 до 6)
+    const needed = 5 - selectedNouns.length;
+    const selectedUniversal: AnkiWord[] = [];
+    if (needed > 0) {
+      const availableUniversal = universalWords.filter(w => !usedWords.has(w.word));
+      // Сортируем универсальные: сначала приоритетные
+      const priorityUniv = availableUniversal.filter(w => w.status !== 'mature');
+      const matureUniv = availableUniversal.filter(w => w.status === 'mature');
+      const sortedUniv = [...priorityUniv, ...matureUniv];
+
+      const chosenUniv = sortedUniv.slice(0, needed);
+      chosenUniv.forEach(w => usedWords.add(w.word));
+      selectedUniversal.push(...chosenUniv);
+    }
+
+    const sessionWords = [...selectedNouns, ...selectedUniversal].map(w => ({
+      word: w.word,
+      translation: w.translation
+    }));
+
+    // Если слов всё ещё меньше 4 (например, в пуле совсем мало слов), то пытаемся добрать уже использованные универсальные
+    if (sessionWords.length < 4) {
+      const neededMore = 4 - sessionWords.length;
+      const extraUniv = universalWords.slice(0, neededMore).map(w => ({
+        word: w.word,
+        translation: w.translation
+      }));
+      sessionWords.push(...extraUniv);
+    }
+
+    result.push({
+      theme,
+      words: sessionWords
+    });
+  }
+
+  return result;
+}
+
 export class GeminiClient {
   private ai: GoogleGenAI | null = null;
 
@@ -42,47 +135,31 @@ export class GeminiClient {
       return [];
     }
 
-    // Фильтруем слова по приоритету: сначала те, что на изучении/повторении (new, learning, review)
-    // mature слова используем только если не хватает для красивой группировки
-    const priorityWords = words.filter(w => w.status !== 'mature');
-    const matureWords = words.filter(w => w.status === 'mature');
-
-    // Ограничиваем список слов для передачи в контекст ИИ, чтобы не перегружать prompt (выберем максимум 50 приоритетных и 30 mature)
-    const wordsListForPrompt = [
-      ...priorityWords.slice(0, 50),
-      ...matureWords.slice(0, 30)
-    ].map(w => ({
-      word: w.word,
-      translation: w.translation,
-      status: w.status,
-      interval: w.interval
-    }));
+    // Группируем слова по ситуационным темам программно
+    const groupedGroups = groupWordsIntoThemes(words);
 
     const systemInstruction = `Вы — преподаватель японского языка.
-Ваша задача — проанализировать список японских слов и сгруппировать их в 3 различные разговорные темы (сценарии) для практического диалога.
-В каждой теме пользователь будет вести диалог с ИИ на японском языке.
+Ваша задача — составить 3 разговорных сценария (сессии) на основе переданных групп слов и их тем.
+Для каждой группы слов вам предоставлена тема (например, "restaurant", "shopping", "travel").
 
-Правила составления тем:
-1. Выберите для каждой темы от 4 до 6 целевых слов (targetWords) из переданного списка.
-2. Старайтесь выбирать слова со статусами 'new', 'learning' или 'review'. Слова со статусом 'mature' используйте только при необходимости.
-3. Темы должны быть естественными и полезными для повседневной практики (например: "В кафе", "Покупка билета на вокзале", "Разговор о погоде").
-4. Не используйте одинаковые целевые слова в разных темах.
-5. Для каждой темы составьте подробную инструкцию (поле 'scenario') на русском языке. Она должна описывать:
-   - Кем является ИИ в этом диалоге (например: продавец, прохожий)
-   - Кем является пользователь в этом диалоге (например: покупатель, турист)
+Правила составления:
+1. Для каждой группы составьте естественную и полезную ситуацию для диалога на русском языке.
+2. Ситуация должна соответствовать указанной теме группы и логично задействовать все переданные целевые слова этой группы.
+3. Опишите сценарий диалога (поле 'scenario') на русском языке:
+   - Кем является ИИ (например: официант, продавец, коллега)
+   - Кем является пользователь (например: клиент, покупатель)
    - Описание ситуации и цель общения для пользователя.
-6. Названия (title) и описания (description) пишите на русском языке.
-
-Верните строго структурированный JSON-ответ, содержащий массив 'sessions'.`;
+4. Напишите название темы (title) и короткое описание (description) на русском языке.
+5. Верните строго структурированный JSON-ответ, содержащий массив 'sessions'.`;
 
     try {
-      logger.info('Отправка запроса в Gemini API для генерации тем...');
+      logger.info('Отправка запроса в Gemini API для генерации тем по группам...');
       
       const result = await withRetry(async (model: GeminiModel) => {
         logger.debug(`Используется модель: ${model}`);
         const response = await this.ai!.models.generateContent({
           model,
-          contents: `Вот список слов для группировки:\n${JSON.stringify(wordsListForPrompt, null, 2)}`,
+          contents: `Вот 3 группы слов с их ситуационными темами:\n${JSON.stringify(groupedGroups, null, 2)}`,
           config: {
             systemInstruction,
             responseMimeType: 'application/json',
@@ -283,6 +360,94 @@ export class GeminiClient {
       return result;
     } catch (error: any) {
       logger.error(`Ошибка проверки грамматики для ввода "${userInput}"`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Классифицирует японские слова по ситуационным категориям с помощью Gemini.
+   */
+  async classifyWords(words: string[]): Promise<{ word: string; tags: string[] }[]> {
+    if (!this.ai) {
+      logger.error('Инициализация Gemini: отсутствует GEMINI_API_KEY');
+      throw new Error('Ключ GEMINI_API_KEY не задан в переменных окружения.');
+    }
+
+    if (words.length === 0) {
+      return [];
+    }
+
+    const systemInstruction = `Вы — лингвистический классификатор для японского языка.
+Ваша задача — классифицировать список японских слов по ситуационным темам.
+
+Доступные теги:
+- 'shopping': Покупки, магазины, одежда, деньги, транзакции.
+- 'restaurant': Рестораны, кафе, еда, напитки, заказ еды.
+- 'travel': Путешествия, транспорт, гостиницы, направления, природа (море, горы).
+- 'home': Дом, быт, семья, мебель, ежедневные домашние дела.
+- 'work': Работа, офис, бизнес, профессии, совещания.
+- 'hobbies': Хобби, спорт, развлечения, искусство, игры, музыка, книги.
+- 'social': Общение, друзья, встречи, звонки, переписка, социальные взаимодействия.
+- 'health': Здоровье, медицина, больницы, болезни, самочувствие, несчастные случаи.
+- 'weather': Погода, дождь, снег, природные катастрофы (тайфун, землетрясение).
+- 'education': Учеба, школа, университет, языки, экзамены, грамматика.
+- 'universal': Общие действия, местоимения, базовые наречия, предлоги, а также абстрактные/общие глаголы и прилагательные (например: делать, идти, быть, большой, хороший).
+
+Правила классификации:
+1. Для каждого слова определите один или несколько подходящих тегов из списка выше.
+2. Существительные классифицируйте в ситуационные теги в зависимости от их значения (например, "книга" -> ["education", "hobbies"], "автомобиль" -> ["travel"]).
+3. Общие глаголы и прилагательные (например: делать, идти, большой, красивый) ОБЯЗАТЕЛЬНО должны содержать тег "universal". Вы можете добавить ситуационные теги к глаголам/прилагательным, только если они узкоспециализированные (например, "обедать" -> ["universal", "restaurant"], "покупать" -> ["universal", "shopping"]).
+4. Каждое слово в ответе должно иметь хотя бы один тег.`;
+
+    try {
+      logger.info(`Классификация ${words.length} слов через Gemini API`);
+      
+      const result = await withRetry(async (model: GeminiModel) => {
+        const response = await this.ai!.models.generateContent({
+          model,
+          contents: `Классифицируй следующие слова:\n${JSON.stringify(words)}`,
+          config: {
+            systemInstruction,
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: 'OBJECT',
+              properties: {
+                classifications: {
+                  type: 'ARRAY',
+                  description: 'Список классификаций для каждого слова',
+                  items: {
+                    type: 'OBJECT',
+                    properties: {
+                      word: { type: 'STRING', description: 'Исходное слово' },
+                      tags: {
+                        type: 'ARRAY',
+                        description: 'Теги, подходящие к слову (минимум один). Общие глаголы/прилагательные должны получать "universal".',
+                        items: {
+                          type: 'STRING',
+                          enum: ['shopping', 'restaurant', 'travel', 'home', 'work', 'hobbies', 'social', 'health', 'weather', 'education', 'universal']
+                        }
+                      }
+                    },
+                    required: ['word', 'tags']
+                  }
+                }
+              },
+              required: ['classifications']
+            }
+          }
+        });
+
+        const responseText = response.text;
+        if (!responseText) {
+          throw new Error('Gemini API вернул пустой ответ при классификации');
+        }
+
+        return JSON.parse(responseText) as { classifications: { word: string; tags: string[] }[] };
+      });
+
+      return result.classifications || [];
+    } catch (error: any) {
+      logger.error('Ошибка классификации слов в GeminiClient', error);
       throw error;
     }
   }

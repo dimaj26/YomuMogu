@@ -70,6 +70,13 @@ class YomuMoguDatabase extends Dexie {
       ui_words: '[profileId+id], id, status, due, profileId',
       grammar_progress: '[profileId+ruleId], ruleId, status, due, profileId',
     });
+
+    this.version(5).stores({
+      words: '[profileId+id], id, word, category, [profileId+category], passive.due, active.due, *tags, profileId',
+      reviews: '++id, [profileId+cardId], cardId, timestamp, synced, profileId',
+      ui_words: '[profileId+id], id, status, due, profileId',
+      grammar_progress: '[profileId+ruleId], ruleId, status, due, profileId',
+    });
   }
 }
 
@@ -403,6 +410,21 @@ export async function syncLocalDatabaseWithAnki(
         }
       }
     });
+
+    // Запускаем фоновую ленивую классификацию слов, у которых нет тегов
+    if (typeof window !== 'undefined') {
+      import('./localDeckService').then(({ classifyMissingWords }) => {
+        db.words.where('profileId').equals(profileId).toArray().then(allWords => {
+          classifyMissingWords(profileId, allWords).catch(err => {
+            console.error('[LazyTagger] Ошибка фоновой классификации при синхронизации:', err);
+          });
+        }).catch(err => {
+          console.error('[LazyTagger] Ошибка чтения слов при синхронизации:', err);
+        });
+      }).catch(err => {
+        console.error('[LazyTagger] Ошибка динамического импорта localDeckService при синхронизации:', err);
+      });
+    }
 
     return { success: true, message: 'Синхронизация успешно завершена' };
   } catch (error: any) {

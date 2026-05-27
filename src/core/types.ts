@@ -8,6 +8,7 @@ export interface CardWord {
   rawFront: string;
   rawBack: string;
   cardIds?: number[];
+  tags?: string[];
 }
 
 export interface FsrsState {
@@ -39,6 +40,7 @@ export interface LocalWord {
   active: FsrsState;
   contextExamples?: WordContextExample[];
   mnemonic?: string; // Пользовательская мнемоника / ИИ-этимология
+  tags?: string[]; // Ситуационные теги разметки
 }
 
 export interface LocalReview {

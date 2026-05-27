@@ -314,4 +314,13 @@ export function isGoodContextExample(sentence: string, targetWord: string): bool
   return true;
 }
 
+/**
+ * Проверяет, должно ли слово быть направлено в чат (активная стабильность < 3 дней или количество ошибок lapses >= 2).
+ */
+export function shouldRouteToChat(word: LocalWord): boolean {
+  if (!word || !word.active) return false;
+  if (word.active.status === 'new') return false;
+  return word.active.stability < 3 || word.active.lapses >= 2;
+}
+
 
