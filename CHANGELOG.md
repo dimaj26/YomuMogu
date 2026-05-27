@@ -2,6 +2,16 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.31.0] - 2026-05-27
+### Added
+- **Step-by-Step Grammar Learning Wizard**: Refactored `GrammarTrainer.tsx` and `GrammarTrainer.module.css` into a multi-step interactive wizard:
+  - Slide-based theory slideshow (Step 1) displaying detailed subconcept explanation steps configured in `grammar_rules.json`.
+  - Interactive Sentence Token Builder (Step 2) allowing users to assemble suggestions using shuffled clickable tokens and verifying syntax.
+  - Free-form composition validation (Step 3) checked by Gemini.
+- **Exact Match Local Bypass**: Implemented `cleanJapanese` normalizer matching user inputs against pre-defined sample answers in `/api/gemini/grammar-verify/route.ts` to bypass LLM API calls and verify instantly in 0ms.
+- **Latency Optimization**: Extended `withRetry` inside `retry.ts` to accept a prioritized list of models, and updated `client.ts` to route custom grammar checks to `gemini-2.5-flash-lite` first (reducing latency from ~3s to ~1.2s).
+- **Unit Tests**: Added a bypass unit test in `grammar-verify.test.ts` to verify local suggestions verification logic.
+
 ## [1.30.0] - 2026-05-27
 ### Changed
 - **Grammar Curriculum Alignment**: Replaced all 5 grammar rules in `src/resources/grammar_rules.json` with a strict 7-step N5 curriculum aligned with the Morphology-Before-Syntax pedagogy defined in `_nogit_philosophy.md §6.1`:

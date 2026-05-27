@@ -597,4 +597,4 @@ npm run test:integration:gemini # Live LLM integration tests (uses Gemini API, c
 
 ### [PL-9.4] Current Test Count
 
-224 unit tests across 34 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
+225 unit tests across 34 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
