@@ -61,13 +61,11 @@
   justify-content: center;
   position: relative;
   outline: none;
-  box-shadow: 0 6px 0 var(--border-color, #d1d5db);
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background-color 0.2s ease;
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease, background-color 0.3s ease;
 }
 
 .trackNode:active:not(:disabled) {
-  transform: translateY(4px) scale(0.95);
-  box-shadow: 0 2px 0 var(--border-color, #d1d5db);
+  transform: translateY(0);
 }
 
 .trackNode:disabled {
@@ -108,7 +106,7 @@
 .locked {
   background-color: var(--border-color, #e5e7eb);
   border-color: var(--text-light, #d1d5db);
-  box-shadow: 0 6px 0 var(--text-light, #c4c7cc);
+  box-shadow: none;
 }
 
 .locked .nodeInner {
@@ -118,19 +116,43 @@
 .new {
   background-color: var(--color-blue, #3b82f6);
   border-color: var(--color-blue-shadow, #1d4ed8);
-  box-shadow: 0 6px 0 var(--color-blue-shadow, #1d4ed8);
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+}
+
+.new:hover:not(:disabled) {
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.25);
+}
+
+.new:active:not(:disabled) {
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
 }
 
 .learning {
   background-color: var(--color-orange, #f59e0b);
   border-color: var(--color-orange-shadow, #d97706);
-  box-shadow: 0 6px 0 var(--color-orange-shadow, #d97706);
+  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2);
+}
+
+.learning:hover:not(:disabled) {
+  box-shadow: 0 10px 20px rgba(245, 158, 11, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.25);
+}
+
+.learning:active:not(:disabled) {
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);
 }
 
 .completed {
   background-color: var(--color-green, #10b981);
   border-color: var(--color-green-shadow, #047857);
-  box-shadow: 0 6px 0 var(--color-green-shadow, #047857);
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+}
+
+.completed:hover:not(:disabled) {
+  box-shadow: 0 10px 20px rgba(16, 185, 129, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.25);
+}
+
+.completed:active:not(:disabled) {
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
 }
 
 .checkIcon {
@@ -139,8 +161,7 @@
 
 /* HOVER EFFECT GLOW & SCALE */
 .trackNode:hover:not(:disabled) {
-  transform: scale(1.1);
-  box-shadow: 0 8px 0 var(--border-color, #d1d5db), 0 10px 20px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
 }
 
 /* DETAILS POPOVER */
