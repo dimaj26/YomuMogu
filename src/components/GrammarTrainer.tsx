@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { X, CheckCircle, AlertCircle, Loader2, Play, Volume2, ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, CheckCircle, AlertCircle, Loader2, Play, Volume2, HelpCircle } from 'lucide-react';
 import grammarRules from '@/resources/grammar_rules.json';
 import { sanitizeHtml } from '@/lib/sanitize';
 import styles from './GrammarTrainer.module.css';
@@ -12,51 +12,86 @@ interface GrammarTrainerProps {
   onComplete: () => void;
 }
 
-// Вспомогательная функция для перемешивания токенов
-function shuffleArray<T>(array: T[]): T[] {
-  const arr = [...array];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
+// Компонент маскота чашечки чая 🍵
+const Mascot: React.FC<{ state: 'idle' | 'happy' | 'worried' | 'cheering' }> = ({ state }) => {
+  return (
+    <div className={`${styles.mascotWidget} ${styles[state]}`} data-state={state}>
+      <div className={styles.mascotImageContainer}>
+        <svg className={styles.mascotSvg} viewBox="0 0 100 100" width="70" height="70">
+          <g className={styles.steamGroup}>
+            <path d="M45,25 Q48,15 45,5" stroke="var(--text-light, #9ca3af)" strokeWidth="2" strokeLinecap="round" fill="none" className={styles.steamLine1} />
+            <path d="M55,25 Q58,15 55,5" stroke="var(--text-light, #9ca3af)" strokeWidth="2" strokeLinecap="round" fill="none" className={styles.steamLine2} />
+          </g>
+          <path d="M 25 55 Q 12 50 15 42 Q 18 42 24 49 Z" fill="#3b82f6" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" />
+          <path d="M 75 48 C 88 48 88 68 75 68" fill="none" stroke="var(--border-color, #e5e7eb)" strokeWidth="4" strokeLinecap="round" />
+          <circle cx="50" cy="58" r="26" fill="#3b82f6" stroke="var(--border-color, #e5e7eb)" strokeWidth="3" />
+          <ellipse cx="50" cy="33" rx="18" ry="4" fill="#1e3a8a" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" />
+          <circle cx="50" cy="28" r="5" fill="#f59e0b" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" />
+          
+          {state === 'idle' && (
+            <g>
+              <path d="M 40 55 Q 44 58 48 55" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" fill="none" strokeLinecap="round" />
+              <path d="M 52 55 Q 56 58 60 55" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" fill="none" strokeLinecap="round" />
+              <path d="M 48 64 Q 50 67 52 64" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" fill="none" strokeLinecap="round" />
+            </g>
+          )}
+          {state === 'happy' && (
+            <g>
+              <path d="M 38 58 Q 43 52 48 58" stroke="var(--border-color, #e5e7eb)" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+              <path d="M 52 58 Q 57 52 62 58" stroke="var(--border-color, #e5e7eb)" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+              <path d="M 46 64 Q 50 72 54 64 Z" fill="#f59e0b" stroke="var(--border-color, #e5e7eb)" strokeWidth="1.5" />
+              <circle cx="34" cy="62" r="3" fill="rgba(239, 68, 68, 0.4)" />
+              <circle cx="66" cy="62" r="3" fill="rgba(239, 68, 68, 0.4)" />
+            </g>
+          )}
+          {state === 'worried' && (
+            <g>
+              <path d="M 40 56 Q 44 52 48 56" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" fill="none" strokeLinecap="round" />
+              <path d="M 52 56 Q 56 52 60 56" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" fill="none" strokeLinecap="round" />
+              <path d="M 47 67 Q 50 63 53 67" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" fill="none" strokeLinecap="round" />
+              <path d="M 32 50 C 32 50 30 55 32 57 C 34 57 34 55 34 50 Z" fill="#60a5fa" />
+            </g>
+          )}
+          {state === 'cheering' && (
+            <g>
+              <path d="M 38 58 Q 43 52 48 58" stroke="var(--border-color, #e5e7eb)" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+              <path d="M 52 58 L 62 55" stroke="var(--border-color, #e5e7eb)" strokeWidth="2.5" strokeLinecap="round" />
+              <path d="M 46 63 Q 50 68 54 63" stroke="var(--border-color, #e5e7eb)" strokeWidth="2" fill="none" strokeLinecap="round" />
+              <circle cx="34" cy="62" r="3" fill="rgba(239, 68, 68, 0.4)" />
+            </g>
+          )}
+        </svg>
+      </div>
+    </div>
+  );
+};
 
 export const GrammarTrainer: React.FC<GrammarTrainerProps> = ({ ruleId, onClose, onComplete }) => {
   const rule = grammarRules.find(r => r.id === ruleId);
-  const hasSubSteps = rule && rule.subSteps && rule.subSteps.length > 0;
 
-  const [step, setStep] = useState<'theory' | 'tokens' | 'free-writing'>(
-    hasSubSteps ? 'theory' : 'free-writing'
-  );
+  // Стейты песочницы предложений
+  const [tone, setTone] = useState<'polite' | 'plain' | 'dropped'>('polite');
+  const [polarity, setPolarity] = useState<'affirmative' | 'negative'>('affirmative');
+  const [activeTooltip, setActiveTooltip] = useState<'wa' | 'desu' | null>(null);
 
-  // Состояние слайдера теории
-  const [subStepIdx, setSubStepIdx] = useState(0);
+  // Стейт активной вкладки справочника
+  const [activeTab, setActiveTab] = useState<'sandbox' | 'secrets' | 'verify'>('sandbox');
 
-  // Состояние конструктора токенов
-  const targetSuggestion = rule?.suggestions && rule.suggestions[0];
-  const targetTokens = targetSuggestion && 'tokens' in targetSuggestion ? (targetSuggestion.tokens as string[]) : [];
-  const [shuffledTokens, setShuffledTokens] = useState<string[]>([]);
-  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
-  const [tokenError, setTokenError] = useState<string | null>(null);
-  const [tokenSuccess, setTokenSuccess] = useState(false);
-
-  // Состояние свободного ввода
+  // Состояния свободного ввода и проверки ИИ
   const [userInput, setUserInput] = useState('');
   const [isChecking, setIsChecking] = useState(false);
   const [result, setResult] = useState<{ isCorrect: boolean; correction: string; explanation: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Перемешиваем токены при входе на шаг квиза
-  const startTokensStep = () => {
-    if (targetTokens && targetTokens.length > 0) {
-      setShuffledTokens(shuffleArray(targetTokens));
-    }
-    setSelectedIndices([]);
-    setTokenError(null);
-    setTokenSuccess(false);
-    setStep('tokens');
-  };
+  // Состояние маскота
+  const [mascotState, setMascotState] = useState<'idle' | 'happy' | 'worried' | 'cheering'>('idle');
+
+  // Реагируем на переключения тумблеров песочницы анимацией маскота
+  useEffect(() => {
+    setMascotState('cheering');
+    const timer = setTimeout(() => setMascotState('idle'), 800);
+    return () => clearTimeout(timer);
+  }, [tone, polarity]);
 
   if (!rule) {
     return (
@@ -94,8 +129,14 @@ export const GrammarTrainer: React.FC<GrammarTrainerProps> = ({ ruleId, onClose,
 
       const data = await res.json();
       setResult(data);
+      if (data.isCorrect) {
+        setMascotState('happy');
+      } else {
+        setMascotState('worried');
+      }
     } catch (err: any) {
       setError(err.message || 'Произошла непредвиденная ошибка.');
+      setMascotState('worried');
     } finally {
       setIsChecking(false);
     }
@@ -105,6 +146,7 @@ export const GrammarTrainer: React.FC<GrammarTrainerProps> = ({ ruleId, onClose,
     setUserInput(sampleAnswer);
     setResult(null);
     setError(null);
+    setActiveTab('verify');
   };
 
   const playTTS = (text: string) => {
@@ -114,340 +156,369 @@ export const GrammarTrainer: React.FC<GrammarTrainerProps> = ({ ruleId, onClose,
     audio.play().catch(() => {});
   };
 
-  // Логика токен-билдера
-  const handleTokenClick = (idx: number) => {
-    if (tokenSuccess) return;
-    if (selectedIndices.includes(idx)) {
-      setSelectedIndices(selectedIndices.filter(i => i !== idx));
-    } else {
-      setSelectedIndices([...selectedIndices, idx]);
-    }
-    setTokenError(null);
+  // Метод динамического рендеринга предложения в песочнице
+  const renderSandboxSentence = () => {
+    const isPolite = tone === 'polite';
+    const isPlain = tone === 'plain';
+    const isDropped = tone === 'dropped';
+    const isAffirmative = polarity === 'affirmative';
+
+    // Формируем частицы и связки
+    let subject = isPlain ? '俺 (оре)' : '私 (ватаси)';
+    if (isDropped) subject = '私'; // Разговорное опускание
+    
+    return (
+      <div className={styles.sandboxSentence}>
+        {/* Субъект */}
+        <div className={styles.sandboxCard} title="Тема предложения">
+          <span className={styles.sandboxWord}>{subject}</span>
+          <span className={styles.sandboxLabel}>Я</span>
+        </div>
+
+        {/* Тематическая частица は */}
+        {!isDropped && (
+          <button 
+            type="button" 
+            onClick={() => setActiveTooltip(activeTooltip === 'wa' ? null : 'wa')}
+            className={`${styles.sandboxCard} ${styles.particle} ${activeTooltip === 'wa' ? styles.activeCard : ''}`}
+          >
+            <span className={styles.sandboxWord}>は</span>
+            <span className={styles.sandboxLabel}>тема (ва)</span>
+          </button>
+        )}
+
+        {/* Объект (Студент) */}
+        <div className={styles.sandboxCard} title="Описание темы">
+          <span className={styles.sandboxWord}>学生</span>
+          <span className={styles.sandboxLabel}>студент</span>
+        </div>
+
+        {/* Грамматическая связка です / だ */}
+        {!isDropped && (
+          <button 
+            type="button" 
+            onClick={() => setActiveTooltip(activeTooltip === 'desu' ? null : 'desu')}
+            className={`${styles.sandboxCard} ${styles.copula} ${activeTooltip === 'desu' ? styles.activeCard : ''}`}
+          >
+            <span className={styles.sandboxWord}>
+              {isPolite ? (isAffirmative ? 'です' : 'ではありません') : (isAffirmative ? 'だ' : 'じゃない')}
+            </span>
+            <span className={styles.sandboxLabel}>
+              {isAffirmative ? 'есть' : 'не есть'}
+            </span>
+          </button>
+        )}
+
+        {isDropped && !isAffirmative && (
+          <button 
+            type="button" 
+            onClick={() => setActiveTooltip(activeTooltip === 'desu' ? null : 'desu')}
+            className={`${styles.sandboxCard} ${styles.copula} ${activeTooltip === 'desu' ? styles.activeCard : ''}`}
+          >
+            <span className={styles.sandboxWord}>じゃない</span>
+            <span className={styles.sandboxLabel}>не есть</span>
+          </button>
+        )}
+      </div>
+    );
   };
 
-  const resetTokens = () => {
-    setSelectedIndices([]);
-    setTokenError(null);
-    setTokenSuccess(false);
-    if (targetTokens && targetTokens.length > 0) {
-      setShuffledTokens(shuffleArray(targetTokens));
+  const getTooltipContent = () => {
+    if (activeTooltip === 'wa') {
+      return {
+        title: 'Частица は (тема)',
+        text: rule.sandbox?.explanationTips?.wa || 'Выделяет тему высказывания. В устной дружеской речи часто заменяется паузой.'
+      };
     }
+    if (activeTooltip === 'desu') {
+      return {
+        title: 'Связка です / だ (быть)',
+        text: rule.sandbox?.explanationTips?.desu || 'Склеивает тему и описание в предложении. です — вежливо, だ — дружески, опускание — разговорный стиль.'
+      };
+    }
+    return null;
   };
 
-  const checkTokens = () => {
-    const built = selectedIndices.map(idx => shuffledTokens[idx]).join('');
-    const cleanedBuilt = built.replace(/[\s\t\r\n\u3000。、？！・.?!,]/g, '');
-    const cleanedTarget = targetSuggestion ? targetSuggestion.sampleAnswer.replace(/[\s\t\r\n\u3000。、？！・.?!,]/g, '') : '';
-
-    if (cleanedBuilt === cleanedTarget) {
-      setTokenSuccess(true);
-      setTokenError(null);
-    } else {
-      setTokenError('Порядок слов неверный. Попробуйте еще раз!');
-    }
-  };
+  const tooltip = getTooltipContent();
 
   return (
     <div className={styles.overlay}>
-      <div className={styles.modalCard}>
+      <div className={styles.modalCard} style={{ maxWidth: '800px' }}>
         {/* HEADER */}
         <div className={styles.modalHeader}>
           <div>
             <span className={styles.ruleTopic}>{rule.topic}</span>
             <h2 className={styles.ruleConstruction}>{rule.construction}</h2>
           </div>
-          <button onClick={onClose} className={styles.closeBtn} title="Закрыть">
-            <X size={22} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <Mascot state={mascotState} />
+            <button onClick={onClose} className={styles.closeBtn} title="Закрыть">
+              <X size={22} />
+            </button>
+          </div>
         </div>
 
-        <div className={styles.modalContent}>
-          {/* ШАГ 1: ПОШАГОВАЯ ТЕОРИЯ */}
-          {step === 'theory' && rule.subSteps && (
-            <div className={styles.stepContainer}>
-              <div className={styles.progressHeader}>
-                <span>Разбор теории</span>
-                <span>{subStepIdx + 1} / {rule.subSteps.length}</span>
+        <div className={styles.modalContent} style={{ padding: 0, flexDirection: 'row', gap: 0, overflow: 'hidden' }}>
+          
+          {/* ЛЕВАЯ КОЛОНКА: СТЕНД-ПЕСОЧНИЦА */}
+          <div className={styles.leftColumn}>
+            <div className={styles.columnTitle}>Лаборатория предложений</div>
+            
+            {/* Рендеринг песочницы */}
+            <div className={styles.sandboxArea}>
+              {renderSandboxSentence()}
+            </div>
+
+            {/* Подсказки к карточкам (Интерактивные поповеры) */}
+            {tooltip && (
+              <div className={styles.popoverTooltip}>
+                <div className={styles.popoverTooltipHeader}>
+                  <HelpCircle size={14} className={styles.tooltipIcon} />
+                  <span className={styles.popoverTooltipTitle}>{tooltip.title}</span>
+                </div>
+                <p className={styles.popoverTooltipText}>{tooltip.text}</p>
               </div>
+            )}
+
+            {/* Пульт управления тумблерами */}
+            <div className={styles.sandboxControls}>
+              <div className={styles.controlGroup}>
+                <span className={styles.controlLabel}>Тон общения:</span>
+                <div className={styles.pillContainer}>
+                  <button 
+                    type="button" 
+                    onClick={() => { setTone('polite'); setActiveTooltip(null); }}
+                    className={`${styles.pillBtn} ${tone === 'polite' ? styles.pillBtnActive : ''}`}
+                  >
+                    Вежливо
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => { setTone('plain'); setActiveTooltip(null); }}
+                    className={`${styles.pillBtn} ${tone === 'plain' ? styles.pillBtnActive : ''}`}
+                  >
+                    Дружески
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => { setTone('dropped'); setActiveTooltip(null); }}
+                    className={`${styles.pillBtn} ${tone === 'dropped' ? styles.pillBtnActive : ''}`}
+                  >
+                    Устный пропуск
+                  </button>
+                </div>
+              </div>
+
+              <div className={styles.controlGroup}>
+                <span className={styles.controlLabel}>Полярность:</span>
+                <div className={styles.pillContainer}>
+                  <button 
+                    type="button" 
+                    onClick={() => { setPolarity('affirmative'); setActiveTooltip(null); }}
+                    className={`${styles.pillBtn} ${polarity === 'affirmative' ? styles.pillBtnActive : ''}`}
+                  >
+                    Утверждение (+)
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => { setPolarity('negative'); setActiveTooltip(null); }}
+                    className={`${styles.pillBtn} ${polarity === 'negative' ? styles.pillBtnActive : ''}`}
+                  >
+                    Отрицание (-)
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.sandboxInstruction}>
+              💡 Кликайте по элементам предложения выше (например, на <strong>は</strong> или <strong>です</strong>), чтобы открыть секреты живого японского языка.
+            </div>
+          </div>
+
+          {/* ПРАВАЯ КОЛОНКА: СВЕДЕНИЯ И ИИ-ПРОВЕРКА */}
+          <div className={styles.rightColumn}>
+            
+            {/* Навигация вкладок */}
+            <div className={styles.tabHeader}>
+              <button 
+                type="button" 
+                onClick={() => setActiveTab('sandbox')}
+                className={`${styles.tabBtn} ${activeTab === 'sandbox' ? styles.tabBtnActive : ''}`}
+              >
+                Как устроено
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setActiveTab('secrets')}
+                className={`${styles.tabBtn} ${activeTab === 'secrets' ? styles.tabBtnActive : ''}`}
+              >
+                Секреты устной речи
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setActiveTab('verify')}
+                className={`${styles.tabBtn} ${activeTab === 'verify' ? styles.tabBtnActive : ''}`}
+              >
+                ИИ-Проверка
+              </button>
+            </div>
+
+            <div className={styles.tabContent}>
               
-              <div className={styles.progressDots}>
-                {rule.subSteps.map((_, sIdx) => (
-                  <div 
-                    key={sIdx} 
-                    className={`${styles.dot} ${sIdx === subStepIdx ? styles.activeDot : ''} ${sIdx < subStepIdx ? styles.passedDot : ''}`}
-                  />
-                ))}
-              </div>
-
-              <div className={styles.theorySlide}>
-                {/* Кастинг полей step/title и detail/explanation для совместимости */}
-                <h3 className={styles.slideTitle}>
-                  {(rule.subSteps[subStepIdx] as any).title || (rule.subSteps[subStepIdx] as any).step}
-                </h3>
-                <p className={styles.slideText}>
-                  {(rule.subSteps[subStepIdx] as any).explanation || (rule.subSteps[subStepIdx] as any).detail}
-                </p>
-              </div>
-
-              <div className={styles.navigationBtns}>
-                <button
-                  type="button"
-                  onClick={() => setSubStepIdx(subStepIdx - 1)}
-                  disabled={subStepIdx === 0}
-                  className={`btn-3d btn-blue ${styles.navBtn}`}
-                >
-                  <ArrowLeft size={16} /> Назад
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (subStepIdx < rule.subSteps!.length - 1) {
-                      setSubStepIdx(subStepIdx + 1);
-                    } else {
-                      startTokensStep();
-                    }
-                  }}
-                  className={`btn-3d btn-green ${styles.navBtn}`}
-                >
-                  {subStepIdx < rule.subSteps.length - 1 ? (
-                    <>Далее <ArrowRight size={16} /></>
-                  ) : (
-                    <>К практике <Play size={16} /></>
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* ШАГ 2: ИНТЕРАКТИВНЫЙ КОНСТРУКТОР */}
-          {step === 'tokens' && targetSuggestion && (
-            <div className={styles.stepContainer}>
-              <div className={styles.progressHeader}>
-                <span>Шаг 2: Конструктор предложений</span>
-                <span className={styles.badge}>Практика</span>
-              </div>
-
-              <div className={styles.instructionBox}>
-                <span className={styles.instructionLabel}>Задание:</span>
-                <p className={styles.instructionText}>{targetSuggestion.hint}</p>
-                {targetSuggestion.baseWords && (
-                  <span className={styles.baseWordsHint}>Опорные слова: {targetSuggestion.baseWords}</span>
-                )}
-              </div>
-
-              {/* Зона сборки */}
-              <div className={styles.workspace}>
-                {selectedIndices.length === 0 ? (
-                  <span className={styles.workspacePlaceholder}>Нажимайте на слова ниже, чтобы собрать фразу...</span>
-                ) : (
-                  <div className={styles.tokenList}>
-                    {selectedIndices.map((idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleTokenClick(idx)}
-                        className={`${styles.token} ${styles.selectedToken}`}
-                      >
-                        {shuffledTokens[idx]}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Зона выбора токенов */}
-              <div className={styles.tokenPool}>
-                {shuffledTokens.map((token, idx) => {
-                  const isUsed = selectedIndices.includes(idx);
-                  return (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => handleTokenClick(idx)}
-                      className={`${styles.token} ${isUsed ? styles.usedToken : ''}`}
-                      disabled={isUsed || tokenSuccess}
-                    >
-                      {token}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {tokenError && (
-                <div className={`${styles.resultBanner} ${styles.errorBanner}`}>
-                  <AlertCircle size={20} className={styles.icon} />
-                  <span>{tokenError}</span>
-                </div>
-              )}
-
-              {tokenSuccess && (
-                <div className={`${styles.resultBanner} ${styles.successBanner}`}>
-                  <CheckCircle size={20} className={styles.icon} />
-                  <span>Отлично! Предложение собрано верно.</span>
-                </div>
-              )}
-
-              <div className={styles.constructorControls}>
-                <button
-                  type="button"
-                  onClick={resetTokens}
-                  className={`btn-3d btn-red ${styles.controlBtn}`}
-                  disabled={tokenSuccess}
-                >
-                  <RotateCcw size={16} /> Сбросить
-                </button>
-
-                {tokenSuccess ? (
-                  <button
-                    type="button"
-                    onClick={() => setStep('free-writing')}
-                    className={`btn-3d btn-green ${styles.controlBtn}`}
-                  >
-                    Далее <ArrowRight size={16} />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={checkTokens}
-                    className={`btn-3d btn-blue ${styles.controlBtn}`}
-                    disabled={selectedIndices.length === 0}
-                  >
-                    Проверить
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* ШАГ 3: СВОБОДНОЕ КОНСТРУИРОВАНИЕ (Gemini) */}
-          {step === 'free-writing' && (
-            <div className={styles.stepContainer}>
-              {hasSubSteps && (
-                <div className={styles.progressHeader}>
-                  <span>Шаг 3: Свободное конструирование</span>
-                  <span className={styles.badge}>ИИ-Анализ</span>
-                </div>
-              )}
-
-              <div className={styles.sectionTheory}>
-                <p className={styles.explanation}>{rule.explanation}</p>
-                <div className={styles.conjugationCard}>
-                  <span className={styles.cardTitle}>Как образуется:</span>
-                  <code className={styles.conjugationCode}>{rule.conjugationGuide}</code>
-                </div>
-              </div>
-
-              <div className={styles.sectionSuggestions}>
-                <h4 className={styles.subTitle}>Примеры и подсказки:</h4>
-                <div className={styles.suggestionsGrid}>
-                  {rule.suggestions.map((s, idx) => (
-                    <div key={idx} className={styles.suggestionCard}>
-                      <div className={styles.suggestionHeader}>
-                        <span className={styles.suggestionHint}>{s.hint}</span>
-                        <button 
-                          type="button" 
-                          onClick={() => handleSuggestionClick(s.sampleAnswer)} 
-                          className={styles.useBtn}
-                        >
-                          Использовать
-                        </button>
-                      </div>
-                      <div className={styles.suggestionWords}>{s.baseWords}</div>
+              {/* ВКЛАДКА 1: КАК ЭТО УСТРОЕНО */}
+              {activeTab === 'sandbox' && (
+                <div className={styles.tabPane}>
+                  <div className={styles.sectionTheory}>
+                    <p className={styles.explanation}>{rule.explanation}</p>
+                    <div className={styles.conjugationCard}>
+                      <span className={styles.cardTitle}>Базовый шаблон сборки:</span>
+                      <code className={styles.conjugationCode}>{rule.conjugationGuide}</code>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              <form onSubmit={handleVerify} className={styles.inputForm}>
-                <label htmlFor="userInput" className={styles.inputLabel}>
-                  Составьте собственное предложение на японском:
-                </label>
-                <div className={styles.inputWrapper}>
-                  <input
-                    id="userInput"
-                    type="text"
-                    value={userInput}
-                    onChange={(e) => {
-                      setUserInput(e.target.value);
-                      if (result) setResult(null);
-                    }}
-                    placeholder="Пример: 本を読んでください。"
-                    className={styles.textInput}
-                    disabled={isChecking}
-                    autoComplete="off"
-                  />
-                  <button
-                    type="submit"
-                    className={`btn-3d btn-blue ${styles.verifyBtn}`}
-                    disabled={isChecking || !userInput.trim()}
-                  >
-                    {isChecking ? <Loader2 className={styles.spinner} size={18} /> : 'Проверить'}
-                  </button>
-                </div>
-              </form>
-
-              {error && (
-                <div className={`${styles.resultBanner} ${styles.errorBanner}`}>
-                  <AlertCircle size={20} className={styles.icon} />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              {result && (
-                <div className={`${styles.resultCard} ${result.isCorrect ? styles.correct : styles.incorrect}`}>
-                  <div className={styles.resultHeader}>
-                    {result.isCorrect ? (
-                      <>
-                        <CheckCircle size={24} className={styles.successIcon} />
-                        <span className={styles.resultTitle}>Правильно!</span>
-                      </>
-                    ) : (
-                      <>
-                        <AlertCircle size={24} className={styles.errorIcon} />
-                        <span className={styles.resultTitle}>Требуется исправление</span>
-                      </>
-                    )}
                   </div>
 
-                  {!result.isCorrect && result.correction && (
-                    <div className={styles.correctionWrapper}>
-                      <span className={styles.correctionLabel}>Корректный вариант:</span>
-                      <div className={styles.correctionSentence}>
-                        <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(result.correction) }} />
-                        <button 
-                          type="button" 
-                          onClick={() => playTTS(result.correction)}
-                          className={styles.audioBtn}
-                          title="Прослушать"
-                        >
-                          <Volume2 size={16} />
-                        </button>
-                      </div>
+                  <div className={styles.sectionSuggestions}>
+                    <h4 className={styles.subTitle}>Примеры и подсказки (кликните, чтобы использовать):</h4>
+                    <div className={styles.suggestionsGrid}>
+                      {rule.suggestions.map((s, idx) => (
+                        <div key={idx} className={styles.suggestionCard} style={{ padding: '8px 12px' }}>
+                          <div className={styles.suggestionHeader}>
+                            <span className={styles.suggestionHint}>{s.hint}</span>
+                            <button 
+                              type="button" 
+                              onClick={() => handleSuggestionClick(s.sampleAnswer)} 
+                              className={styles.useBtn}
+                            >
+                              Использовать
+                            </button>
+                          </div>
+                          <div className={styles.suggestionWords}>{s.baseWords}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ВКЛАДКА 2: РАЗГОВОРНЫЕ СЕКРЕТЫ */}
+              {activeTab === 'secrets' && (
+                <div className={styles.tabPane}>
+                  <div className={styles.secretsCard}>
+                    <h4 className={styles.secretsTitle}>🤫 Секреты устного языка: Опускание частиц</h4>
+                    <p className={styles.secretsText}>
+                      Японцы в реальной разговорной речи стремятся сократить любые длинные фразы. Именно поэтому тематическую частицу <strong>は (ва)</strong> и связку <strong>です (дэсу)</strong> практически всегда опускают в диалогах с друзьями. 
+                      Вместо <em>«Корэ ва мидзу дэсу»</em> (Это вода) японец скажет просто: <strong>«Корэ, мидзу»</strong> (Это, вода).
+                    </p>
+                  </div>
+
+                  <div className={styles.secretsCard} style={{ marginTop: '12px' }}>
+                    <h4 className={styles.secretsTitle}>👥 Местоимения «Я»</h4>
+                    <p className={styles.secretsText}>
+                      В зависимости от вежливости и вашего пола слово «Я» меняется:
+                      <br />• <strong>私 (ватаси)</strong> — нейтрально, вежливо для всех.
+                      <br />• <strong>俺 (орэ)</strong> — грубое мужское «Я» в кругу друзей.
+                      <br />• <strong>僕 (боку)</strong> — скромное мужское «Я», часто используется парнями.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* ВКЛАДКА 3: ИИ-ПРОВЕРКА */}
+              {activeTab === 'verify' && (
+                <div className={styles.tabPane}>
+                  <form onSubmit={handleVerify} className={styles.inputForm}>
+                    <label htmlFor="userInput" className={styles.inputLabel}>
+                      Напишите собственное предложение на японском:
+                    </label>
+                    <div className={styles.inputWrapper}>
+                      <input
+                        id="userInput"
+                        type="text"
+                        value={userInput}
+                        onChange={(e) => {
+                          setUserInput(e.target.value);
+                          if (result) setResult(null);
+                        }}
+                        placeholder="Пример: 私は学生です。"
+                        className={styles.textInput}
+                        disabled={isChecking}
+                        autoComplete="off"
+                      />
+                      <button
+                        type="submit"
+                        className={`btn-3d btn-blue ${styles.verifyBtn}`}
+                        disabled={isChecking || !userInput.trim()}
+                      >
+                        {isChecking ? <Loader2 className={styles.spinner} size={18} /> : 'Проверить'}
+                      </button>
+                    </div>
+                  </form>
+
+                  {error && (
+                    <div className={`${styles.resultBanner} ${styles.errorBanner}`} style={{ marginTop: '12px' }}>
+                      <AlertCircle size={20} className={styles.icon} />
+                      <span>{error}</span>
                     </div>
                   )}
 
-                  {!result.isCorrect && result.explanation && (
-                    <p className={styles.explanationText}>{result.explanation}</p>
-                  )}
+                  {result && (
+                    <div className={`${styles.resultCard} ${result.isCorrect ? styles.correct : styles.incorrect}`} style={{ marginTop: '12px' }}>
+                      <div className={styles.resultHeader}>
+                        {result.isCorrect ? (
+                          <>
+                            <CheckCircle size={24} className={styles.successIcon} />
+                            <span className={styles.resultTitle}>Правильно!</span>
+                          </>
+                        ) : (
+                          <>
+                            <AlertCircle size={24} className={styles.errorIcon} />
+                            <span className={styles.resultTitle}>Требуется исправление</span>
+                          </>
+                        )}
+                      </div>
 
-                  {result.isCorrect && (
-                    <div className={styles.successActions}>
-                      <p className={styles.successText}>Вы полностью освоили это правило! Оно готово для отработки в диалогах.</p>
-                      <button
-                        type="button"
-                        onClick={onComplete}
-                        className="btn-3d btn-green"
-                        style={{ padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '8px', margin: '8px auto 0' }}
-                      >
-                        <Play size={18} />
-                        Начать диалог с ИИ
-                      </button>
+                      {!result.isCorrect && result.correction && (
+                        <div className={styles.correctionWrapper}>
+                          <span className={styles.correctionLabel}>Корректный вариант:</span>
+                          <div className={styles.correctionSentence}>
+                            <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(result.correction) }} />
+                            <button 
+                              type="button" 
+                              onClick={() => playTTS(result.correction)}
+                              className={styles.audioBtn}
+                              title="Прослушать"
+                            >
+                              <Volume2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {!result.isCorrect && result.explanation && (
+                        <p className={styles.explanationText}>{result.explanation}</p>
+                      )}
+
+                      {result.isCorrect && (
+                        <div className={styles.successActions}>
+                          <p className={styles.successText}>Грамматика правильная. Вы готовы применить это в практике!</p>
+                          <button
+                            type="button"
+                            onClick={onComplete}
+                            className="btn-3d btn-green"
+                            style={{ padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '8px', margin: '8px auto 0' }}
+                          >
+                            <Play size={18} />
+                            Начать диалог с ИИ
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               )}
+
             </div>
-          )}
+          </div>
+
         </div>
       </div>
     </div>

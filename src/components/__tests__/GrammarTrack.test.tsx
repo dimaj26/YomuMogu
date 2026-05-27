@@ -82,7 +82,7 @@ describe('GrammarTrack Component', () => {
     fireEvent.click(node);
 
     // Поповер должен открыться — ищем текст объяснения
-    expect(screen.getByText(/Базовый именной предикат/)).toBeInTheDocument();
+    expect(screen.getByText(/базовая формула японского предложения/)).toBeInTheDocument();
   });
 
   it('блокирует ступень 1.2 если 1.1 не начата', () => {
