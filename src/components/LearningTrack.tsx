@@ -160,10 +160,15 @@ export function LearningTrack({
           else if (node.status === 'available') btnClass += ` ${styles.nodeAvailable}`;
           else btnClass += ` ${styles.nodeLocked}`;
 
+          const isPopoverLeft = coord.x < 200;
+          const popoverClassName = isPopoverLeft 
+            ? `${styles.popover} ${styles.popoverLeft}`
+            : `${styles.popover} ${styles.popoverRight}`;
+
           return (
             <div
               key={idx}
-              className={styles.trackNodeWrapper}
+              className={`${styles.trackNodeWrapper} ${isPopoverActive ? styles.activeWrapper : ''}`}
               style={{ left: `${coord.x}px`, top: `${coord.y}px` }}
             >
               <button
@@ -189,7 +194,7 @@ export function LearningTrack({
 
               {/* Рендер всплывающего окна (Popover) */}
               {isPopoverActive && (
-                <div className={styles.popover}>
+                <div className={popoverClassName}>
                   <div className={styles.popoverHeader}>
                     <h5 className={styles.popoverTitle}>{node.title}</h5>
                     <button
@@ -284,9 +289,6 @@ export function LearningTrack({
                         {t('Начать квиз', 'クиз開始')}
                       </button>
                     )}
-                  </div>
-                  <div className={styles.arrow}>
-                    <div className={styles.arrowInner} />
                   </div>
                 </div>
               )}

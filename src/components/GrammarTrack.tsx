@@ -212,9 +212,9 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
                     <span className={styles.nodeNumber}>{idx + 1}</span>
                   )}
                 </div>
-                {/* Текст под узлом */}
-                <span className={styles.nodeLabel}>{node.construction}</span>
               </button>
+              {/* Текст под узлом */}
+              <span className={styles.nodeLabel}>{node.construction}</span>
 
               {/* POPOVER DETAIL CARD */}
               {activePopover === idx && (

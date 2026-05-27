@@ -57,6 +57,10 @@
   z-index: 5;
 }
 
+.trackNodeWrapper.activeWrapper {
+  z-index: 100;
+}
+
 .nodeBtn {
   width: 68px;
   height: 68px;
@@ -70,11 +74,17 @@
   cursor: pointer;
   position: relative;
   outline: none;
-  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
-.nodeBtn:active {
-  transform: scale(0.95);
+.nodeBtn:hover:not(:disabled) {
+  transform: scale(1.1);
+  box-shadow: 0 8px 0 var(--border-color, #d1d5db), 0 10px 20px rgba(0, 0, 0, 0.08);
+}
+
+.nodeBtn:active:not(:disabled) {
+  transform: translateY(4px) scale(0.95);
+  box-shadow: 0 2px 0 var(--border-color, #d1d5db);
 }
 
 /* 3D тени и цвета для разных статусов узлов */
@@ -133,9 +143,6 @@
 /* Всплывающее окно (Popover) */
 .popover {
   position: absolute;
-  top: -150px;
-  left: 50%;
-  transform: translateX(-50%);
   width: 280px;
   background: var(--bg-primary);
   border: var(--border-width) solid var(--border-color);
@@ -144,7 +151,73 @@
   padding: 16px;
   box-sizing: border-box;
   z-index: 100;
-  animation: popoverFadeIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.popoverRight {
+  left: 80px;
+  top: 50%;
+  transform: translateY(-50%);
+  animation: popoverFadeRight 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.popoverRight::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -16px;
+  transform: translateY(-50%);
+  border-width: 10px 16px 10px 0;
+  border-style: solid;
+  border-color: transparent var(--border-color, #e5e7eb) transparent transparent;
+  width: 0;
+  height: 0;
+}
+
+.popoverRight::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -12px;
+  transform: translateY(-50%);
+  border-width: 8px 12px 8px 0;
+  border-style: solid;
+  border-color: transparent var(--bg-primary) transparent transparent;
+  width: 0;
+  height: 0;
+}
+
+.popoverLeft {
+  right: 80px;
+  left: auto;
+  top: 50%;
+  transform: translateY(-50%);
+  animation: popoverFadeLeft 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.popoverLeft::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -16px;
+  transform: translateY(-50%);
+  border-width: 10px 0 10px 16px;
+  border-style: solid;
+  border-color: transparent transparent transparent var(--border-color, #e5e7eb);
+  width: 0;
+  height: 0;
+}
+
+.popoverLeft::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -12px;
+  transform: translateY(-50%);
+  border-width: 8px 0 8px 12px;
+  border-style: solid;
+  border-color: transparent transparent transparent var(--bg-primary);
+  width: 0;
+  height: 0;
 }
 
 .popoverHeader {
@@ -202,36 +275,12 @@
   color: var(--text-primary);
 }
 
-.arrow {
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-top: 10px solid var(--border-color);
+@keyframes popoverFadeRight {
+  from { opacity: 0; transform: translateY(-50%) translateX(10px) scale(0.95); }
+  to { opacity: 1; transform: translateY(-50%) translateX(0) scale(1); }
 }
 
-.arrowInner {
-  position: absolute;
-  bottom: 2.5px;
-  left: -9px;
-  width: 0;
-  height: 0;
-  border-left: 9px solid transparent;
-  border-right: 9px solid transparent;
-  border-top: 9px solid var(--bg-primary);
-}
-
-@keyframes popoverFadeIn {
-  0% {
-    opacity: 0;
-    transform: translateX(-50%) scale(0.85) translateY(10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(-50%) scale(1) translateY(0);
-  }
+@keyframes popoverFadeLeft {
+  from { opacity: 0; transform: translateY(-50%) translateX(-10px) scale(0.95); }
+  to { opacity: 1; transform: translateY(-50%) translateX(0) scale(1); }
 }

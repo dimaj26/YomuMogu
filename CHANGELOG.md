@@ -13,8 +13,12 @@ All notable changes to the YomuMogu project are documented in this file. The for
 - Added comprehensive unit testing coverage for grammar verify routes in `src/app/api/gemini/__tests__/grammar-verify.test.ts` and updated page unit tests in `src/app/chat/__tests__/page.test.tsx`.
 
 ### Fixed
-- Fixed layout overlapping issue in Grammar Roadmap (`src/components/GrammarTrack.tsx` and module.css): popovers now display to the left or right of the nodes (left nodes show popover on the left at `72px` offset, right/center nodes show popover on the right at `72px` offset) utilizing side viewport empty spaces without overlapping labels. Pointer arrows are extended to 20px length to bridge gaps, active node wrapper z-index is elevated to 100 to prevent clipping, and SVG connectors are colored per-segment based on target node completion.
-- Replaced glitchy node wiggling hover rotation with smooth scale-up transitions.
+- Unified layout and popover mechanics of both Word Roadmap (`LearningTrack`) and Grammar Roadmap (`GrammarTrack`) to behave identically:
+  - Both tracks position detail popovers to the left or right of the nodes based on horizontal coordinates using viewport empty margins (left nodes show on the left, right/center nodes show on the right) at a unified `80px` offset.
+  - Arrow tips are positioned at `64px` from node center, leaving a clean `30px` gap from the node button edge (`34px`) to prevent any overlaps or label clipping.
+  - Sibling label element (`nodeLabel`) is moved outside the button element in `GrammarTrack` to match `LearningTrack`, preventing text jitter or blurry scale changes on hover.
+  - Wrapper layers (`nodeWrapper` / `trackNodeWrapper`) use active classes that elevate active wrappers to `z-index: 100` to prevent sibling overlap clipping.
+- Replaced glitchy node wiggling hover animations with a premium smooth scale transition.
 
 ## [1.28.0] - 2026-05-27
 ### Added
