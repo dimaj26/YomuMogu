@@ -90,6 +90,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to start pra
 - **Warm-up Trainer (Priming)**: Client-only React-overlay on `/practice` facilitating a 3-step learning warmup (Sight & Sound, Kana Check, Translation Check) for up to 10 new words without FSRS modifications.
 - **Phonosemantic Hints (声符)**: Custom Accordion component displaying Kanji phonetic components and semantic relative chips, aiding vocabulary association.
 - **Interactive Mnemonics & AI Etymology**: Offline notes editor in the Quiz with a "✨ ИИ-Этимология" action to fetch origin breakdowns from Gemini API.
+- **Grammar Roadmap & Trainer**: A winding vertical pathway on the Practice launcher page implementing a strict 7-step N5 grammar curriculum. Practicing a rule launches the interactive "Grammar Lab / Sandbox" sentence builder (supporting formality, polarity, and spoken contractions/omissions), displaying popover cards, vector SVG mascot `🍵` reactions, and spoken Japanese secrets. Custom compositions are verified via Gemini API, utilizing a 0ms suggestion match bypass layer.
 
 ---
 

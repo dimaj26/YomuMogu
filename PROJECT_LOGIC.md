@@ -147,6 +147,7 @@ src/
 | `components/__tests__/LearningTrack.test.tsx` | Unit tests for LearningTrack component rendering and popover triggers |
 | `components/GrammarTrack.tsx` | Duolingo winding SVG path component for 7-step N5 grammar curriculum with linear unlock chain (1.1→1.2→2→3→4→5→6) |
 | `components/GrammarTrainer.tsx` | Interactive overlays explaining grammar theory and prompting user custom sentences checked by AI |
+| `components/__tests__/GrammarTrainer.test.tsx` | Unit tests verifying GrammarTrainer component rendering and interactive sandbox |
 | `src/resources/grammar_rules.json` | 7-step JLPT N5 grammar curriculum JSON (IDs: `g_n5_s1_1`..`g_n5_s6`) aligned with Morphology-Before-Syntax pedagogy |
 | `app/api/gemini/grammar-verify/route.ts` | POST endpoint using Gemini client to verify user Japanese sentences against grammar rules |
 | `app/api/gemini/__tests__/grammar-verify.test.ts` | Unit tests verifying the grammar verification API route behavior under standard inputs |
@@ -597,4 +598,4 @@ npm run test:integration:gemini # Live LLM integration tests (uses Gemini API, c
 
 ### [PL-9.4] Current Test Count
 
-225 unit tests across 34 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
+233 unit tests across 35 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).

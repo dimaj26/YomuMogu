@@ -1,6 +1,16 @@
 # YomuMogu Changelog
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+## [1.32.0] - 2026-05-28
+### Added
+- **Dynamic Grammar Sandbox Curriculum**: Scaled the interactive sentence workbench sandbox layout (Tone, Polarity, Contractions, dynamic cards) to all 7 curriculum rules in `grammar_rules.json`.
+- **Custom Pill Controls**: Re-labeled Tone and Polarity selectors based on rule metadata (e.g., "Выбор глагола" and "Форма" for verb classification; "Конструкция" and "Стиль" for te-form constructions).
+- **Spoken Japanese Secrets**: Authored distinct Russian "Секреты устной речи" text guides and sub-steps for all N5 curriculum rules in `grammar_rules.json`, highlighting particle drops, colloquial contractions (`〜ている` -> `〜てる`), and pronouns.
+- **Unit Testing Suite**: Added `GrammarTrainer.test.tsx` containing 8 tests verifying dynamic rendering, card tooltip clicks, tab switching, and dynamic suggestion placeholders.
+
+### Changed
+- Refactored `GrammarTrainer.tsx` sentence builder to dynamically resolve card values, labels, tooltip explanations, and panel tabs from rule sandbox configs.
+- Replaced hardcoded suggestion check placeholder with dynamic sample answers based on rule suggestions.
 
 ## [1.31.0] - 2026-05-27
 ### Added
