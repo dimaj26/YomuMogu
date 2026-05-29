@@ -341,12 +341,46 @@ export async function addWord(
 }
 
 /**
+ * Вспомогательная функция для разделения склеенных nJMdict слов и значений.
+ */
+export function fixConcatenatedTranslation(text: string): string {
+  if (!text) return '';
+  let fixed = text;
+  
+  // Конкретные исправления известных слияний
+  fixed = fixed.replace(/sadmiserableunhappysorrowfulof/g, 'sad, miserable, unhappy, sorrowful, of');
+  fixed = fixed.replace(/sadmiserableunhappysorrowful/g, 'sad, miserable, unhappy, sorrowful');
+  fixed = fixed.replace(/\(waving\)longitude/g, '(waving), longitude');
+  
+  // Общий эвристический сплиттер для типичных английских слов, если они слиплись
+  const commonWords = [
+    'sad', 'miserable', 'unhappy', 'sorrowful', 'person', 'warp', 'waving', 'longitude', 
+    'happy', 'joyful', 'cheerful', 'angry', 'mad', 'annoyed', 'scared', 'afraid', 'frightened',
+    'tired', 'sleepy', 'exhausted', 'hungry', 'thirsty', 'sick', 'ill', 'pain', 'hurt'
+  ];
+  
+  for (let i = 0; i < commonWords.length; i++) {
+    for (let j = 0; j < commonWords.length; j++) {
+      if (i === j) continue;
+      const combined = commonWords[i] + commonWords[j];
+      const regex = new RegExp(combined, 'g');
+      fixed = fixed.replace(regex, `${commonWords[i]}, ${commonWords[j]}`);
+    }
+  }
+  
+  return fixed;
+}
+
+/**
  * Удаляет мусор разметки и служебные надписи словарей (например, nJMdict English)
  * из полей переводов.
  */
 export function cleanTranslationJunk(translation: string): string {
   if (!translation) return '';
   let cleaned = translation;
+  
+  // Исправляем слипшиеся слова nJMdict
+  cleaned = fixConcatenatedTranslation(cleaned);
   
   // Удаляем варианты с GemDict/nJMdict English/Russian/Japanese/etc. с любыми скобками или без них
   cleaned = cleaned.replace(/[\(\[\{]?\s*(?:GemDict|nJMdict)(?:\s+[a-zA-Z]+)?\s*[\)\]\}]?/gi, '');

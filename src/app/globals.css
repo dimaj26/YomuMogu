@@ -132,6 +132,16 @@ body {
   box-shadow: 0 0 0 var(--color-yellow-shadow);
 }
 
+.btn-3d.btn-gray {
+  background-color: var(--border-color);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+  box-shadow: 0 var(--btn-shadow-depth) 0 var(--text-light);
+}
+.btn-3d.btn-gray:active {
+  box-shadow: 0 0 0 var(--text-light);
+}
+
 
 .btn-3d:disabled {
   background-color: var(--border-color) !important;

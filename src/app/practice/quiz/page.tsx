@@ -766,7 +766,7 @@ function QuizComponent() {
                 <button
                   type="button"
                   onClick={() => saveReviewAndGoNext(1)}
-                  className={`${styles.gradeBtn} btn-3d btn-red ${!isCorrect ? styles.defaultGradeBtn : ''}`}
+                  className={`${styles.gradeBtn} btn-3d btn-gray ${!isCorrect ? styles.defaultGradeBtn : ''}`}
                 >
                   <span className={styles.gradeLabel}>
                     {t('Повторить', 'もう一度')} {!isCorrect && ' ↵'}
