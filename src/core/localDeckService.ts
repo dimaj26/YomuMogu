@@ -341,8 +341,30 @@ export async function addWord(
 }
 
 /**
+ * Удаляет мусор разметки и служебные надписи словарей (например, GemDict English)
+ * из полей переводов.
+ */
+export function cleanTranslationJunk(translation: string): string {
+  if (!translation) return '';
+  let cleaned = translation;
+  
+  // Удаляем варианты с GemDict English/Russian/Japanese/etc. с любыми скобками или без них
+  cleaned = cleaned.replace(/[\(\[\{]?\s*GemDict(?:\s+[a-zA-Z]+)?\s*[\)\]\}]?/gi, '');
+  
+  // Удаляем двоеточия или тире, которые могли остаться с краю после удаления
+  cleaned = cleaned.replace(/^\s*[:;\-\–\—\s]+\s*/, '');
+  cleaned = cleaned.replace(/\s*[:;\-\–\—\s]+\s*$/, '');
+  
+  // Очищаем лишние двойные пробелы
+  cleaned = cleaned.replace(/\s+/g, ' ');
+  
+  return cleaned.trim();
+}
+
+/**
  * Корректирует опечатки/поля в уже импортированных словах локального списка
  * на основе свежей версии starter_deck.json, сохраняя историю FSRS.
+ * Также очищает мусор внешних словарей во всех импортированных словах.
  */
 export async function syncExistingLocalWordsWithStarterDeck(profileId: string): Promise<void> {
   if (typeof window === 'undefined') return;
@@ -354,10 +376,8 @@ export async function syncExistingLocalWordsWithStarterDeck(profileId: string): 
     .filter(w => w.category === LOCAL_DECK_NAME)
     .toArray();
 
-  if (existingWords.length === 0) return;
-
-  const existingMap = new Map<number, LocalWord>(existingWords.map(w => [w.id, w]));
   const wordsToUpdate: LocalWord[] = [];
+  const existingMap = new Map<number, LocalWord>(existingWords.map(w => [w.id, w]));
 
   for (const item of deckData) {
     const existing = existingMap.get(item.id);
@@ -375,9 +395,25 @@ export async function syncExistingLocalWordsWithStarterDeck(profileId: string): 
     }
   }
 
+  // Очистка мусора GemDict во всех сохраненных словах профиля
+  const allProfileWords = await db.words
+    .where('profileId')
+    .equals(profileId)
+    .toArray();
+
+  for (const w of allProfileWords) {
+    const cleaned = cleanTranslationJunk(w.translation);
+    if (cleaned !== w.translation) {
+      w.translation = cleaned;
+      if (!wordsToUpdate.some(item => item.id === w.id)) {
+        wordsToUpdate.push(w);
+      }
+    }
+  }
+
   if (wordsToUpdate.length > 0) {
     await db.words.bulkPut(wordsToUpdate);
-    console.log(`[LocalDeck] Автоматически исправлены опечатки в ${wordsToUpdate.length} словах для профиля ${profileId}`);
+    console.log(`[LocalDeck] Автоматически исправлены опечатки и очищен мусор разметки в ${wordsToUpdate.length} словах для профиля ${profileId}`);
   }
 }
 

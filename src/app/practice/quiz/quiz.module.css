@@ -518,3 +518,12 @@
   width: 100%;
 }
 
+.defaultGradeBtn {
+  outline: 3px solid var(--color-blue, #1899eb) !important;
+  outline-offset: 3px;
+  transform: scale(1.04) translateY(-2px) !important;
+  z-index: 5;
+  position: relative;
+}
+
+

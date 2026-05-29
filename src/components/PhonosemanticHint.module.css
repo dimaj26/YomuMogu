@@ -146,3 +146,13 @@
   margin-top: 2px;
   transition: color 0.15s ease;
 }
+
+.infoText {
+  padding: 12px 14px 2px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary, #777);
+  line-height: 1.4;
+  border-bottom: 1.5px dashed rgba(74, 144, 226, 0.2);
+  margin-bottom: 4px;
+}

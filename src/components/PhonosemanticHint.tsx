@@ -51,6 +51,9 @@ export function PhonosemanticHint({ data }: PhonosemanticHintProps) {
         style={{ maxHeight: isOpen ? (bodyRef.current?.scrollHeight ?? 0) : 0 }}
         aria-hidden={!isOpen}
       >
+        <div className={styles.infoText}>
+          Иероглифы с общим фонетическим ключом часто имеют одинаковое или близкое онное чтение (音読み). Групповое запоминание помогает легче читать родственные слова.
+        </div>
         <div className={styles.inner}>
           {/* Блок ключа */}
           <div className={styles.keyBlock}>

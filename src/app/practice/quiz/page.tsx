@@ -575,16 +575,12 @@ function QuizComponent() {
               {matchedExample ? matchedExample.translation : currentWord.translation}
             </div>
 
-            {/* Предложение с пропуском или прочерки */}
-            {matchedExample ? (
+            {/* Предложение с пропуском */}
+            {matchedExample && (
               <div 
                 className={styles.clozeSentence}
                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(getClozeSentence(matchedExample.sentence, currentWord.word)) }}
               />
-            ) : (
-              <div className={styles.clozeSentence}>
-                <span className={styles.clozeBlank}>?</span>
-              </div>
             )}
           </div>
 
@@ -667,7 +663,7 @@ function QuizComponent() {
                   <>
                     <span>{t('Неверно. ', '不正解。')}</span>
                     <strong>{currentWord.word}</strong>
-                    {currentWord.reading !== currentWord.word && (
+                    {currentWord.reading && currentWord.reading.trim() !== currentWord.word.trim() && (
                       <span>【{currentWord.reading}】</span>
                     )}
                   </>
@@ -683,7 +679,7 @@ function QuizComponent() {
               <div style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '2px', textAlign: 'center' }}>
                 {currentWord.word}
               </div>
-              {currentWord.reading !== currentWord.word && (
+              {currentWord.reading && currentWord.reading.trim() !== currentWord.word.trim() && (
                 <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
                   【{currentWord.reading}】
                 </div>
@@ -762,9 +758,11 @@ function QuizComponent() {
                 <button
                   type="button"
                   onClick={() => saveReviewAndGoNext(1)}
-                  className={`${styles.gradeBtn} btn-3d btn-red`}
+                  className={`${styles.gradeBtn} btn-3d btn-red ${!isCorrect ? styles.defaultGradeBtn : ''}`}
                 >
-                  <span className={styles.gradeLabel}>{t('Повторить', 'もう一度')}</span>
+                  <span className={styles.gradeLabel}>
+                    {t('Повторить', 'もう一度')} {!isCorrect && ' ↵'}
+                  </span>
                   <span className={styles.gradeBadge}>{getFSRSIntervalString(1)}</span>
                 </button>
                 <button
@@ -778,9 +776,11 @@ function QuizComponent() {
                 <button
                   type="button"
                   onClick={() => saveReviewAndGoNext(3)}
-                  className={`${styles.gradeBtn} btn-3d btn-green`}
+                  className={`${styles.gradeBtn} btn-3d btn-green ${isCorrect ? styles.defaultGradeBtn : ''}`}
                 >
-                  <span className={styles.gradeLabel}>{t('Хорошо', ' 普通')}</span>
+                  <span className={styles.gradeLabel}>
+                    {t('Хорошо', ' 普通')} {isCorrect && ' ↵'}
+                  </span>
                   <span className={styles.gradeBadge}>{getFSRSIntervalString(3)}</span>
                 </button>
                 <button
