@@ -1,6 +1,32 @@
 # YomuMogu Changelog
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+## [1.34.0] - 2026-05-29
+
+### Added
+- **Manual Grade Override Bar**: Integrated an interactive rating bar (Again, Hard, Good, Easy) in the post-answer feedback card of `/practice/quiz` displaying real-time computed intervals.
+- **Typo-Forgiveness & Manual Bypass**: Added a "Простил опечатку" button for incorrect quiz responses, allowing the user to mark answers as correct, update default grade, and access FSRS override controls.
+- **Visual Kanji Reinforcement**: Displays a large 3rem Kanji block and reading below the response input in the feedback card to aid recognition.
+- **Keyboard Shortcuts**: Registered physical keyboard bindings: `1`–`4` for rating overrides, `i` / `\` / `~` for Ignore Typo, and `Enter` to commit selection.
+- **Expanded Unit Testing**: Added unit tests in `page.test.tsx` verifying typo forgiveness, manual rating override logging, and keydown shortcut listener.
+
+## [1.33.0] - 2026-05-28
+
+### Added
+- **Situational Tagging System**: Implemented automatic classification of Japanese words into 10 situational themes (`shopping`, `restaurant`, `travel`, `home`, `work`, `hobbies`, `social`, `health`, `weather`, `education`) or `universal`.
+- **Static N5 Dictionary**: Created `situational_dictionary.json` in `src/resources/` mapping N5 Starter Deck words to eliminate Gemini classification overhead on initial import.
+- **Lazy AI Classifier Route**: Created POST API route `/api/gemini/classify` using a schema-enforced Gemini structured JSON output to lazily classify custom Anki imports when they enter the active learning pool.
+- **IndexedDB multiEntry Index**: Upgraded Dexie.js database to Schema Version 5, adding an indexed `*tags` multiEntry index to the `words` table.
+- **Adaptive Reviews Gating**: Implemented FSRS stability routing logic checking `active.stability < 3` or `lapses >= 2` to direct decaying words to Gemini chat dialogues, while directing stable items to rapid translation quizzes.
+- **Tag-Based Distractor Selection**: Optimized Warm-up `generateOptions` on the practice page to query and prioritize distractor options sharing overlapping situational tags.
+- **Unit Testing Coverage**: Added `classify.test.ts` and `tagger.test.ts` to test API routes, FSRS routing logic, and theme clustering.
+
+### Changed
+- Updated `localDeckService.ts` to pre-populate tags on starter deck import and trigger lazy tag classification for custom/Anki imports.
+- Modified `scheduler.ts` to expose `shouldRouteToChat` helper checking active FSRS stability and lapses.
+- Updated `sessions/route.ts` and `lib/gemini/client.ts` to group active review words by situational tag overlap using a new `groupWordsIntoThemes` utility.
+
 ## [1.32.0] - 2026-05-28
 ### Added
 - **Dynamic Grammar Sandbox Curriculum**: Scaled the interactive sentence workbench sandbox layout (Tone, Polarity, Contractions, dynamic cards) to all 7 curriculum rules in `grammar_rules.json`.

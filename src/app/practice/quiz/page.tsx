@@ -2,7 +2,7 @@
 
 import React, { Suspense, useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Check, X, ArrowLeft, AlertCircle, Loader2, Lightbulb, BookOpen, Award, Sparkles } from 'lucide-react';
+import { Check, X, ArrowLeft, AlertCircle, Loader2, Lightbulb, BookOpen, Award, Sparkles, RefreshCw } from 'lucide-react';
 import { useJapanification } from '@/hooks/useJapanification';
 import { useQuests } from '@/hooks/useQuests';
 import { getActiveProfileId } from '@/lib/profile';
@@ -69,11 +69,13 @@ function QuizComponent() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [words, setWords] = useState<LocalWord[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const currentWord = words[currentIndex];
   const [userInput, setUserInput] = useState<string>('');
   
   // Состояния квиза
   const [isAnswered, setIsAnswered] = useState<boolean>(false);
   const [isCorrect, setIsCorrect] = useState<boolean>(false);
+  const [selectedGrade, setSelectedGrade] = useState<number | null>(null);
   const [showFirstChar, setShowFirstChar] = useState<boolean>(false);
   const [dictDefinition, setDictDefinition] = useState<string | null>(null);
   const [isLoadingDict, setIsLoadingDict] = useState<boolean>(false);
@@ -97,6 +99,173 @@ function QuizComponent() {
 
   const wordsParam = searchParams.get('words');
   const modeParam = searchParams.get('mode');
+
+  // Сохранение мнемоники в IndexedDB
+  const saveMnemonic = useCallback(async (text: string) => {
+    if (words.length === 0 || currentIndex >= words.length) return;
+    const currentWord = words[currentIndex];
+    const cleanText = text.trim();
+    if (cleanText === (currentWord.mnemonic || '')) return; // Нет изменений
+    
+    setIsSavingMnemonic(true);
+    try {
+      await db.words.update(currentWord.id, { mnemonic: cleanText || undefined });
+      currentWord.mnemonic = cleanText || undefined;
+      if (cleanText) {
+        incrementQuestProgress('mnemonics', 1);
+      }
+    } catch (e) {
+      console.error('Ошибка сохранения мнемоники:', e);
+    } finally {
+      setIsSavingMnemonic(false);
+    }
+  }, [words, currentIndex, incrementQuestProgress]);
+
+  // Запрос ИИ-этимологии
+  const fetchEtymology = useCallback(async () => {
+    if (isLoadingEtymology || etymologyData || words.length === 0) return;
+    const currentWord = words[currentIndex];
+    
+    setIsLoadingEtymology(true);
+    try {
+      const res = await fetch('/api/gemini/etymology', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ word: currentWord.word })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEtymologyData(data);
+        
+        // Автозаполняем мнемонику, если пользователь не написал свою
+        if (!mnemonicText.trim() && data.etymology) {
+          setMnemonicText(data.etymology);
+          await db.words.update(currentWord.id, { mnemonic: data.etymology });
+          currentWord.mnemonic = data.etymology;
+          incrementQuestProgress('mnemonics', 1);
+        }
+      } else {
+        console.error('Ошибка API этимологии:', res.status);
+      }
+    } catch (e) {
+      console.error('Ошибка запроса этимологии:', e);
+    } finally {
+      setIsLoadingEtymology(false);
+    }
+  }, [isLoadingEtymology, etymologyData, words, currentIndex, mnemonicText, incrementQuestProgress]);
+
+  const getFSRSIntervalString = (grade: number) => {
+    if (!currentWord) return '';
+    try {
+      const { newInterval } = calculateNextFsrsState(currentWord, grade, 'active');
+      if (newInterval === 0 || newInterval < 1) return '10м';
+      if (newInterval < 30) return `${Math.round(newInterval)}д`;
+      return `${(newInterval / 30).toFixed(1)}м`;
+    } catch (e) {
+      return '';
+    }
+  };
+
+  const saveReviewAndGoNext = async (grade: number) => {
+    if (!currentWord) return;
+    try {
+      const { updatedWord, newInterval, lastInterval } = calculateNextFsrsState(currentWord, grade, 'active');
+      let finalWord = updatedWord as LocalWord;
+      
+      const correct = grade > 1;
+      if (correct) {
+        finalWord = alignPassiveToActiveState(finalWord) as LocalWord;
+        setCorrectCount(prev => prev + 1);
+        setXpGained(prev => prev + 1);
+        addPoints(1); // +1 XP за правильный ответ в профиль
+      }
+
+      if (currentWord.active.status === 'new') {
+        incrementDailyNewWordsCount(profileId, 1);
+      }
+
+      // Сохраняем прогресс в IndexedDB
+      await db.words.put(finalWord);
+
+      // Пишем отзыв для синхронизации
+      await addLocalReview({
+        profileId,
+        cardId: currentWord.id,
+        ease: grade,
+        interval: newInterval,
+        lastInterval,
+        duration: Date.now() - startTime,
+        timestamp: Date.now(),
+        synced: 0,
+        reviewType: 'active'
+      });
+
+      // Инкрементируем квест на повторения
+      incrementQuestProgress('reviews', 1);
+    } catch (e) {
+      console.error('Ошибка записи FSRS прогресса в квизе:', e);
+    }
+
+    await handleNextWord();
+  };
+
+  const handleCheckAnswer = () => {
+    if (!currentWord || isAnswered || !userInput.trim()) return;
+
+    // Нечеткое сравнение: удаляем пробелы
+    const normalizedInput = userInput.trim().replace(/[\s\u3000]+/g, '');
+    const normalizedWord = currentWord.word.trim().replace(/[\s\u3000]+/g, '');
+    const normalizedReading = currentWord.reading ? currentWord.reading.trim().replace(/[\s\u3000]+/g, '') : '';
+
+    const correct = normalizedInput === normalizedWord || (!!normalizedReading && normalizedInput === normalizedReading);
+    setIsCorrect(correct);
+    setIsAnswered(true);
+    setSelectedGrade(correct ? 3 : 1);
+  };
+
+  const handleIgnoreTypo = () => {
+    setIsCorrect(true);
+    setSelectedGrade(3);
+  };
+
+  const handleNextWord = async () => {
+    if (!currentWord) return;
+    // Сохраняем мнемонику при переходе
+    if (mnemonicText.trim() && mnemonicText !== (currentWord.mnemonic || '')) {
+      await saveMnemonic(mnemonicText);
+    }
+
+    if (currentIndex < words.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+    } else {
+      setIsCompleted(true);
+    }
+  };
+
+  const handleShowFirstChar = () => {
+    setShowFirstChar(true);
+  };
+
+  const handleFetchDefinition = async () => {
+    if (!currentWord || isLoadingDict || dictDefinition) return;
+    setIsLoadingDict(true);
+    try {
+      const res = await fetch(`/api/dict/lookup?word=${encodeURIComponent(currentWord.word)}`);
+      if (res.ok) {
+        const data = await res.json();
+        let rawDef = data.definition || data.entry || 'Определение отсутствует в базе';
+        // Маскируем целевое слово в определении для исключения прямых подсказок
+        const masked = rawDef.replaceAll(currentWord.word, '***');
+        setDictDefinition(masked);
+      } else {
+        setDictDefinition('Не удалось загрузить определение');
+      }
+    } catch (e) {
+      setDictDefinition('Ошибка словаря');
+    } finally {
+      setIsLoadingDict(false);
+    }
+  };
 
   // Загрузка слов
   useEffect(() => {
@@ -190,6 +359,7 @@ function QuizComponent() {
     if (words.length > 0 && currentIndex < words.length) {
       setUserInput('');
       setIsAnswered(false);
+      setSelectedGrade(null);
       setShowFirstChar(false);
       setDictDefinition(null);
       setEtymologyData(null);
@@ -207,59 +377,45 @@ function QuizComponent() {
     }
   }, [currentIndex, words]);
 
-  // Сохранение мнемоники в IndexedDB
-  const saveMnemonic = useCallback(async (text: string) => {
-    if (words.length === 0 || currentIndex >= words.length) return;
-    const currentWord = words[currentIndex];
-    const cleanText = text.trim();
-    if (cleanText === (currentWord.mnemonic || '')) return; // Нет изменений
-    
-    setIsSavingMnemonic(true);
-    try {
-      await db.words.update(currentWord.id, { mnemonic: cleanText || undefined });
-      currentWord.mnemonic = cleanText || undefined;
-      if (cleanText) {
-        incrementQuestProgress('mnemonics', 1);
-      }
-    } catch (e) {
-      console.error('Ошибка сохранения мнемоники:', e);
-    } finally {
-      setIsSavingMnemonic(false);
-    }
-  }, [words, currentIndex, incrementQuestProgress]);
+  // Клавиатурные шорткаты после ответа
+  useEffect(() => {
+    if (!isAnswered) return;
 
-  // Запрос ИИ-этимологии
-  const fetchEtymology = useCallback(async () => {
-    if (isLoadingEtymology || etymologyData || words.length === 0) return;
-    const currentWord = words[currentIndex];
-    
-    setIsLoadingEtymology(true);
-    try {
-      const res = await fetch('/api/gemini/etymology', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ word: currentWord.word })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setEtymologyData(data);
-        
-        // Автозаполняем мнемонику, если пользователь не написал свою
-        if (!mnemonicText.trim() && data.etymology) {
-          setMnemonicText(data.etymology);
-          await db.words.update(currentWord.id, { mnemonic: data.etymology });
-          currentWord.mnemonic = data.etymology;
-          incrementQuestProgress('mnemonics', 1);
-        }
-      } else {
-        console.error('Ошибка API этимологии:', res.status);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Игнорируем шорткаты, если фокус в textarea мнемоники
+      if (document.activeElement?.tagName === 'TEXTAREA') {
+        return;
       }
-    } catch (e) {
-      console.error('Ошибка запроса этимологии:', e);
-    } finally {
-      setIsLoadingEtymology(false);
-    }
-  }, [isLoadingEtymology, etymologyData, words, currentIndex, mnemonicText, incrementQuestProgress]);
+
+      const key = e.key.toLowerCase();
+
+      if (key === '1' || key === 'a' || key === 'f' || key === 'а') {
+        e.preventDefault();
+        saveReviewAndGoNext(1);
+      } else if (key === '2' || key === 'h' || key === 'д' || key === 'р') {
+        e.preventDefault();
+        saveReviewAndGoNext(2);
+      } else if (key === '3' || key === 'g' || key === 'п' || key === 'о') {
+        e.preventDefault();
+        saveReviewAndGoNext(3);
+      } else if (key === '4' || key === 'e' || key === 'у') {
+        e.preventDefault();
+        saveReviewAndGoNext(4);
+      } else if (key === 'i' || key === '\\' || key === '`' || key === '~' || key === 'ш') {
+        if (!isCorrect) {
+          e.preventDefault();
+          handleIgnoreTypo();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isAnswered, isCorrect, currentWord, profileId, startTime, saveReviewAndGoNext]);
+
+
 
   if (isLoading) {
     return (
@@ -359,8 +515,6 @@ function QuizComponent() {
     );
   }
 
-  const currentWord = words[currentIndex];
-  
   // Находим подходящий пример предложения
   const examples = currentWord.contextExamples || [];
   const matchedExample = examples.find(ex => ex.sentence && ex.sentence.includes(currentWord.word));
@@ -387,95 +541,7 @@ function QuizComponent() {
     return sentence.replace(word, '_______');
   };
 
-  const handleCheckAnswer = async () => {
-    if (isAnswered || !userInput.trim()) return;
 
-    // Нечеткое сравнение: удаляем пробелы
-    const normalizedInput = userInput.trim().replace(/[\s\u3000]+/g, '');
-    const normalizedWord = currentWord.word.trim().replace(/[\s\u3000]+/g, '');
-    const normalizedReading = currentWord.reading ? currentWord.reading.trim().replace(/[\s\u3000]+/g, '') : '';
-
-    const correct = normalizedInput === normalizedWord || (!!normalizedReading && normalizedInput === normalizedReading);
-    setIsCorrect(correct);
-    setIsAnswered(true);
-
-    const grade = correct ? 3 : 1; // Good (3) или Again (1)
-    
-    try {
-      const { updatedWord, newInterval, lastInterval } = calculateNextFsrsState(currentWord, grade, 'active');
-      let finalWord = updatedWord as LocalWord;
-      
-      if (correct) {
-        finalWord = alignPassiveToActiveState(finalWord) as LocalWord;
-        setCorrectCount(prev => prev + 1);
-        setXpGained(prev => prev + 1);
-        addPoints(1); // +1 XP за правильный ответ в профиль
-      }
-
-      if (currentWord.active.status === 'new') {
-        incrementDailyNewWordsCount(profileId, 1);
-      }
-
-      // Сохраняем прогресс в IndexedDB
-      await db.words.put(finalWord);
-
-      // Пишем отзыв для синхронизации
-      await addLocalReview({
-        profileId,
-        cardId: currentWord.id,
-        ease: grade,
-        interval: newInterval,
-        lastInterval,
-        duration: Date.now() - startTime,
-        timestamp: Date.now(),
-        synced: 0,
-        reviewType: 'active'
-      });
-
-      // Инкрементируем квест на повторения
-      incrementQuestProgress('reviews', 1);
-    } catch (e) {
-      console.error('Ошибка записи FSRS прогресса в квизе:', e);
-    }
-  };
-
-  const handleNextWord = async () => {
-    // Сохраняем мнемонику при переходе
-    if (mnemonicText.trim() && mnemonicText !== (currentWord.mnemonic || '')) {
-      await saveMnemonic(mnemonicText);
-    }
-
-    if (currentIndex < words.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-    } else {
-      setIsCompleted(true);
-    }
-  };
-
-  const handleShowFirstChar = () => {
-    setShowFirstChar(true);
-  };
-
-  const handleFetchDefinition = async () => {
-    if (isLoadingDict || dictDefinition) return;
-    setIsLoadingDict(true);
-    try {
-      const res = await fetch(`/api/dict/lookup?word=${encodeURIComponent(currentWord.word)}`);
-      if (res.ok) {
-        const data = await res.json();
-        let rawDef = data.definition || data.entry || 'Определение отсутствует в базе';
-        // Маскируем целевое слово в определении для исключения прямых подсказок
-        const masked = rawDef.replaceAll(currentWord.word, '***');
-        setDictDefinition(masked);
-      } else {
-        setDictDefinition('Не удалось загрузить определение');
-      }
-    } catch (e) {
-      setDictDefinition('Ошибка словаря');
-    } finally {
-      setIsLoadingDict(false);
-    }
-  };
 
   const firstChar = currentWord.word[0] || (currentWord.reading && currentWord.reading[0]);
   const progressPercent = Math.round((currentIndex / words.length) * 100);
@@ -580,7 +646,7 @@ function QuizComponent() {
                   if (!isAnswered) {
                     if (userInput.trim()) handleCheckAnswer();
                   } else {
-                    handleNextWord();
+                    saveReviewAndGoNext(selectedGrade ?? (isCorrect ? 3 : 1));
                   }
                 }
               }}
@@ -607,6 +673,21 @@ function QuizComponent() {
                   </>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* VISUAL REINFORCEMENT (KANJI RETENTION BLOCK) */}
+          {isAnswered && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '16px 0', gap: '8px', animation: 'fadeIn 0.3s' }}>
+              <span className={styles.overrideLabel}>{t('Визуальный образ слова:', '単語の視覚的イメージ:')}</span>
+              <div style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '2px', textAlign: 'center' }}>
+                {currentWord.word}
+              </div>
+              {currentWord.reading !== currentWord.word && (
+                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                  【{currentWord.reading}】
+                </div>
+              )}
             </div>
           )}
 
@@ -658,6 +739,62 @@ function QuizComponent() {
             </div>
           )}
 
+          {/* MANUAL OVERRIDE AND IGNORE TYPO CONTROLS */}
+          {isAnswered && (
+            <div style={{ width: '100%', marginTop: 24 }}>
+              {/* Ignore Typo Button (visible only if validation initially failed and user has not ignored it yet) */}
+              {!isCorrect && (
+                <button
+                  type="button"
+                  onClick={handleIgnoreTypo}
+                  className={`${styles.ignoreTypoBtn} btn-3d btn-orange`}
+                >
+                  <RefreshCw size={16} />
+                  {t('Простил опечатку / Принять ответ', 'タイポを許容 / 正解にする')}
+                </button>
+              )}
+
+              {/* FSRS Rating Buttons */}
+              <span className={styles.overrideLabel}>
+                {t('Оцените сложность воспоминания:', '記憶の難易度を評価:')}
+              </span>
+              <div className={styles.overrideGradeBar}>
+                <button
+                  type="button"
+                  onClick={() => saveReviewAndGoNext(1)}
+                  className={`${styles.gradeBtn} btn-3d btn-red`}
+                >
+                  <span className={styles.gradeLabel}>{t('Повторить', 'もう一度')}</span>
+                  <span className={styles.gradeBadge}>{getFSRSIntervalString(1)}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => saveReviewAndGoNext(2)}
+                  className={`${styles.gradeBtn} btn-3d btn-orange`}
+                >
+                  <span className={styles.gradeLabel}>{t('Трудно', ' 難しい')}</span>
+                  <span className={styles.gradeBadge}>{getFSRSIntervalString(2)}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => saveReviewAndGoNext(3)}
+                  className={`${styles.gradeBtn} btn-3d btn-green`}
+                >
+                  <span className={styles.gradeLabel}>{t('Хорошо', ' 普通')}</span>
+                  <span className={styles.gradeBadge}>{getFSRSIntervalString(3)}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => saveReviewAndGoNext(4)}
+                  className={`${styles.gradeBtn} btn-3d btn-blue`}
+                >
+                  <span className={styles.gradeLabel}>{t('Легко', '簡単')}</span>
+                  <span className={styles.gradeBadge}>{getFSRSIntervalString(4)}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* SUBMIT OR NEXT ACTIONS */}
           <div className={styles.actionArea}>
             {!isAnswered ? (
@@ -670,7 +807,7 @@ function QuizComponent() {
               </button>
             ) : (
               <button
-                onClick={handleNextWord}
+                onClick={() => saveReviewAndGoNext(selectedGrade ?? (isCorrect ? 3 : 1))}
                 className={`${styles.submitBtn} btn-3d btn-blue`}
               >
                 {currentIndex < words.length - 1 ? t('Следующее слово', '次の単語') : t('Завершить', '終了')}

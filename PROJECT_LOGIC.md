@@ -55,9 +55,11 @@ src/
       gemini/
         sessions/route.ts # POST /api/gemini/sessions
         etymology/route.ts # POST /api/gemini/etymology
+        classify/
+          route.ts        # POST /api/gemini/classify
         grammar-verify/
           route.ts        # POST /api/gemini/grammar-verify
-        __tests__/sessions.test.ts, etymology.test.ts, grammar-verify.test.ts
+        __tests__/sessions.test.ts, etymology.test.ts, grammar-verify.test.ts, classify.test.ts
       chat/
         route.ts          # POST /api/chat (send message)
         hint/route.ts     # POST /api/chat/hint (generate hints)
@@ -108,6 +110,7 @@ src/
       LearningTrack.test.tsx # Unit tests for LearningTrack component
   resources/
     phonosemantics.json   # 50 phonosemantic keys and relative kanji data
+    situational_dictionary.json # Static situational tags mapping for 500 N5 words
   lib/
     logger.ts             # Structured logger (debug/info/warn/error → logs/)
     profile.ts            # localStorage profile helpers + multi-profile management
@@ -129,10 +132,14 @@ src/
 | `plugins/anki/wordSource.ts` | Implements `WordSource` utilizing Anki client for deck querying and sync |
 | `app/api/dict/lookup/route.ts` | GET endpoint for offline dictionary lookup |
 | `app/api/gemini/etymology/route.ts` | POST endpoint to generate word etymologies and mnemonic hints |
+| `app/api/gemini/classify/route.ts` | POST endpoint to classify words by situational tags using Gemini |
 | `app/api/gemini/__tests__/etymology.test.ts` | Unit test for etymology route using mocked Gemini client |
+| `app/api/gemini/__tests__/classify.test.ts` | Unit test for classify route using mocked Gemini client |
+| `core/__tests__/tagger.test.ts` | Unit tests for tagger, FSRS routing, and session grouping helpers |
 | `components/PhonosemanticHint.tsx` | Accordion component displaying phonosemantic keys and relative kanji |
 | `components/DebugDrawer.tsx` | Client component implementing the sliding debug drawer HUD |
 | `resources/phonosemantics.json` | 50 phonosemantic keys and relative kanji data |
+| `resources/situational_dictionary.json` | Static situational tags mapping for 500 N5 words |
 | `app/practice/quiz/page.tsx` | Gamified Active Recall quiz component supporting ad-hoc, FSRS modes, mnemonics, and phonosemantic hints |
 | `lib/dict/jitendex.ts` | `lookupWord(word)` — offline SQLite JitenDex dictionary lookup |
 | `lib/dict/lookup.py` | Python script invoked via Node `execFile` to query SQLite dictionary database |
@@ -199,6 +206,7 @@ interface AnkiWord {
   deckName: string;
   rawFront: string;
   rawBack: string;
+  tags?: string[];
 }
 
 // GeneratedSession (lib/gemini/client.ts)
@@ -293,6 +301,7 @@ interface LocalWord {
   active: FsrsState;
   contextExamples?: WordContextExample[];
   mnemonic?: string; // User note / AI etymology
+  tags?: string[];
 }
 
 interface FsrsState {
@@ -346,10 +355,10 @@ interface UiWord {
 
 ### [PL-3.4] IndexedDB Schema
 
-For local-first operation and off-session scheduling, YomuMogu maintains client-side storage using Dexie.js (upgraded to Schema Version 4):
+For local-first operation and off-session scheduling, YomuMogu maintains client-side storage using Dexie.js (upgraded to Schema Version 5):
 - **`words` Table** (`[profileId+id]` compound key):
-  - Stores the local replication of Anki cards including calculated FSRS variables.
-  - Indexes: `id`, `word`, `category`, `passive.due`, `active.due`, `profileId`.
+  - Stores the local replication of Anki cards including calculated FSRS variables and situational tags.
+  - Indexes: `id`, `word`, `category`, `passive.due`, `active.due`, `*tags`, `profileId`.
 - **`reviews` Table** (`id` auto-increment key):
   - Stores local review logs generated during dialogue practice.
   - Indexes: `[profileId+cardId]`, `cardId`, `timestamp`, `synced`, `profileId`.
@@ -383,6 +392,7 @@ All Anki routes proxy requests to AnkiConnect at `http://localhost:8765`.
 |---|---|---|---|
 | `/api/gemini/sessions` | POST | `{ words: AnkiWord[] }` | `{ sessions: GeneratedSession[] }` |
 | `/api/gemini/etymology` | POST | `{ word }` | `{ components: string[], etymology: string }` |
+| `/api/gemini/classify` | POST | `{ words: string[] }` | `{ classifications: Array<{ word: string; tags: string[] }> }` |
 | `/api/gemini/grammar-verify` | POST | `{ ruleId, userInput }` | `{ isCorrect: boolean, correction: string, explanation: string }` |
 | `/api/chat` | POST | `{ scenario, targetWords, history, message, level, grammarInJapanese, collectedWords? }` | `ChatResponse` |
 | `/api/chat/hint` | POST | `{ scenario, targetWords, history, level }` | `HintResponse` |
@@ -477,6 +487,12 @@ To prevent "leakage" of target words and encourage user recall:
 - Tight sentence length limits (under 15/20/30/50 characters depending on level) are verified by the model via a self-count instruction.
 
 
+### [PL-5.9] Adaptive Reviews & Situational Routing
+- **FSRS Stability Gating**: Reviews are adaptively routed between rapid recognition checks (offline translation quiz) and conversation writing (Gemini chat) based on active FSRS stability. If `active.stability < 3` days or `lapses >= 2`, the word is routed to dialog practice; otherwise, it is scheduled for the offline quiz.
+- **Situational Clustering**: The system programmatically groups the daily active vocabulary pool using `groupWordsIntoThemes` by finding overlaps among the 10 situational themes (`shopping`, `restaurant`, `travel`, `home`, `work`, `hobbies`, `social`, `health`, `weather`, `education`). It matches nouns matching a specific theme and fills the remaining slots with `universal` verbs and adjectives to form coherent 4-6 word target sets for dialogue practice.
+- **Contextual Distractors**: The multiple-choice Warm-up selector queries words matching the target's situational tag to provide high-quality, contextually similar distractors.
+
+
 ---
 
 ## [PL-6] ANKI INTEGRATION PATTERNS
@@ -523,6 +539,7 @@ To ensure state parity and permit offline study without losing scheduling progre
 7. **Dual-State FSRS**: Vocabulary entities maintain two distinct scheduling trajectories (`passive` and `active`). Passive scheduling handles recognition/reading, while active scheduling handles speech/writing production.
 8. **Anki Integration for Dual-States**: Anki sync processes use the active FSRS state as the primary scheduling data synced with Anki. Remote reviews are replayed to align both passive and active states, and imported translations have HTML cleanings applied.
 9. **Contextual Sentence Examples**: Sentences correctly produced by the user in dialogue are preserved as contextual examples in IndexedDB under the associated word entity's `contextExamples` field.
+10. **Quiz Manual FSRS Override & Typo Forgiveness**: To decouple scheduling transactions from strict input checks, the Quiz feedback view renders an interactive override bar displaying calculated intervals for rating buttons (Again, Hard, Good, Easy) in real-time. If an answer fails correctness check, the "Простил опечатку" button allows the user to manually flip validation state to correct, updating the default grade to Good, and revealing the FSRS rating override controls for manual assessment.
 
 ---
 
@@ -598,4 +615,4 @@ npm run test:integration:gemini # Live LLM integration tests (uses Gemini API, c
 
 ### [PL-9.4] Current Test Count
 
-233 unit tests across 35 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
+243 unit tests across 37 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).

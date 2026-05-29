@@ -451,3 +451,70 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* === Панель ручной оценки FSRS и прощения опечаток === */
+.overrideGradeBar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+  width: 100%;
+  animation: slideUp 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.gradeBtn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 4px;
+  min-height: 60px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.gradeBtn:active {
+  transform: translateY(2px);
+}
+
+.gradeLabel {
+  font-size: 14px;
+  font-weight: 800;
+  margin-bottom: 4px;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+}
+
+.gradeBadge {
+  font-size: 11px;
+  font-weight: 700;
+  background-color: rgba(255, 255, 255, 0.25);
+  color: inherit;
+  padding: 2px 6px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.ignoreTypoBtn {
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.overrideLabel {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-secondary, #afafaf);
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  display: block;
+  text-align: center;
+  width: 100%;
+}
+

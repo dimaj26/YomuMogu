@@ -17,6 +17,7 @@ vi.mock('lucide-react', () => ({
   BookOpen: () => <span data-testid="icon-book" />,
   Award: () => <span data-testid="icon-award" />,
   Sparkles: () => <span data-testid="icon-sparkles" />,
+  RefreshCw: () => <span data-testid="icon-refresh" />,
 }));
 
 // Mock router and searchParams
@@ -164,8 +165,8 @@ describe('QuizPage Component', () => {
 
     // Verify incorrect feedback
     await waitFor(() => {
-      expect(screen.getByText(/Неверно/)).toBeInTheDocument();
-      expect(screen.getByText(/いぬ/)).toBeInTheDocument();
+      expect(document.body.textContent).toContain('Неверно');
+      expect(document.body.textContent).toContain('いぬ');
     });
   });
 
@@ -326,11 +327,133 @@ describe('QuizPage Component', () => {
     const checkButton = screen.getByRole('button', { name: 'Проверить' });
     fireEvent.click(checkButton);
 
-    // Verify correct feedback and incremented daily count
+    // Verify correct feedback
     await waitFor(() => {
       expect(screen.getByText('Верно! Отличная работа.')).toBeInTheDocument();
     });
 
+    // Click next / finish
+    const nextButton = screen.getByRole('button', { name: 'Завершить' });
+    fireEvent.click(nextButton);
+
+    // Verify finished screen
+    await waitFor(() => {
+      expect(screen.getByText('Повторение завершено!')).toBeInTheDocument();
+    });
+
     expect(localStorage.getItem(key)).toBe('1');
+  });
+
+  it('allows ignoring a typo and manually selecting Hard rating', async () => {
+    // Seed due word with non-new status
+    const dueWord = {
+      profileId: 'default',
+      id: 15,
+      word: '猫',
+      reading: 'ねこ',
+      translation: 'кошка',
+      category: 'Japanese',
+      source: 'anki' as const,
+      passive: { status: 'review' as const, stability: 3, difficulty: 5, interval: 2, due: Date.now() - 5000, reps: 2, lapses: 0 },
+      active: { status: 'review' as const, stability: 3, difficulty: 5, interval: 2, due: Date.now() - 5000, reps: 2, lapses: 0 },
+    };
+    await db.words.put(dueWord);
+
+    render(
+      <JapanificationProvider>
+        <QuizPage />
+      </JapanificationProvider>
+    );
+
+    // Wait for the word to load
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Введите ответ на японском...')).toBeInTheDocument();
+    });
+
+    // Enter incorrect answer
+    const input = screen.getByPlaceholderText('Введите ответ на японском...');
+    fireEvent.change(input, { target: { value: 'ねко_ошибка' } });
+
+    // Click check
+    const checkButton = screen.getByRole('button', { name: 'Проверить' });
+    fireEvent.click(checkButton);
+
+    // Verify incorrect banner and Ignore Typo button presence
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Неверно');
+      expect(screen.getByRole('button', { name: /Простил опечатку/ })).toBeInTheDocument();
+    });
+
+    // Click Ignore Typo
+    const ignoreButton = screen.getByRole('button', { name: /Простил опечатку/ });
+    fireEvent.click(ignoreButton);
+
+    // Verify correctness toggled to green/correct and FSRS override buttons are rendered
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Верно!');
+      expect(screen.getByRole('button', { name: /Трудно/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Хорошо/ })).toBeInTheDocument();
+    });
+
+    // Click Hard (Трудно)
+    const hardButton = screen.getByRole('button', { name: /Трудно/ });
+    fireEvent.click(hardButton);
+
+    // Verify transitions to finish screen and review logged with ease: 2
+    await waitFor(() => {
+      expect(screen.getByText('Повторение завершено!')).toBeInTheDocument();
+    });
+
+    const reviews = await db.reviews.toArray();
+    expect(reviews).toHaveLength(1);
+    expect(reviews[0].ease).toBe(2); // Hard
+  });
+
+  it('supports keyboard shortcuts for manual FSRS ratings', async () => {
+    // Seed due word
+    const dueWord = {
+      profileId: 'default',
+      id: 16,
+      word: '猫',
+      reading: 'ねко',
+      translation: 'кошка',
+      category: 'Japanese',
+      source: 'anki' as const,
+      passive: { status: 'learning' as const, stability: 2, difficulty: 5, interval: 1, due: Date.now() - 5000, reps: 1, lapses: 0 },
+      active: { status: 'learning' as const, stability: 2, difficulty: 5, interval: 1, due: Date.now() - 5000, reps: 1, lapses: 0 },
+    };
+    await db.words.put(dueWord);
+
+    render(
+      <JapanificationProvider>
+        <QuizPage />
+      </JapanificationProvider>
+    );
+
+    // Wait for the word
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Введите ответ на японском...')).toBeInTheDocument();
+    });
+
+    // Enter correct answer and check
+    const input = screen.getByPlaceholderText('Введите ответ на японском...');
+    fireEvent.change(input, { target: { value: 'ねко' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Проверить' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Верно! Отличная работа.')).toBeInTheDocument();
+    });
+
+    // Trigger keyboard key '2' for Hard
+    fireEvent.keyDown(window, { key: '2' });
+
+    // Verify finished screen and logged with ease: 2
+    await waitFor(() => {
+      expect(screen.getByText('Повторение завершено!')).toBeInTheDocument();
+    });
+
+    const reviews = await db.reviews.toArray();
+    expect(reviews).toHaveLength(1);
+    expect(reviews[0].ease).toBe(2); // Hard
   });
 });

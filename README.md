@@ -87,6 +87,8 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to start pra
   - *Gemini-Powered Chat Audit*: Automatically extracts new N4+ vocabulary used during practice.
   - *Offline Dictionary lookup*: Integrates JitenDex offline dictionary definitions (HTML).
   - *Anki Review Sync*: Seamlessly checks Anki card status to sync reviews or create new cards.
+- **Situational Tagging System**: Automatically classifies words into 10 situational themes (`shopping`, `restaurant`, `travel`, `home`, `work`, `hobbies`, `social`, `health`, `weather`, `education`) or `universal`, utilizing a local static dictionary (`situational_dictionary.json`) for N5 starter deck and a schema-enforced lazy Gemini classifier (`/api/gemini/classify`) for custom Anki imports.
+- **Adaptive Reviews Pipeline**: Dynamically routes cards between rapid recognition check (offline translation quiz) and conversational dialog practice (Gemini chat) based on active FSRS stability. If `active.stability < 3` days or lapses >= 2, the word is routed to chat; otherwise, it is scheduled for the offline quiz. Groups active words by overlapping situational themes to generate contextually coherent scenarios, and uses tags to pull contextually similar distractors in multiple-choice Warm-ups.
 - **Warm-up Trainer (Priming)**: Client-only React-overlay on `/practice` facilitating a 3-step learning warmup (Sight & Sound, Kana Check, Translation Check) for up to 10 new words without FSRS modifications.
 - **Phonosemantic Hints (声符)**: Custom Accordion component displaying Kanji phonetic components and semantic relative chips, aiding vocabulary association.
 - **Interactive Mnemonics & AI Etymology**: Offline notes editor in the Quiz with a "✨ ИИ-Этимология" action to fetch origin breakdowns from Gemini API.
@@ -104,6 +106,8 @@ src/
     practice/             # Practice launcher, session management, & stats
     settings/             # Deck settings, profile management, & field mappings
     api/                  # Proxy routes to Gemini & AnkiConnect
+      gemini/
+        classify/         # Situational tagging classifier route
     error.tsx             # Global layout error fallback page
   components/             # UI Components (LanguageSwitcher, JpUI, ErrorBoundary)
   hooks/                  # Custom state hooks (JapanificationState, useApiCall)
@@ -113,6 +117,8 @@ src/
     localDeckService.ts   # Starter deck importer and local DB manager
     types.ts              # Core type definitions
     pluginRegistry.ts     # Interface for custom data sources & plugins
+  resources/              # Static resources and dictionaries
+    situational_dictionary.json # Static situational tags dictionary (N5 starter deck)
   lib/
     dict/                 # SQLite dictionary lookup script and helper
     gemini/               # Gemini content generation, fallbacks, & withRetry wrapper
