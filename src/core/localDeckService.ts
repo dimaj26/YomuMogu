@@ -399,12 +399,66 @@ export function cleanTranslationJunk(translation: string): string {
 }
 
 /**
+ * Вручную исправляет опечатки и разделяет склеенные слова в переводе
+ * во всех словах профиля "test" для устранения импортированного мусора.
+ */
+export async function manuallyFixTestProfileWords(profileId: string): Promise<void> {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    const allWords = await db.words
+      .where('profileId')
+      .equals(profileId)
+      .toArray();
+
+    const updated: LocalWord[] = [];
+    for (const w of allWords) {
+      let changed = false;
+      let t = w.translation;
+
+      // Точечные ручные замены слипшихся цепочек по указанию пользователя
+      if (t.includes('sadmiserableunhappysorrowfulof a person')) {
+        t = t.replace('sadmiserableunhappysorrowfulof a person', 'sad, miserable, unhappy, sorrowful (of a person)');
+        changed = true;
+      }
+      if (t.includes('sadmiserableunhappysorrowful')) {
+        t = t.replace('sadmiserableunhappysorrowful', 'sad, miserable, unhappy, sorrowful');
+        changed = true;
+      }
+      if (t.includes('warp (waving)longitude')) {
+        t = t.replace('warp (waving)longitude', 'warp (waving), longitude');
+        changed = true;
+      }
+      if (t.includes('waving)longitude')) {
+        t = t.replace('waving)longitude', 'waving), longitude');
+        changed = true;
+      }
+
+      if (changed) {
+        w.translation = t;
+        updated.push(w);
+      }
+    }
+
+    if (updated.length > 0) {
+      await db.words.bulkPut(updated);
+      console.log(`[ManualFix] Вручную исправлено ${updated.length} слов в профиле ${profileId}`);
+    }
+  } catch (e) {
+    console.error('Ошибка ручного исправления колоды:', e);
+  }
+}
+
+/**
  * Корректирует опечатки/поля в уже импортированных словах локального списка
  * на основе свежей версии starter_deck.json, сохраняя историю FSRS.
  * Также очищает мусор внешних словарей во всех импортированных словах.
  */
 export async function syncExistingLocalWordsWithStarterDeck(profileId: string): Promise<void> {
   if (typeof window === 'undefined') return;
+
+  // Вручную исправляем колоду профиля
+  await manuallyFixTestProfileWords(profileId);
 
   const deckData = (await import('../resources/starter_deck.json')).default;
   const existingWords = await db.words

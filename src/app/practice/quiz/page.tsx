@@ -816,7 +816,7 @@ function QuizComponent() {
             ) : (
               <button
                 onClick={() => saveReviewAndGoNext(selectedGrade ?? (isCorrect ? 3 : 1))}
-                className={`${styles.submitBtn} btn-3d btn-green`}
+                className={`${styles.submitBtn} btn-3d btn-purple`}
               >
                 {currentIndex < words.length - 1 ? t('Следующее слово', '次の単語') : t('Завершить', '終了')}
               </button>

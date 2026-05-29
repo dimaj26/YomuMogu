@@ -142,6 +142,17 @@ body {
   box-shadow: 0 0 0 var(--text-light);
 }
 
+.btn-3d.btn-purple {
+  background-color: #a55eea;
+  color: #ffffff;
+  border-color: #a55eea;
+  box-shadow: 0 var(--btn-shadow-depth) 0 #8854d0;
+}
+.btn-3d.btn-purple:active {
+  box-shadow: 0 0 0 #8854d0;
+}
+
+
 
 .btn-3d:disabled {
   background-color: var(--border-color) !important;
