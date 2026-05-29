@@ -341,15 +341,15 @@ export async function addWord(
 }
 
 /**
- * Удаляет мусор разметки и служебные надписи словарей (например, GemDict English)
+ * Удаляет мусор разметки и служебные надписи словарей (например, nJMdict English)
  * из полей переводов.
  */
 export function cleanTranslationJunk(translation: string): string {
   if (!translation) return '';
   let cleaned = translation;
   
-  // Удаляем варианты с GemDict English/Russian/Japanese/etc. с любыми скобками или без них
-  cleaned = cleaned.replace(/[\(\[\{]?\s*GemDict(?:\s+[a-zA-Z]+)?\s*[\)\]\}]?/gi, '');
+  // Удаляем варианты с GemDict/nJMdict English/Russian/Japanese/etc. с любыми скобками или без них
+  cleaned = cleaned.replace(/[\(\[\{]?\s*(?:GemDict|nJMdict)(?:\s+[a-zA-Z]+)?\s*[\)\]\}]?/gi, '');
   
   // Удаляем двоеточия или тире, которые могли остаться с краю после удаления
   cleaned = cleaned.replace(/^\s*[:;\-\–\—\s]+\s*/, '');
