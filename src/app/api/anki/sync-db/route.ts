@@ -3,6 +3,7 @@ import { ankiClient } from '@/plugins/anki/client';
 import { parseAndFilterCards } from '@/plugins/anki/filter';
 import { logger } from '@/lib/logger';
 import { verifyCsrf } from '@/lib/csrf';
+import { cleanTranslationJunk } from '@/core/localDeckService';
 
 export async function POST(request: NextRequest) {
   if (process.env.ANKI_ENABLED === 'false') {
@@ -223,10 +224,7 @@ export async function POST(request: NextRequest) {
     // Очищаем переводы от HTML тегов и ограничиваем размер
     for (const card of parsedWords) {
       if (card.translation) {
-        card.translation = card.translation
-          .replace(/<[^>]*>/g, '') // Удаляем HTML теги
-          .replace(/\s+/g, ' ')   // Схлопываем лишние пробелы
-          .trim()
+        card.translation = cleanTranslationJunk(card.translation)
           .substring(0, 150);     // Лимитируем длину
       }
     }

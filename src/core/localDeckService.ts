@@ -385,6 +385,9 @@ export function cleanTranslationJunk(translation: string): string {
   // Удаляем варианты с GemDict/nJMdict English/Russian/Japanese/etc. с любыми скобками или без них
   cleaned = cleaned.replace(/[\(\[\{]?\s*(?:GemDict|nJMdict)(?:\s+[a-zA-Z]+)?\s*[\)\]\}]?/gi, '');
   
+  // Удаляем префиксы вроде (English), (Russian), [English], [Russian], English:, Russian:
+  cleaned = cleaned.replace(/[\(\[\{]?\s*(?:English|Russian|Japanese|French|German|Spanish)(?:\s+translation)?\s*[\)\]\}]?\s*[:\-–—]?/gi, '');
+  
   // Восстанавливаем пробелы после закрывающих скобок, если за ними сразу идет слово (проблема слияния nJMdict)
   cleaned = cleaned.replace(/([\)\]\}])(?=[a-zA-Zа-яА-ЯёЁ])/g, '$1 ');
   
@@ -413,28 +416,24 @@ export async function manuallyFixTestProfileWords(profileId: string): Promise<vo
 
     const updated: LocalWord[] = [];
     for (const w of allWords) {
-      let changed = false;
-      let t = w.translation;
+      const original = w.translation;
+      let t = cleanTranslationJunk(original);
 
       // Точечные ручные замены слипшихся цепочек по указанию пользователя
       if (t.includes('sadmiserableunhappysorrowfulof a person')) {
         t = t.replace('sadmiserableunhappysorrowfulof a person', 'sad, miserable, unhappy, sorrowful (of a person)');
-        changed = true;
       }
       if (t.includes('sadmiserableunhappysorrowful')) {
         t = t.replace('sadmiserableunhappysorrowful', 'sad, miserable, unhappy, sorrowful');
-        changed = true;
       }
       if (t.includes('warp (waving)longitude')) {
         t = t.replace('warp (waving)longitude', 'warp (waving), longitude');
-        changed = true;
       }
       if (t.includes('waving)longitude')) {
         t = t.replace('waving)longitude', 'waving), longitude');
-        changed = true;
       }
 
-      if (changed) {
+      if (t !== original) {
         w.translation = t;
         updated.push(w);
       }

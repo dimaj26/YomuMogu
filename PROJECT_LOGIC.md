@@ -545,30 +545,15 @@ To ensure state parity and permit offline study without losing scheduling progre
 
 ---
 
-## [PL-7] JAPANIFICATION SYSTEM
+## [PL-7] PROGRESSION & IMMERSION DECORATION
 
-To hide user-facing "Japanification" branding, the system is referred to as "Language Immersion Progression" or "Immersion" (Погружение) in the UI. A compact Language Switcher dropdown is placed in the headers of pages to select the interface mode: Русский (`ru`), Smart (`smart` — uses FSRS/XP-based progressive immersion), or 日本語 (`ja` — entire UI is Japanese). Under the hood, the virtual level logic determines element translation within the Smart mode.
+To encourage user engagement, YomuMogu displays decorative progression levels and XP stats in the UI.
 
-### [PL-7.1] Level Thresholds (points → level 0–6)
+### [PL-7.1] Decorative XP and Level
+- XP is displayed as a decorative progress bar on the dashboard.
+- Levels (0–6) are calculated based on earned XP to serve as a decorative progress indicator.
 
-| Speed | L0 | L1 | L2 | L3 | L4 | L5 | L6 |
-|---|---|---|---|---|---|---|---|
-| slow | 0 | 30 | 80 | 150 | 250 | 400 | 600 |
-| normal | 0 | 20 | 50 | 100 | 170 | 280 | 420 |
-| fast | 0 | 10 | 25 | 50 | 85 | 140 | 210 |
-
-### [PL-7.2] Level Effects (what changes at each level)
-| Level | UI Effect |
-|---|---|
-| 0 | All Russian |
-| 1 | AI reply translations hidden by default |
-| 2 | UI buttons switch to Japanese |
-| 3 | Navigation menu in Japanese (furigana) |
-| 4 | Hints in Japanese |
-| 5 | Grammar feedback in Japanese |
-| 6 | Entire UI in Japanese |
-
-### [PL-7.3] XP Sources
+### [PL-7.2] XP Sources
 - Word used correctly in chat: +1 XP per word
 - Grammar correct: +1 XP bonus
 - Session completed (80% words collected): +5 XP

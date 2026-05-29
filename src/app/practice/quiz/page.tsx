@@ -7,7 +7,7 @@ import { useJapanification } from '@/hooks/useJapanification';
 import { useQuests } from '@/hooks/useQuests';
 import { getActiveProfileId } from '@/lib/profile';
 import { db, addLocalReview } from '@/core/db';
-import { getDailyNewWordsCount, getDailyNewWordsLimit, incrementDailyNewWordsCount } from '@/core/localDeckService';
+import { getDailyNewWordsCount, getDailyNewWordsLimit, incrementDailyNewWordsCount, syncExistingLocalWordsWithStarterDeck } from '@/core/localDeckService';
 import { calculateNextFsrsState, alignPassiveToActiveState, createDefaultFsrsState } from '@/core/scheduler';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { PhonosemanticHint, PhonosemanticData } from '@/components/PhonosemanticHint';
@@ -273,6 +273,9 @@ function QuizComponent() {
       try {
         const activeProfile = getActiveProfileId();
         setProfileId(activeProfile);
+
+        // Очищаем опечатки и склеенные слова в БД перед загрузкой
+        await syncExistingLocalWordsWithStarterDeck(activeProfile);
 
         let loadedWords: LocalWord[] = [];
 
