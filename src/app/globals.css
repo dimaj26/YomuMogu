@@ -112,6 +112,27 @@ body {
   box-shadow: 0 0 0 var(--color-orange-shadow);
 }
 
+.btn-3d.btn-red {
+  background-color: var(--color-red);
+  color: #ffffff;
+  border-color: var(--color-red);
+  box-shadow: 0 var(--btn-shadow-depth) 0 var(--color-red-shadow);
+}
+.btn-3d.btn-red:active {
+  box-shadow: 0 0 0 var(--color-red-shadow);
+}
+
+.btn-3d.btn-yellow {
+  background-color: var(--color-yellow);
+  color: #3c3c3c;
+  border-color: var(--color-yellow);
+  box-shadow: 0 var(--btn-shadow-depth) 0 var(--color-yellow-shadow);
+}
+.btn-3d.btn-yellow:active {
+  box-shadow: 0 0 0 var(--color-yellow-shadow);
+}
+
+
 .btn-3d:disabled {
   background-color: var(--border-color) !important;
   border-color: var(--border-color) !important;

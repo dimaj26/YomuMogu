@@ -351,6 +351,9 @@ export function cleanTranslationJunk(translation: string): string {
   // Удаляем варианты с GemDict/nJMdict English/Russian/Japanese/etc. с любыми скобками или без них
   cleaned = cleaned.replace(/[\(\[\{]?\s*(?:GemDict|nJMdict)(?:\s+[a-zA-Z]+)?\s*[\)\]\}]?/gi, '');
   
+  // Восстанавливаем пробелы после закрывающих скобок, если за ними сразу идет слово (проблема слияния nJMdict)
+  cleaned = cleaned.replace(/([\)\]\}])(?=[a-zA-Zа-яА-ЯёЁ])/g, '$1 ');
+  
   // Удаляем двоеточия или тире, которые могли остаться с краю после удаления
   cleaned = cleaned.replace(/^\s*[:;\-\–\—\s]+\s*/, '');
   cleaned = cleaned.replace(/\s*[:;\-\–\—\s]+\s*$/, '');

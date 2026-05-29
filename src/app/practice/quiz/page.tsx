@@ -662,9 +662,13 @@ function QuizComponent() {
                 ) : (
                   <>
                     <span>{t('Неверно. ', '不正解。')}</span>
-                    <strong>{currentWord.word}</strong>
-                    {currentWord.reading && currentWord.reading.trim() !== currentWord.word.trim() && (
-                      <span>【{currentWord.reading}】</span>
+                    {currentWord.reading && currentWord.reading.trim() !== currentWord.word.trim() ? (
+                      <ruby>
+                        <strong>{currentWord.word}</strong>
+                        <rt style={{ fontSize: '0.55em', color: 'var(--text-secondary)' }}>{currentWord.reading}</rt>
+                      </ruby>
+                    ) : (
+                      <strong>{currentWord.word}</strong>
                     )}
                   </>
                 )}
@@ -677,13 +681,17 @@ function QuizComponent() {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '16px 0', gap: '8px', animation: 'fadeIn 0.3s' }}>
               <span className={styles.overrideLabel}>{t('Визуальный образ слова:', '単語の視覚的イメージ:')}</span>
               <div style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '2px', textAlign: 'center' }}>
-                {currentWord.word}
+                {currentWord.reading && currentWord.reading.trim() !== currentWord.word.trim() ? (
+                  <ruby>
+                    {currentWord.word}
+                    <rt style={{ fontSize: '0.45em', color: 'var(--text-secondary)', userSelect: 'none' }}>
+                      {currentWord.reading}
+                    </rt>
+                  </ruby>
+                ) : (
+                  currentWord.word
+                )}
               </div>
-              {currentWord.reading && currentWord.reading.trim() !== currentWord.word.trim() && (
-                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                  【{currentWord.reading}】
-                </div>
-              )}
             </div>
           )}
 
@@ -743,10 +751,10 @@ function QuizComponent() {
                 <button
                   type="button"
                   onClick={handleIgnoreTypo}
-                  className={`${styles.ignoreTypoBtn} btn-3d btn-orange`}
+                  className={`${styles.ignoreTypoBtn} btn-3d btn-yellow`}
                 >
                   <RefreshCw size={16} />
-                  {t('Простил опечатку / Принять ответ', 'タイポを許容 / 正解にする')}
+                  {t('Опечатка / Принять ответ', 'タイポを許容 / 正解にする')}
                 </button>
               )}
 
@@ -808,7 +816,7 @@ function QuizComponent() {
             ) : (
               <button
                 onClick={() => saveReviewAndGoNext(selectedGrade ?? (isCorrect ? 3 : 1))}
-                className={`${styles.submitBtn} btn-3d btn-blue`}
+                className={`${styles.submitBtn} btn-3d btn-green`}
               >
                 {currentIndex < words.length - 1 ? t('Следующее слово', '次の単語') : t('Завершить', '終了')}
               </button>

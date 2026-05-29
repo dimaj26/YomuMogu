@@ -381,11 +381,11 @@ describe('QuizPage Component', () => {
     // Verify incorrect banner and Ignore Typo button presence
     await waitFor(() => {
       expect(document.body.textContent).toContain('Неверно');
-      expect(screen.getByRole('button', { name: /Простил опечатку/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Опечатка/ })).toBeInTheDocument();
     });
 
     // Click Ignore Typo
-    const ignoreButton = screen.getByRole('button', { name: /Простил опечатку/ });
+    const ignoreButton = screen.getByRole('button', { name: /Опечатка/ });
     fireEvent.click(ignoreButton);
 
     // Verify correctness toggled to green/correct and FSRS override buttons are rendered

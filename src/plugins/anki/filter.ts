@@ -13,6 +13,9 @@ export function stripHtml(html: string): string {
     .replace(/<rt>[\s\S]*?<\/rt>/gi, '')
     .replace(/<rp>[\s\S]*?<\/rp>/gi, '');
     
+  // Вставляем пробелы вместо блочных/закрывающих HTML-тегов, чтобы текст из соседних элементов не слипался (например, span, div, p, br)
+  clean = clean.replace(/<\/(p|div|td|li|ol|ul|h[1-6]|tr|span)>|<br\s*\/?>/gi, ' ');
+    
   // 2. Теперь удаляем все остальные HTML-теги
   clean = clean.replace(/<[^>]*>/g, '');
   
