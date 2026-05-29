@@ -44,14 +44,17 @@ src/
     chat/                 # /chat page — AI conversation interface
       page.tsx
       chat.module.css
+    error.tsx             # Global Next.js error boundary page
     api/
       anki/               # Anki proxy routes (server → AnkiConnect)
         connect/route.ts  # GET  /api/anki/connect
         decks/route.ts    # GET  /api/anki/decks
         words/route.ts    # GET  /api/anki/words
         sync/route.ts     # POST /api/anki/sync
+          __tests__/sync.test.ts
         add/route.ts      # POST /api/anki/add
-        __tests__/connect.test.ts, sync.test.ts, add.test.ts
+          __tests__/add.test.ts
+        __tests__/connect.test.ts
       gemini/
         sessions/route.ts # POST /api/gemini/sessions
         etymology/route.ts # POST /api/gemini/etymology
@@ -71,9 +74,11 @@ src/
   hooks/
     useJapanification.tsx # XP progression, level, speed, chatLevel state
     useQuests.ts          # Daily quests state tracking (reviews, chats, mnemonics)
+    useApiCall.ts         # Custom hook consolidating client-side loading, error state, and retry logic
     __tests__/
       useJapanification.test.ts
       useQuests.test.ts   # Unit tests for useQuests hook
+      useApiCall.test.ts  # Unit tests for useApiCall hook
   core/
     db.ts                 # Decoupled IndexedDB database
     localDeckService.ts   # Local word management
@@ -86,6 +91,10 @@ src/
       filter.ts
       wordSource.ts
       index.ts
+      __tests__/
+        client.test.ts
+        filter.test.ts
+        sync.integration.test.ts
   components/
     JpUIProvider.tsx      # UI FSRS word state provider
     JpUI.tsx              # Granular Smart Japanification wrapper
@@ -108,12 +117,17 @@ src/
       DebugDrawer.test.tsx # Unit tests for DebugDrawer component
       JpUI.test.tsx        # Unit tests for JpUI component FSRS opacity
       LearningTrack.test.tsx # Unit tests for LearningTrack component
+      GrammarTrack.test.tsx  # Unit tests for GrammarTrack component
+      GrammarTrainer.test.tsx # Unit tests for GrammarTrainer component
   resources/
     phonosemantics.json   # 50 phonosemantic keys and relative kanji data
     situational_dictionary.json # Static situational tags mapping for 500 N5 words
+    starter_deck.json     # 500-word offline starter vocabulary deck
   lib/
     logger.ts             # Structured logger (debug/info/warn/error → logs/)
     profile.ts            # localStorage profile helpers + multi-profile management
+    csrf.ts               # CSRF protection helpers (same-origin Origin/Referer verification)
+    sanitize.ts           # DOMPurify HTML sanitization utility for dangerouslySetInnerHTML
 ```
 
 ### [PL-2.2] File Registry
@@ -126,10 +140,26 @@ src/
 | `core/types.ts` | Central TypeScript interface definitions for db schemas, reviews, and FSRS states |
 | `core/pluginRegistry.ts` | Interfaces for custom learning plugins and active `WordSource` providers |
 | `core/__tests__/localDeckService.test.ts` | Unit tests for localDeckService |
+| `core/__tests__/db.test.ts` | Unit tests for Dexie.js database functions |
+| `core/__tests__/scheduler.test.ts` | Unit tests for FSRS scheduler calculations |
 | `plugins/anki/index.ts` | Entry point for the Anki integration plugin registering itself to the core |
 | `plugins/anki/client.ts` | `AnkiConnectClient` wrapper class querying local Anki desktop HTTP API |
 | `plugins/anki/filter.ts` | Functional filters classifying card statuses from raw Anki queue parameters |
 | `plugins/anki/wordSource.ts` | Implements `WordSource` utilizing Anki client for deck querying and sync |
+| `plugins/anki/__tests__/client.test.ts` | Unit tests for AnkiConnectClient |
+| `plugins/anki/__tests__/filter.test.ts` | Unit tests for Anki card status filter |
+| `plugins/anki/__tests__/sync.integration.test.ts` | Integration tests for bilateral Anki sync (requires local Anki Desktop) |
+| `hooks/useApiCall.ts` | Custom React hook consolidating client-side loading, error state, and retry logic |
+| `hooks/__tests__/useApiCall.test.ts` | Unit tests for useApiCall hook |
+| `lib/csrf.ts` | CSRF protection helpers: same-origin `Origin` and `Referer` verification for mutating Anki routes |
+| `lib/sanitize.ts` | `sanitizeHtml(html)` — DOMPurify wrapper for safe `dangerouslySetInnerHTML` injection |
+| `components/ErrorBoundary.tsx` | Global class-based React error boundary catching rendering exceptions |
+| `components/ErrorFallback.tsx` | UI fallback component rendered by ErrorBoundary on crash |
+| `app/error.tsx` | Next.js App Router global error boundary page |
+| `app/api/anki/sync/__tests__/sync.test.ts` | Unit tests for `/api/anki/sync` route |
+| `app/api/anki/add/__tests__/add.test.ts` | Unit tests for `/api/anki/add` route |
+| `app/api/chat/analyze/__tests__/analyze.test.ts` | Unit tests for `/api/chat/analyze` route |
+| `app/api/chat/hint/__tests__/hint.test.ts` | Unit tests for `/api/chat/hint` route |
 | `app/api/dict/lookup/route.ts` | GET endpoint for offline dictionary lookup |
 | `app/api/gemini/etymology/route.ts` | POST endpoint to generate word etymologies and mnemonic hints |
 | `app/api/gemini/classify/route.ts` | POST endpoint to classify words by situational tags using Gemini |
@@ -196,7 +226,7 @@ Profile metadata (not namespaced):
 ### [PL-3.3] Core TypeScript Interfaces
 
 ```typescript
-// AnkiWord (lib/anki/filter.ts)
+// AnkiWord (plugins/anki/filter.ts)
 interface AnkiWord {
   id: number;
   word: string;        // Japanese
@@ -591,14 +621,15 @@ npm run test:integration:gemini # Live LLM integration tests (uses Gemini API, c
 ### [PL-9.3] Test Categories
 | Category | Location | Mock strategy |
 |---|---|---|
-| Anki Client | `lib/anki/__tests__/` | Mock `fetch` |
-| Local Database | `lib/__tests__/` | `fake-indexeddb` polyfill |
-| Anki Filter | `lib/anki/__tests__/` | Pure function, no mocks |
+| Anki Client | `plugins/anki/__tests__/` | Mock `fetch` |
+| Local Database | `core/__tests__/` | `fake-indexeddb` polyfill |
+| Anki Filter | `plugins/anki/__tests__/` | Pure function, no mocks |
 | Gemini Client | `lib/gemini/__tests__/` | Mock `@google/genai` |
 | API Routes | `app/api/*/__tests__/` | Mock service singletons |
-| UI Components | `app/__tests__/`, `app/chat/__tests__/`, `app/settings/__tests__/` | Mock `fetch`, `lucide-react`, `next/navigation` |
+| UI Components | `app/__tests__/`, `app/chat/__tests__/`, `app/settings/__tests__/`, `app/practice/__tests__/`, `app/practice/quiz/__tests__/` | Mock `fetch`, `lucide-react`, `next/navigation` |
 | Hooks | `hooks/__tests__/` | Mock state and time |
-| Integration | `lib/gemini/__tests__/*.integration.test.ts` | Real API call |
+| Integration (Anki) | `plugins/anki/__tests__/sync.integration.test.ts` | Real local AnkiConnect |
+| Integration (Gemini) | `lib/gemini/__tests__/*.integration.test.ts` | Real Gemini API call |
 
 ### [PL-9.4] Current Test Count
 
