@@ -2,6 +2,14 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.35.0] - 2026-05-29
+
+### Added
+- **Interactive Quiz Grading Modifiers**: Re-styled rating buttons on `/practice/quiz` page to separate action/override functions (Again button to neutral slate gray, Typo Forgiveness to yellow, and Next/Finish action to purple).
+- **Inline Furigana Reinforcement**: Replaced reading bracket display below the kanji card in the quiz feedback card with clean HTML `<ruby>` tag representation aligned vertically above the text.
+- **Phonosemantic Explanations**: Added a visual accordion warning/clarity note inside the Phonosemantic component explaining phonetic-semantic associations and phonetic group representations.
+- **nJMdict Translation Separators**: Protected imported dictionary definitions against clumping by replacing closing tags with a `; ` separator in HTML parsing, and introduced programmatic corrections for existing clumped entries on profile load.
+
 ## [1.34.0] - 2026-05-29
 
 ### Added
