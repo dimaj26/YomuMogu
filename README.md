@@ -48,9 +48,13 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to start pra
   ```powershell
   npm run test
   ```
-- **Local Integration Tests** (free, local; requires local Anki Desktop running with AnkiConnect active):
+- **Local Integration Tests (Anki)** (free, local; requires local Anki Desktop running with AnkiConnect active):
   ```powershell
   npm run test:integration
+  ```
+- **Local Integration Tests (MeCab Parser)** (free, local; tests connection resilience when MeCab is online/offline):
+  ```powershell
+  npm run test:integration:media
   ```
 - **Gemini API Integration Tests** (online, uses real Gemini API key; costs money):
   ```powershell

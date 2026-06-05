@@ -106,7 +106,7 @@ You are an expert **TypeScript / Next.js 15** developer. Your specialty is App R
 ### [CP-3.6] Testing
 - Unit tests use Vitest + `@testing-library/react`. Run with `npm run test`.
 - All Gemini calls in unit tests must be **mocked** — never hit real API.
-- Integration tests (real API) live in `*.integration.test.ts`. Run local Anki integration tests with `npm run test:integration` and live LLM tests with `npm run test:integration:gemini`.
+- Integration tests (real API) live in `*.integration.test.ts`. Run local Anki integration tests with `npm run test:integration`, local MeCab integration tests with `npm run test:integration:media`, and live LLM tests with `npm run test:integration:gemini`.
 - Integration tests require Anki Desktop to be running with AnkiConnect active on port 8765; if Anki is offline, sync-related integration tests will be silently skipped. The AI must explicitly instruct the user to open Anki Desktop before running integration tests.
 - When adding a new module, add corresponding test file in `__tests__/` sibling directory.
 - Mock all `lucide-react` icons in UI component tests to avoid SVG rendering issues in jsdom.
