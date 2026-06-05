@@ -3,6 +3,7 @@ import { logger } from '@/lib/logger';
 import { verifyCsrf } from '@/lib/csrf';
 import { extractYoutubeVideoId, getYoutubeTranscriptSegments } from '@/lib/media/youtube';
 import { parseSrtOrVtt, parseSubtitlesToSegments, type SubtitleSegment } from '@/lib/media/parser';
+import mediaTranscripts from '@/resources/media_transcripts.json';
 
 interface CacheEntry {
   lemmas: string[];
@@ -73,16 +74,24 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      try {
-        // Скачиваем транскрипт с YouTube в виде временных сегментов
-        segments = await getYoutubeTranscriptSegments(videoId);
+      // Проверяем, есть ли предсгенерированные субтитры для этого видео в медиатеке
+      const pregenerated = mediaTranscripts[videoId as keyof typeof mediaTranscripts];
+      if (pregenerated) {
+        logger.info(`[API] Использование предсгенерированных субтитров из JSON для видео ${videoId}`);
+        segments = pregenerated as SubtitleSegment[];
         textToTokenize = segments.map(s => s.text).join('\n');
-      } catch (scrapingErr: any) {
-        logger.error(`[API] Ошибка при получении субтитров YouTube для видео ${videoId}:`, scrapingErr);
-        return NextResponse.json(
-          { error: scrapingErr.message || 'Не удалось загрузить субтитры с YouTube' },
-          { status: 502 }
-        );
+      } else {
+        try {
+          // Скачиваем транскрипт с YouTube в виде временных сегментов
+          segments = await getYoutubeTranscriptSegments(videoId);
+          textToTokenize = segments.map(s => s.text).join('\n');
+        } catch (scrapingErr: any) {
+          logger.error(`[API] Ошибка при получении субтитров YouTube для видео ${videoId}:`, scrapingErr);
+          return NextResponse.json(
+            { error: scrapingErr.message || 'Не удалось загрузить субтитры с YouTube' },
+            { status: 502 }
+          );
+        }
       }
     } else if (srtText) {
       // Парсим пользовательские субтитры SRT/VTT

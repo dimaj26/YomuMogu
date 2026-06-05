@@ -204,4 +204,28 @@ describe('API Route POST /api/media/parse', () => {
     expect(data2.cached).toBe(true); // Должно вернуться из in-memory кэша
     expect(globalThis.fetch).not.toHaveBeenCalled(); // fetch не должен вызываться
   });
+
+  it('should use static pre-generated transcripts fallback for a known videoId (e.g. LqV2u750oA8) without scraping YouTube', async () => {
+    const mockLemmas = ['友達', '学生', '先生'];
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ lemmas: mockLemmas }),
+    });
+
+    const request = new NextRequest('http://localhost/api/media/parse', {
+      method: 'POST',
+      body: JSON.stringify({ url: 'https://www.youtube.com/watch?v=LqV2u750oA8' }),
+    });
+
+    const response = await parsePost(request);
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(data.lemmas).toEqual(mockLemmas);
+    expect(data.segments.length).toBeGreaterThan(0);
+    expect(data.cached).toBe(false);
+
+    // Убеждаемся, что fetch был вызван ровно 1 раз (только для токенизации), а не для парсинга YouTube watch page
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+  });
 });

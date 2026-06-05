@@ -186,6 +186,7 @@ src/
 | `hooks/useMediaRecommendation.ts` | Hook calculating Comprehension Rate (CR) and FSRS-due vocabulary matches for videos |
 | `hooks/__tests__/useMediaRecommendation.test.ts` | Unit tests for useMediaRecommendation hook |
 | `resources/media_feed.json` | Static metadata list of recommended video channels/audio podcast feeds |
+| `resources/media_transcripts.json` | Pre-generated timed dialogues/monologues JSON transcripts for recommended YouTube videos |
 | `core/__tests__/tagger.test.ts` | Unit tests for tagger, FSRS routing, and session grouping helpers |
 | `components/PhonosemanticHint.tsx` | Accordion component displaying phonosemantic keys and relative kanji |
 | `components/DebugDrawer.tsx` | Client component implementing the sliding debug drawer HUD |
@@ -656,4 +657,4 @@ npm run test:integration:gemini # Live LLM integration tests (uses Gemini API, c
 
 ### [PL-9.4] Current Test Count
 
-262 unit tests across 41 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
+263 unit tests across 41 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).

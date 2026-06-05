@@ -32,7 +32,12 @@ YomuMogu is an interactive Japanese language learning web application that integ
 
 ## Running the App
 
-Start the Next.js development server:
+To start both the Next.js development server and the background MeCab tokenizer microservice automatically in a zero-configuration developer setup:
+```powershell
+.\run-server.bat
+```
+
+Alternatively, to start only the Next.js development server:
 ```powershell
 npm run dev
 ```

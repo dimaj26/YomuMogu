@@ -2,6 +2,23 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.38.0] - 2026-06-05
+
+### Added
+- **Static Transcript Fallback**: Added a static transcript fallback lookup using pre-generated transcripts (`media_transcripts.json`) inside `/api/media/parse` to bypass YouTube watch page scraping blocks.
+
+### Fixed
+- **Media Player CSP Resolution**: Updated Content-Security-Policy rules in `next.config.ts` to allow YouTube Player script loading (`script-src`) and iframe embeds (`frame-src`, `child-src`, `connect-src`), resolving the black screen issue.
+
+## [1.37.0] - 2026-06-05
+
+### Added
+- **MeCab Tokenizer Auto-Startup**: Integrated automated background launch of the MeCab tokenizer microservice on port 8000 inside `run-server.bat` via a minimized command prompt window.
+- **Production Media Feed**: Replaced all dummy/placeholder video recommendations in `media_feed.json` with active, captioned Japanese YouTube videos.
+
+### Fixed
+- **Media Recommendation Test Cases**: Corrected `useMediaRecommendation.test.ts` to test against valid lemmas matching the first production video (`yt_1`), returning all 262 unit tests to passing status.
+
 ## [1.36.0] - 2026-06-05
 
 ### Added
