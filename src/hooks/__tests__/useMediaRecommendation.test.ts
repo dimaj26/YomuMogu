@@ -49,15 +49,15 @@ describe('useMediaRecommendation hook', () => {
   });
 
   it('should calculate correct comprehension rate based on IndexedDB word states', async () => {
-    // Вставляем 2 слова из лемм первого дефолтного видео ("今日", "天気")
+    // Вставляем 2 слова из лемм первого дефолтного видео ("友達", "電話")
     // Одно слово активно-известно, другое пассивно-известно (due в будущем)
     await db.words.bulkPut([
       {
         profileId: 'test-profile',
         id: 1,
-        word: '今日',
-        reading: 'きょう',
-        translation: 'сегодня',
+        word: '友達',
+        reading: 'ともだち',
+        translation: 'друг',
         category: 'Japanese',
         source: 'manual',
         passive: { stability: 0, difficulty: 0, interval: 0, due: Date.now() - 1000, reps: 0, lapses: 0, status: 'new' },
@@ -66,9 +66,9 @@ describe('useMediaRecommendation hook', () => {
       {
         profileId: 'test-profile',
         id: 2,
-        word: '天気',
-        reading: 'てんき',
-        translation: 'погода',
+        word: '電話',
+        reading: 'でんわ',
+        translation: 'телефон',
         category: 'Japanese',
         source: 'manual',
         passive: { stability: 20, difficulty: 5.0, interval: 20, due: Date.now() + 1000000, reps: 1, lapses: 0, status: 'review' }, // Пассивно-известно (due в будущем)
@@ -90,13 +90,13 @@ describe('useMediaRecommendation hook', () => {
   });
 
   it('should calculate FSRS due overlap count correctly', async () => {
-    // Вставляем слово "今日" как просроченное для повторения (active.due <= now)
+    // Вставляем слово "友達" как просроченное для повторения (active.due <= now)
     await db.words.put({
       profileId: 'test-profile',
       id: 1,
-      word: '今日',
-      reading: 'きょう',
-      translation: 'сегодня',
+      word: '友達',
+      reading: 'ともだち',
+      translation: 'друг',
       category: 'Japanese',
       source: 'manual',
       passive: { stability: 0, difficulty: 0, interval: 0, due: Date.now() - 1000, reps: 0, lapses: 0, status: 'new' },
