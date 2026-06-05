@@ -117,6 +117,25 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
     };
   }, [url]);
 
+  // Прослушивание сообщений от браузерного расширения для получения субтитров
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'YOMUMOGU_YT_SUBTITLES') {
+        const receivedSegments = event.data.segments;
+        if (Array.isArray(receivedSegments) && receivedSegments.length > 0) {
+          setSegments(receivedSegments);
+          setError(null);
+          setIsLoading(false);
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, []);
+
   // Инициализация YouTube API
   useEffect(() => {
     if (!isYoutube || !ytVideoId || isLoading) return;

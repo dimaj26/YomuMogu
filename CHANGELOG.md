@@ -2,6 +2,16 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.39.0] - 2026-06-06
+
+### Added
+- **YouTube Subtitle Interceptor Extension**: Created a Manifest V3 Chrome Extension helper (`manifest.json`, `background.js`, `content.js`) in `src/extension/` to intercept YouTube timedtext API requests in the user's browser context and relay timing segments to YomuMogu.
+- **Client Integration Listener**: Integrated `window.postMessage` listener in `MediaInteractivePlayer.tsx` to accept timing segments sent from the extension helper.
+- **Unit Testing**: Added unit test in `MediaInteractivePlayer.test.tsx` verifying extension event listener integration and segment state updates.
+
+### Fixed
+- **Tokenizer Loopback Connection**: Updated default `tokenizerUrl` fallback inside `/api/media/parse` and `/api/media/tokenize` endpoints from `localhost:8000` to `127.0.0.1:8000` to resolve IPv6 loopback connection bottlenecks on Node.js 18+.
+
 ## [1.38.0] - 2026-06-05
 
 ### Added

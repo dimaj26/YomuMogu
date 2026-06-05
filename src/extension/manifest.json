@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "YomuMogu YouTube Subtitles Helper",
+  "version": "1.0.0",
+  "description": "Вспомогательное расширение для локального перехвата и передачи субтитров YouTube в приложение YomuMogu.",
+  "permissions": [
+    "webRequest",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://*.youtube.com/api/timedtext*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost:3000/*",
+        "http://127.0.0.1:3000/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ]
+}

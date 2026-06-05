@@ -173,4 +173,33 @@ describe('MediaInteractivePlayer Component', () => {
       expect(screen.getByText('Слово добавлено в Anki!')).toBeInTheDocument();
     });
   });
+
+  it('updates segments state when receiving a YOMUMOGU_YT_SUBTITLES message event from browser extension', async () => {
+    render(
+      <MediaInteractivePlayer
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="NHK Easy News"
+        onClose={vi.fn()}
+      />
+    );
+
+    const customSegments = [
+      { start: 10, duration: 3, text: 'こんにちは' },
+      { start: 13, duration: 4, text: '世界' }
+    ];
+
+    // Симулируем отправку сообщения через window.postMessage от расширения
+    fireEvent(window, new MessageEvent('message', {
+      data: {
+        type: 'YOMUMOGU_YT_SUBTITLES',
+        segments: customSegments
+      }
+    }));
+
+    // Ожидаем, что новые сегменты отобразятся на экране
+    await waitFor(() => {
+      expect(screen.getByText('こんにちは')).toBeInTheDocument();
+      expect(screen.getByText('世界')).toBeInTheDocument();
+    });
+  });
 });

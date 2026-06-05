@@ -102,6 +102,10 @@ src/
         client.test.ts
         filter.test.ts
         sync.integration.test.ts
+  extension/              # Browser extension files for YouTube subtitles
+    manifest.json
+    background.js
+    content.js
   components/
     JpUIProvider.tsx      # UI FSRS word state provider
     JpUI.tsx              # Granular Smart Japanification wrapper
@@ -159,6 +163,9 @@ src/
 | `plugins/anki/__tests__/client.test.ts` | Unit tests for AnkiConnectClient |
 | `plugins/anki/__tests__/filter.test.ts` | Unit tests for Anki card status filter |
 | `plugins/anki/__tests__/sync.integration.test.ts` | Integration tests for bilateral Anki sync (requires local Anki Desktop) |
+| `extension/manifest.json` | Browser extension manifest configuration |
+| `extension/background.js` | Extension background worker intercepting YouTube subtitles requests |
+| `extension/content.js` | Extension content script relaying messages to YomuMogu page |
 | `hooks/useApiCall.ts` | Custom React hook consolidating client-side loading, error state, and retry logic |
 | `hooks/__tests__/useApiCall.test.ts` | Unit tests for useApiCall hook |
 | `lib/csrf.ts` | CSRF protection helpers: same-origin `Origin` and `Referer` verification for mutating Anki routes |
