@@ -71,14 +71,21 @@ src/
         hint/__tests__/hint.test.ts
       dict/
         lookup/route.ts   # GET  /api/dict/lookup (offline JitenDex query)
+      media/
+        parse/route.ts    # POST /api/media/parse (YouTube/file subtitle scraping & parsing)
+          __tests__/parse.test.ts
+        tokenize/route.ts # POST /api/media/tokenize (morphological analyzer proxy)
+          __tests__/tokenize.test.ts
   hooks/
     useJapanification.tsx # XP progression, level, speed, chatLevel state
     useQuests.ts          # Daily quests state tracking (reviews, chats, mnemonics)
+    useMediaRecommendation.ts # Smart video/podcast recommendation CR/FSRS overlaps hook
     useApiCall.ts         # Custom hook consolidating client-side loading, error state, and retry logic
     __tests__/
       useJapanification.test.ts
       useQuests.test.ts   # Unit tests for useQuests hook
       useApiCall.test.ts  # Unit tests for useApiCall hook
+      useMediaRecommendation.test.ts # Unit tests for useMediaRecommendation hook
   core/
     db.ts                 # Decoupled IndexedDB database
     localDeckService.ts   # Local word management
@@ -111,6 +118,8 @@ src/
     GrammarTrack.module.css # Styles for the GrammarTrack component
     GrammarTrainer.tsx    # Interactive overlays displaying theory and AI feedback for grammar rules
     GrammarTrainer.module.css # Styles for the GrammarTrainer component
+    MediaInteractivePlayer.tsx # Interactive subtitle player component supporting YouTube/Audio media
+    MediaInteractivePlayer.module.css # CSS module for MediaInteractivePlayer
     __tests__/
       ErrorBoundary.test.tsx
       ErrorFallback.test.tsx
@@ -119,6 +128,7 @@ src/
       LearningTrack.test.tsx # Unit tests for LearningTrack component
       GrammarTrack.test.tsx  # Unit tests for GrammarTrack component
       GrammarTrainer.test.tsx # Unit tests for GrammarTrainer component
+      MediaInteractivePlayer.test.tsx # Unit tests for MediaInteractivePlayer component
   resources/
     phonosemantics.json   # 50 phonosemantic keys and relative kanji data
     situational_dictionary.json # Static situational tags mapping for 500 N5 words
@@ -165,6 +175,17 @@ src/
 | `app/api/gemini/classify/route.ts` | POST endpoint to classify words by situational tags using Gemini |
 | `app/api/gemini/__tests__/etymology.test.ts` | Unit test for etymology route using mocked Gemini client |
 | `app/api/gemini/__tests__/classify.test.ts` | Unit test for classify route using mocked Gemini client |
+| `app/api/media/parse/route.ts` | POST endpoint parsing YouTube subtitles/metadata or SRT/VTT file transcripts |
+| `app/api/media/parse/__tests__/parse.test.ts` | Unit tests for parse media endpoint |
+| `app/api/media/tokenize/route.ts` | POST endpoint proxying tokenization to local MeCab microservice |
+| `app/api/media/tokenize/__tests__/tokenize.test.ts` | Unit tests for tokenize endpoint |
+| `lib/media/youtube.ts` | Zero-dependency Japanese YouTube caption extractor |
+| `lib/media/parser.ts` | SRT/VTT subtitle file parser and duration rounding utility |
+| `components/MediaInteractivePlayer.tsx` | Subtitle-synchronized player component with interactive definitions |
+| `components/__tests__/MediaInteractivePlayer.test.tsx` | Unit tests for MediaInteractivePlayer component |
+| `hooks/useMediaRecommendation.ts` | Hook calculating Comprehension Rate (CR) and FSRS-due vocabulary matches for videos |
+| `hooks/__tests__/useMediaRecommendation.test.ts` | Unit tests for useMediaRecommendation hook |
+| `resources/media_feed.json` | Static metadata list of recommended video channels/audio podcast feeds |
 | `core/__tests__/tagger.test.ts` | Unit tests for tagger, FSRS routing, and session grouping helpers |
 | `components/PhonosemanticHint.tsx` | Accordion component displaying phonosemantic keys and relative kanji |
 | `components/DebugDrawer.tsx` | Client component implementing the sliding debug drawer HUD |
@@ -428,6 +449,8 @@ All Anki routes proxy requests to AnkiConnect at `http://localhost:8765`.
 | `/api/chat/hint` | POST | `{ scenario, targetWords, history, level }` | `HintResponse` |
 | `/api/chat/analyze` | POST | `{ history, deckName, frontField, backField, deckMappings? }` | `{ words: AnalyzedWord[] }` |
 | `/api/dict/lookup` | GET | `?word=WORD` | `{ definition: string }` |
+| `/api/media/parse` | POST | `{ url }` or `{ srtText }` | `{ success: boolean, lemmas: string[], segments: SubtitleSegment[] }` |
+| `/api/media/tokenize` | POST | `{ text, mode? }` | `{ tokens: MeCabToken[] }` or `{ lemmas: string[] }` |
 
 ### [PL-4.3] ChatResponse & HintResponse
 ```typescript
@@ -633,4 +656,4 @@ npm run test:integration:gemini # Live LLM integration tests (uses Gemini API, c
 
 ### [PL-9.4] Current Test Count
 
-243 unit tests across 37 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
+262 unit tests across 41 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).

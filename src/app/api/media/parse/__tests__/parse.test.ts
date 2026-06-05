@@ -3,7 +3,7 @@ import { POST as parsePost } from '../route';
 import { NextRequest } from 'next/server';
 import { verifyCsrf } from '@/lib/csrf';
 import { extractYoutubeVideoId } from '@/lib/media/youtube';
-import { parseSrtOrVtt } from '@/lib/media/parser';
+import { parseSrtOrVtt, parseSubtitlesToSegments } from '@/lib/media/parser';
 
 vi.mock('@/lib/csrf', () => ({
   verifyCsrf: vi.fn(),
@@ -43,6 +43,29 @@ describe('SRT and VTT subtitle parser helper', () => {
     expect(parseSrtOrVtt(srtContent)).toBe(expected);
     expect(parseSrtOrVtt(vttContent)).toBe(expected);
     expect(parseSrtOrVtt('')).toBe('');
+  });
+
+  it('should parse SRT and VTT into structured SubtitleSegment arrays with correct timings', () => {
+    const srtContent = `1
+00:00:01,120 --> 00:00:03,540
+こんにちは。
+
+2
+00:00:03,540 --> 00:00:06,100
+お元気ですか？`;
+
+    const segments = parseSubtitlesToSegments(srtContent);
+    expect(segments).toHaveLength(2);
+    expect(segments[0]).toEqual({
+      start: 1.12,
+      duration: 2.42,
+      text: 'こんにちは。'
+    });
+    expect(segments[1]).toEqual({
+      start: 3.54,
+      duration: 2.56,
+      text: 'お元気ですか？'
+    });
   });
 });
 

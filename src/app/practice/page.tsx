@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { BookOpen, Settings, Sparkles, RefreshCw, AlertCircle, Play, XCircle, ArrowLeft, X, Volume2, Target, Trophy, CheckCircle } from 'lucide-react';
 import { useJapanification } from '@/hooks/useJapanification';
 import { useQuests } from '@/hooks/useQuests';
+import { useMediaRecommendation, type MediaItem } from '@/hooks/useMediaRecommendation';
+import { MediaInteractivePlayer } from '@/components/MediaInteractivePlayer';
 import { LearningTrack } from '@/components/LearningTrack';
 import { getProfileItem, setProfileItem, removeProfileItem, getActiveProfileId } from '@/lib/profile';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
@@ -145,9 +147,22 @@ export default function PracticePage() {
   const [warmupOptions, setWarmupOptions] = useState<string[]>([]);
 
   // Грамматические состояния
-  const [activeTab, setActiveTab] = useState<'words' | 'grammar'>('words');
+  const [activeTab, setActiveTab] = useState<'words' | 'grammar' | 'media'>('words');
   const [grammarProgress, setGrammarProgress] = useState<Record<string, GrammarProgress>>({});
   const [activeGrammarRuleId, setActiveGrammarRuleId] = useState<string | null>(null);
+
+  // Состояния для медиа-рекомендаций
+  const {
+    recommendations: mediaRecommendations,
+    isLoading: isMediaLoading,
+    error: mediaError,
+    addCustomUrl,
+    refreshFeed: refreshMediaFeed
+  } = useMediaRecommendation();
+  const [activeMedia, setActiveMedia] = useState<MediaItem | null>(null);
+  const [customUrlInput, setCustomUrlInput] = useState<string>('');
+  const [isAddingUrl, setIsAddingUrl] = useState<boolean>(false);
+  const [importError, setImportError] = useState<string | null>(null);
 
   // Загружаем данные профиля и сессий
   const loadProfileData = async () => {
@@ -599,6 +614,145 @@ export default function PracticePage() {
     );
   };
 
+  const handleAddMediaUrl = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customUrlInput.trim() || isAddingUrl) return;
+    setIsAddingUrl(true);
+    setImportError(null);
+    try {
+      const item = await addCustomUrl(customUrlInput.trim());
+      if (item) {
+        setCustomUrlInput('');
+        // Автоматически запускаем воспроизведение импортированного видео
+        setActiveMedia(item);
+      } else {
+        setImportError(mediaError || 'Не удалось импортировать видео по ссылке. Проверьте правильность URL.');
+      }
+    } catch (e: any) {
+      setImportError(e.message || 'Ошибка импорта.');
+    } finally {
+      setIsAddingUrl(false);
+    }
+  };
+
+  const renderMediaTab = () => {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
+        {/* Панель импорта ссылки */}
+        <form onSubmit={handleAddMediaUrl} className={styles.mediaImportForm} style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <input
+            type="text"
+            className="input-friendly"
+            placeholder="Вставьте ссылку на YouTube (например, https://www.youtube.com/watch?v=...)"
+            value={customUrlInput}
+            onChange={(e) => setCustomUrlInput(e.target.value)}
+            style={{ flex: 1, minWidth: '250px' }}
+            disabled={isAddingUrl}
+          />
+          <button
+            type="submit"
+            disabled={isAddingUrl || !customUrlInput.trim()}
+            className="btn-3d btn-green"
+            style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            {isAddingUrl ? (
+              <>
+                <RefreshCw size={16} className={styles.spin} />
+                Импорт...
+              </>
+            ) : (
+              'Импортировать'
+            )}
+          </button>
+        </form>
+
+        {importError && (
+          <div className={styles.errorAlert} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <AlertCircle size={16} />
+            <p style={{ margin: 0 }}>{importError}</p>
+          </div>
+        )}
+
+        {/* Сетка рекомендованного контента */}
+        <div>
+          <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 800 }}>Рекомендованный медиаконтент</h3>
+          
+          {isMediaLoading && mediaRecommendations.length === 0 ? (
+            <div className={styles.loadingText} style={{ padding: '48px 24px' }}>
+              <RefreshCw size={28} className={styles.spin} style={{ margin: '0 auto 16px auto', color: 'var(--color-blue)', display: 'block' }} />
+              <p style={{ margin: 0, fontWeight: 700, fontSize: '16px' }}>Анализируем ваш лексический профиль и подбираем Comprehensible Input...</p>
+            </div>
+          ) : mediaRecommendations.length === 0 ? (
+            <div className={styles.emptyState}>
+              <XCircle size={48} className={styles.emptyIcon} />
+              <p>Медиаконтент не найден. Попробуйте импортировать собственное видео по ссылке выше.</p>
+            </div>
+          ) : (
+            <div className={styles.mediaGrid}>
+              {mediaRecommendations.map((item) => {
+                const cr = item.comprehensionRate || 0;
+                let barColor = 'var(--color-red)';
+                let textColor = 'var(--color-red)';
+                if (cr >= 85) {
+                  barColor = 'var(--color-green)';
+                  textColor = 'var(--color-green)';
+                } else if (cr >= 70) {
+                  barColor = 'var(--color-yellow-shadow)';
+                  textColor = 'var(--color-yellow-shadow)';
+                } else if (cr >= 50) {
+                  barColor = 'var(--color-orange)';
+                  textColor = 'var(--color-orange)';
+                }
+
+                return (
+                  <div key={item.id} className={`${styles.mediaCard} card-friendly`}>
+                    <div className={styles.mediaCardHeader}>
+                      <span className={`${styles.platformBadge} ${item.platform === 'youtube' ? styles.ytBadge : styles.podcastBadge}`}>
+                        {item.platform === 'youtube' ? 'YouTube' : 'Подкаст'}
+                      </span>
+                      {item.dueOverlapCount !== undefined && item.dueOverlapCount > 0 && (
+                        <span className={styles.overlapBadge}>
+                          ✨ Повторение: {item.dueOverlapCount} слов
+                        </span>
+                      )}
+                    </div>
+
+                    <h4 className={styles.mediaCardTitle}>{item.title}</h4>
+                    <p className={styles.mediaCardDesc}>{item.description}</p>
+
+                    <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px', fontWeight: 800 }}>
+                        <span>Степень понимания:</span>
+                        <span style={{ color: textColor }}>{cr}% знакомых слов</span>
+                      </div>
+                      <div style={{ width: '100%', height: '10px', backgroundColor: 'var(--bg-secondary)', borderRadius: '5px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                        <div style={{ width: `${cr}%`, height: '100%', backgroundColor: barColor, transition: 'width 0.3s ease' }} />
+                      </div>
+                      {cr >= 80 && (
+                        <p style={{ margin: '8px 0 0 0', fontSize: '11px', fontWeight: 700, color: 'var(--color-green)' }}>
+                          🎯 Рекомендуется как Comprehensible Input
+                        </p>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => setActiveMedia(item)}
+                      className="btn-3d btn-blue"
+                      style={{ marginTop: '16px', width: '100%', padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '13px' }}
+                    >
+                      <Play size={14} />
+                      Смотреть и учить
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={styles.container}>
       <header className="navbar">
@@ -740,21 +894,28 @@ export default function PracticePage() {
                   >
                     Карта грамматики
                   </button>
+                  <button
+                    onClick={() => setActiveTab('media')}
+                    className={`btn-3d ${activeTab === 'media' ? 'btn-blue' : ''}`}
+                    style={{ padding: '8px 16px', fontSize: '14px', textTransform: 'none' }}
+                  >
+                    Рекомендации медиа
+                  </button>
                 </div>
                 
-                {activeTab === 'words' && sessions.length === 0 && words.length > 0 && (
-                  <button
-                    onClick={generateSessions}
-                    disabled={isLoadingSessions}
-                    className="btn-3d btn-blue"
-                    style={{ padding: '8px 16px', fontSize: '14px' }}
-                  >
-                    {isLoadingSessions ? 'Создание тем...' : 'Сгенерировать темы тренировок'}
-                  </button>
-                )}
-              </div>
-
-              {activeTab === 'words' ? (
+                  {activeTab === 'words' && sessions.length === 0 && words.length > 0 && (
+                    <button
+                      onClick={generateSessions}
+                      disabled={isLoadingSessions}
+                      className="btn-3d btn-blue"
+                      style={{ padding: '8px 16px', fontSize: '14px' }}
+                    >
+                      {isLoadingSessions ? 'Создание тем...' : 'Сгенерировать темы тренировок'}
+                    </button>
+                  )}
+                </div>
+              
+              {activeTab === 'words' && (
                 <>
                   {isLoadingSessions && (
                     <div className={styles.loadingText} style={{ padding: '48px 24px' }}>
@@ -815,12 +976,16 @@ export default function PracticePage() {
                     </div>
                   )}
                 </>
-              ) : (
+              )}
+
+              {activeTab === 'grammar' && (
                 <GrammarTrack
                   grammarProgress={grammarProgress}
                   onSelectRule={(ruleId) => setActiveGrammarRuleId(ruleId)}
                 />
               )}
+
+              {activeTab === 'media' && renderMediaTab()}
             </div>
           </div>
 
@@ -969,6 +1134,17 @@ export default function PracticePage() {
               router.push('/chat');
             }
             setActiveGrammarRuleId(null);
+          }}
+        />
+      )}
+
+      {activeMedia && (
+        <MediaInteractivePlayer
+          url={activeMedia.url}
+          title={activeMedia.title}
+          onClose={() => {
+            setActiveMedia(null);
+            refreshMediaFeed();
           }}
         />
       )}

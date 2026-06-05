@@ -2,6 +2,17 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.36.0] - 2026-06-05
+
+### Added
+- **Smart Video & Podcast Recommendations**: Introduced a new `"media"` tab on the practice launcher `/practice` displaying recommended videos and podcasts, calculating Comprehension Rates ($CR$) and due word overlaps based on user vocabulary.
+- **Interactive Timed Subtitle Player**: Built a player modal supporting both the YouTube Iframe API and standard HTML5 `<audio>`, with timed subtitle segments rendering clickable word tokens.
+- **Offline JitenDex dictionary lookup**: Linked word token clicks to offline JitenDex dictionary searches (`/api/dict/lookup`) displaying meanings and readings.
+- **Direct Same-Session Anki Card Creation**: Enabled adding cards directly from the player sidebar with automatic reading conversion (Katakana to Hiragana).
+- **Client-side Drag & Drop Subtitles**: Implemented drag and drop file uploads for `.srt` and `.vtt` subtitles directly into the player interface.
+- **Robust URL-based Fetch Mocks**: Upgraded unit tests in `MediaInteractivePlayer.test.tsx` to use dynamic, path-based fetch mocking in `beforeEach` and separate event clicks from `waitFor` callbacks.
+- **Comprehensive Unit Testing**: Added `MediaInteractivePlayer.test.tsx` and `useMediaRecommendation.test.ts` to cover component rendering, player seeking, and hook recommendations.
+
 ## [1.35.0] - 2026-05-29
 
 ### Added

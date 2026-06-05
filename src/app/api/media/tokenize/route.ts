@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { text } = body;
+    const { text, mode } = body;
 
     if (!text || typeof text !== 'string') {
       logger.warn('[API] Невалидный запрос к /api/media/tokenize: отсутствует или некорректное поле text');
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    logger.info(`[API] Запрос на токенизацию текста длиной ${text.length} символов`);
+    logger.info(`[API] Запрос на токенизацию текста длиной ${text.length} (режим: ${mode || 'lemmas'})`);
 
     const tokenizerUrl = process.env.TOKENIZER_URL || 'http://localhost:8000';
     const tokenizerApiKey = process.env.TOKENIZER_API_KEY || 'yomumogu-secret-token';
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
           'Content-Type': 'application/json',
           'X-Tokenizer-API-Key': tokenizerApiKey,
         },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, mode: mode || 'lemmas' }),
         signal: controller.signal,
       });
 
@@ -57,7 +57,8 @@ export async function POST(request: NextRequest) {
       const data = await res.json();
       return NextResponse.json({
         success: true,
-        lemmas: data.lemmas,
+        lemmas: data.lemmas || [],
+        tokens: data.tokens || [],
       });
     } catch (fetchErr: any) {
       clearTimeout(timeoutId);

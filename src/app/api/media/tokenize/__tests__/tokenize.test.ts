@@ -65,6 +65,25 @@ describe('API Route POST /api/media/tokenize', () => {
     expect(data.lemmas).toEqual(mockLemmas);
   });
 
+  it('should return detailed tokens in detailed mode successfully', async () => {
+    const mockTokens = [{ surface: '日本', pos: '名詞', lemma: '日本', reading: 'ニホン' }];
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ tokens: mockTokens }),
+    });
+
+    const request = new NextRequest('http://localhost/api/media/tokenize', {
+      method: 'POST',
+      body: JSON.stringify({ text: '日本', mode: 'detailed' }),
+    });
+
+    const response = await tokenizePost(request);
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(data.tokens).toEqual(mockTokens);
+  });
+
   it('should return 502 if microservice returns an error status', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: false,

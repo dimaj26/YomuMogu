@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { verifyCsrf } from '@/lib/csrf';
-import { extractYoutubeVideoId, getYoutubeTranscript } from '@/lib/media/youtube';
-import { parseSrtOrVtt } from '@/lib/media/parser';
+import { extractYoutubeVideoId, getYoutubeTranscriptSegments } from '@/lib/media/youtube';
+import { parseSrtOrVtt, parseSubtitlesToSegments, type SubtitleSegment } from '@/lib/media/parser';
+
+interface CacheEntry {
+  lemmas: string[];
+  segments: SubtitleSegment[];
+}
 
 // Простой серверный кэш в оперативной памяти (максимум 100 видео)
 const MAX_CACHE_SIZE = 100;
-const lemmasCache = new Map<string, string[]>();
+const lemmasCache = new Map<string, CacheEntry>();
 
-function addToCache(key: string, value: string[]) {
+function addToCache(key: string, value: CacheEntry) {
   if (lemmasCache.size >= MAX_CACHE_SIZE) {
     // Удаляем первый вставленный элемент (простой FIFO клинап)
     const firstKey = lemmasCache.keys().next().value;
@@ -42,6 +47,7 @@ export async function POST(request: NextRequest) {
     const tokenizerApiKey = process.env.TOKENIZER_API_KEY || 'yomumogu-secret-token';
     let textToTokenize = '';
     let cacheKey = '';
+    let segments: SubtitleSegment[] = [];
 
     if (url) {
       const videoId = extractYoutubeVideoId(url);
@@ -57,17 +63,20 @@ export async function POST(request: NextRequest) {
       
       // Проверяем наличие в кэше
       if (lemmasCache.has(cacheKey)) {
-        logger.info(`[API] Возврат лемм из кэша для видео ${videoId}`);
+        logger.info(`[API] Возврат лемм и сегментов из кэша для видео ${videoId}`);
+        const cached = lemmasCache.get(cacheKey)!;
         return NextResponse.json({
           success: true,
-          lemmas: lemmasCache.get(cacheKey),
+          lemmas: cached.lemmas,
+          segments: cached.segments,
           cached: true
         });
       }
 
       try {
-        // Скачиваем транскрипт с YouTube
-        textToTokenize = await getYoutubeTranscript(videoId);
+        // Скачиваем транскрипт с YouTube в виде временных сегментов
+        segments = await getYoutubeTranscriptSegments(videoId);
+        textToTokenize = segments.map(s => s.text).join('\n');
       } catch (scrapingErr: any) {
         logger.error(`[API] Ошибка при получении субтитров YouTube для видео ${videoId}:`, scrapingErr);
         return NextResponse.json(
@@ -78,6 +87,7 @@ export async function POST(request: NextRequest) {
     } else if (srtText) {
       // Парсим пользовательские субтитры SRT/VTT
       textToTokenize = parseSrtOrVtt(srtText);
+      segments = parseSubtitlesToSegments(srtText);
       if (!textToTokenize) {
         return NextResponse.json(
           { error: 'Не удалось извлечь текст из переданных субтитров' },
@@ -114,12 +124,13 @@ export async function POST(request: NextRequest) {
 
       // Кэшируем результат, если это было видео по ссылке
       if (cacheKey) {
-        addToCache(cacheKey, lemmas);
+        addToCache(cacheKey, { lemmas, segments });
       }
 
       return NextResponse.json({
         success: true,
         lemmas,
+        segments,
         cached: false
       });
     } catch (tokenErr: any) {
