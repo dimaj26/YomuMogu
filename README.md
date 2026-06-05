@@ -65,6 +65,23 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to start pra
   npm run test:anki
   ```
 
+### E2E Testing (Playwright)
+Для запуска сквозных E2E-тестов (проверка реального воспроизведения YouTube, отсутствия CSP блокировок и обработки отключения MeCab в интерфейсе):
+1. Установите Playwright и драйверы браузеров на локальной машине:
+   ```powershell
+   npm install
+   npx playwright install
+   ```
+2. Убедитесь, что запущен Next.js dev-сервер и локальный микросервис MeCab:
+   ```powershell
+   npm run dev
+   python -m uvicorn src.services.tokenizer.server:app --host 127.0.0.1 --port 8000
+   ```
+3. Запустите E2E-тесты:
+   ```powershell
+   npm run test:e2e
+   ```
+
 > [!WARNING]
 > **Anki Integration Testing Requirements & Safety:**
 > - Running local integration tests (`npm run test:integration` or `npm run test:anki`) connects directly to your active Anki Desktop profile via AnkiConnect.

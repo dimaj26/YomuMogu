@@ -122,4 +122,32 @@ test.describe('Media Recommendation & Player E2E Tests', () => {
     await expect(token).toBeVisible({ timeout: 5000 });
   });
 
+  // Тезис 4: Проверка загрузки реального YouTube плеера и воспроизведения с перехватом кликов по субтитрам
+  test('should successfully load YouTube video player and display timed subtitles', async ({ page }) => {
+    await page.goto('/practice');
+
+    // Кликаем по вкладке "Медиа"
+    await page.click('button:has-text("Медиа")');
+
+    // Нажимаем на первое видео "Сэнсэй Шун - Знакомство с друзьями"
+    await page.click('text=Сэнсэй Шун - Знакомство с друзьями');
+
+    // Убеждаемся, что фрейм плеера и список субтитров видны
+    const playerIframe = page.locator('#youtube-player-iframe');
+    await expect(playerIframe).toBeVisible({ timeout: 10000 });
+
+    const playlist = page.locator('div[class*="segmentsList"]');
+    await expect(playlist).toBeVisible({ timeout: 10000 });
+
+    // Проверяем наличие текстовых строк субтитров
+    const firstSegment = page.locator('div[class*="segmentRow"]').first();
+    await expect(firstSegment).toBeVisible();
+
+    // Кликаем по первому сегменту субтитров для симуляции перемотки/запуска
+    await firstSegment.click();
+
+    // Проверяем, что активная строка субтитров подсвечивается (присваивается класс segmentRowActive)
+    await expect(firstSegment).toHaveClass(/segmentRowActive/);
+  });
+
 });
