@@ -8,9 +8,12 @@ All notable changes to the YomuMogu project are documented in this file. The for
 - **YouTube Subtitle Interceptor Extension**: Created a Manifest V3 Chrome Extension helper (`manifest.json`, `background.js`, `content.js`) in `src/extension/` to intercept YouTube timedtext API requests in the user's browser context and relay timing segments to YomuMogu.
 - **Client Integration Listener**: Integrated `window.postMessage` listener in `MediaInteractivePlayer.tsx` to accept timing segments sent from the extension helper.
 - **Unit Testing**: Added unit test in `MediaInteractivePlayer.test.tsx` verifying extension event listener integration and segment state updates.
+- **Tokenizer Downtime Integration Tests**: Created `tokenize.integration.test.ts` and updated `parse.integration.test.ts` to test API route behavior when the MeCab tokenizer microservice is offline.
 
 ### Fixed
 - **Tokenizer Loopback Connection**: Updated default `tokenizerUrl` fallback inside `/api/media/parse` and `/api/media/tokenize` endpoints from `localhost:8000` to `127.0.0.1:8000` to resolve IPv6 loopback connection bottlenecks on Node.js 18+.
+- **Playwright Test Runner Conflicts**: Excluded `tests/e2e/**` Playwright test spec files from default Vitest scope in `vitest.config.ts` to prevent `@playwright/test` import errors during unit test execution.
+- **Tokenize Connection Error Status**: Fixed `/api/media/tokenize` error handling to correctly return `502 Bad Gateway` (with message "Сервер токенизации временно недоступен") when uvicorn is offline, rather than crashing with `500 Internal Server Error`.
 
 ## [1.38.0] - 2026-06-05
 

@@ -11,6 +11,6 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
-    exclude: [...configDefaults.exclude, '**/*.integration.test.ts', 'scratch/**'],
+    exclude: [...configDefaults.exclude, '**/*.integration.test.ts', 'scratch/**', 'tests/e2e/**'],
   },
 });

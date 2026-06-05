@@ -69,7 +69,11 @@ export async function POST(request: NextRequest) {
           { status: 504 }
         );
       }
-      throw fetchErr;
+      logger.error('[API] Ошибка подключения к микросервису токенизации MeCab', fetchErr);
+      return NextResponse.json(
+        { error: 'Сервер токенизации временно недоступен' },
+        { status: 502 }
+      );
     }
   } catch (error: any) {
     logger.error('[API] Исключение во время токенизации на /api/media/tokenize', error);

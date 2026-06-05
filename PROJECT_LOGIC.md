@@ -184,8 +184,10 @@ src/
 | `app/api/gemini/__tests__/classify.test.ts` | Unit test for classify route using mocked Gemini client |
 | `app/api/media/parse/route.ts` | POST endpoint parsing YouTube subtitles/metadata or SRT/VTT file transcripts |
 | `app/api/media/parse/__tests__/parse.test.ts` | Unit tests for parse media endpoint |
+| `app/api/media/parse/__tests__/parse.integration.test.ts` | Integration tests for parse media endpoint against running MeCab |
 | `app/api/media/tokenize/route.ts` | POST endpoint proxying tokenization to local MeCab microservice |
 | `app/api/media/tokenize/__tests__/tokenize.test.ts` | Unit tests for tokenize endpoint |
+| `app/api/media/tokenize/__tests__/tokenize.integration.test.ts` | Integration tests for tokenize media endpoint against running MeCab |
 | `lib/media/youtube.ts` | Zero-dependency Japanese YouTube caption extractor |
 | `lib/media/parser.ts` | SRT/VTT subtitle file parser and duration rounding utility |
 | `components/MediaInteractivePlayer.tsx` | Subtitle-synchronized player component with interactive definitions |
@@ -661,7 +663,8 @@ npm run test:integration:gemini # Live LLM integration tests (uses Gemini API, c
 | Hooks | `hooks/__tests__/` | Mock state and time |
 | Integration (Anki) | `plugins/anki/__tests__/sync.integration.test.ts` | Real local AnkiConnect |
 | Integration (Gemini) | `lib/gemini/__tests__/*.integration.test.ts` | Real Gemini API call |
+| Integration (MeCab) | `app/api/media/parse/__tests__/parse.integration.test.ts` | Real local MeCab microservice |
 
 ### [PL-9.4] Current Test Count
 
-263 unit tests across 41 test files, and 14 integration tests across 3 files. All passing (integration tests require active API keys and local Anki).
+264 unit tests across 41 test files, and 18 integration tests across 5 files. All passing (integration tests require active API keys, local Anki, or local MeCab).
