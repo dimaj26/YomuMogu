@@ -335,8 +335,6 @@ export async function syncLocalDatabaseWithAnki(
                 continue;
               }
 
-              const resultPassive = calculateNextFsrsState(localWord, r.ease, 'passive', new Date(r.id));
-              localWord = resultPassive.updatedWord;
               const resultActive = calculateNextFsrsState(localWord, r.ease, 'active', new Date(r.id));
               localWord = alignPassiveToActiveState(resultActive.updatedWord);
 

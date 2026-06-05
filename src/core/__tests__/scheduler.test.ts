@@ -259,7 +259,7 @@ describe('FSRS Scheduling logic', () => {
     }
   });
 
-  it('should calculate active and passive states independently', () => {
+  it('should calculate active FSRS and derive passive state using 2.5x coefficient, and push passive due date on passive review', () => {
     const word: LocalWord = {
       profileId: 'test-user',
       id: 99999,
@@ -274,26 +274,30 @@ describe('FSRS Scheduling logic', () => {
 
     const date = new Date('2026-05-01T12:00:00');
     
-    // 1. Делаем пассивное повторение
+    // 1. Делаем пассивное повторение (просто сдвигается due на величину passive.interval)
     const passiveResult = calculateNextFsrsState(word, 3, 'passive', date);
-    expect(passiveResult.updatedWord.passive.status).toBe('review');
-    expect(passiveResult.updatedWord.passive.reps).toBe(1);
+    expect(passiveResult.updatedWord.passive.status).toBe('new');
+    expect(passiveResult.updatedWord.passive.reps).toBe(0);
+    expect(passiveResult.updatedWord.passive.due).toBe(date.getTime());
     
     // Активное состояние должно остаться нетронутым
     expect(passiveResult.updatedWord.active.status).toBe('new');
     expect(passiveResult.updatedWord.active.reps).toBe(0);
 
-    // 2. Делаем активное повторение на основе результата пассивного
-    const activeResult = calculateNextFsrsState(passiveResult.updatedWord, 4, 'active', date);
+    // 2. Делаем активное повторение
+    const activeResult = calculateNextFsrsState(word, 3, 'active', date);
     expect(activeResult.updatedWord.active.status).toBe('review');
     expect(activeResult.updatedWord.active.reps).toBe(1);
     
-    // Пассивное должно сохранить свои изменения
+    // Пассивное состояние должно обновиться на основе активного (с 2.5x коэффициентом)
+    expect(activeResult.updatedWord.passive.status).toBe('review');
     expect(activeResult.updatedWord.passive.reps).toBe(1);
+    expect(activeResult.updatedWord.passive.interval).toBe(Math.round(activeResult.newInterval * 2.5));
+    expect(activeResult.updatedWord.passive.stability).toBe(activeResult.updatedWord.active.stability * 2.5);
   });
 
   describe('alignPassiveToActiveState', () => {
-    it('should copy active state to passive state if passive is worse (shorter interval)', () => {
+    it('should copy active state to passive state if passive is worse (shorter interval than active * 2.5)', () => {
       const word: LocalWord = {
         profileId: 'test-user',
         id: 111,
@@ -323,8 +327,8 @@ describe('FSRS Scheduling logic', () => {
       };
 
       const aligned = alignPassiveToActiveState(word);
-      expect(aligned.passive.interval).toBe(10);
-      expect(aligned.passive.stability).toBe(10);
+      expect(aligned.passive.interval).toBe(25); // 10 * 2.5
+      expect(aligned.passive.stability).toBe(25); // 10 * 2.5
       expect(aligned.passive.difficulty).toBe(4.5);
     });
 
@@ -338,10 +342,10 @@ describe('FSRS Scheduling logic', () => {
         category: 'Japanese',
         source: 'manual',
         passive: {
-          stability: 20,
+          stability: 30,
           difficulty: 4.0,
-          interval: 20,
-          due: Date.now() + 20 * 24 * 3600 * 1000,
+          interval: 30,
+          due: Date.now() + 30 * 24 * 3600 * 1000,
           reps: 5,
           lapses: 0,
           status: 'mature'
@@ -358,8 +362,8 @@ describe('FSRS Scheduling logic', () => {
       };
 
       const aligned = alignPassiveToActiveState(word);
-      expect(aligned.passive.interval).toBe(20);
-      expect(aligned.passive.stability).toBe(20);
+      expect(aligned.passive.interval).toBe(30);
+      expect(aligned.passive.stability).toBe(30);
     });
   });
 

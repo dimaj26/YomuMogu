@@ -201,16 +201,62 @@ export function calculateNextFsrsState(
 
   if (type && (word.passive || word.active)) {
     // Вложенная структура LocalWord
-    const state = word[type] || createDefaultFsrsState(now.getTime());
-    const { updatedState, newInterval, lastInterval } = calculateNextFsrsStateForState(state, ease, now);
-    return {
-      updatedWord: {
-        ...word,
-        [type]: updatedState
-      },
-      newInterval,
-      lastInterval
-    };
+    if (type === 'active') {
+      const state = word.active || createDefaultFsrsState(now.getTime());
+      const { updatedState, newInterval, lastInterval } = calculateNextFsrsStateForState(state, ease, now);
+      
+      // Вычисляем параметры пассивного состояния на основе обновленного активного (коэффициент 2.5x)
+      const passiveInterval = Math.round(newInterval * 2.5);
+      const passiveStability = updatedState.stability * 2.5;
+      const lastReview = updatedState.lastReview || now.getTime();
+      const alignedPassiveDue = passiveInterval >= 1
+        ? alignToDayBoundary(new Date(lastReview + passiveInterval * 24 * 3600 * 1000))
+        : new Date(lastReview);
+        
+      const passiveState: FsrsState = {
+        stability: passiveStability,
+        difficulty: updatedState.difficulty,
+        interval: passiveInterval,
+        due: alignedPassiveDue.getTime(),
+        lastReview,
+        status: updatedState.status,
+        reps: updatedState.reps,
+        lapses: updatedState.lapses
+      };
+
+      return {
+        updatedWord: {
+          ...word,
+          active: updatedState,
+          passive: passiveState
+        },
+        newInterval,
+        lastInterval
+      };
+    } else {
+      // Пассивный обзор: не запускаем FSRS-математику, просто сдвигаем passive.due на величину passive.interval
+      const state = word.passive || createDefaultFsrsState(now.getTime());
+      const passiveInterval = state.interval || 0;
+      const nextDue = now.getTime() + passiveInterval * 24 * 3600 * 1000;
+      const alignedPassiveDue = passiveInterval >= 1
+        ? alignToDayBoundary(new Date(nextDue))
+        : new Date(nextDue);
+        
+      const passiveState: FsrsState = {
+        ...state,
+        due: alignedPassiveDue.getTime(),
+        lastReview: now.getTime()
+      };
+
+      return {
+        updatedWord: {
+          ...word,
+          passive: passiveState
+        },
+        newInterval: passiveInterval,
+        lastInterval: passiveInterval
+      };
+    }
   } else {
     // Плоская структура (UiWord, legacy-костыли или тесты)
     const state: FsrsState = {
@@ -252,23 +298,29 @@ export function calculateNextFsrsState(
 export function alignPassiveToActiveState(word: LocalWord): LocalWord {
   if (!word.passive || !word.active) return word;
 
+  const targetPassiveInterval = Math.round(word.active.interval * 2.5);
   const passiveIsWorse =
-    word.passive.interval < word.active.interval ||
+    word.passive.interval < targetPassiveInterval ||
     word.passive.due < word.active.due;
 
   if (passiveIsWorse) {
+    const passiveStability = word.active.stability * 2.5;
+    const lastReview = word.active.lastReview || Date.now();
+    const alignedPassiveDue = targetPassiveInterval >= 1
+      ? alignToDayBoundary(new Date(lastReview + targetPassiveInterval * 24 * 3600 * 1000))
+      : new Date(lastReview);
+
     return {
       ...word,
       passive: {
-        ...word.passive,
-        stability: word.active.stability,
+        stability: passiveStability,
         difficulty: word.active.difficulty,
-        interval: word.active.interval,
-        due: word.active.due,
+        interval: targetPassiveInterval,
+        due: alignedPassiveDue.getTime(),
         status: word.active.status,
         reps: word.active.reps,
         lapses: word.active.lapses,
-        lastReview: word.active.lastReview
+        lastReview
       }
     };
   }
