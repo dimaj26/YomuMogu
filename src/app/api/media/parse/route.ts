@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const tokenizerUrl = process.env.TOKENIZER_URL || 'http://localhost:8000';
+    const tokenizerUrl = process.env.TOKENIZER_URL || 'http://127.0.0.1:8000';
     const tokenizerApiKey = process.env.TOKENIZER_API_KEY || 'yomumogu-secret-token';
     let textToTokenize = '';
     let cacheKey = '';

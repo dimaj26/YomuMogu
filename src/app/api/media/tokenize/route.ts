@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     logger.info(`[API] Запрос на токенизацию текста длиной ${text.length} (режим: ${mode || 'lemmas'})`);
 
-    const tokenizerUrl = process.env.TOKENIZER_URL || 'http://localhost:8000';
+    const tokenizerUrl = process.env.TOKENIZER_URL || 'http://127.0.0.1:8000';
     const tokenizerApiKey = process.env.TOKENIZER_API_KEY || 'yomumogu-secret-token';
 
     const controller = new AbortController();
