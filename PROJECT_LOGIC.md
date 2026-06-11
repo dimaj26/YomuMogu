@@ -6,7 +6,7 @@
 |---|---|
 | **App Name** | YomuMogu |
 | **Purpose** | Japanese learning via Anki + Gemini AI conversation practice |
-| **Runtime** | Node.js 20+ / Next.js 15 (App Router) |
+| **Runtime** | Node.js 20+ / Next.js 16 (App Router) |
 | **Language** | TypeScript (strict mode) |
 | **UI** | React 19 client components, Vanilla CSS Modules |
 | **AI** | Google Gemini API (`@google/genai`), models: `gemini-2.5-flash` → `gemini-2.5-pro` → `gemini-2.5-flash-lite` |
@@ -52,9 +52,15 @@ src/
         words/route.ts    # GET  /api/anki/words
         sync/route.ts     # POST /api/anki/sync
           __tests__/sync.test.ts
+        sync-db/route.ts  # POST /api/anki/sync-db (bilateral FSRS sync)
+          __tests__/sync-db.test.ts
+        setup-deck/route.ts # POST /api/anki/setup-deck (create deck + model)
+          __tests__/setup-deck.test.ts
         add/route.ts      # POST /api/anki/add
           __tests__/add.test.ts
         __tests__/connect.test.ts
+      words/
+        route.ts          # GET  /api/words (plugin-aware word source with local DB fallback)
       gemini/
         sessions/route.ts # POST /api/gemini/sessions
         etymology/route.ts # POST /api/gemini/etymology
@@ -137,11 +143,21 @@ src/
     phonosemantics.json   # 50 phonosemantic keys and relative kanji data
     situational_dictionary.json # Static situational tags mapping for 500 N5 words
     starter_deck.json     # 500-word offline starter vocabulary deck
+    grammar_rules.json    # 7-step JLPT N5 grammar curriculum (IDs: g_n5_s1_1..g_n5_s6)
+    media_feed.json       # Static metadata for recommended video/podcast channels
+    media_transcripts.json # Pre-generated timed transcripts for recommended YouTube videos
+  services/
+    tokenizer/
+      server.py           # MeCab FastAPI microservice (port 8000)
+      Dockerfile          # Container definition for MeCab service
   lib/
     logger.ts             # Structured logger (debug/info/warn/error → logs/)
     profile.ts            # localStorage profile helpers + multi-profile management
     csrf.ts               # CSRF protection helpers (same-origin Origin/Referer verification)
     sanitize.ts           # DOMPurify HTML sanitization utility for dangerouslySetInnerHTML
+    media/
+      youtube.ts          # Zero-dependency Japanese YouTube caption extractor
+      parser.ts           # SRT/VTT subtitle parser and duration rounding utility
 ```
 
 ### [PL-2.2] File Registry
@@ -166,6 +182,8 @@ src/
 | `extension/manifest.json` | Browser extension manifest configuration |
 | `extension/background.js` | Extension background worker intercepting YouTube subtitles requests |
 | `extension/content.js` | Extension content script relaying messages to YomuMogu page |
+| `extension/convert.js` | Modular JSON3 subtitle format converter for browser extension |
+| `__tests__/extension-convert.test.ts` | Unit tests for Chrome extension subtitle converter |
 | `hooks/useApiCall.ts` | Custom React hook consolidating client-side loading, error state, and retry logic |
 | `hooks/__tests__/useApiCall.test.ts` | Unit tests for useApiCall hook |
 | `lib/csrf.ts` | CSRF protection helpers: same-origin `Origin` and `Referer` verification for mutating Anki routes |
@@ -190,6 +208,9 @@ src/
 | `app/api/media/tokenize/__tests__/tokenize.integration.test.ts` | Integration tests for tokenize media endpoint against running MeCab |
 | `lib/media/youtube.ts` | Zero-dependency Japanese YouTube caption extractor |
 | `lib/media/parser.ts` | SRT/VTT subtitle file parser and duration rounding utility |
+| `lib/media/availability.ts` | oEmbed/caption availability checker for YouTube videos |
+| `lib/media/__tests__/availability.test.ts` | Unit tests for media availability helpers |
+| `lib/media/__tests__/feed.integration.test.ts` | Integration tests verifying oEmbed embedding and caption tracks in media feed |
 | `components/MediaInteractivePlayer.tsx` | Subtitle-synchronized player component with interactive definitions |
 | `components/__tests__/MediaInteractivePlayer.test.tsx` | Unit tests for MediaInteractivePlayer component |
 | `hooks/useMediaRecommendation.ts` | Hook calculating Comprehension Rate (CR) and FSRS-due vocabulary matches for videos |
@@ -219,6 +240,13 @@ src/
 | `src/resources/grammar_rules.json` | 7-step JLPT N5 grammar curriculum JSON (IDs: `g_n5_s1_1`..`g_n5_s6`) aligned with Morphology-Before-Syntax pedagogy |
 | `app/api/gemini/grammar-verify/route.ts` | POST endpoint using Gemini client to verify user Japanese sentences against grammar rules |
 | `app/api/gemini/__tests__/grammar-verify.test.ts` | Unit tests verifying the grammar verification API route behavior under standard inputs |
+| `app/api/anki/sync-db/route.ts` | POST endpoint for bilateral FSRS sync between IndexedDB and Anki; handles deduplication, bulk queries, FSRS approximation |
+| `app/api/anki/sync-db/__tests__/sync-db.test.ts` | Unit tests for sync-db route |
+| `app/api/anki/setup-deck/route.ts` | POST endpoint to create a YomuMogu deck and note model in Anki if absent |
+| `app/api/anki/setup-deck/__tests__/setup-deck.test.ts` | Unit tests for setup-deck route |
+| `app/api/words/route.ts` | GET endpoint resolving words via active `WordSource` plugin or local IndexedDB fallback |
+| `services/tokenizer/server.py` | FastAPI MeCab microservice providing morphological analysis on port 8000 |
+| `services/tokenizer/Dockerfile` | Docker container definition for the MeCab tokenizer service |
 
 
 ---
@@ -643,12 +671,15 @@ To encourage user engagement, YomuMogu displays decorative progression levels an
 - `vitest.config.ts` — unit tests, excludes `*.integration.test.ts`
 - `vitest.integration.config.ts` — integration tests only, reads `.env.local`
 - `vitest.setup.ts` — jsdom setup, `@testing-library/jest-dom` matchers
+- `playwright.config.ts` — end-to-end tests (Chromium), requires running dev server
 
 ### [PL-9.2] Commands
 ```powershell
-npm run test                   # Unit tests (mocked, offline)
-npm run test:integration       # Local integration tests (Anki only, free, requires local Anki Desktop)
-npm run test:integration:gemini # Live LLM integration tests (uses Gemini API, costs money)
+npm run test                     # Unit tests (mocked, offline)
+npm run test:integration         # Anki integration tests (requires local Anki Desktop on port 8765)
+npm run test:integration:gemini  # Live LLM integration tests (uses Gemini API, costs money)
+npm run test:integration:media   # MeCab integration tests (requires tokenizer on port 8000)
+npm run test:e2e                 # Playwright end-to-end tests (requires running dev server)
 ```
 
 ### [PL-9.3] Test Categories
@@ -667,4 +698,4 @@ npm run test:integration:gemini # Live LLM integration tests (uses Gemini API, c
 
 ### [PL-9.4] Current Test Count
 
-264 unit tests across 41 test files, and 18 integration tests across 5 files. All passing (integration tests require active API keys, local Anki, or local MeCab).
+278 unit/integration tests across 43 test files. All passing.

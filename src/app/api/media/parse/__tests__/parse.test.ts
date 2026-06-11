@@ -205,7 +205,7 @@ describe('API Route POST /api/media/parse', () => {
     expect(globalThis.fetch).not.toHaveBeenCalled(); // fetch не должен вызываться
   });
 
-  it('should use static pre-generated transcripts fallback for a known videoId (e.g. LqV2u750oA8) without scraping YouTube', async () => {
+  it('should use static pre-generated transcripts fallback for a known videoId (e.g. Jnea4HbYIso) without scraping YouTube', async () => {
     const mockLemmas = ['友達', '学生', '先生'];
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -214,7 +214,7 @@ describe('API Route POST /api/media/parse', () => {
 
     const request = new NextRequest('http://localhost/api/media/parse', {
       method: 'POST',
-      body: JSON.stringify({ url: 'https://www.youtube.com/watch?v=LqV2u750oA8' }),
+      body: JSON.stringify({ url: 'https://www.youtube.com/watch?v=Jnea4HbYIso' }),
     });
 
     const response = await parsePost(request);
@@ -228,4 +228,41 @@ describe('API Route POST /api/media/parse', () => {
     // Убеждаемся, что fetch был вызван ровно 1 раз (только для токенизации), а не для парсинга YouTube watch page
     expect(globalThis.fetch).toHaveBeenCalledTimes(1);
   });
+
+  it('should return 200 with segments, empty lemmas, and tokenizerDown: true when tokenizer is down but segments are found', async () => {
+    // Мокаем fetch для MeCab токенизатора, возвращая ошибку подключения
+    globalThis.fetch = vi.fn().mockRejectedValueOnce(new Error('Connection refused'));
+
+    const request = new NextRequest('http://localhost/api/media/parse', {
+      method: 'POST',
+      body: JSON.stringify({ url: 'https://www.youtube.com/watch?v=IJEn-9nAFQE' }),
+    });
+
+    const response = await parsePost(request);
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(data.tokenizerDown).toBe(true);
+    expect(data.lemmas).toEqual([]);
+    expect(data.segments.length).toBeGreaterThan(0);
+  });
+
+  it('should return 502 with distinct error message when YouTube video is unavailable', async () => {
+    // Имитируем падение скрапера YouTube watch page с ошибкой недоступности видео
+    globalThis.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      text: async () => `<html><body><div id="player-unavailable">This video is unavailable.</div></body></html>`,
+    } as Response);
+
+    const request = new NextRequest('http://localhost/api/media/parse', {
+      method: 'POST',
+      body: JSON.stringify({ url: 'https://www.youtube.com/watch?v=unavailabl1' }),
+    });
+
+    const response = await parsePost(request);
+    expect(response.status).toBe(502);
+    const data = await response.json();
+    expect(data.error).toContain('Видео недоступно или удалено');
+  });
 });
+

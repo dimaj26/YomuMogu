@@ -122,7 +122,12 @@ export async function getYoutubeTranscript(videoId: string): Promise<string> {
   
   const html = await response.text();
   
-  // Вариант 1: Ищем captionTracks в JSON-конфигурации страницы
+  // Проверяем доступность видео на странице
+  if (html.includes('player-unavailable') || html.includes('playabilityStatus":{"status":"ERROR"') || html.includes('playabilityStatus":{"status":"UNPLAYABLE"') || html.includes('playabilityStatus":{"status":"LOGIN_REQUIRED"')) {
+    throw new Error('Видео недоступно или удалено (ошибка воспроизведения YouTube)');
+  }
+  
+  // Вариант 1: Ищем captionTracks in JSON-конфигурации страницы
   const captionTracksMatch = html.match(/"captionTracks":\s*(\[[^\]]+\])/);
   if (captionTracksMatch) {
     try {
@@ -171,6 +176,11 @@ export async function getYoutubeTranscriptSegments(videoId: string): Promise<Sub
   }
   
   const html = await response.text();
+  
+  // Проверяем доступность видео на странице
+  if (html.includes('player-unavailable') || html.includes('playabilityStatus":{"status":"ERROR"') || html.includes('playabilityStatus":{"status":"UNPLAYABLE"') || html.includes('playabilityStatus":{"status":"LOGIN_REQUIRED"')) {
+    throw new Error('Видео недоступно или удалено (ошибка воспроизведения YouTube)');
+  }
   
   // Вариант 1: Ищем captionTracks
   const captionTracksMatch = html.match(/"captionTracks":\s*(\[[^\]]+\])/);

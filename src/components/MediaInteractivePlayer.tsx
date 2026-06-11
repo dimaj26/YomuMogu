@@ -445,7 +445,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
           <div className={styles.playerContainer}>
             {isYoutube ? (
               <div className={styles.ytWrapper}>
-                <div ref={ytContainerRef} className={styles.ytIframe}></div>
+                <div ref={ytContainerRef} id="youtube-player-iframe" className={styles.ytIframe}></div>
               </div>
             ) : (
               <div className={styles.audioWrapper}>

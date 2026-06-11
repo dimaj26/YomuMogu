@@ -2,6 +2,21 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.40.0] - 2026-06-11
+
+### Added
+- **Media Player Graceful Degradation**: Added support for rendering raw subtitle segments and showing a friendly warning banner (`[data-testid="tokenizer-warning"]`) in `MediaInteractivePlayer.tsx` when the MeCab tokenizer microservice is offline or returned an error.
+- **YouTube Media Availability Check**: Added zero-dependency availability checks (`checkMediaAvailability(item)`) utilizing YouTube oEmbed probes and captionTracks checkers in `src/lib/media/availability.ts` to ensure recommended videos are active and loadable.
+- **Chrome Extension Subtitle Parser Extraction**: Modularized the JSON3 subtitle parser into `src/extension/convert.js` and added robust unit tests under `src/__tests__/extension-convert.test.ts`.
+- **Unit and Integration Tests**: Added integration tests `src/lib/media/__tests__/feed.integration.test.ts` to verify YouTube media recommendations against oEmbed, and unit tests `src/lib/media/__tests__/availability.test.ts`.
+- **E2E Playwright Tests**: Expanded Playwright E2E test coverage in `tests/e2e/media-player.spec.ts` to verify offline tokenizer warnings, CSP safety, media playback seeking, and playlist interaction.
+
+### Fixed
+- **Chrome Extension Reserved Folder Name Issue**: Moved unit tests out of `src/extension/__tests__/` to `src/__tests__/extension-convert.test.ts` because Chrome rejects unpacking chrome extensions that contain directories starting with an underscore (like `__tests__`).
+- **YouTube Player Lifecycle Cleanup**: Ensured correct YouTube Player iframe initialization and `destroy()` cleanup using React `ytContainerRef` and references to prevent multiple player script inclusions and memory leaks.
+- **CSP Content-Security-Policy Expansion**: Added `media-src 'self' https:` to the Next.js CSP configuration in `next.config.ts` to permit YouTube and external audio playback streams.
+- **Playwright Target Click Interceptions**: Handled overlay pointer interceptions by forcing clicks on segment rows and using correct visual locators on practice media card buttons.
+
 ## [1.39.0] - 2026-06-06
 
 ### Added

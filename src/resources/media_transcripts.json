@@ -1,48 +1,48 @@
 {
-  "LqV2u750oA8": [
+  "Jnea4HbYIso": [
     {
       "start": 0,
-      "duration": 3,
+      "duration": 3.0,
       "text": "こんにちは、ユミさん。"
     },
     {
-      "start": 3,
+      "start": 3.0,
       "duration": 2.5,
       "text": "ケンさん、こんにちは。"
     },
     {
       "start": 5.5,
-      "duration": 2,
+      "duration": 2.0,
       "text": "ユミさん、元気？"
     },
     {
       "start": 7.5,
       "duration": 2.5,
-      "text": "はい、元気です。ケンさんも？"
+      "text": "はい、元気です. ケンさんも？"
     },
     {
-      "start": 10,
-      "duration": 2,
+      "start": 10.0,
+      "duration": 2.0,
       "text": "うん、元気だよ。"
     },
     {
-      "start": 12,
+      "start": 12.0,
       "duration": 4.5,
       "text": "あのね、私の友達の名前はタロウだよ。"
     },
     {
       "start": 16.5,
-      "duration": 2,
+      "duration": 2.0,
       "text": "へえ、タロウさん。"
     },
     {
       "start": 18.5,
-      "duration": 4,
+      "duration": 4.0,
       "text": "うん。タロウは学生じゃないんだ。先生だよ。"
     },
     {
       "start": 22.5,
-      "duration": 3,
+      "duration": 3.0,
       "text": "そうなんだ！面白そうですね。"
     },
     {
@@ -51,48 +51,48 @@
       "text": "うん。明日、タロウと会うんだけど、ユミさんも一緒に行く？"
     },
     {
-      "start": 32,
-      "duration": 4,
+      "start": 32.0,
+      "duration": 4.0,
       "text": "え、私もですか？嬉しいです！"
     },
     {
-      "start": 36,
+      "start": 36.0,
       "duration": 6.5,
       "text": "うん！タロウに電話して話すよ。「ユミさんも呼ぶ」って。"
     },
     {
       "start": 42.5,
-      "duration": 3,
+      "duration": 3.0,
       "text": "ユミさん、明日、時間ある？"
     },
     {
       "start": 45.5,
-      "duration": 3,
+      "duration": 3.0,
       "text": "明日ですか？午後なら大丈夫です。"
     },
     {
       "start": 48.5,
-      "duration": 5,
+      "duration": 5.0,
       "text": "よかった！じゃあ、午後3時に駅で会うのはどう？"
     },
     {
       "start": 53.5,
-      "duration": 4,
+      "duration": 4.0,
       "text": "はい、いいですよ。どこで待つのがいいですか？"
     },
     {
       "start": 57.5,
-      "duration": 2,
+      "duration": 2.0,
       "text": "駅の時計の前で。"
     },
     {
       "start": 59.5,
-      "duration": 2,
+      "duration": 2.0,
       "text": "わかりました。"
     },
     {
       "start": 61.5,
-      "duration": 4,
+      "duration": 4.0,
       "text": "じゃあ、そこでタロウとみんなで遊ぶね。"
     },
     {
@@ -101,127 +101,35 @@
       "text": "はい！楽しみです。"
     },
     {
-      "start": 68,
-      "duration": 2,
+      "start": 68.0,
+      "duration": 2.0,
       "text": "じゃあ、また明日！"
     },
     {
-      "start": 70,
+      "start": 70.0,
       "duration": 1.5,
       "text": "はい、明日！"
     },
     {
       "start": 71.5,
-      "duration": 4,
+      "duration": 4.0,
       "text": "今日は家にまっすぐ帰るかな。"
     }
   ],
-  "7B8t-FvN8aI": [
-    {
-      "start": 0,
-      "duration": 3,
-      "text": "今日は、天気、とてもいいですね！"
-    },
-    {
-      "start": 3,
-      "duration": 4,
-      "text": "ええ、本当にそうですね。Aさん、今日は何をしますか？"
-    },
-    {
-      "start": 7,
-      "duration": 3.5,
-      "text": "私はこれから学校へ行きます。Bさんは？"
-    },
-    {
-      "start": 10.5,
-      "duration": 4,
-      "text": "私は今日は学校へ行きません。休みの日です。"
-    },
-    {
-      "start": 14.5,
-      "duration": 6,
-      "text": "そうですか。じゃあ、午後に私の家に来ませんか？一緒に寿司を食べましょう。"
-    },
-    {
-      "start": 20.5,
-      "duration": 5,
-      "text": "いいですね！寿司、大好きです！何時に行けばいいですか？"
-    },
-    {
-      "start": 25.5,
-      "duration": 6.5,
-      "text": "２時ごろに来てください。寿司を食べた後、日本の映画を見ませんか？"
-    },
-    {
-      "start": 32,
-      "duration": 4.5,
-      "text": "はい、見たいです！日本の映画を見るのは楽しいです。"
-    },
-    {
-      "start": 36.5,
-      "duration": 6,
-      "text": "その後、公園を散歩しましょう。歩くのは気持ちがいいですよ。"
-    },
-    {
-      "start": 42.5,
-      "duration": 6,
-      "text": "いいですね。公園で本を読んだり、たくさん話したりしましょう。"
-    },
-    {
-      "start": 48.5,
-      "duration": 6,
-      "text": "あ、宿題がありました！日本語で日記を書かなければなりません。"
-    },
-    {
-      "start": 54.5,
-      "duration": 4,
-      "text": "大変ですね。先生はなんて言っていましたか？"
-    },
-    {
-      "start": 58.5,
-      "duration": 6.5,
-      "text": "「毎日書くと、日本語が上手になります」と言っていました。"
-    },
-    {
-      "start": 65,
-      "duration": 6,
-      "text": "なるほど。僕は後で飲み物を買いに行きます。一緒に来ますか？"
-    },
-    {
-      "start": 71,
-      "duration": 6,
-      "text": "はい、行きます！急いで行きたいから、少し走りましょう！"
-    },
-    {
-      "start": 77,
-      "duration": 6.5,
-      "text": "(笑) じゃあ、最初はゆっくり歩いて、それから走りましょう。"
-    },
-    {
-      "start": 83.5,
-      "duration": 2,
-      "text": "はい！じゃあ、また後で！"
-    },
-    {
-      "start": 85.5,
-      "duration": 1.5,
-      "text": "うん、またね！"
-    }
-  ],
-  "68h08g5S2zM": [
+  "IJEn-9nAFQE": [
     {
       "start": 0,
       "duration": 1.5,
       "text": "こんにちは、田中さん！"
     },
     {
-      "start": 2,
+      "start": 2.0,
       "duration": 1.5,
       "text": "こんにちは、佐藤さん！"
     },
     {
-      "start": 4,
-      "duration": 1,
+      "start": 4.0,
+      "duration": 1.0,
       "text": "元気ですか？"
     },
     {
@@ -231,12 +139,12 @@
     },
     {
       "start": 8.5,
-      "duration": 4,
+      "duration": 4.0,
       "text": "私も元気です。あの、明日、時間がありますか？"
     },
     {
-      "start": 13,
-      "duration": 3,
+      "start": 13.0,
+      "duration": 3.0,
       "text": "明日ですか？うーん... 明日はちょっと..."
     },
     {
@@ -251,13 +159,13 @@
     },
     {
       "start": 22.5,
-      "duration": 2,
+      "duration": 2.0,
       "text": "早く起きるつもりです。"
     },
     {
-      "start": 25,
-      "duration": 2,
-      "text": "そうですか。残念ですね。"
+      "start": 25.0,
+      "duration": 2.0,
+      "text": "そうですか. 残念ですね。"
     },
     {
       "start": 27.5,
@@ -266,12 +174,12 @@
     },
     {
       "start": 30.5,
-      "duration": 3,
+      "duration": 3.0,
       "text": "今日は、午後なら時間がありますよ！"
     },
     {
-      "start": 34,
-      "duration": 2,
+      "start": 34.0,
+      "duration": 2.0,
       "text": "午後、何かしますか？"
     },
     {
@@ -286,52 +194,52 @@
     },
     {
       "start": 45.5,
-      "duration": 5,
+      "duration": 5.0,
       "text": "いいですね！お茶も好きですが、何か食べるのもいいですね！"
     },
     {
-      "start": 51,
+      "start": 51.0,
       "duration": 4.5,
       "text": "あ、そういえば、昨日、新しいカフェができましたよ。"
     },
     {
-      "start": 56,
+      "start": 56.0,
       "duration": 1.5,
       "text": "そこへ行きませんか？"
     },
     {
-      "start": 58,
+      "start": 58.0,
       "duration": 2.5,
       "text": "いいですね！そこへ行きましょう！"
     },
     {
-      "start": 61,
+      "start": 61.0,
       "duration": 2.5,
       "text": "５時にそこで会いませんか？"
     },
     {
-      "start": 64,
+      "start": 64.0,
       "duration": 3.5,
       "text": "飲み物は何にしますか？水もありますか？"
     },
     {
-      "start": 68,
+      "start": 68.0,
       "duration": 1.5,
       "text": "はい、いいですね！"
     },
     {
-      "start": 70,
+      "start": 70.0,
       "duration": 2.5,
       "text": "５時にそこへ行きます。"
     },
     {
-      "start": 73,
+      "start": 73.0,
       "duration": 3.5,
-      "text": "そして、６時半には家に帰ります。"
+      "text": "그리고、６時半には家に帰ります。"
     },
     {
-      "start": 77,
-      "duration": 3,
+      "start": 77.0,
+      "duration": 3.0,
       "text": "わかりました！私も５時に来ます！"
     },
     {
@@ -341,49 +249,49 @@
     },
     {
       "start": 82.5,
-      "duration": 2,
+      "duration": 2.0,
       "text": "私もです！じゃあ、後で！"
     }
   ],
-  "0k-s38wY2lA": [
+  "kspJZbXxdfA": [
     {
       "start": 0,
-      "duration": 2,
+      "duration": 2.0,
       "text": "お腹が空いたね。"
     },
     {
-      "start": 2,
-      "duration": 4,
+      "start": 2.0,
+      "duration": 4.0,
       "text": "うん、お腹が空いた。レストランに行こうか。"
     },
     {
-      "start": 6,
-      "duration": 3,
+      "start": 6.0,
+      "duration": 3.0,
       "text": "いいね！このレストランはどう？"
     },
     {
-      "start": 9,
-      "duration": 5,
+      "start": 9.0,
+      "duration": 5.0,
       "text": "ここ、雰囲気もいいし、美味しいって評判だよ。"
     },
     {
-      "start": 14,
+      "start": 14.0,
       "duration": 2.5,
       "text": "メニューを見よう。"
     },
     {
       "start": 16.5,
-      "duration": 2,
+      "duration": 2.0,
       "text": "何が食べたい？"
     },
     {
       "start": 18.5,
-      "duration": 3,
+      "duration": 3.0,
       "text": "私は肉料理が食べたいな。"
     },
     {
       "start": 21.5,
-      "duration": 5,
+      "duration": 5.0,
       "text": "私は魚料理にしようかな。野菜も欲しいね。"
     },
     {
@@ -392,32 +300,32 @@
       "text": "パンもいる？"
     },
     {
-      "start": 29,
-      "duration": 3,
+      "start": 29.0,
+      "duration": 3.0,
       "text": "うん、パンもください。"
     },
     {
-      "start": 32,
-      "duration": 3,
+      "start": 32.0,
+      "duration": 3.0,
       "text": "じゃあ、注文しようか。"
     },
     {
-      "start": 35,
-      "duration": 4,
+      "start": 35.0,
+      "duration": 4.0,
       "text": "すみません、注文をお願いします。"
     },
     {
-      "start": 39,
-      "duration": 2,
+      "start": 39.0,
+      "duration": 2.0,
       "text": "はい、どうぞ。"
     },
     {
-      "start": 41,
-      "duration": 6,
+      "start": 41.0,
+      "duration": 6.0,
       "text": "肉料理と魚料理、それから野菜とパンをください。"
     },
     {
-      "start": 47,
+      "start": 47.0,
       "duration": 2.5,
       "text": "飲み物は何にする？"
     },
@@ -427,7 +335,7 @@
       "text": "私はジュースを飲む。"
     },
     {
-      "start": 52,
+      "start": 52.0,
       "duration": 4.5,
       "text": "かしこまりました。少々お待ちください。"
     },
@@ -437,18 +345,18 @@
       "text": "わぁ、美味しそう！"
     },
     {
-      "start": 59,
-      "duration": 2,
+      "start": 59.0,
+      "duration": 2.0,
       "text": "うん、美味しい！"
     },
     {
-      "start": 61,
+      "start": 61.0,
       "duration": 2.5,
       "text": "ごちそうさまでした。"
     },
     {
       "start": 63.5,
-      "duration": 3,
+      "duration": 3.0,
       "text": "会計をお願いします。"
     },
     {
@@ -457,86 +365,88 @@
       "text": "はい、ありがとうございます。"
     }
   ],
-  "g6eH9e64F_o": [
+  "dQw4w9WgXcQ": [
     {
       "start": 0,
-      "duration": 3.5,
-      "text": "こんにちは！皆さん。"
+      "duration": 4.0,
+      "text": "私たちは長い間お互いを知っている。"
     },
     {
-      "start": 3.5,
-      "duration": 4,
-      "text": "ここは日本の東京です。"
+      "start": 4.0,
+      "duration": 4.0,
+      "text": "君の心は痛んでいるが、それを言うのが恥ずかしいんだね。"
     },
     {
-      "start": 7.5,
-      "duration": 5,
-      "text": "今日は、私の一日と日本の生活について話します。"
+      "start": 8.0,
+      "duration": 4.0,
+      "text": "中では何が起こっているかお互いによく分かっている。"
     },
     {
-      "start": 12.5,
-      "duration": 3.5,
-      "text": "朝、私は早く起きます。"
+      "start": 12.0,
+      "duration": 4.0,
+      "text": "私たちはゲームを知っているし、プレイするつもりだ。"
     },
     {
-      "start": 16,
-      "duration": 3.5,
-      "text": "美味しい朝ごはんを食べます。"
+      "start": 16.0,
+      "duration": 4.0,
+      "text": "決してあなたをあきらめない、決してあなたを失望させない。"
     },
     {
-      "start": 19.5,
-      "duration": 3.5,
-      "text": "それから、仕事に行きます。"
+      "start": 20.0,
+      "duration": 4.0,
+      "text": "決して走り回ってあなたを置き去りにしない。"
     },
     {
-      "start": 23,
-      "duration": 3,
-      "text": "駅まで歩いて行きます。"
+      "start": 24.0,
+      "duration": 4.0,
+      "text": "決してあなたを泣かせない、決してさよならを言わない。"
     },
     {
-      "start": 26,
-      "duration": 4.5,
-      "text": "東京は人が本当に多いですね。"
+      "start": 28.0,
+      "duration": 4.0,
+      "text": "決して嘘をついてあなたを傷つけない。"
+    }
+  ],
+  "ZRtdQ81jPUQ": [
+    {
+      "start": 0,
+      "duration": 3.0,
+      "text": "無敵の笑顔で荒らすメディア。"
     },
     {
-      "start": 30.5,
-      "duration": 4.5,
-      "text": "昼は、会社の近くでランチを食べます。"
+      "start": 3.0,
+      "duration": 3.0,
+      "text": "知りたいその秘密ミステリアス。"
     },
     {
-      "start": 35,
-      "duration": 4,
-      "text": "午後も、仕事をします。"
+      "start": 6.0,
+      "duration": 3.0,
+      "text": "抜けてるところさえ彼女のエリア。"
     },
     {
-      "start": 39,
-      "duration": 5.5,
-      "text": "仕事の後には、日本語を勉強します。"
+      "start": 9.0,
+      "duration": 3.0,
+      "text": "完璧で嘘つきな君は、天才的なアイドル様。"
     },
     {
-      "start": 44.5,
-      "duration": 5,
-      "text": "友達とカフェでたくさん話すこともあります。"
+      "start": 12.0,
+      "duration": 3.0,
+      "text": "今日何食べた？好きな本は？"
     },
     {
-      "start": 49.5,
-      "duration": 3.5,
-      "text": "夜、家に帰ります。"
+      "start": 15.0,
+      "duration": 3.0,
+      "text": "遊びに行くならどこに行くの？"
     },
     {
-      "start": 53,
-      "duration": 5,
-      "text": "日本での生活は毎日とても楽しいです。"
+      "start": 18.0,
+      "duration": 3.0,
+      "text": "何も食べてない、それは秘密。"
     },
     {
-      "start": 58,
-      "duration": 6,
-      "text": "そして、いつも新しいことや面白いことを発見します。"
-    },
-    {
-      "start": 64,
-      "duration": 3,
-      "text": "最後に、ベッドで寝ます。"
+      "start": 21.0,
+      "duration": 3.0,
+      "text": "そう淡々と、だけど燦々と。"
     }
   ]
 }

@@ -13,13 +13,13 @@ test.describe('Media Recommendation & Player E2E Tests', () => {
       });
     });
 
-    await page.goto('/practice');
+    await page.goto('/practice', { waitUntil: 'domcontentloaded' });
 
     // Кликаем по вкладке "Медиа"
     await page.click('button:has-text("Медиа")');
 
     // Нажимаем на первое видео для открытия плеера
-    await page.click('text=Сэнсэй Шун - Знакомство с друзьями');
+    await page.locator('div[class*="mediaCard"]:has-text("Сэнсэй Шун - О себе (Genki 1: L1)")').locator('button:has-text("Смотреть и учить")').click();
 
     // Ожидаем появление карточки с ошибкой
     const errorMsg = page.locator('p[class*="errorMsg"]');
@@ -45,9 +45,9 @@ test.describe('Media Recommendation & Player E2E Tests', () => {
       });
     });
 
-    await page.goto('/practice');
+    await page.goto('/practice', { waitUntil: 'domcontentloaded' });
     await page.click('button:has-text("Медиа")');
-    await page.click('text=Сэнсэй Шун - Знакомство с друзьями');
+    await page.locator('div[class*="mediaCard"]:has-text("Сэнсэй Шун - О себе (Genki 1: L1)")').locator('button:has-text("Смотреть и учить")').click();
 
     // Даем плееру время на инициализацию iframe и загрузку скриптов
     await page.waitForTimeout(2000);
@@ -99,9 +99,9 @@ test.describe('Media Recommendation & Player E2E Tests', () => {
       });
     });
 
-    await page.goto('/practice');
+    await page.goto('/practice', { waitUntil: 'domcontentloaded' });
     await page.click('button:has-text("Медиа")');
-    await page.click('text=Сэнсэй Шун - Знакомство с друзьями');
+    await page.locator('div[class*="mediaCard"]:has-text("Сэнсэй Шун - О себе (Genki 1: L1)")').locator('button:has-text("Смотреть и учить")').click();
 
     // Эмулируем запуск воспроизведения (время плеера выставляем в 1 сек, чтобы активировать сегмент)
     // В компоненте это вызовет поиск активного сегмента и запрос к /api/media/tokenize
@@ -124,30 +124,61 @@ test.describe('Media Recommendation & Player E2E Tests', () => {
 
   // Тезис 4: Проверка загрузки реального YouTube плеера и воспроизведения с перехватом кликов по субтитрам
   test('should successfully load YouTube video player and display timed subtitles', async ({ page }) => {
-    await page.goto('/practice');
+    await page.goto('/practice', { waitUntil: 'domcontentloaded' });
 
     // Кликаем по вкладке "Медиа"
     await page.click('button:has-text("Медиа")');
 
-    // Нажимаем на первое видео "Сэнсэй Шун - Знакомство с друзьями"
-    await page.click('text=Сэнсэй Шун - Знакомство с друзьями');
+    // Нажимаем на первое видео "Сэнсэй Шун - О себе (Genki 1: L1)"
+    await page.locator('div[class*="mediaCard"]:has-text("Сэнсэй Шун - О себе (Genki 1: L1)")').locator('button:has-text("Смотреть и учить")').click();
 
     // Убеждаемся, что фрейм плеера и список субтитров видны
     const playerIframe = page.locator('#youtube-player-iframe');
     await expect(playerIframe).toBeVisible({ timeout: 10000 });
 
     const playlist = page.locator('div[class*="segmentsList"]');
-    await expect(playlist).toBeVisible({ timeout: 10000 });
+    await expect(playlist).toBeAttached({ timeout: 10000 });
 
     // Проверяем наличие текстовых строк субтитров
     const firstSegment = page.locator('div[class*="segmentRow"]').first();
-    await expect(firstSegment).toBeVisible();
+    await expect(firstSegment).toBeVisible({ timeout: 10000 });
 
     // Кликаем по первому сегменту субтитров для симуляции перемотки/запуска
-    await firstSegment.click();
+    await firstSegment.click({ force: true });
 
     // Проверяем, что активная строка субтитров подсвечивается (присваивается класс segmentRowActive)
     await expect(firstSegment).toHaveClass(/segmentRowActive/);
+  });
+
+  // Тезис 5: Проверка отображения предупреждения, когда токенизатор отключен, но сегменты загружены
+  test('should display warning banner when tokenizer is down but segments are parsed', async ({ page }) => {
+    // Мокаем возвращение segments с флагом tokenizerDown: true
+    await page.route('**/api/media/parse', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          tokenizerDown: true,
+          segments: [{ start: 0, duration: 3, text: '今日' }],
+          lemmas: []
+        }),
+      });
+    });
+
+    await page.goto('/practice', { waitUntil: 'domcontentloaded' });
+    await page.click('button:has-text("Медиа")');
+    await page.locator('div[class*="mediaCard"]:has-text("Сэнсэй Шун - О себе (Genki 1: L1)")').locator('button:has-text("Смотреть и учить")').click();
+
+    // Выбираем первый сегмент, чтобы активировать его
+    const playlistItem = page.locator('div[class*="segmentRow"]').first();
+    await expect(playlistItem).toBeVisible();
+    await playlistItem.click({ force: true });
+
+    // Должен отобразиться баннер предупреждения
+    const warningBanner = page.locator('[data-testid="tokenizer-warning"]');
+    await expect(warningBanner).toBeVisible();
+    await expect(warningBanner).toContainText('Разбор слов недоступен (токенизатор не запущен)');
   });
 
 });

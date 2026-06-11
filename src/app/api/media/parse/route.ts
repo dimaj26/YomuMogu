@@ -122,6 +122,15 @@ export async function POST(request: NextRequest) {
       if (!res.ok) {
         const errText = await res.text();
         logger.error(`[API] Ошибка токенизатора при парсинге медиа: ${errText}`);
+        if (segments && segments.length > 0) {
+          logger.warn('[API] Возврат сырых сегментов без токенизации из-за ошибки MeCab');
+          return NextResponse.json({
+            success: true,
+            lemmas: [],
+            segments,
+            tokenizerDown: true
+          });
+        }
         return NextResponse.json(
           { error: 'Ошибка разбора японского текста в субтитрах' },
           { status: 502 }
@@ -144,6 +153,15 @@ export async function POST(request: NextRequest) {
       });
     } catch (tokenErr: any) {
       logger.error('[API] Ошибка подключения к микросервису токенизации', tokenErr);
+      if (segments && segments.length > 0) {
+        logger.warn('[API] Возврат сырых сегментов из-за недоступности токенизатора');
+        return NextResponse.json({
+          success: true,
+          lemmas: [],
+          segments,
+          tokenizerDown: true
+        });
+      }
       return NextResponse.json(
         { error: 'Сервер токенизации временно недоступен' },
         { status: 503 }

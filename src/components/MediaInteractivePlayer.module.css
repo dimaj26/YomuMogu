@@ -203,8 +203,23 @@
   border-bottom: 4px solid var(--border-color, #2d3748);
   min-height: 80px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+.tokenizerWarning {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-orange, #dd6b20);
+  background: rgba(221, 107, 32, 0.1);
+  border: 2px solid var(--color-orange, #dd6b20);
+  border-radius: 8px;
+  padding: 6px 12px;
+  margin-bottom: 12px;
+  text-align: center;
+  width: 100%;
+  animation: fadeIn 0.2s ease-out;
 }
 
 .rawText {
