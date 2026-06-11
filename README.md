@@ -100,6 +100,8 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to start pra
 - **Refined Chat Exit & Confirmation Flow**: Supports non-destructive back navigation from the active chat directly to the dashboard, and features a dedicated "Завершить" button with a custom 3D confirmation modal to transition into the Bonus Test.
 - **Anki Deck Integration**: Automatically imports cards from selected Anki decks, prioritizing new/learning status words. Supports configuring distinct Front, Back, Audio, and Image field mappings per deck to handle custom note templates.
 - **CSRF Protection**: All mutating API endpoints proxying requests to local Anki are protected by strict Origin/Referer verification checks.
+- **Smart Video/Podcast Recommendations & Interactive Player**: Adds a "Media" tab to the practice launcher page. Displays video streams and podcast recommendations calculated by matching the user's active recall and passive vocabulary to transcripts, outputting Comprehension Rates ($CR$) and due word overlaps. Features an interactive overlay player utilizing the YouTube Iframe API and HTML5 Audio, displaying clickable Japanese word tokens parsed by MeCab. Clicking words queries definitions in the offline JitenDex dictionary and allows adding same-session Anki cards with Katakana-to-Hiragana reading conversion. Includes client-side parsing fallback supporting Drag & Drop of `.vtt` and `.srt` subtitle files directly into the player. Incorporates graceful degradation by rendering raw timing segments and showing a friendly warning banner when the MeCab tokenizer microservice is offline, along with zero-dependency oEmbed media availability pre-checks and robust YouTube player iframe cleanup. Running the app via `run-server.bat` automatically starts the Next.js dev server and the background MeCab tokenizer microservice on port 8000.
+- **YouTube Subtitle Interceptor Extension**: A Manifest V3 Chrome Extension helper that intercepts YouTube subtitle network requests in the user's browser context (bypassing server-side scraping caps) and relays timing segments securely into the active YomuMogu page using `content_scripts` and `window.postMessage` handlers, using a modularized JSON3Timing parser.
 - **Unified Error Handling Boundaries & API Hook**: Reusable React `ErrorBoundary` and companion `ErrorFallback` UI wrap rendering exceptions, and a custom `useApiCall` hook handles loading, error, and retry state management on client fetches.
 - **Language Switcher Dropdown (a11y)**: Compact 3D Duolingo-styled global language switcher dropdown in the header, fully keyboard navigable (Arrows, Space, Enter, Escape) with active focus synchronization.
 - **Granular UI FSRS Japanification**: Under-the-hood smart localization wrapper component (`<JpUI>`) and provider (`JpUIProvider`) driven by the `ts-fsrs` mathematical scheduler. In Smart mode, it dynamically translates UI elements (up to 1 new word per session), plays gold pulse animations on new translations, provides hover translation tooltips, and supports interactive FSRS assessments ("Забыл" / "Знаю") directly in the UI. Furigana utilizes gradual opacity fade-outs (<3d: 1.0; <21d: 0.6; >=21d: 0.0, appearing on hover) to preserve line height constraints and eliminate Cumulative Layout Shift (CLS).
@@ -131,11 +133,14 @@ src/
     chat/                 # Conversation UI & Bonus/Sync flow
     practice/             # Practice launcher, session management, & stats
     settings/             # Deck settings, profile management, & field mappings
-    api/                  # Proxy routes to Gemini & AnkiConnect
+    api/                  # Proxy routes to Gemini, AnkiConnect, and Media
       gemini/
         classify/         # Situational tagging classifier route
+      media/
+        parse/            # Parse YouTube/file transcripts endpoint
+        tokenize/         # MeCab tokenization proxy endpoint
     error.tsx             # Global layout error fallback page
-  components/             # UI Components (LanguageSwitcher, JpUI, ErrorBoundary)
+  components/             # UI Components (LanguageSwitcher, JpUI, ErrorBoundary, MediaInteractivePlayer)
   hooks/                  # Custom state hooks (JapanificationState, useApiCall)
   core/                   # Core local-first services & DB
     db.ts                 # IndexedDB database definition (Dexie.js)
@@ -148,9 +153,15 @@ src/
   lib/
     dict/                 # SQLite dictionary lookup script and helper
     gemini/               # Gemini content generation, fallbacks, & withRetry wrapper
+    media/                # YouTube subtitle scrapers, VTT/SRT parsers, and availability probes
     logger.ts             # Structured log writer
     profile.ts            # Namespaced profile storage helpers
     csrf.ts               # CSRF verification helper
+  extension/              # Chrome Extension helper files
+    manifest.json         # Extension configuration
+    background.js         # Intercepts and relays timedtext requests
+    content.js            # Relays extension timing segments to page
+    convert.js            # Modular JSON3 subtitle timings converter
 ```
 
 ---
