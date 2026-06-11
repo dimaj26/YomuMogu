@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { MediaInteractivePlayer } from '../MediaInteractivePlayer';
 
 // Мокаем глобальный fetch
@@ -33,10 +33,14 @@ vi.mock('@/lib/profile', () => ({
 const mockPlayerInstance = {
   getCurrentTime: vi.fn().mockReturnValue(1.5),
   seekTo: vi.fn(),
+  destroy: vi.fn(),
 };
+
+let lastPlayerConfig: any = null;
 
 globalThis.window.YT = {
   Player: vi.fn().mockImplementation(function (id, config) {
+    lastPlayerConfig = config;
     // Симулируем вызов onStateChange
     if (config.events && config.events.onStateChange) {
       setTimeout(() => {
@@ -54,6 +58,7 @@ globalThis.window.YT = {
 describe('MediaInteractivePlayer Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    lastPlayerConfig = null;
     mockFetch.mockImplementation((url) => {
       const urlStr = typeof url === 'string' ? url : (url as any).url || '';
       if (urlStr.includes('/api/media/parse')) {
@@ -201,5 +206,91 @@ describe('MediaInteractivePlayer Component', () => {
       expect(screen.getByText('こんにちは')).toBeInTheDocument();
       expect(screen.getByText('世界')).toBeInTheDocument();
     });
+  });
+
+  it('renders raw subtitles and warning notice when tokenizerDown is true', async () => {
+    mockFetch.mockImplementationOnce((url) => {
+      const urlStr = typeof url === 'string' ? url : (url as any).url || '';
+      if (urlStr.includes('/api/media/parse')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            tokenizerDown: true,
+            lemmas: [],
+            segments: [
+              { start: 0, duration: 2, text: '今日' }
+            ]
+          })
+        });
+      }
+      return Promise.reject(new Error(`Unhandled fetch: ${urlStr}`));
+    });
+
+    render(
+      <MediaInteractivePlayer
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="NHK Easy News"
+        onClose={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Разбор слов недоступен (токенизатор не запущен)')).toBeInTheDocument();
+      expect(screen.getAllByText('今日').length).toBeGreaterThan(0);
+    });
+  });
+
+  it('calls destroy on YT player when component unmounts', async () => {
+    const { unmount } = render(
+      <MediaInteractivePlayer
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="NHK Easy News"
+        onClose={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(lastPlayerConfig).not.toBeNull();
+    });
+
+    unmount();
+    expect(mockPlayerInstance.destroy).toHaveBeenCalled();
+  });
+
+  it('displays Russian error message when YT player encounters onError with code 101/150', async () => {
+    render(
+      <MediaInteractivePlayer
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="NHK Easy News"
+        onClose={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(lastPlayerConfig).not.toBeNull();
+    });
+
+    // Simulate onError with code 101 (video cannot be played in embedded player)
+    act(() => {
+      lastPlayerConfig.events.onError({ data: 101 });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Владелец видео запретил его воспроизведение во встраиваемых проигрывателях.')).toBeInTheDocument();
+    });
+  });
+
+  it('does not render audio element when url is a YouTube link (synchronous isYoutube derivation)', () => {
+    render(
+      <MediaInteractivePlayer
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="NHK Easy News"
+        onClose={vi.fn()}
+      />
+    );
+
+    const audioElement = document.querySelector('audio');
+    expect(audioElement).toBeNull();
   });
 });

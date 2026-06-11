@@ -42,6 +42,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
   const [tokenizedCache, setTokenizedCache] = useState<Record<string, MeCabToken[]>>({});
   const [activeTokens, setActiveTokens] = useState<MeCabToken[]>([]);
   const [isTokenizing, setIsTokenizing] = useState<boolean>(false);
+  const [tokenizerDown, setTokenizerDown] = useState<boolean>(false);
 
   // Словарь и Anki поповер
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
@@ -55,26 +56,16 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
   const audioRef = useRef<HTMLAudioElement>(null);
   const ytPlayerRef = useRef<any>(null);
   const ytTimerIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [isYoutube, setIsYoutube] = useState<boolean>(false);
-  const [ytVideoId, setYtVideoId] = useState<string | null>(null);
+  const ytContainerRef = useRef<HTMLDivElement>(null);
+
+  // Извлекаем ID видео, если ссылка ведет на YouTube (синхронно)
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  const ytVideoId = (match && match[2].length === 11) ? match[2] : null;
+  const isYoutube = !!ytVideoId;
 
   // Драг-энд-дроп файлов субтитров
   const [dragActive, setDragActive] = useState<boolean>(false);
-
-  // Извлекаем ID видео, если ссылка ведет на YouTube
-  useEffect(() => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-    const match = url.match(regExp);
-    const videoId = (match && match[2].length === 11) ? match[2] : null;
-    
-    if (videoId) {
-      setIsYoutube(true);
-      setYtVideoId(videoId);
-    } else {
-      setIsYoutube(false);
-      setYtVideoId(null);
-    }
-  }, [url]);
 
   // Загружаем транскрипт с сервера
   const loadTranscript = async () => {
@@ -97,6 +88,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
       const data = await response.json();
       if (data.segments && data.segments.length > 0) {
         setSegments(data.segments);
+        setTokenizerDown(!!data.tokenizerDown);
       } else {
         throw new Error('Для этого видео отсутствуют дорожки японских субтитров.');
       }
@@ -142,9 +134,15 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
 
     // Функция инициализации
     const initPlayer = () => {
+      if (ytPlayerRef.current || !ytContainerRef.current) return;
       // @ts-ignore
-      ytPlayerRef.current = new window.YT.Player('youtube-player-iframe', {
+      ytPlayerRef.current = new window.YT.Player(ytContainerRef.current, {
         videoId: ytVideoId,
+        playerVars: {
+          origin: typeof window !== 'undefined' ? window.location.origin : '',
+          cc_load_policy: 1,
+          rel: 0,
+        },
         events: {
           onStateChange: (event: any) => {
             // @ts-ignore
@@ -154,6 +152,14 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
               stopYtTimer();
             }
           },
+          onError: (event: any) => {
+            const code = event.data;
+            if (code === 101 || code === 150) {
+              setError('Владелец видео запретил его воспроизведение во встраиваемых проигрывателях.');
+            } else {
+              setError(`Ошибка воспроизведения YouTube (код ${code})`);
+            }
+          }
         },
       });
     };
@@ -188,6 +194,14 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
 
     return () => {
       stopYtTimer();
+      if (ytPlayerRef.current && typeof ytPlayerRef.current.destroy === 'function') {
+        try {
+          ytPlayerRef.current.destroy();
+        } catch (e) {
+          console.warn('Error destroying YouTube player:', e);
+        }
+        ytPlayerRef.current = null;
+      }
     };
   }, [isYoutube, ytVideoId, isLoading]);
 
@@ -425,7 +439,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
           <div className={styles.playerContainer}>
             {isYoutube ? (
               <div className={styles.ytWrapper}>
-                <div id="youtube-player-iframe" className={styles.ytIframe}></div>
+                <div ref={ytContainerRef} className={styles.ytIframe}></div>
               </div>
             ) : (
               <div className={styles.audioWrapper}>
@@ -482,6 +496,11 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
                   {/* Рендеринг активной строки с токенизацией */}
                   {activeSegmentIndex !== -1 ? (
                     <div className={styles.activeLine}>
+                      {tokenizerDown && (
+                        <div className={styles.tokenizerWarning} data-testid="tokenizer-warning">
+                          Разбор слов недоступен (токенизатор не запущен)
+                        </div>
+                      )}
                       {isTokenizing ? (
                         <div className={styles.tokenizeLoading}>
                           <Loader2 className={styles.spin} size={16} />
