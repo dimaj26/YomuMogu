@@ -307,7 +307,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
 
   // Запуск токенизации при смене активного сегмента
   useEffect(() => {
-    if (activeSegmentIndex === -1) {
+    if (activeSegmentIndex === -1 || tokenizerDown) {
       setActiveTokens([]);
       return;
     }
@@ -356,7 +356,38 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
     };
 
     tokenizeSegment();
-  }, [activeSegmentIndex, segments, tokenizedCache]);
+  }, [activeSegmentIndex, segments, tokenizedCache, tokenizerDown]);
+
+
+  // Опрос здоровья токенизатора для авто-восстановления
+  useEffect(() => {
+    if (!tokenizerDown) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/media/tokenize');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && !data.tokenizerDown) {
+            setTokenizerDown(false);
+            if (activeSegmentIndex !== -1) {
+              const text = segments[activeSegmentIndex].text;
+              setTokenizedCache(prev => {
+                const copy = { ...prev };
+                delete copy[text];
+                return copy;
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Ошибка при циклическом опросе токенизатора:', err);
+      }
+    }, 10000);
+
+    return () => clearInterval(pollInterval);
+  }, [tokenizerDown, activeSegmentIndex, segments]);
+
 
   // Обработка клика по токену слова
   const handleTokenClick = async (token: MeCabToken) => {

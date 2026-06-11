@@ -2,6 +2,17 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.43.0] - 2026-06-12
+
+### Added
+- **MeCab Tokenizer Offline E2E Tests**: Created a new spec `media-tokenizer-down.spec.ts` that verifies player degradation, warning banner visibility, and disabling of word highlights when the MeCab tokenizer is offline.
+- **Trusted Host Config for Pip Installer**: Added `--trusted-host` options for `pypi.org`, `files.pythonhosted.org`, and `pypi.python.org` in `run-tokenizer.bat` to bypass certificate verification issues on environments with SSL certificate verification failures.
+
+### Changed
+- **Sequential Playwright Execution**: Configured E2E tests to run sequentially (`workers: 1`, `fullyParallel: false`) with a global `timeout: 60000` to prevent Next.js Turbopack compilation overload and IndexedDB transaction lock conflicts.
+- **E2E Project Separation**: Split npm scripts: `npm run test:e2e` now targets only the `chromium` and `live` projects (with tokenizer online), and `npm run test:e2e:offline` targets the `offline` project (setting `E2E_TOKENIZER_DOWN=1` with tokenizer stopped).
+- **SSL Bypass for Live Scraping Spec**: Set `process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'` in `media-live.spec.ts` to prevent fetch certificate verification errors when running live YouTube transcript scraping tests in local environments.
+
 ## [1.42.0] - 2026-06-11
 
 ### Added

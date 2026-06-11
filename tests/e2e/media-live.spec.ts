@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { getYoutubeTranscriptSegments } from '../../src/lib/media/youtube';
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 test.describe('Live Subtitles, Karaoke & Dictionary E2E Tests @live', () => {
 
   test('субтитры в плеере соответствуют реальным субтитрам видео (live, без моков)', async ({ page }) => {

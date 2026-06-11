@@ -71,5 +71,6 @@ _nogit*
 /task.txt
 /test-results/
 /playwright-report/
+/venv/
 
 

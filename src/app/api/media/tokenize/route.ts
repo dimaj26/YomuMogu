@@ -64,10 +64,11 @@ export async function POST(request: NextRequest) {
       });
     } catch (fetchErr: any) {
       clearTimeout(timeoutId);
+      const errCode = fetchErr.cause?.code || 'код недоступен';
       if (fetchErr.name === 'AbortError') {
-        logger.error('[API] Превышено время ожидания ответа от микросервиса MeCab');
+        logger.error(`[API] Превышено время ожидания ответа от микросервиса MeCab (${tokenizerUrl})`);
       } else {
-        logger.error('[API] Ошибка подключения к микросервису токенизации MeCab', fetchErr);
+        logger.error(`[API] Ошибка подключения к микросервису токенизации MeCab (${tokenizerUrl}). Код ошибки: ${errCode}. Убедитесь, что запущен run-tokenizer.bat и проверьте logs\\tokenizer.log. Детали:`, fetchErr);
       }
       return NextResponse.json({
         success: true,
@@ -84,3 +85,41 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function GET(request: NextRequest) {
+  const tokenizerUrl = process.env.TOKENIZER_URL || 'http://127.0.0.1:8000';
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  try {
+    const res = await fetch(`${tokenizerUrl}/health`, {
+      method: 'GET',
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json();
+      return NextResponse.json({
+        success: true,
+        status: data.status || 'ok',
+        tokenizerDown: false,
+      });
+    }
+
+    logger.warn(`[API] Микросервис MeCab вернул ошибку при проверке здоровья: статус ${res.status}`);
+    return NextResponse.json({
+      success: false,
+      tokenizerDown: true,
+    });
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    const errCode = error.cause?.code || 'код недоступен';
+    logger.error(`[API] Ошибка подключения к микросервису токенизации MeCab при проверке здоровья (код: ${errCode}): ${error.message || String(error)}`);
+    return NextResponse.json({
+      success: false,
+      tokenizerDown: true,
+    });
+  }
+}
+

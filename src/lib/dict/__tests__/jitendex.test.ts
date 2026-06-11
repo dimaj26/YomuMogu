@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { lookupWord } from '../jitendex';
 import child_process from 'child_process';
+import fs from 'fs';
 
 vi.mock('child_process', () => {
   const fn = vi.fn();
@@ -12,9 +13,22 @@ vi.mock('child_process', () => {
   };
 });
 
+vi.mock('fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('fs')>();
+  return {
+    ...actual,
+    default: {
+      ...actual,
+      existsSync: vi.fn().mockReturnValue(true),
+    },
+    existsSync: vi.fn().mockReturnValue(true),
+  };
+});
+
 describe('JitenDex wrapper', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    vi.mocked(fs.existsSync).mockReturnValue(true);
   });
 
   it('should resolve and return the parsed stdout json on success', async () => {
@@ -36,7 +50,7 @@ describe('JitenDex wrapper', () => {
     expect(result).toEqual(mockOutput);
     expect(spy).toHaveBeenCalled();
     const [file, args, options] = spy.mock.calls[0];
-    expect(file).toBe('python');
+    expect(file).toContain('python.exe');
     expect(args?.[0]).toContain('lookup.py');
     expect(args?.[1]).toBe('相手');
     expect(options).toEqual({ encoding: 'utf8' });
@@ -55,3 +69,4 @@ describe('JitenDex wrapper', () => {
     expect(result.error).toContain('Process failed');
   });
 });
+

@@ -255,7 +255,7 @@ src/
 | `services/tokenizer/Dockerfile` | Docker container definition for the MeCab tokenizer service |
 | `scripts/generate-transcripts.mjs` | Node script to scrape real `ja` captions for all feed videos and output `media_transcripts.json` |
 | `tests/e2e/media-live.spec.ts` | Playwright E2E tests verifying real Japanese subtitle player interaction, karaoke highlighting, and dictionary lookup |
-
+| `tests/e2e/media-tokenizer-down.spec.ts` | Playwright E2E tests verifying player degradation, warning banner, and disabled highlights when tokenizer is offline |
 
 ---
 
@@ -706,4 +706,4 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-302 unit/integration tests across 48 test files. All passing.
+305 unit/integration tests across 46 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.

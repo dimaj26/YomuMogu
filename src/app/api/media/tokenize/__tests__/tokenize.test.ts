@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { POST as tokenizePost } from '../route';
+import { POST as tokenizePost, GET as tokenizeGet } from '../route';
 import { NextRequest } from 'next/server';
 import { verifyCsrf } from '@/lib/csrf';
 
@@ -139,3 +139,49 @@ describe('API Route POST /api/media/tokenize', () => {
     expect(data.tokenizationSkipped).toBe(true);
   });
 });
+
+describe('API Route GET /api/media/tokenize', () => {
+  let originalFetch: typeof globalThis.fetch;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    originalFetch = globalThis.fetch;
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  it('GET /api/media/tokenize проксирует /health и сообщает status ok при успехе', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ status: 'ok' }),
+    });
+
+    const request = new NextRequest('http://localhost/api/media/tokenize', {
+      method: 'GET',
+    });
+
+    const response = await tokenizeGet(request);
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(data.status).toBe('ok');
+    expect(data.tokenizerDown).toBe(false);
+  });
+
+  it('GET /api/media/tokenize проксирует /health и сообщает tokenizerDown при ошибке', async () => {
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error('Connection refused'));
+
+    const request = new NextRequest('http://localhost/api/media/tokenize', {
+      method: 'GET',
+    });
+
+    const response = await tokenizeGet(request);
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data.success).toBe(false);
+    expect(data.tokenizerDown).toBe(true);
+  });
+});
+

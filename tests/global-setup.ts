@@ -1,56 +1,35 @@
-import { spawn } from 'child_process';
 import type { FullConfig } from '@playwright/test';
 
 async function globalSetup(config: FullConfig) {
-  console.log('[E2E Global Setup] Checking MeCab tokenizer status...');
+  const isDownExpected = process.env.E2E_TOKENIZER_DOWN?.trim() === '1';
+
+  console.log(`[E2E Global Setup] Проверка статуса MeCab токенизатора (ожидается оффлайн: ${isDownExpected})...`);
+
+  let isAlive = false;
   try {
     const res = await fetch('http://127.0.0.1:8000/health');
     if (res.ok) {
       const data = (await res.json()) as any;
       if (data.status === 'ok') {
-        console.log('[E2E Global Setup] MeCab tokenizer is already running.');
-        return;
+        isAlive = true;
       }
     }
   } catch (err) {
-    // Not running, proceed to start it
+    // Не запущен
   }
 
-  console.log('[E2E Global Setup] MeCab tokenizer is offline. Starting tokenizer server on port 8000...');
-
-  // Launch MeCab server
-  const child = spawn('python', [
-    '-m', 'uvicorn', 'src.services.tokenizer.server:app',
-    '--host', '127.0.0.1',
-    '--port', '8000'
-  ], {
-    stdio: 'ignore',
-    shell: true,
-    detached: false
-  });
-
-  (globalThis as any).__mecabProcess = child;
-
-  // Poll /health
-  const start = Date.now();
-  const timeout = 15000; // 15 seconds
-  while (Date.now() - start < timeout) {
-    try {
-      const res = await fetch('http://127.0.0.1:8000/health');
-      if (res.ok) {
-        const data = (await res.json()) as any;
-        if (data.status === 'ok') {
-          console.log('[E2E Global Setup] MeCab tokenizer started successfully.');
-          return;
-        }
-      }
-    } catch (err) {
-      // wait and retry
+  if (isDownExpected) {
+    if (isAlive) {
+      throw new Error('[E2E Global Setup FAIL] Токенизатор запущен, но для теста E2E_TOKENIZER_DOWN=1 он должен быть отключен! Остановите токенизатор перед запуском этого теста.');
     }
-    await new Promise(resolve => setTimeout(resolve, 500));
+    console.log('[E2E Global Setup] Токенизатор успешно проверен: оффлайн, как и ожидалось.');
+  } else {
+    if (!isAlive) {
+      throw new Error('[E2E Global Setup FAIL] Токенизатор не запущен — запустите run-tokenizer.bat перед запуском E2E-тестов.');
+    }
+    console.log('[E2E Global Setup] Токенизатор успешно проверен: онлайн.');
   }
-
-  throw new Error('MeCab tokenizer failed to start within 15 seconds.');
 }
 
 export default globalSetup;
+

@@ -102,6 +102,10 @@ describe('MediaInteractivePlayer Component', () => {
     });
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('shows loading state initially and then renders parsed transcript segments', async () => {
     render(
       <MediaInteractivePlayer
@@ -830,4 +834,102 @@ describe('MediaInteractivePlayer Component', () => {
       expect(offlineDot.className).toContain('statusDotOnline');
     });
   });
+
+  it('при tokenizerDown компонент опрашивает health и после восстановления перезапускает токенизацию активного сегмента', async () => {
+    vi.useFakeTimers();
+
+    let tokenizePostCalled = false;
+    let getHealthCalledCount = 0;
+
+    mockFetch.mockImplementation((url, init) => {
+      const urlStr = typeof url === 'string' ? url : (url as any).url || '';
+      const method = init?.method || 'GET';
+
+      if (urlStr.includes('/api/media/parse')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            tokenizerDown: true,
+            lemmas: [],
+            segments: [
+              { start: 0, duration: 2, text: '今日' }
+            ]
+          })
+        });
+      }
+
+      if (urlStr.includes('/api/media/tokenize')) {
+        if (method === 'POST') {
+          tokenizePostCalled = true;
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              tokens: [{ surface: '今日', pos: '名詞', lemma: '今日', reading: 'キョウ' }]
+            })
+          });
+        } else if (method === 'GET') {
+          getHealthCalledCount++;
+          if (getHealthCalledCount === 1) {
+            return Promise.resolve({
+              ok: true,
+              json: async () => ({ success: false, tokenizerDown: true })
+            });
+          } else {
+            return Promise.resolve({
+              ok: true,
+              json: async () => ({ success: true, status: 'ok', tokenizerDown: false })
+            });
+          }
+        }
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
+    render(
+      <MediaInteractivePlayer
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="NHK Easy News"
+        onClose={vi.fn()}
+      />
+    );
+
+    // Даем промисам (fetch) загрузиться
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(screen.getByText('Разбор слов недоступен: токенизатор не запущен (run-server.bat)')).toBeInTheDocument();
+
+    const statusDot = screen.getByTestId('tokenizer-status-dot');
+    expect(statusDot.className).toContain('statusDotOffline');
+    expect(tokenizePostCalled).toBe(false);
+
+    // Первый интервал: опрашивает, но оффлайн
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10000);
+    });
+
+    expect(getHealthCalledCount).toBe(1);
+    expect(tokenizePostCalled).toBe(false);
+    expect(statusDot.className).toContain('statusDotOffline');
+
+    // Второй интервал: опрашивает и переходит в онлайн
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10000);
+    });
+
+    expect(getHealthCalledCount).toBe(2);
+
+    // Даем отработать последующим промисам/микрозадачам
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(tokenizePostCalled).toBe(true);
+    expect(statusDot.className).toContain('statusDotOnline');
+
+    vi.useRealTimers();
+  });
 });
+
