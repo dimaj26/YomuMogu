@@ -113,6 +113,12 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === 'YOMUMOGU_YT_SUBTITLES') {
+        // Фильтруем по videoId, если он передан в сообщении от расширения
+        if (event.data.videoId && event.data.videoId !== ytVideoId) {
+          console.log(`[Player] Игнорируем субтитры для другого видео: ${event.data.videoId} (текущее: ${ytVideoId})`);
+          return;
+        }
+
         const receivedSegments = event.data.segments;
         if (Array.isArray(receivedSegments) && receivedSegments.length > 0) {
           setSegments(receivedSegments);
@@ -126,7 +132,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
     return () => {
       window.removeEventListener('message', handleMessage);
     };
-  }, []);
+  }, [ytVideoId]);
 
   // Инициализация YouTube API
   useEffect(() => {

@@ -11,7 +11,8 @@
     "https://*.youtube.com/api/timedtext*"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "content_scripts": [
     {

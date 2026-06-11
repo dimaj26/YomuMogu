@@ -208,6 +208,49 @@ describe('MediaInteractivePlayer Component', () => {
     });
   });
 
+  it('ignores browser extension messages with mismatching videoId, but accepts matching ones', async () => {
+    render(
+      <MediaInteractivePlayer
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="NHK Easy News"
+        onClose={vi.fn()}
+      />
+    );
+
+    const wrongSegments = [
+      { start: 10, duration: 3, text: '間違ったテキスト' }
+    ];
+    const correctSegments = [
+      { start: 10, duration: 3, text: '正しいテキスト' }
+    ];
+
+    // 1. Send message with wrong videoId
+    fireEvent(window, new MessageEvent('message', {
+      data: {
+        type: 'YOMUMOGU_YT_SUBTITLES',
+        videoId: 'wrongVideoId',
+        segments: wrongSegments
+      }
+    }));
+
+    // Check that wrong text is not displayed
+    expect(screen.queryByText('間違ったテキスト')).toBeNull();
+
+    // 2. Send message with correct videoId
+    fireEvent(window, new MessageEvent('message', {
+      data: {
+        type: 'YOMUMOGU_YT_SUBTITLES',
+        videoId: 'dQw4w9WgXcQ',
+        segments: correctSegments
+      }
+    }));
+
+    // Check that correct text is displayed
+    await waitFor(() => {
+      expect(screen.getByText('正しいテキスト')).toBeInTheDocument();
+    });
+  });
+
   it('renders raw subtitles and warning notice when tokenizerDown is true', async () => {
     mockFetch.mockImplementationOnce((url) => {
       const urlStr = typeof url === 'string' ? url : (url as any).url || '';
