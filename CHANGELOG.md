@@ -2,6 +2,16 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.46.0] - 2026-06-12
+
+### Added
+- **Persistent YouTube Cache**: Implemented file-backed cache utility `cache.ts` writing to `_nogit_youtube_cache.json` in the project root to cache subtitle availability (`getCachedAvailability`) and transcript segments (`getCachedTranscript`) to minimize duplicate scraper calls.
+- **YouTube 429 Cooldown Logic**: Integrated global rate limit tracking in `youtube.ts` using `Retry-After` headers to block outbound requests and prevent YouTube IP rate-limiting.
+- **Skip-on-429 Test Policy**: Configured E2E Playwright tests and integration tests to dynamically skip (using `test.skip` or `this.skip`) when hitting YouTube HTTP 429 rate limits, preventing test failures caused by environmental restrictions.
+
+### Fixed
+- **Parse API Unit Test Isolation**: Mocked the media cache module in `parse.test.ts` to isolate unit tests from reading or contaminating the real persistent cache file on disk.
+
 ## [1.45.0] - 2026-06-12
 
 ### Added

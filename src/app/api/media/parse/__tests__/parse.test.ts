@@ -9,6 +9,14 @@ vi.mock('@/lib/csrf', () => ({
   verifyCsrf: vi.fn(),
 }));
 
+vi.mock('@/lib/media/cache', () => ({
+  getCachedAvailability: vi.fn(() => undefined),
+  setCachedAvailability: vi.fn(),
+  getCachedTranscript: vi.fn(() => undefined),
+  setCachedTranscript: vi.fn(),
+}));
+
+
 describe('YouTube URL video ID extraction helper', () => {
   it('should extract 11-char video ID from various YouTube URL formats', () => {
     expect(extractYoutubeVideoId('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ');

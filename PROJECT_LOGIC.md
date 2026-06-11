@@ -490,6 +490,17 @@ For local-first operation and off-session scheduling, YomuMogu maintains client-
   - Stores user grammar Leitner progress step intervals.
   - Indexes: `ruleId`, `status`, `due`, `profileId`.
 
+### [PL-3.5] Persistent YouTube Cache Schema
+
+To minimize outbound scraping requests and avoid YouTube rate limits (HTTP 429), YomuMogu writes a local, Git-ignored JSON file `_nogit_youtube_cache.json` in the project root.
+
+```typescript
+interface YoutubeCacheData {
+  availability: Record<string, boolean>; // Maps video ID to caption availability
+  transcripts: Record<string, SubtitleSegment[]>; // Maps video ID to parsed subtitle segments
+}
+```
+
 ---
 
 ## [PL-4] API ROUTE CONTRACTS
@@ -521,6 +532,7 @@ All Anki routes proxy requests to AnkiConnect at `http://localhost:8765`.
 | `/api/dict/lookup` | GET | `?word=WORD` | `{ definition: string }` |
 | `/api/media/parse` | POST | `{ url }` or `{ srtText }` | `{ success: boolean, lemmas: string[], segments: SubtitleSegment[] }` — segments tagged with `source: 'pregenerated' | 'scraped' | 'upload'` |
 | `/api/media/tokenize` | POST | `{ text, mode? }` | `{ tokens: MeCabToken[] }` or `{ lemmas: string[] }` or `{ tokenizationSkipped: true, tokens: [], lemmas: [] }` |
+| `/api/media/search` | POST | `{ query, excludeIds?, seed?, continuation?, knownWords?, pageSize? }` | `{ success: boolean, results: Array<{ id, title, description, url, platform, lemmas, comprehensionRate, subQuality, levelFit, score, trackKind }>, continuation: string \| null, theme: string \| null }` |
 
 ### [PL-4.3] ChatResponse & HintResponse
 ```typescript
