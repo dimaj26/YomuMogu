@@ -21,9 +21,25 @@ test.describe('Live Subtitles, Karaoke & Dictionary E2E Tests @live', () => {
     const viewButton = firstCard.locator('button:has-text("Смотреть и учить")');
     await viewButton.click();
 
-    // Ждем загрузки плейлиста сегментов
+    // Ждем загрузки плейлиста сегментов или окна ошибки
     const playlist = page.locator('div[class*="playlistBox"]');
-    await expect(playlist).toBeVisible({ timeout: 15000 });
+    const errorBox = page.locator('div[class*="errorBox"]');
+    
+    await Promise.race([
+      playlist.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {}),
+      errorBox.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {})
+    ]);
+
+    if (await errorBox.isVisible()) {
+      const errorText = await errorBox.textContent() || '';
+      if (errorText.includes('429') || errorText.toLowerCase().includes('too many requests')) {
+        console.log('Detected YouTube rate limit (429) during E2E media test. Skipping.');
+        test.skip(true, 'пропущено: YouTube 429 (IP rate-limit)');
+        return;
+      }
+    }
+
+    await expect(playlist).toBeVisible({ timeout: 1000 });
 
     // Находим все отрендеренные строки субтитров в UI
     const renderedTexts = await page.locator('div[class*="segmentRow"] span[class*="segmentText"]').allTextContents();
@@ -59,9 +75,25 @@ test.describe('Live Subtitles, Karaoke & Dictionary E2E Tests @live', () => {
     await page.click('button:has-text("Медиа")');
     await page.locator('div[class*="mediaCard"]').first().locator('button:has-text("Смотреть и учить")').click();
 
-    // Ждем загрузки сегментов
+    // Ждем загрузки сегментов или окна ошибки
     const firstSegment = page.locator('div[class*="segmentRow"]').first();
-    await expect(firstSegment).toBeVisible({ timeout: 15000 });
+    const errorBox = page.locator('div[class*="errorBox"]');
+    
+    await Promise.race([
+      firstSegment.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {}),
+      errorBox.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {})
+    ]);
+
+    if (await errorBox.isVisible()) {
+      const errorText = await errorBox.textContent() || '';
+      if (errorText.includes('429') || errorText.toLowerCase().includes('too many requests')) {
+        console.log('Detected YouTube rate limit (429) during E2E media test. Skipping.');
+        test.skip(true, 'пропущено: YouTube 429 (IP rate-limit)');
+        return;
+      }
+    }
+
+    await expect(firstSegment).toBeVisible({ timeout: 1000 });
 
     // Кликаем по первому сегменту субтитров для симуляции воспроизведения в этой временной метке
     await firstSegment.click({ force: true });
@@ -92,9 +124,25 @@ test.describe('Live Subtitles, Karaoke & Dictionary E2E Tests @live', () => {
     await page.click('button:has-text("Медиа")');
     await page.locator('div[class*="mediaCard"]').first().locator('button:has-text("Смотреть и учить")').click();
 
-    // Ждем загрузки сегментов
+    // Ждем загрузки сегментов или окна ошибки
     const firstSegment = page.locator('div[class*="segmentRow"]').first();
-    await expect(firstSegment).toBeVisible({ timeout: 15000 });
+    const errorBox = page.locator('div[class*="errorBox"]');
+    
+    await Promise.race([
+      firstSegment.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {}),
+      errorBox.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {})
+    ]);
+
+    if (await errorBox.isVisible()) {
+      const errorText = await errorBox.textContent() || '';
+      if (errorText.includes('429') || errorText.toLowerCase().includes('too many requests')) {
+        console.log('Detected YouTube rate limit (429) during E2E media test. Skipping.');
+        test.skip(true, 'пропущено: YouTube 429 (IP rate-limit)');
+        return;
+      }
+    }
+
+    await expect(firstSegment).toBeVisible({ timeout: 1000 });
     await firstSegment.click({ force: true });
 
     // Ждем токенизацию MeCab

@@ -1,6 +1,32 @@
 import { logger } from '../logger';
 import { SubtitleSegment } from './parser';
 import { parseJson3ToSegments } from './json3';
+import { getCachedAvailability, setCachedAvailability, getCachedTranscript, setCachedTranscript } from './cache';
+
+// Глобальный кулдаун при 429 ошибке (IP rate-limit)
+let rateLimitResetTime = 0;
+
+function checkRateLimit() {
+  if (Date.now() < rateLimitResetTime) {
+    const remainingSec = Math.ceil((rateLimitResetTime - Date.now()) / 1000);
+    throw new Error(`Too Many Requests (IP rate-limit активен, осталось ${remainingSec} сек)`);
+  }
+}
+
+function handle429Error(responseHeaders?: Headers) {
+  let delaySec = 60; // дефолт 1 минута
+  if (responseHeaders) {
+    const retryAfterHeader = responseHeaders.get('Retry-After');
+    if (retryAfterHeader) {
+      const parsed = parseInt(retryAfterHeader, 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        delaySec = parsed;
+      }
+    }
+  }
+  rateLimitResetTime = Date.now() + delaySec * 1000;
+  logger.error(`[YouTube Scraper] Получен статус 429 Too Many Requests. Кулдаун установлен на ${delaySec} сек.`);
+}
 
 /**
  * Извлекает ID видео из различных форматов ссылок YouTube
@@ -29,6 +55,7 @@ function decodeHtmlEntities(str: string): string {
  * Вспомогательная функция для получения списка дорожек субтитров и сессионных кук через InnerTube API
  */
 async function getTracksAndCookies(videoId: string): Promise<{ tracks: any[]; cookieString: string }> {
+  checkRateLimit();
   const url = `https://www.youtube.com/watch?v=${videoId}&hl=ja`;
   const headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -37,6 +64,10 @@ async function getTracksAndCookies(videoId: string): Promise<{ tracks: any[]; co
 
   logger.info(`[YouTube Scraper] Скачивание страницы видео ${videoId} для получения кук`);
   const response = await fetch(url, { headers });
+  if (response.status === 429) {
+    handle429Error(response.headers);
+    throw new Error('Too Many Requests');
+  }
   if (!response.ok) {
     throw new Error(`Не удалось загрузить страницу YouTube: ${response.statusText}`);
   }
@@ -57,6 +88,8 @@ async function getTracksAndCookies(videoId: string): Promise<{ tracks: any[]; co
 
   logger.info(`[YouTube Scraper] Запрос к InnerTube Player API для видео ${videoId}`);
   const playerUrl = 'https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
+  
+  checkRateLimit();
   const playerRes = await fetch(playerUrl, {
     method: 'POST',
     headers: {
@@ -75,6 +108,10 @@ async function getTracksAndCookies(videoId: string): Promise<{ tracks: any[]; co
     })
   });
 
+  if (playerRes.status === 429) {
+    handle429Error(playerRes.headers);
+    throw new Error('Too Many Requests');
+  }
   if (!playerRes.ok) {
     throw new Error(`Не удалось вызвать player API: ${playerRes.statusText}`);
   }
@@ -102,12 +139,17 @@ async function fetchAndParseTranscriptXml(tracks: any[], videoId: string, cookie
     'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
   };
 
+  checkRateLimit();
   const xmlRes = await fetch(jaTrack.baseUrl, {
     headers: {
       ...headers,
       'Cookie': cookieString
     }
   });
+  if (xmlRes.status === 429) {
+    handle429Error(xmlRes.headers);
+    throw new Error('Too Many Requests');
+  }
   if (!xmlRes.ok) {
     throw new Error(`Не удалось загрузить XML субтитров: ${xmlRes.statusText}`);
   }
@@ -155,12 +197,17 @@ async function fetchAndParseTranscriptToSegments(tracks: any[], videoId: string,
     const json3Url = timedtextParsed.toString();
 
     logger.info(`[YouTube Scraper] Попытка получения субтитров в формате JSON3 для видео ${videoId}`);
+    checkRateLimit();
     const json3Res = await fetch(json3Url, {
       headers: {
         ...headers,
         'Cookie': cookieString
       }
     });
+    if (json3Res.status === 429) {
+      handle429Error(json3Res.headers);
+      throw new Error('Too Many Requests');
+    }
     if (json3Res.ok) {
       const jsonData = await json3Res.json();
       const segments = parseJson3ToSegments(jsonData);
@@ -177,12 +224,17 @@ async function fetchAndParseTranscriptToSegments(tracks: any[], videoId: string,
   // 2. Фолбэк на XML-версию
   logger.info(`[YouTube Scraper] Запрос XML субтитров по ссылке для видео ${videoId} (сегменты)`);
   
+  checkRateLimit();
   const xmlRes = await fetch(jaTrack.baseUrl, {
     headers: {
       ...headers,
       'Cookie': cookieString
     }
   });
+  if (xmlRes.status === 429) {
+    handle429Error(xmlRes.headers);
+    throw new Error('Too Many Requests');
+  }
   if (!xmlRes.ok) {
     throw new Error(`Не удалось загрузить XML субтитров: ${xmlRes.statusText}`);
   }
@@ -219,19 +271,33 @@ export async function getYoutubeTranscript(videoId: string): Promise<string> {
  * Получает временные сегменты субтитров для видео YouTube по его ID
  */
 export async function getYoutubeTranscriptSegments(videoId: string): Promise<SubtitleSegment[]> {
+  const cached = getCachedTranscript(videoId);
+  if (cached !== undefined) {
+    logger.info(`[YouTube Cache] Субтитры получены из кэша для видео ${videoId}`);
+    return cached;
+  }
   const { tracks, cookieString } = await getTracksAndCookies(videoId);
-  return await fetchAndParseTranscriptToSegments(tracks, videoId, cookieString);
+  const segments = await fetchAndParseTranscriptToSegments(tracks, videoId, cookieString);
+  setCachedTranscript(videoId, segments);
+  return segments;
 }
 
 /**
  * Проверяет наличие японских субтитров у видео по его ID
  */
 export async function hasJapaneseCaptions(videoId: string): Promise<boolean> {
+  const cached = getCachedAvailability(videoId);
+  if (cached !== undefined) {
+    logger.info(`[YouTube Cache] Доступность субтитров получена из кэша для ${videoId}: ${cached}`);
+    return cached;
+  }
   try {
     const { tracks } = await getTracksAndCookies(videoId);
     const jaTrack = tracks.find(t => t.languageCode === 'ja' && t.kind !== 'asr') ||
                     tracks.find(t => t.languageCode === 'ja' || t.languageCode?.startsWith('ja') || t.vssId?.includes('.ja'));
-    return !!jaTrack;
+    const result = !!jaTrack;
+    setCachedAvailability(videoId, result);
+    return result;
   } catch (e: any) {
     logger.warn(`[YouTube Captions Check] Ошибка проверки субтитров для ${videoId}: ${e.message || e}`);
     return false;

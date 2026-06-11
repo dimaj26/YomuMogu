@@ -10,7 +10,17 @@ function normalizeText(text: string): string {
 }
 
 describe('Transcript Fidelity Integration', () => {
-  it('pregenerated транскрипт соответствует реальным субтитрам видео (совпадение ≥60%, дрейф ≤3с)', async () => {
+  it('pregenerated транскрипт соответствует реальным субтитрам видео (совпадение ≥60%, дрейф ≤3с)', async (context) => {
+    try {
+      // Проверяем доступность YouTube, чтобы отловить 429
+      const testRes = await fetch('https://www.youtube.com/watch?v=Jnea4HbYIso&hl=ja');
+      if (testRes.status === 429) {
+        console.warn('Skipping integration test: YouTube IP rate-limit (429)');
+        context.skip();
+        return;
+      }
+    } catch (e) {}
+
     const entries = Object.entries(mediaTranscripts);
     expect(entries.length).toBeGreaterThan(0);
 
@@ -30,6 +40,11 @@ describe('Transcript Fidelity Integration', () => {
       try {
         scrapedSegments = await getYoutubeTranscriptSegments(videoId);
       } catch (err: any) {
+        if (err.message?.includes('429') || err.message?.toLowerCase().includes('too many requests')) {
+          console.warn('Skipping integration test due to YouTube 429 IP rate-limit during execution');
+          context.skip();
+          return;
+        }
         throw new Error(`Не удалось получить реальные субтитры для ${videoId}: ${err.message}`);
       }
 

@@ -163,6 +163,7 @@ src/
       search.ts           # YouTube search page scraper
       ranking.ts          # Candidate scoring and ranking engine
       selection.ts        # Seeded history-aware page diversity selection
+      cache.ts            # Persistent file-backed YouTube search and transcript cache
 ```
 
 ### [PL-2.2] File Registry
@@ -223,6 +224,7 @@ src/
 | `lib/media/search.ts` | Zero-dependency Japanese YouTube search page scraper and continuation tracker |
 | `lib/media/ranking.ts` | Pure candidate ranking engine based on FSRS levelFit (0.6) and subtitle track kind quality score (0.4) |
 | `lib/media/selection.ts` | Pure seeded selection helper maintaining profile shown history (overlap <= 10%) |
+| `lib/media/cache.ts` | Persistent file-backed YouTube search and transcript cache |
 | `lib/gemini/queryExpansion.ts` | Singleton query expansion service running a single gemini-2.5-flash-lite call with caching and error degradation |
 | `lib/media/__tests__/availability.test.ts` | Unit tests for media availability helpers |
 | `lib/media/__tests__/json3.test.ts` | Unit tests for json3 subtitle parser |
@@ -232,6 +234,7 @@ src/
 | `lib/media/__tests__/search.test.ts` | Unit tests for search result scraper and parser |
 | `lib/media/__tests__/ranking.test.ts` | Unit tests for candidate scoring and ranking rules |
 | `lib/media/__tests__/selection.test.ts` | Unit tests for seeded PRNG selection and history diversity |
+| `lib/media/__tests__/cache.test.ts` | Unit tests for YouTube file-backed cache |
 | `lib/gemini/__tests__/queryExpansion.test.ts` | Unit tests for Gemini query expansion and cache fallback |
 | `lib/media/__tests__/search-live.integration.test.ts` | Integration tests verifying search and caption check against live YouTube API |
 | `lib/media/__tests__/feed.integration.test.ts` | Integration tests verifying oEmbed embedding and caption tracks in media feed |
@@ -727,4 +730,4 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-346 unit/integration tests across 54 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+349 unit/integration tests across 55 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.

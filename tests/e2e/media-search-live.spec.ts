@@ -20,9 +20,25 @@ test.describe('Media Search E2E Tests @live', () => {
     const searchButton = page.locator('button:has-text("Найти")');
     await searchButton.click();
 
-    // 5. Ожидаем появление заголовка с результатами поиска
+    // 5. Ожидаем появление заголовка с результатами поиска или ошибки 429
     const resultsHeader = page.locator('h3:has-text("Результаты поиска по запросу")');
-    await expect(resultsHeader).toBeVisible({ timeout: 20000 });
+    const errorAlert = page.locator('div[class*="errorAlert"]');
+    
+    await Promise.race([
+      resultsHeader.waitFor({ state: 'visible', timeout: 30000 }).catch(() => {}),
+      errorAlert.waitFor({ state: 'visible', timeout: 30000 }).catch(() => {})
+    ]);
+
+    if (await errorAlert.isVisible()) {
+      const errorText = await errorAlert.textContent() || '';
+      if (errorText.includes('429') || errorText.toLowerCase().includes('too many requests')) {
+        console.log('Detected YouTube rate limit (429) during E2E search test. Skipping.');
+        test.skip(true, 'пропущено: YouTube 429 (IP rate-limit)');
+        return;
+      }
+    }
+
+    await expect(resultsHeader).toBeVisible({ timeout: 1000 });
     await expect(resultsHeader).toContainText('разговор');
 
     // 6. Убеждаемся, что карточки результатов поиска отрендерились
