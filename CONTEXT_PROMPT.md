@@ -113,6 +113,8 @@ You are an expert **TypeScript / Next.js 16** developer. Your specialty is App R
 - When adding a new module, add corresponding test file in `__tests__/` sibling directory.
 - Mock all `lucide-react` icons in UI component tests to avoid SVG rendering issues in jsdom.
 - For database-dependent unit tests (e.g. settings or practice pages querying Dexie IndexedDB), import and initialize the global polyfill `fake-indexeddb` at the top of the test file: `import fakeIndexedDB, { IDBKeyRange } from 'fake-indexeddb'; globalThis.indexedDB = fakeIndexedDB; globalThis.IDBKeyRange = IDBKeyRange;` to run offline DB queries and statistics aggregation safely in JSDOM.
+- Playwright E2E tests must be configured to run sequentially (`workers: 1`, `fullyParallel: false`) to avoid Next.js dev server compilation overload and IndexedDB database transaction locks. If running HTTPS fetch/scraping tests (like live YouTube transcript tests) in environments with certificate issues, set `process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'` at the top of the spec file to bypass SSL validation.
+
 
 ### [CP-3.7] File Modification Rules
 - Always read target file before proposing or making any change. Never guess existing content.

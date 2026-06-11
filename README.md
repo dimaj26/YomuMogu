@@ -75,7 +75,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to start pra
 2. Убедитесь, что запущен Next.js dev-сервер и локальный микросервис MeCab:
    ```powershell
    npm run dev
-   python -m uvicorn src.services.tokenizer.server:app --host 127.0.0.1 --port 8000
+   .\venv\Scripts\python.exe -m uvicorn src.services.tokenizer.server:app --host 127.0.0.1 --port 8000
    ```
 3. Запустите E2E-тесты:
    ```powershell
