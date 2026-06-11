@@ -178,7 +178,7 @@ test.describe('Media Recommendation & Player E2E Tests', () => {
     // Должен отобразиться баннер предупреждения
     const warningBanner = page.locator('[data-testid="tokenizer-warning"]');
     await expect(warningBanner).toBeVisible();
-    await expect(warningBanner).toContainText('Разбор слов недоступен (токенизатор не запущен)');
+    await expect(warningBanner).toContainText('Разбор слов недоступен');
   });
 
 });

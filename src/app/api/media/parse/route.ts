@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { url, srtText } = body;
+    const { url, srtText, forceScrape } = body;
 
     if (!url && !srtText) {
       logger.warn('[API] Невалидный запрос к /api/media/parse: отсутствуют и url, и srtText');
@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
     let textToTokenize = '';
     let cacheKey = '';
     let segments: SubtitleSegment[] = [];
+    let sourceUsed: 'cache' | 'scraped' | 'pregenerated' | 'upload' | null = null;
 
     if (url) {
       const videoId = extractYoutubeVideoId(url);
@@ -63,32 +64,42 @@ export async function POST(request: NextRequest) {
 
       cacheKey = `yt:${videoId}`;
       
-      // Проверяем наличие в кэше
-      if (lemmasCache.has(cacheKey)) {
-        logger.info(`[API] Возврат лемм и сегментов из кэша для видео ${videoId}`);
+      // 1. Проверяем наличие в кэше (если не задан forceScrape)
+      if (!forceScrape && lemmasCache.has(cacheKey)) {
+        logger.info(`[API] [КЭШ] Возврат лемм и сегментов из кэша для видео ${videoId}`);
         const cached = lemmasCache.get(cacheKey)!;
+        const hasWords = cached.segments.some(s => s.words && s.words.length > 0);
         return NextResponse.json({
           success: true,
           lemmas: cached.lemmas,
           segments: cached.segments,
-          cached: true
+          cached: true,
+          source: 'cache',
+          hasWords
         });
       }
 
-      // Проверяем, есть ли предсгенерированные субтитры для этого видео в медиатеке
-      const pregenerated = mediaTranscripts[videoId as keyof typeof mediaTranscripts];
-      if (pregenerated) {
-        logger.info(`[API] Использование предсгенерированных субтитров из JSON для видео ${videoId}`);
-        segments = (pregenerated as SubtitleSegment[]).map(s => ({ ...s, source: 'pregenerated' }));
-      } else {
-        try {
-          // Скачиваем транскрипт с YouTube в виде временных сегментов
-          segments = await getYoutubeTranscriptSegments(videoId);
-          segments = segments.map(s => ({ ...s, source: 'scraped' }));
-        } catch (scrapingErr: any) {
-          logger.error(`[API] Ошибка при получении субтитров YouTube для видео ${videoId}:`, scrapingErr);
+      // 2. Пробуем скрейпить с YouTube в реальном времени
+      try {
+        logger.info(`[API] [СКРЕЙПИНГ] Попытка загрузки реальных субтитров с YouTube для видео ${videoId}`);
+        segments = await getYoutubeTranscriptSegments(videoId);
+        segments = segments.map(s => ({ ...s, source: 'scraped' }));
+        sourceUsed = 'scraped';
+      } catch (scrapingErr: any) {
+        logger.warn(`[API] Не удалось скрейпить субтитры с YouTube для видео ${videoId} (${scrapingErr.message || scrapingErr}). Пробуем предсгенерированный фолбэк.`);
+        
+        // 3. Фолбэк на предсгенерированные субтитры из JSON
+        const pregenerated = mediaTranscripts[videoId as keyof typeof mediaTranscripts];
+        if (pregenerated) {
+          logger.info(`[API] [ФОЛБЭК] Использование предсгенерированных субтитров из JSON для видео ${videoId}`);
+          const rawSegs = Array.isArray(pregenerated) ? pregenerated : (pregenerated as any).segments;
+          segments = rawSegs.map((s: SubtitleSegment) => ({ ...s, source: 'pregenerated' }));
+          sourceUsed = 'pregenerated';
+        } else {
+          // Если и скрейпинг, и предсгенерированные субтитры отсутствуют - возвращаем 502
+          logger.error(`[API] [ОШИБКА] Субтитры отсутствуют в JSON-медиатеке и не удалось скрейпить с YouTube для видео ${videoId}`);
           return NextResponse.json(
-            { error: scrapingErr.message || 'Не удалось загрузить субтитры с YouTube' },
+            { error: `Не удалось загрузить субтитры с YouTube и они отсутствуют в медиатеке: ${scrapingErr.message || scrapingErr}` },
             { status: 502 }
           );
         }
@@ -96,6 +107,7 @@ export async function POST(request: NextRequest) {
     } else if (srtText) {
       // Парсим пользовательские субтитры SRT/VTT
       segments = parseSubtitlesToSegments(srtText).map(s => ({ ...s, source: 'upload' }));
+      sourceUsed = 'upload';
     }
 
     // Нормализуем сегменты и склеиваем в предложения
@@ -113,6 +125,7 @@ export async function POST(request: NextRequest) {
     if (srtText) {
       logger.info(`[API] Успешно распарсен загруженный файл субтитров длиной ${textToTokenize.length} символов`);
     }
+
 
     // Отправляем очищенный текст в микросервис MeCab
     logger.info(`[API] Отправка текста на токенизацию в микросервис MeCab: ${textToTokenize.length} символов`);
@@ -132,11 +145,14 @@ export async function POST(request: NextRequest) {
         logger.error(`[API] Ошибка токенизатора при парсинге медиа: ${errText}`);
         if (segments && segments.length > 0) {
           logger.warn('[API] Возврат сырых сегментов без токенизации из-за ошибки MeCab');
+          const hasWords = segments.some(s => s.words && s.words.length > 0);
           return NextResponse.json({
             success: true,
             lemmas: [],
             segments,
-            tokenizerDown: true
+            tokenizerDown: true,
+            source: sourceUsed || 'upload',
+            hasWords
           });
         }
         return NextResponse.json(
@@ -153,21 +169,27 @@ export async function POST(request: NextRequest) {
         addToCache(cacheKey, { lemmas, segments });
       }
 
+      const hasWords = segments.some(s => s.words && s.words.length > 0);
       return NextResponse.json({
         success: true,
         lemmas,
         segments,
-        cached: false
+        cached: false,
+        source: sourceUsed || 'upload',
+        hasWords
       });
     } catch (tokenErr: any) {
       logger.error('[API] Ошибка подключения к микросервису токенизации', tokenErr);
       if (segments && segments.length > 0) {
         logger.warn('[API] Возврат сырых сегментов из-за недоступности токенизатора');
+        const hasWords = segments.some(s => s.words && s.words.length > 0);
         return NextResponse.json({
           success: true,
           lemmas: [],
           segments,
-          tokenizerDown: true
+          tokenizerDown: true,
+          source: sourceUsed || 'upload',
+          hasWords
         });
       }
       return NextResponse.json(

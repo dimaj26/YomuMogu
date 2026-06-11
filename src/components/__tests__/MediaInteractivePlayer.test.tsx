@@ -448,8 +448,30 @@ describe('MediaInteractivePlayer Component', () => {
     });
   });
 
-  it('cc_load_policy=0 когда сегменты уже получены с сервера', async () => {
-    // Сервер вернул сегменты → cc_load_policy должен быть 0 (YouTube CC не нужны)
+  it('cc_load_policy=0 когда сегменты имеют words', async () => {
+    // Сервер вернул сегменты с пословными таймингами → cc_load_policy=0
+    mockFetch.mockImplementationOnce((url) => {
+      const urlStr = typeof url === 'string' ? url : (url as any).url || '';
+      if (urlStr.includes('/api/media/parse')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            lemmas: [],
+            segments: [
+              {
+                start: 0,
+                duration: 2,
+                text: '今日',
+                words: [{ text: '今日', offsetMs: 0 }]
+              }
+            ]
+          })
+        });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
     render(
       <MediaInteractivePlayer
         url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
@@ -463,6 +485,40 @@ describe('MediaInteractivePlayer Component', () => {
     });
 
     expect(lastPlayerConfig.playerVars.cc_load_policy).toBe(0);
+  });
+
+  it('cc_load_policy=1 когда сегменты без words', async () => {
+    // Сервер вернул сегменты без пословных таймингов → cc_load_policy=1
+    mockFetch.mockImplementationOnce((url) => {
+      const urlStr = typeof url === 'string' ? url : (url as any).url || '';
+      if (urlStr.includes('/api/media/parse')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            lemmas: [],
+            segments: [
+              { start: 0, duration: 2, text: '今日' } // Без слов
+            ]
+          })
+        });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
+    render(
+      <MediaInteractivePlayer
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="NHK Easy News"
+        onClose={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(lastPlayerConfig).not.toBeNull();
+    });
+
+    expect(lastPlayerConfig.playerVars.cc_load_policy).toBe(1);
   });
 
   it('cc_load_policy=1 когда сегментов нет', async () => {
@@ -495,6 +551,138 @@ describe('MediaInteractivePlayer Component', () => {
     });
 
     expect(lastPlayerConfig.playerVars.cc_load_policy).toBe(1);
+  });
+
+  it('extension-сегменты с words заменяют серверные без words', async () => {
+    // Сервер возвращает сегменты без слов
+    mockFetch.mockImplementationOnce((url) => {
+      const urlStr = typeof url === 'string' ? url : (url as any).url || '';
+      if (urlStr.includes('/api/media/parse')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            lemmas: [],
+            segments: [
+              { start: 0, duration: 2, text: 'Серверный текст' } // Без слов
+            ]
+          })
+        });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
+    render(
+      <MediaInteractivePlayer
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="NHK Easy News"
+        onClose={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Серверный текст')).toBeInTheDocument();
+    });
+
+    const extensionSegments = [
+      {
+        start: 0,
+        duration: 2,
+        text: 'Текст расширения',
+        words: [{ text: 'Текст', offsetMs: 0 }, { text: 'расширения', offsetMs: 500 }]
+      }
+    ];
+
+    // Симулируем сообщение от расширения
+    fireEvent(window, new MessageEvent('message', {
+      data: {
+        type: 'YOMUMOGU_YT_SUBTITLES',
+        videoId: 'dQw4w9WgXcQ',
+        segments: extensionSegments
+      }
+    }));
+
+    // Должны отобразиться сегменты от расширения, так как они имеют words
+    await waitFor(() => {
+      expect(screen.getByText('Текст расширения')).toBeInTheDocument();
+    });
+  });
+
+  it('data-has-words отражает наличие пословных таймингов', async () => {
+    // 1. Сначала загружаем без слов
+    mockFetch.mockImplementationOnce((url) => {
+      const urlStr = typeof url === 'string' ? url : (url as any).url || '';
+      if (urlStr.includes('/api/media/parse')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            lemmas: [],
+            segments: [
+              { start: 0, duration: 2, text: 'Привет без слов' }
+            ]
+          })
+        });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
+    const { container, unmount } = render(
+      <MediaInteractivePlayer
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="NHK Easy News"
+        onClose={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Привет без слов')).toBeInTheDocument();
+    });
+
+    const rootElement = container.firstChild as HTMLElement;
+    expect(rootElement.getAttribute('data-has-words')).toBe('false');
+
+    // Размонтируем первый плеер перед вторым тестом
+    unmount();
+
+    // 2. Теперь загружаем со словами
+    vi.clearAllMocks();
+    mockFetch.mockImplementationOnce((url) => {
+      const urlStr = typeof url === 'string' ? url : (url as any).url || '';
+      if (urlStr.includes('/api/media/parse')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            lemmas: [],
+            segments: [
+              {
+                start: 0,
+                duration: 2,
+                text: 'Привет со словами',
+                words: [{ text: 'Привет со словами', offsetMs: 0 }]
+              }
+            ]
+          })
+        });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
+    const { container: containerWithWords } = render(
+      <MediaInteractivePlayer
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="NHK Easy News"
+        onClose={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Привет со словами')).toBeInTheDocument();
+    });
+
+    const rootElementWithWords = containerWithWords.firstChild as HTMLElement;
+    expect(rootElementWithWords.getAttribute('data-has-words')).toBe('true');
   });
 
   it('кнопка CC вызывает loadModule/unloadModule и не падает при их отсутствии', async () => {
@@ -530,5 +718,116 @@ describe('MediaInteractivePlayer Component', () => {
     delete mockPlayerInstance.loadModule;
     delete mockPlayerInstance.unloadModule;
     expect(() => fireEvent.click(ccBtn)).not.toThrow();
+  });
+
+  it('статус-индикатор: gray при tokenizationSkipped, green при успехе', async () => {
+    // 1. Успешный случай — зеленый индикатор
+    mockFetch.mockImplementation((url) => {
+      const urlStr = typeof url === 'string' ? url : (url as any).url || '';
+      if (urlStr.includes('/api/media/parse')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            lemmas: ['今日'],
+            segments: [{ start: 0, duration: 2, text: '今日' }]
+          })
+        });
+      }
+      if (urlStr.includes('/api/media/tokenize')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            tokens: [{ surface: '今日', pos: '名詞', lemma: '今日', reading: 'キョウ' }]
+          })
+        });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
+    const { container, unmount } = render(
+      <MediaInteractivePlayer
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="NHK Easy News"
+        onClose={vi.fn()}
+      />
+    );
+
+    // Ждем окончания загрузки
+    await waitFor(() => {
+      expect(screen.getByText('今日')).toBeInTheDocument();
+    });
+
+    const statusDot = screen.getByTestId('tokenizer-status-dot');
+    expect(statusDot).toBeInTheDocument();
+    expect(statusDot.className).toContain('statusDotOnline');
+
+    unmount();
+
+    // 2. Случай сбоя — серый индикатор и клик для повторной попытки
+    vi.clearAllMocks();
+    let tokeniseCalled = 0;
+    mockFetch.mockImplementation((url) => {
+      const urlStr = typeof url === 'string' ? url : (url as any).url || '';
+      if (urlStr.includes('/api/media/parse')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            lemmas: [],
+            segments: [{ start: 0, duration: 2, text: '今日' }]
+          })
+        });
+      }
+      if (urlStr.includes('/api/media/tokenize')) {
+        tokeniseCalled++;
+        if (tokeniseCalled === 1) {
+          // Первая попытка возвращает сбой
+          return Promise.resolve({
+            ok: false,
+            status: 500
+          });
+        } else {
+          // Вторая попытка успешна
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              tokens: [{ surface: '今日', pos: '名詞', lemma: '今日', reading: 'キョウ' }]
+            })
+          });
+        }
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
+    // Нам нужен mockTime, чтобы активный сегмент переключился и сработал tokenize
+    mockPlayerInstance.getCurrentTime.mockReturnValue(1.0);
+
+    const { container: containerOffline } = render(
+      <MediaInteractivePlayer
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="NHK Easy News"
+        onClose={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('今日')).toBeInTheDocument();
+    });
+
+    // Ожидаем ошибку токенизации и переключение в офлайн
+    await waitFor(() => {
+      const offlineDot = screen.getByTestId('tokenizer-status-dot');
+      expect(offlineDot.className).toContain('statusDotOffline');
+    });
+
+    // Кликаем по офлайн-точке для повторной попытки
+    const offlineDot = screen.getByTestId('tokenizer-status-dot');
+    fireEvent.click(offlineDot);
+
+    // Должна сработать успешная повторная попытка токенизации и точка станет зеленой
+    await waitFor(() => {
+      expect(offlineDot.className).toContain('statusDotOnline');
+    });
   });
 });

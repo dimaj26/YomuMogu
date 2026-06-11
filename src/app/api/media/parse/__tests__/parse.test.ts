@@ -118,44 +118,80 @@ describe('API Route POST /api/media/parse', () => {
     expect(data.cached).toBe(false);
   });
 
-  it('should scrape YouTube watch page, fetch caption XML, tokenize, and cache results', async () => {
-    const mockWatchPageHtml = `
-      <html>
-        <body>
-          <script>
-            var ytInitialPlayerResponse = {
-              "captions": {
-                "playerCaptionsTracklistRenderer": {
-                  "captionTracks": [
-                    {
-                      "baseUrl": "https://www.youtube.com/api/timedtext?v=testVideoId&lang=ja",
-                      "languageCode": "ja",
-                      "vssId": ".ja"
-                    }
-                  ]
-                }
+  const mockWatchPageHtml = `
+    <html>
+      <body>
+        <script>
+          var ytInitialPlayerResponse = {
+            "captions": {
+              "playerCaptionsTracklistRenderer": {
+                "captionTracks": [
+                  {
+                    "baseUrl": "https://www.youtube.com/api/timedtext?v=testVideoI1&lang=ja",
+                    "languageCode": "ja",
+                    "vssId": ".ja"
+                  }
+                ]
               }
-            };
-          </script>
-        </body>
-      </html>
-    `;
+            }
+          };
+        </script>
+      </body>
+    </html>
+  `;
 
-    const mockXmlText = `<?xml version="1.0" encoding="utf-8" ?>
-      <transcript>
-        <text start="0.0" dur="2.0">こんにちは。</text>
-        <text start="2.0" dur="2.0">日本に行きます。</text>
-      </transcript>
-    `;
+  const mockXmlText = `<?xml version="1.0" encoding="utf-8" ?>
+    <transcript>
+      <text start="0.0" dur="2.0">こんにちは。</text>
+      <text start="2.0" dur="2.0">日本に行きます。</text>
+    </transcript>
+  `;
 
-    const mockLemmas = ['こんにちは', '日本', '行く'];
+  const mockLemmas = ['こんにちは', '日本', '行く'];
 
+  function setupFetchMock({
+    watchPageOk = true,
+    watchPageHtml = mockWatchPageHtml,
+    playerOk = true,
+    xmlOk = true,
+    xmlText = mockXmlText,
+    tokenizeOk = true,
+    tokenizeLemmas = mockLemmas,
+    tokenizeError = null as Error | null
+  } = {}) {
     globalThis.fetch = vi.fn().mockImplementation(async (url: string) => {
       const urlStr = String(url);
       if (urlStr.includes('watch?v=')) {
+        if (!watchPageOk) {
+          return { ok: false, status: 404, statusText: 'Not Found' } as Response;
+        }
         return {
           ok: true,
-          text: async () => mockWatchPageHtml,
+          headers: {
+            getSetCookie: () => ['VISITOR_INFO1_LIVE=abc', 'YSC=xyz']
+          },
+          text: async () => watchPageHtml,
+        } as Response;
+      }
+      if (urlStr.includes('/youtubei/v1/player')) {
+        if (!playerOk) {
+          return { ok: false, status: 400, statusText: 'Bad Request' } as Response;
+        }
+        return {
+          ok: true,
+          json: async () => ({
+            captions: {
+              playerCaptionsTracklistRenderer: {
+                captionTracks: [
+                  {
+                    baseUrl: 'https://www.youtube.com/api/timedtext?v=testVideoI1&lang=ja',
+                    languageCode: 'ja',
+                    vssId: '.ja'
+                  }
+                ]
+              }
+            }
+          })
         } as Response;
       }
       if (urlStr.includes('fmt=json3')) {
@@ -166,23 +202,36 @@ describe('API Route POST /api/media/parse', () => {
         } as Response;
       }
       if (urlStr.includes('timedtext')) {
+        if (!xmlOk) {
+          return { ok: false, status: 500, statusText: 'Error' } as Response;
+        }
         return {
           ok: true,
-          text: async () => mockXmlText,
+          text: async () => xmlText,
         } as Response;
       }
       if (urlStr.includes('tokenize')) {
+        if (tokenizeError) {
+          throw tokenizeError;
+        }
+        if (!tokenizeOk) {
+          return { ok: false, status: 500, text: async () => 'Tokenize Error' } as Response;
+        }
         return {
           ok: true,
-          json: async () => ({ lemmas: mockLemmas }),
+          json: async () => ({ lemmas: tokenizeLemmas }),
         } as Response;
       }
       return { ok: false, status: 500 } as Response;
     });
+  }
+
+  it('should scrape YouTube watch page, fetch caption XML, tokenize, and cache results', async () => {
+    setupFetchMock();
 
     const request1 = new NextRequest('http://localhost/api/media/parse', {
       method: 'POST',
-      body: JSON.stringify({ url: 'https://www.youtube.com/watch?v=testVideoId' }),
+      body: JSON.stringify({ url: 'https://www.youtube.com/watch?v=testVideoI1' }),
     });
 
     const response1 = await parsePost(request1);
@@ -191,14 +240,15 @@ describe('API Route POST /api/media/parse', () => {
     expect(data1.success).toBe(true);
     expect(data1.lemmas).toEqual(mockLemmas);
     expect(data1.cached).toBe(false);
+    expect(data1.source).toBe('scraped');
 
-    // Сбрасываем счетчик вызовов fetch и мокаем для второго запроса (проверить кэширование)
+    // Проверяем кэширование при повторном запросе
     vi.clearAllMocks();
     globalThis.fetch = vi.fn();
 
     const request2 = new NextRequest('http://localhost/api/media/parse', {
       method: 'POST',
-      body: JSON.stringify({ url: 'https://www.youtube.com/watch?v=testVideoId' }),
+      body: JSON.stringify({ url: 'https://www.youtube.com/watch?v=testVideoI1' }),
     });
 
     const response2 = await parsePost(request2);
@@ -206,16 +256,32 @@ describe('API Route POST /api/media/parse', () => {
     const data2 = await response2.json();
     expect(data2.success).toBe(true);
     expect(data2.lemmas).toEqual(mockLemmas);
-    expect(data2.cached).toBe(true); // Должно вернуться из in-memory кэша
-    expect(globalThis.fetch).not.toHaveBeenCalled(); // fetch не должен вызываться
+    expect(data2.cached).toBe(true);
+    expect(data2.source).toBe('cache');
+    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
-  it('should use static pre-generated transcripts fallback for a known videoId (e.g. Jnea4HbYIso) without scraping YouTube', async () => {
-    const mockLemmas = ['友達', '学生', '先生'];
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ lemmas: mockLemmas }),
+  it('should prioritize scraping over pregenerated transcripts', async () => {
+    // 1VVZFkqYwAE есть в pregenerated, но мы эмулируем успешный скрейпинг
+    setupFetchMock();
+
+    const request = new NextRequest('http://localhost/api/media/parse', {
+      method: 'POST',
+      body: JSON.stringify({ url: 'https://www.youtube.com/watch?v=1VVZFkqYwAE' }),
     });
+
+    const response = await parsePost(request);
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(data.source).toBe('scraped');
+    // Должны вернуться скрейпленные сегменты, а не предсгенерированные
+    expect(data.segments[0].text).toContain('こんにちは。');
+  });
+
+  it('should fallback to pregenerated transcripts if scraping fails', async () => {
+    // Jnea4HbYIso есть в pregenerated, эмулируем ошибку скрейпинга (например, watch page 404)
+    setupFetchMock({ watchPageOk: false });
 
     const request = new NextRequest('http://localhost/api/media/parse', {
       method: 'POST',
@@ -226,17 +292,63 @@ describe('API Route POST /api/media/parse', () => {
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data.success).toBe(true);
-    expect(data.lemmas).toEqual(mockLemmas);
+    expect(data.source).toBe('pregenerated');
+    // Должны вернуться предсгенерированные сегменты
     expect(data.segments.length).toBeGreaterThan(0);
-    expect(data.cached).toBe(false);
+    expect(data.segments[0].text).toContain('年末');
+  });
 
-    // Убеждаемся, что fetch был вызван ровно 1 раз (только для токенизации), а не для парсинга YouTube watch page
-    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+  it('should bypass cache when forceScrape is true', async () => {
+    setupFetchMock();
+
+    // Первый запрос, чтобы положить в кэш
+    const request1 = new NextRequest('http://localhost/api/media/parse', {
+      method: 'POST',
+      body: JSON.stringify({ url: 'https://www.youtube.com/watch?v=cacheTestV1' }),
+    });
+    await parsePost(request1);
+
+    // Второй запрос с forceScrape: true
+    vi.clearAllMocks();
+    setupFetchMock();
+
+    const request2 = new NextRequest('http://localhost/api/media/parse', {
+      method: 'POST',
+      body: JSON.stringify({
+        url: 'https://www.youtube.com/watch?v=cacheTestV1',
+        forceScrape: true
+      }),
+    });
+
+    const response2 = await parsePost(request2);
+    expect(response2.status).toBe(200);
+    const data2 = await response2.json();
+    expect(data2.success).toBe(true);
+    expect(data2.cached).toBe(false); // Должен обойти кэш
+    expect(data2.source).toBe('scraped');
+    expect(globalThis.fetch).toHaveBeenCalled(); // Fetch должен быть вызван снова
+  });
+
+  it('should return source and hasWords in response', async () => {
+    setupFetchMock();
+
+    const request = new NextRequest('http://localhost/api/media/parse', {
+      method: 'POST',
+      body: JSON.stringify({ url: 'https://www.youtube.com/watch?v=testVideoI2' }),
+    });
+
+    const response = await parsePost(request);
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data.source).toBe('scraped');
+    expect(typeof data.hasWords).toBe('boolean');
   });
 
   it('should return 200 with segments, empty lemmas, and tokenizerDown: true when tokenizer is down but segments are found', async () => {
-    // Мокаем fetch для MeCab токенизатора, возвращая ошибку подключения
-    globalThis.fetch = vi.fn().mockRejectedValueOnce(new Error('Connection refused'));
+    // MeCab токенизатор падает с ошибкой подключения
+    setupFetchMock({
+      tokenizeError: new Error('Connection refused')
+    });
 
     const request = new NextRequest('http://localhost/api/media/parse', {
       method: 'POST',
@@ -253,11 +365,10 @@ describe('API Route POST /api/media/parse', () => {
   });
 
   it('should return 502 with distinct error message when YouTube video is unavailable', async () => {
-    // Имитируем падение скрапера YouTube watch page с ошибкой недоступности видео
-    globalThis.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      text: async () => `<html><body><div id="player-unavailable">This video is unavailable.</div></body></html>`,
-    } as Response);
+    // Имитируем падение скрапера с ошибкой недоступности
+    setupFetchMock({
+      watchPageHtml: `<html><body><div id="player-unavailable">This video is unavailable.</div></body></html>`
+    });
 
     const request = new NextRequest('http://localhost/api/media/parse', {
       method: 'POST',

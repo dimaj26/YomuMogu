@@ -2,6 +2,21 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.42.0] - 2026-06-11
+
+### Added
+- **MeCab Tokenizer Status Indicator Dot**: Added a visual status indicator dot in the player header next to the title (green for active tokenization, gray for tokenizerDown status). Clicking the gray dot clears the active segment tokenization cache and retries morphological analysis.
+- **Data Attributes for E2E Assertions**: Added `data-has-words` and `data-yt-state` attributes to the player's root modal container to facilitate automated timing and state checks.
+- **Player Component Tests**: Added unit test coverage for status dot states, retry-on-click behaviour, wordless `cc_load_policy: 1` assignments, and extension upgrade-merge segment replacement logic.
+- **Scraper Priority Unit Tests**: Created unit tests verifying real-time scraping priority over pregenerated fallbacks, fallback behaviour upon scraping failures, and cache-bypassing using the `forceScrape: true` flag.
+- **Transcript Scraper and Generator Script**: Implemented `scripts/generate-transcripts.mjs` to fetch real Japanese transcripts and word-level timings from YouTube, ensuring that all recommended media files are sourced from real YouTube caption data.
+- **Fidelity and Feed Language Integration Tests**: Added `feed-language.integration.test.ts` and `transcript-fidelity.integration.test.ts` to verify feed sanity and that pregenerated transcripts correspond to actual scraped timed text.
+
+### Changed
+- **CC Load Policy Word-Availability Check (RC-C)**: YouTube player initialization now uses `cc_load_policy: 1` if the loaded segments do not contain word-level timings, allowing the interceptor extension to run.
+- **Extension Upgrade-Merge (RC-C)**: Upgraded browser extension segment adoption logic to allow replacing existing server segments if the server segments lack word-level timings and the extension segments have them.
+- **E2E Playwright Strict Mode Fix**: Added `.first()` to Playwright locator references in `tests/e2e/media-live.spec.ts` to resolve strict-mode locator violations when multiple words are highlighted during video playback.
+
 ## [1.41.0] - 2026-06-11
 
 ### Added

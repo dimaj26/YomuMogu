@@ -54,7 +54,7 @@ describe('Parse Media Integration Test (Real MeCab)', () => {
     expect(data.segments.length).toBeGreaterThan(0);
   });
 
-  it('should return 502/504 when the MeCab tokenizer microservice is offline', async () => {
+  it('should return 200 with tokenizerDown: true when the MeCab tokenizer microservice is offline', async () => {
     // Временно подменяем URL токенизатора на несуществующий порт
     const originalUrl = process.env.TOKENIZER_URL;
     process.env.TOKENIZER_URL = 'http://127.0.0.1:9999';
@@ -63,16 +63,18 @@ describe('Parse Media Integration Test (Real MeCab)', () => {
       const request = new NextRequest('http://localhost/api/media/parse', {
         method: 'POST',
         body: JSON.stringify({
-          url: 'https://www.youtube.com/watch?v=LqV2u750oA8'
+          url: 'https://www.youtube.com/watch?v=Jnea4HbYIso'
         }),
       });
 
       const response = await parsePost(request);
       
-      // Должно вернуть статус 503 Service Unavailable
-      expect(response.status).toBe(503);
+      expect(response.status).toBe(200);
       const data = await response.json();
-      expect(data.error).toContain('недоступен');
+      expect(data.success).toBe(true);
+      expect(data.tokenizerDown).toBe(true);
+      expect(data.lemmas).toEqual([]);
+      expect(data.segments.length).toBeGreaterThan(0);
     } finally {
       // Восстанавливаем оригинальный URL
       if (originalUrl) {

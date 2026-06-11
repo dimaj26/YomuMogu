@@ -26,13 +26,70 @@ function decodeHtmlEntities(str: string): string {
 }
 
 /**
- * Скачивает и парсит XML транскрипта по списку дорожек
+ * Вспомогательная функция для получения списка дорожек субтитров и сессионных кук через InnerTube API
  */
-async function fetchAndParseTranscriptXml(tracks: any[], videoId: string): Promise<string> {
-  // Ищем сначала точную японскую дорожку (ja), затем автоперевод/автогенерацию (ja или a.ja)
-  const jaTrack = tracks.find(t => t.languageCode === 'ja') || 
-                  tracks.find(t => t.languageCode?.startsWith('ja')) ||
-                  tracks.find(t => t.vssId?.includes('.ja'));
+async function getTracksAndCookies(videoId: string): Promise<{ tracks: any[]; cookieString: string }> {
+  const url = `https://www.youtube.com/watch?v=${videoId}&hl=ja`;
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
+  };
+
+  logger.info(`[YouTube Scraper] Скачивание страницы видео ${videoId} для получения кук`);
+  const response = await fetch(url, { headers });
+  if (!response.ok) {
+    throw new Error(`Не удалось загрузить страницу YouTube: ${response.statusText}`);
+  }
+  const html = await response.text();
+
+  // Проверяем доступность видео
+  if (
+    html.includes('player-unavailable') ||
+    html.includes('playabilityStatus:{"status":"ERROR"') ||
+    html.includes('playabilityStatus:{"status":"UNPLAYABLE"') ||
+    html.includes('playabilityStatus:{"status":"LOGIN_REQUIRED"')
+  ) {
+    throw new Error('Видео недоступно или удалено (ошибка воспроизведения YouTube)');
+  }
+
+  const setCookies = response.headers.getSetCookie ? response.headers.getSetCookie() : [];
+  const cookieString = setCookies.map(c => c.split(';')[0]).join('; ');
+
+  logger.info(`[YouTube Scraper] Запрос к InnerTube Player API для видео ${videoId}`);
+  const playerUrl = 'https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
+  const playerRes = await fetch(playerUrl, {
+    method: 'POST',
+    headers: {
+      ...headers,
+      'Content-Type': 'application/json',
+      'Cookie': cookieString
+    },
+    body: JSON.stringify({
+      context: {
+        client: {
+          clientName: 'ANDROID',
+          clientVersion: '20.10.38'
+        }
+      },
+      videoId: videoId
+    })
+  });
+
+  if (!playerRes.ok) {
+    throw new Error(`Не удалось вызвать player API: ${playerRes.statusText}`);
+  }
+
+  const playerJson = await playerRes.json();
+  const tracks = playerJson?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
+  return { tracks, cookieString };
+}
+
+/**
+ * Скачивает и парсит XML транскрипта по списку дорожек с использованием кук
+ */
+async function fetchAndParseTranscriptXml(tracks: any[], videoId: string, cookieString: string): Promise<string> {
+  const jaTrack = tracks.find(t => t.languageCode === 'ja' && t.kind !== 'asr') ||
+                  tracks.find(t => t.languageCode === 'ja' || t.languageCode?.startsWith('ja') || t.vssId?.includes('.ja'));
                   
   if (!jaTrack || !jaTrack.baseUrl) {
     throw new Error('Японская дорожка субтитров (ja) не найдена для этого видео');
@@ -40,7 +97,17 @@ async function fetchAndParseTranscriptXml(tracks: any[], videoId: string): Promi
   
   logger.info(`[YouTube Scraper] Запрос XML субтитров по ссылке для видео ${videoId}`);
   
-  const xmlRes = await fetch(jaTrack.baseUrl);
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
+  };
+
+  const xmlRes = await fetch(jaTrack.baseUrl, {
+    headers: {
+      ...headers,
+      'Cookie': cookieString
+    }
+  });
   if (!xmlRes.ok) {
     throw new Error(`Не удалось загрузить XML субтитров: ${xmlRes.statusText}`);
   }
@@ -66,22 +133,34 @@ async function fetchAndParseTranscriptXml(tracks: any[], videoId: string): Promi
 }
 
 /**
- * Скачивает и парсит транскрипт (пытается JSON3 с пословными таймингами, при неудаче фолбэк на XML)
+ * Скачивает и парсит транскрипт с использованием кук (пытается JSON3 с пословными таймингами, при неудаче фолбэк на XML)
  */
-async function fetchAndParseTranscriptToSegments(tracks: any[], videoId: string): Promise<SubtitleSegment[]> {
-  const jaTrack = tracks.find(t => t.languageCode === 'ja') || 
-                  tracks.find(t => t.languageCode?.startsWith('ja')) ||
-                  tracks.find(t => t.vssId?.includes('.ja'));
+async function fetchAndParseTranscriptToSegments(tracks: any[], videoId: string, cookieString: string): Promise<SubtitleSegment[]> {
+  const jaTrack = tracks.find(t => t.languageCode === 'ja' && t.kind !== 'asr') ||
+                  tracks.find(t => t.languageCode === 'ja' || t.languageCode?.startsWith('ja') || t.vssId?.includes('.ja'));
                   
   if (!jaTrack || !jaTrack.baseUrl) {
     throw new Error('Японская дорожка субтитров (ja) не найдена для этого видео');
   }
 
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
+  };
+
   // 1. Пробуем получить JSON3 для извлечения пословных таймингов
   try {
-    const json3Url = jaTrack.baseUrl + '&fmt=json3';
+    const timedtextParsed = new URL(jaTrack.baseUrl);
+    timedtextParsed.searchParams.set('fmt', 'json3');
+    const json3Url = timedtextParsed.toString();
+
     logger.info(`[YouTube Scraper] Попытка получения субтитров в формате JSON3 для видео ${videoId}`);
-    const json3Res = await fetch(json3Url);
+    const json3Res = await fetch(json3Url, {
+      headers: {
+        ...headers,
+        'Cookie': cookieString
+      }
+    });
     if (json3Res.ok) {
       const jsonData = await json3Res.json();
       const segments = parseJson3ToSegments(jsonData);
@@ -98,7 +177,12 @@ async function fetchAndParseTranscriptToSegments(tracks: any[], videoId: string)
   // 2. Фолбэк на XML-версию
   logger.info(`[YouTube Scraper] Запрос XML субтитров по ссылке для видео ${videoId} (сегменты)`);
   
-  const xmlRes = await fetch(jaTrack.baseUrl);
+  const xmlRes = await fetch(jaTrack.baseUrl, {
+    headers: {
+      ...headers,
+      'Cookie': cookieString
+    }
+  });
   if (!xmlRes.ok) {
     throw new Error(`Не удалось загрузить XML субтитров: ${xmlRes.statusText}`);
   }
@@ -127,108 +211,15 @@ async function fetchAndParseTranscriptToSegments(tracks: any[], videoId: string)
  * Получает текстовые субтитры для видео YouTube по его ID
  */
 export async function getYoutubeTranscript(videoId: string): Promise<string> {
-  const url = `https://www.youtube.com/watch?v=${videoId}&hl=ja`;
-  
-  logger.info(`[YouTube Scraper] Скачивание страницы видео ${videoId} для поиска субтитров`);
-  
-  const headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
-  };
-  
-  const response = await fetch(url, { headers });
-  if (!response.ok) {
-    throw new Error(`Не удалось загрузить страницу YouTube: ${response.statusText}`);
-  }
-  
-  const html = await response.text();
-  
-  // Проверяем доступность видео на странице
-  if (html.includes('player-unavailable') || html.includes('playabilityStatus":{"status":"ERROR"') || html.includes('playabilityStatus":{"status":"UNPLAYABLE"') || html.includes('playabilityStatus":{"status":"LOGIN_REQUIRED"')) {
-    throw new Error('Видео недоступно или удалено (ошибка воспроизведения YouTube)');
-  }
-  
-  // Вариант 1: Ищем captionTracks in JSON-конфигурации страницы
-  const captionTracksMatch = html.match(/"captionTracks":\s*(\[[^\]]+\])/);
-  if (captionTracksMatch) {
-    try {
-      const tracks = JSON.parse(captionTracksMatch[1]);
-      if (Array.isArray(tracks) && tracks.length > 0) {
-        return await fetchAndParseTranscriptXml(tracks, videoId);
-      }
-    } catch (err: any) {
-      logger.warn('[YouTube Scraper] Ошибка разбора captionTracks, пробуем ytInitialPlayerResponse:', err);
-    }
-  }
-  
-  // Вариант 2: Ищем ytInitialPlayerResponse
-  const playerResponseMatch = html.match(/ytInitialPlayerResponse\s*=\s*({.*?});/);
-  if (playerResponseMatch) {
-    try {
-      const playerResponse = JSON.parse(playerResponseMatch[1]);
-      const tracks = playerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-      if (tracks && Array.isArray(tracks)) {
-        return await fetchAndParseTranscriptXml(tracks, videoId);
-      }
-    } catch (e) {
-      logger.warn('[YouTube Scraper] Ошибка парсинга ytInitialPlayerResponse:', e);
-    }
-  }
-  
-  throw new Error('На этой странице YouTube не найдено доступных субтитров');
+  const { tracks, cookieString } = await getTracksAndCookies(videoId);
+  return await fetchAndParseTranscriptXml(tracks, videoId, cookieString);
 }
 
 /**
  * Получает временные сегменты субтитров для видео YouTube по его ID
  */
 export async function getYoutubeTranscriptSegments(videoId: string): Promise<SubtitleSegment[]> {
-  const url = `https://www.youtube.com/watch?v=${videoId}&hl=ja`;
-  
-  logger.info(`[YouTube Scraper] Скачивание страницы видео ${videoId} для поиска субтитров (сегменты)`);
-  
-  const headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
-  };
-  
-  const response = await fetch(url, { headers });
-  if (!response.ok) {
-    throw new Error(`Не удалось загрузить страницу YouTube: ${response.statusText}`);
-  }
-  
-  const html = await response.text();
-  
-  // Проверяем доступность видео на странице
-  if (html.includes('player-unavailable') || html.includes('playabilityStatus":{"status":"ERROR"') || html.includes('playabilityStatus":{"status":"UNPLAYABLE"') || html.includes('playabilityStatus":{"status":"LOGIN_REQUIRED"')) {
-    throw new Error('Видео недоступно или удалено (ошибка воспроизведения YouTube)');
-  }
-  
-  // Вариант 1: Ищем captionTracks
-  const captionTracksMatch = html.match(/"captionTracks":\s*(\[[^\]]+\])/);
-  if (captionTracksMatch) {
-    try {
-      const tracks = JSON.parse(captionTracksMatch[1]);
-      if (Array.isArray(tracks) && tracks.length > 0) {
-        return await fetchAndParseTranscriptToSegments(tracks, videoId);
-      }
-    } catch (err: any) {
-      logger.warn('[YouTube Scraper] Ошибка разбора captionTracks для сегментов, пробуем ytInitialPlayerResponse:', err);
-    }
-  }
-  
-  // Вариант 2: Ищем ytInitialPlayerResponse
-  const playerResponseMatch = html.match(/ytInitialPlayerResponse\s*=\s*({.*?});/);
-  if (playerResponseMatch) {
-    try {
-      const playerResponse = JSON.parse(playerResponseMatch[1]);
-      const tracks = playerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-      if (tracks && Array.isArray(tracks)) {
-        return await fetchAndParseTranscriptToSegments(tracks, videoId);
-      }
-    } catch (e) {
-      logger.warn('[YouTube Scraper] Ошибка парсинга ytInitialPlayerResponse для сегментов:', e);
-    }
-  }
-  
-  throw new Error('На этой странице YouTube не найдено доступных субтитров');
+  const { tracks, cookieString } = await getTracksAndCookies(videoId);
+  return await fetchAndParseTranscriptToSegments(tracks, videoId, cookieString);
 }
+

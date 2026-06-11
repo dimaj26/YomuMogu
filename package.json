@@ -13,8 +13,10 @@
     "test:integration:gemini": "vitest run src/lib/gemini/__tests__/ --config vitest.integration.config.ts",
     "test:integration:media": "vitest run src/app/api/media/ --config vitest.integration.config.ts",
     "test:anki": "vitest run src/plugins/anki/__tests__/sync.integration.test.ts --config vitest.integration.config.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "transcripts:generate": "node scripts/generate-transcripts.mjs"
   },
+
   "dependencies": {
     "@google/genai": "^2.4.0",
     "dexie": "^4.4.2",

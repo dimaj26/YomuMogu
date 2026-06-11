@@ -48,6 +48,8 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
 
   // Флаг: сервер уже вернул сегменты (для выбора cc_load_policy при инициализации плеера)
   const hasServerSegmentsRef = useRef<boolean>(false);
+  const segmentsRef = useRef<SubtitleSegment[]>([]);
+  segmentsRef.current = segments;
   // Состояние кнопки CC (YouTube субтитры): true = показаны
   const [ccEnabled, setCcEnabled] = useState<boolean>(false);
 
@@ -130,12 +132,19 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
 
         const receivedSegments = event.data.segments;
         if (Array.isArray(receivedSegments) && receivedSegments.length > 0) {
-          // Принимаем субтитры от расширения только если сервер ещё не вернул свои
-          // (приоритет: pregenerated/scraped > extension > none) — предотвращает визуальный мерцание
-          if (hasServerSegmentsRef.current) {
-            console.log('[Player] Игнорируем субтитры расширения: сервер уже предоставил сегменты');
+          // Принимаем субтитры от расширения, если текущие сегменты пусты или не имеют пословных таймингов, а расширение прислало с пословными таймингами
+          const currentHasWords = segmentsRef.current.some(s => s.words && s.words.length > 0);
+          const receivedHasWords = receivedSegments.some((s: any) => s.words && s.words.length > 0);
+
+          if (hasServerSegmentsRef.current && currentHasWords) {
+            console.log('[Player] Игнорируем субтитры расширения: сервер предоставил сегменты с пословными таймингами');
             return;
           }
+          if (hasServerSegmentsRef.current && !receivedHasWords) {
+            console.log('[Player] Игнорируем субтитры расширения без пословных таймингов, так как есть серверные');
+            return;
+          }
+
           setSegments(regroupIntoSentences(normalizeSegments(receivedSegments)));
           setError(null);
           setIsLoading(false);
@@ -161,9 +170,9 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
         videoId: ytVideoId,
         playerVars: {
           origin: typeof window !== 'undefined' ? window.location.origin : '',
-          // cc_load_policy=0: сервер уже предоставил субтитры, YouTube CC не нужны
-          // cc_load_policy=1: субтитров нет, включаем CC чтобы расширение могло их перехватить
-          cc_load_policy: hasServerSegmentsRef.current ? 0 : 1,
+          // cc_load_policy=0: сервер уже предоставил субтитры с пословными таймингами, YouTube CC не нужны
+          // cc_load_policy=1: субтитров нет или они без пословных таймингов, включаем CC чтобы расширение могло их перехватить
+          cc_load_policy: (hasServerSegmentsRef.current && segments.some(s => s.words && s.words.length > 0)) ? 0 : 1,
           rel: 0,
         },
         events: {
@@ -486,13 +495,37 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
   };
 
   return (
-    <div className={styles.modalOverlay}>
+    <div 
+      className={styles.modalOverlay}
+      data-has-words={segments.some(s => s.words && s.words.length > 0) ? "true" : "false"}
+      data-yt-state={ytPlayerRef.current ? "loaded" : "unloaded"}
+    >
       <div className={styles.modalContent}>
         {/* Шапка */}
         <header className={styles.header}>
           <div className={styles.titleInfo}>
             <Sparkles size={20} className={styles.sparkleIcon} />
             <h2 className={styles.title}>{title}</h2>
+            <div 
+              data-testid="tokenizer-status-dot"
+              className={`${styles.statusDot} ${tokenizerDown ? styles.statusDotOffline : styles.statusDotOnline}`}
+              title={tokenizerDown ? 'Токенизатор не запущен. Нажмите для повторной попытки.' : 'Разбор слов активен'}
+              onClick={() => {
+                if (tokenizerDown) {
+                  setTokenizerDown(false);
+                  if (activeSegmentIndex !== -1) {
+                    const text = segments[activeSegmentIndex].text;
+                    setTokenizedCache(prev => {
+                      const copy = { ...prev };
+                      delete copy[text];
+                      return copy;
+                    });
+                  } else {
+                    loadTranscript();
+                  }
+                }
+              }}
+            />
           </div>
           <div className={styles.headerActions}>
             {/* Кнопка CC: управляет субтитрами YouTube через недокументированный API (best-effort) */}
