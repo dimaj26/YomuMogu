@@ -9,7 +9,12 @@ All notable changes to the YomuMogu project are documented in this file. The for
 - **Extension Priority Guard**: `MediaInteractivePlayer` now ignores `YOMUMOGU_YT_SUBTITLES` messages from the Chrome extension if the server already provided segments (`hasServerSegmentsRef` flag). Priority order: `pregenerated` > `scraped` > `upload` > `extension`.
 - **CC Toggle Button**: Added a `CC` button in the player header (visible for YouTube URLs only) that calls `player.loadModule('captions')` / `player.unloadModule('captions')` via a best-effort try/catch to show/hide native YouTube captions independently.
 - **Extension Source Tagging**: `src/extension/background.js` now tags all relayed segments with `source: 'extension'` before `postMessage` dispatch.
-- **Unit Tests**: 3 new tests in `MediaInteractivePlayer.test.tsx` covering `cc_load_policy=0` (server segments), `cc_load_policy=1` (empty), and CC button toggle with graceful no-op when `loadModule`/`unloadModule` absent. Total: 295 tests / 46 files.
+- **Subtitle Timing Robustness (T-1)**: Implemented sticky timing where segments stay active until the next segment starts. Created `normalizeSegments` utility in `src/lib/media/parser.ts` to clamp overlaps, cap the last segment's duration, and handle gaps by rendering the previous subtitle line in a dimmed state (`.dimmedLine`).
+- **Tokenizer Resilience (T-2)**: Refactored `/api/media/tokenize` endpoint to return a 200 OK status with `tokenizationSkipped: true` and empty arrays when the MeCab tokenizer microservice is offline, preventing 502/500 errors. Added a `/health` endpoint to `src/services/tokenizer/server.py` and a non-blocking UI warning badge when tokenization is skipped.
+- **Karaoke Subtitles (T-3)**:
+  - *Layer 1 (Word-Level Highlight)*: Implemented json3 parser in `src/lib/media/json3.ts` to extract per-word `offsetMs` from `segs[].tOffsetMs`. Upgraded YouTube transcription scraper in `src/lib/media/youtube.ts` to fetch json3 by default with XML fallback. Added active word highlighting (`.activeWord`) in the player mapped to MeCab token character offsets.
+  - *Layer 2 (Sentence Regrouping)*: Added `regroupIntoSentences` utility in `src/lib/media/sentences.ts` to merge consecutive segments until Japanese terminal punctuation (。？！) with a maximum safety cap of 90 characters or a 15-second duration.
+- **Unit Tests**: Added comprehensive test coverage (total 295 tests / 46 files) covering sticky timing, tokenizer gracefully down response, json3 parsing, sentence regrouping, and conditional `cc_load_policy`.
 
 ## [1.40.0] - 2026-06-11
 

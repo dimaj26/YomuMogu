@@ -180,9 +180,9 @@ src/
 | `plugins/anki/__tests__/filter.test.ts` | Unit tests for Anki card status filter |
 | `plugins/anki/__tests__/sync.integration.test.ts` | Integration tests for bilateral Anki sync (requires local Anki Desktop) |
 | `extension/manifest.json` | Browser extension manifest configuration |
-| `extension/background.js` | Extension background worker intercepting YouTube subtitles requests |
+| `extension/background.js` | Extension background worker intercepting YouTube subtitles requests; tags relayed segments with `source: 'extension'` |
 | `extension/content.js` | Extension content script relaying messages to YomuMogu page |
-| `extension/convert.js` | Modular JSON3 subtitle format converter for browser extension |
+| `extension/convert.js` | Modular JSON3 subtitle format converter preserving per-word `offsetMs` from `tOffsetMs` |
 | `__tests__/extension-convert.test.ts` | Unit tests for Chrome extension subtitle converter |
 | `hooks/useApiCall.ts` | Custom React hook consolidating client-side loading, error state, and retry logic |
 | `hooks/__tests__/useApiCall.test.ts` | Unit tests for useApiCall hook |
@@ -206,12 +206,16 @@ src/
 | `app/api/media/tokenize/route.ts` | POST endpoint proxying tokenization to local MeCab microservice |
 | `app/api/media/tokenize/__tests__/tokenize.test.ts` | Unit tests for tokenize endpoint |
 | `app/api/media/tokenize/__tests__/tokenize.integration.test.ts` | Integration tests for tokenize media endpoint against running MeCab |
-| `lib/media/youtube.ts` | Zero-dependency Japanese YouTube caption extractor |
-| `lib/media/parser.ts` | SRT/VTT subtitle file parser and duration rounding utility |
+| `lib/media/youtube.ts` | Zero-dependency Japanese YouTube caption extractor; json3-first (`fmt=json3` → `parseJson3ToSegments`), XML fallback with Russian logs per path |
+| `lib/media/parser.ts` | SRT/VTT subtitle file parser; `SubtitleSegment` interface (incl. optional `words[]`, `source`); `normalizeSegments` — sticky timing, gap-fill, overlap clamp, last-segment duration cap |
+| `lib/media/json3.ts` | TypeScript json3 subtitle parser: `parseJson3ToSegments(data)` preserving per-word `offsetMs` from `segs[].tOffsetMs` |
+| `lib/media/sentences.ts` | Pure `regroupIntoSentences(segments)` — merges consecutive segments until Japanese terminal punctuation (。？！) with 90-char / 15-second safety caps; rebases `words[]` offsetMs |
 | `lib/media/availability.ts` | oEmbed/caption availability checker for YouTube videos |
 | `lib/media/__tests__/availability.test.ts` | Unit tests for media availability helpers |
+| `lib/media/__tests__/json3.test.ts` | Unit tests for json3 subtitle parser |
+| `lib/media/__tests__/sentences.test.ts` | Unit tests for sentence regrouping logic |
 | `lib/media/__tests__/feed.integration.test.ts` | Integration tests verifying oEmbed embedding and caption tracks in media feed |
-| `components/MediaInteractivePlayer.tsx` | Subtitle-synchronized player component with interactive definitions |
+| `components/MediaInteractivePlayer.tsx` | Subtitle-synchronized player component: sticky segment matching, karaoke word-level highlight (`activeWordIndex` + char-range overlap), sentence regrouping pipeline, CC dedup (`cc_load_policy` conditional, extension priority guard, CC toggle button) |
 | `components/__tests__/MediaInteractivePlayer.test.tsx` | Unit tests for MediaInteractivePlayer component |
 | `hooks/useMediaRecommendation.ts` | Hook calculating Comprehension Rate (CR) and FSRS-due vocabulary matches for videos |
 | `hooks/__tests__/useMediaRecommendation.test.ts` | Unit tests for useMediaRecommendation hook |
@@ -245,7 +249,7 @@ src/
 | `app/api/anki/setup-deck/route.ts` | POST endpoint to create a YomuMogu deck and note model in Anki if absent |
 | `app/api/anki/setup-deck/__tests__/setup-deck.test.ts` | Unit tests for setup-deck route |
 | `app/api/words/route.ts` | GET endpoint resolving words via active `WordSource` plugin or local IndexedDB fallback |
-| `services/tokenizer/server.py` | FastAPI MeCab microservice providing morphological analysis on port 8000 |
+| `services/tokenizer/server.py` | FastAPI MeCab microservice providing morphological analysis on port 8000; `GET /health` returns `{status:'ok'\|'error'}` |
 | `services/tokenizer/Dockerfile` | Docker container definition for the MeCab tokenizer service |
 
 
