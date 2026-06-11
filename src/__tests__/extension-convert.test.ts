@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { convertJson3ToSegments } from '../convert.js';
+import { convertJson3ToSegments } from '../extension/convert.js';
 
 describe('convertJson3ToSegments', () => {
   it('конвертирует json3 events в SubtitleSegment[] с корректными start/duration', () => {
