@@ -36,6 +36,12 @@ def verify_api_key(api_key: str = Security(api_key_header)):
         raise HTTPException(status_code=403, detail="Неверный API-ключ авторизации")
     return api_key
 
+@app.get("/health")
+def health_check():
+    if not tagger:
+        raise HTTPException(status_code=500, detail="MeCab парсер не инициализирован на сервере")
+    return {"status": "ok"}
+
 @app.post("/tokenize", response_model=TokenizeResponse)
 def tokenize_text(request: TokenizeRequest, api_key: str = Security(verify_api_key)):
     if not tagger:

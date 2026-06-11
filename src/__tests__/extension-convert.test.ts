@@ -30,8 +30,43 @@ describe('convertJson3ToSegments', () => {
     const result = convertJson3ToSegments(mockJson3);
 
     expect(result).toEqual([
-      { start: 1, duration: 2, text: '今日' },
-      { start: 3.5, duration: 1.5, text: '天気がいい' }
+      {
+        start: 1,
+        duration: 2,
+        text: '今日',
+        words: [{ text: '今日', offsetMs: 0 }]
+      },
+      {
+        start: 3.5,
+        duration: 1.5,
+        text: '天気がいい',
+        words: [
+          { text: '天気', offsetMs: 0 },
+          { text: 'がいい', offsetMs: 0 }
+        ]
+      }
+    ]);
+  });
+
+  it('сохраняет words с tOffsetMs', () => {
+    const mockJson3 = {
+      events: [
+        {
+          tStartMs: 1000,
+          dDurationMs: 2000,
+          segs: [
+            { utf8: '今日', tOffsetMs: 0 },
+            { utf8: 'は', tOffsetMs: 500 }
+          ]
+        }
+      ]
+    };
+
+    const result = convertJson3ToSegments(mockJson3);
+
+    expect(result[0].words).toEqual([
+      { text: '今日', offsetMs: 0 },
+      { text: 'は', offsetMs: 500 }
     ]);
   });
 

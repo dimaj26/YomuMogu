@@ -5,6 +5,8 @@ export interface SubtitleSegment {
   start: number;     // Время начала в секундах
   duration: number;  // Длительность в секундах
   text: string;      // Текст субтитра
+  words?: Array<{ text: string; offsetMs: number }>; // Пословные тайминги (json3)
+  source?: 'pregenerated' | 'scraped' | 'extension' | 'upload'; // Источник сегмента
 }
 
 /**
@@ -107,4 +109,44 @@ export function parseSubtitlesToSegments(content: string): SubtitleSegment[] {
   }
   
   return segments;
+}
+
+/**
+ * Нормализует временные сегменты субтитров.
+ * Сортирует по времени начала.
+ * Устанавливает длительность sticky-сегментов до начала следующего сегмента.
+ * Ограничивает длительность перекрывающихся сегментов.
+ * Для последнего сегмента (или единственного) рассчитывает длительность на основе длины текста с ограничением.
+ */
+export function normalizeSegments(segments: SubtitleSegment[]): SubtitleSegment[] {
+  if (!segments || segments.length === 0) return [];
+
+  // Сортируем копию по возрастанию времени начала
+  const sorted = [...segments].sort((a, b) => a.start - b.start);
+  const normalized: SubtitleSegment[] = [];
+
+  for (let i = 0; i < sorted.length; i++) {
+    const current = sorted[i];
+    const next = sorted[i + 1];
+    let duration = current.duration;
+
+    if (next) {
+      // Если длительность <= 0 или заходит на следующий сегмент, обрезаем ее до старта следующего
+      if (duration <= 0 || (current.start + duration) > next.start) {
+        duration = Math.max(0, next.start - current.start);
+      }
+    } else {
+      // Для последнего сегмента
+      const textLen = current.text ? current.text.length : 0;
+      const textDurationCap = Math.min(textLen / 6, 10);
+      duration = Math.max(duration, textDurationCap);
+    }
+
+    normalized.push({
+      ...current,
+      duration: Math.round(duration * 1000) / 1000
+    });
+  }
+
+  return normalized;
 }

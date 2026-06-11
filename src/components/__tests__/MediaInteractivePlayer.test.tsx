@@ -203,8 +203,7 @@ describe('MediaInteractivePlayer Component', () => {
 
     // Ожидаем, что новые сегменты отобразятся на экране
     await waitFor(() => {
-      expect(screen.getByText('こんにちは')).toBeInTheDocument();
-      expect(screen.getByText('世界')).toBeInTheDocument();
+      expect(screen.getByText('こんにちは世界')).toBeInTheDocument();
     });
   });
 
@@ -279,7 +278,7 @@ describe('MediaInteractivePlayer Component', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Разбор слов недоступен (токенизатор не запущен)')).toBeInTheDocument();
+      expect(screen.getByText('Разбор слов недоступен: токенизатор не запущен (run-server.bat)')).toBeInTheDocument();
       expect(screen.getAllByText('今日').length).toBeGreaterThan(0);
     });
   });
@@ -335,5 +334,201 @@ describe('MediaInteractivePlayer Component', () => {
 
     const audioElement = document.querySelector('audio');
     expect(audioElement).toBeNull();
+  });
+
+  it('сегмент с duration=0 остаётся активным до старта следующего (sticky)', async () => {
+    mockFetch.mockImplementation((url) => {
+      const urlStr = typeof url === 'string' ? url : (url as any).url || '';
+      if (urlStr.includes('/api/media/parse')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            tokenizerDown: true,
+            lemmas: [],
+            segments: [
+              { start: 0, duration: 0, text: 'Первый сегмент' },
+              { start: 3, duration: 2, text: 'Второй сегмент' }
+            ]
+          })
+        });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
+    let mockTime = 1.5;
+    mockPlayerInstance.getCurrentTime.mockImplementation(() => mockTime);
+
+    render(
+      <MediaInteractivePlayer
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="NHK Easy News"
+        onClose={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      const activeLine = document.querySelector('[class*="activeLine"]');
+      expect(activeLine).toBeInTheDocument();
+      expect(activeLine?.textContent).toContain('Первый сегмент');
+    });
+
+    // Проверим, что первый сегмент активен и не имеет класса dimmedLine (поскольку время 1.5 < 3)
+    const activeLine = document.querySelector('[class*="activeLine"]');
+    expect(activeLine).toBeInTheDocument();
+    expect(activeLine?.className).not.toContain('dimmedLine');
+
+    // Симулируем изменение времени на 4.0
+    mockTime = 4.0;
+
+    await waitFor(() => {
+      const activeLine = document.querySelector('[class*="activeLine"]');
+      expect(activeLine?.textContent).toContain('Второй сегмент');
+    });
+  });
+
+  it('подсвечивает активное слово по tOffsetMs (karaoke)', async () => {
+    mockFetch.mockImplementation((url) => {
+      const urlStr = typeof url === 'string' ? url : (url as any).url || '';
+      if (urlStr.includes('/api/media/parse')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            lemmas: ['今日', '天気'],
+            segments: [
+              {
+                start: 0,
+                duration: 3,
+                text: '今日天気',
+                words: [
+                  { text: '今日', offsetMs: 0 },
+                  { text: '天気', offsetMs: 1000 }
+                ]
+              }
+            ]
+          })
+        });
+      }
+      if (urlStr.includes('/api/media/tokenize')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            tokens: [
+              { surface: '今日', pos: '名詞', lemma: '今日', reading: 'キョウ' },
+              { surface: '天気', pos: '名詞', lemma: '天気', reading: 'テンキ' }
+            ]
+          })
+        });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
+    let mockTime = 1.5;
+    mockPlayerInstance.getCurrentTime.mockImplementation(() => mockTime);
+
+    render(
+      <MediaInteractivePlayer
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="NHK Easy News"
+        onClose={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('word-token').length).toBe(2);
+    });
+
+    const tokens = screen.getAllByTestId('word-token');
+    expect(tokens[0].textContent).toBe('今日');
+    expect(tokens[1].textContent).toBe('天気');
+
+    await waitFor(() => {
+      expect(tokens[1].className).toContain('activeWord');
+    });
+  });
+
+  it('cc_load_policy=0 когда сегменты уже получены с сервера', async () => {
+    // Сервер вернул сегменты → cc_load_policy должен быть 0 (YouTube CC не нужны)
+    render(
+      <MediaInteractivePlayer
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="NHK Easy News"
+        onClose={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(lastPlayerConfig).not.toBeNull();
+    });
+
+    expect(lastPlayerConfig.playerVars.cc_load_policy).toBe(0);
+  });
+
+  it('cc_load_policy=1 когда сегментов нет', async () => {
+    // Сервер вернул пустые сегменты → cc_load_policy=1 чтобы расширение могло перехватить CC
+    mockFetch.mockImplementation((url) => {
+      const urlStr = typeof url === 'string' ? url : (url as any).url || '';
+      if (urlStr.includes('/api/media/parse')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            lemmas: [],
+            segments: []
+          })
+        });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
+    render(
+      <MediaInteractivePlayer
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="NHK Easy News"
+        onClose={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(lastPlayerConfig).not.toBeNull();
+    });
+
+    expect(lastPlayerConfig.playerVars.cc_load_policy).toBe(1);
+  });
+
+  it('кнопка CC вызывает loadModule/unloadModule и не падает при их отсутствии', async () => {
+    const mockLoadModule = vi.fn();
+    const mockUnloadModule = vi.fn();
+    mockPlayerInstance.loadModule = mockLoadModule;
+    mockPlayerInstance.unloadModule = mockUnloadModule;
+
+    render(
+      <MediaInteractivePlayer
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="NHK Easy News"
+        onClose={vi.fn()}
+      />
+    );
+
+    // Ждём инициализации плеера — ytPlayerRef.current будет mockPlayerInstance
+    await waitFor(() => {
+      expect(lastPlayerConfig).not.toBeNull();
+    });
+
+    const ccBtn = screen.getByLabelText('Субтитры YouTube');
+
+    // Первый клик — loadModule (включить CC)
+    fireEvent.click(ccBtn);
+    expect(mockLoadModule).toHaveBeenCalledWith('captions');
+
+    // Второй клик — unloadModule (выключить CC)
+    fireEvent.click(ccBtn);
+    expect(mockUnloadModule).toHaveBeenCalledWith('captions');
+
+    // Третий клик при отсутствии методов — не должен падать
+    delete mockPlayerInstance.loadModule;
+    delete mockPlayerInstance.unloadModule;
+    expect(() => fireEvent.click(ccBtn)).not.toThrow();
   });
 });

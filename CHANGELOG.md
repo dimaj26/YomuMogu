@@ -2,6 +2,15 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.41.0] - 2026-06-11
+
+### Added
+- **CC Deduplication (T-4)**: Conditional `cc_load_policy` in YouTube player init — `0` when server returned segments (`pregenerated`/`scraped`/`upload`), `1` when segments list is empty, enabling the extension to intercept CC only when needed.
+- **Extension Priority Guard**: `MediaInteractivePlayer` now ignores `YOMUMOGU_YT_SUBTITLES` messages from the Chrome extension if the server already provided segments (`hasServerSegmentsRef` flag). Priority order: `pregenerated` > `scraped` > `upload` > `extension`.
+- **CC Toggle Button**: Added a `CC` button in the player header (visible for YouTube URLs only) that calls `player.loadModule('captions')` / `player.unloadModule('captions')` via a best-effort try/catch to show/hide native YouTube captions independently.
+- **Extension Source Tagging**: `src/extension/background.js` now tags all relayed segments with `source: 'extension'` before `postMessage` dispatch.
+- **Unit Tests**: 3 new tests in `MediaInteractivePlayer.test.tsx` covering `cc_load_policy=0` (server segments), `cc_load_policy=1` (empty), and CC button toggle with graceful no-op when `loadModule`/`unloadModule` absent. Total: 295 tests / 46 files.
+
 ## [1.40.0] - 2026-06-11
 
 ### Added

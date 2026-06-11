@@ -150,29 +150,34 @@ describe('API Route POST /api/media/parse', () => {
 
     const mockLemmas = ['こんにちは', '日本', '行く'];
 
-    // Мокаем fetch для трех последовательных запросов:
-    // 1. YouTube watch page
-    // 2. YouTube caption XML
-    // 3. VPS tokenizer /tokenize
-    let fetchCallCount = 0;
     globalThis.fetch = vi.fn().mockImplementation(async (url: string) => {
-      fetchCallCount++;
-      if (fetchCallCount === 1) {
+      const urlStr = String(url);
+      if (urlStr.includes('watch?v=')) {
         return {
           ok: true,
           text: async () => mockWatchPageHtml,
         } as Response;
-      } else if (fetchCallCount === 2) {
+      }
+      if (urlStr.includes('fmt=json3')) {
+        return {
+          ok: false,
+          status: 404,
+          text: async () => 'Not Found',
+        } as Response;
+      }
+      if (urlStr.includes('timedtext')) {
         return {
           ok: true,
           text: async () => mockXmlText,
         } as Response;
-      } else {
+      }
+      if (urlStr.includes('tokenize')) {
         return {
           ok: true,
           json: async () => ({ lemmas: mockLemmas }),
         } as Response;
       }
+      return { ok: false, status: 500 } as Response;
     });
 
     const request1 = new NextRequest('http://localhost/api/media/parse', {

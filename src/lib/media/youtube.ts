@@ -1,5 +1,6 @@
 import { logger } from '../logger';
 import { SubtitleSegment } from './parser';
+import { parseJson3ToSegments } from './json3';
 
 /**
  * Извлекает ID видео из различных форматов ссылок YouTube
@@ -65,9 +66,9 @@ async function fetchAndParseTranscriptXml(tracks: any[], videoId: string): Promi
 }
 
 /**
- * Скачивает и парсит XML транскрипта на отдельные временные сегменты
+ * Скачивает и парсит транскрипт (пытается JSON3 с пословными таймингами, при неудаче фолбэк на XML)
  */
-async function fetchAndParseTranscriptXmlToSegments(tracks: any[], videoId: string): Promise<SubtitleSegment[]> {
+async function fetchAndParseTranscriptToSegments(tracks: any[], videoId: string): Promise<SubtitleSegment[]> {
   const jaTrack = tracks.find(t => t.languageCode === 'ja') || 
                   tracks.find(t => t.languageCode?.startsWith('ja')) ||
                   tracks.find(t => t.vssId?.includes('.ja'));
@@ -75,7 +76,26 @@ async function fetchAndParseTranscriptXmlToSegments(tracks: any[], videoId: stri
   if (!jaTrack || !jaTrack.baseUrl) {
     throw new Error('Японская дорожка субтитров (ja) не найдена для этого видео');
   }
-  
+
+  // 1. Пробуем получить JSON3 для извлечения пословных таймингов
+  try {
+    const json3Url = jaTrack.baseUrl + '&fmt=json3';
+    logger.info(`[YouTube Scraper] Попытка получения субтитров в формате JSON3 для видео ${videoId}`);
+    const json3Res = await fetch(json3Url);
+    if (json3Res.ok) {
+      const jsonData = await json3Res.json();
+      const segments = parseJson3ToSegments(jsonData);
+      if (segments && segments.length > 0) {
+        logger.info(`[YouTube Scraper] Успешно получено ${segments.length} сегментов в формате JSON3 для видео ${videoId}`);
+        return segments;
+      }
+    }
+    logger.warn(`[YouTube Scraper] Ответ JSON3 пустой или невалидный для видео ${videoId}, переключаемся на XML`);
+  } catch (err: any) {
+    logger.warn(`[YouTube Scraper] Ошибка загрузки JSON3 для видео ${videoId}: ${err?.message || err}. Используем XML.`);
+  }
+
+  // 2. Фолбэк на XML-версию
   logger.info(`[YouTube Scraper] Запрос XML субтитров по ссылке для видео ${videoId} (сегменты)`);
   
   const xmlRes = await fetch(jaTrack.baseUrl);
@@ -99,6 +119,7 @@ async function fetchAndParseTranscriptXmlToSegments(tracks: any[], videoId: stri
     }
   }
   
+  logger.info(`[YouTube Scraper] Успешно получено ${segments.length} сегментов в формате XML для видео ${videoId}`);
   return segments;
 }
 
@@ -188,7 +209,7 @@ export async function getYoutubeTranscriptSegments(videoId: string): Promise<Sub
     try {
       const tracks = JSON.parse(captionTracksMatch[1]);
       if (Array.isArray(tracks) && tracks.length > 0) {
-        return await fetchAndParseTranscriptXmlToSegments(tracks, videoId);
+        return await fetchAndParseTranscriptToSegments(tracks, videoId);
       }
     } catch (err: any) {
       logger.warn('[YouTube Scraper] Ошибка разбора captionTracks для сегментов, пробуем ytInitialPlayerResponse:', err);
@@ -202,7 +223,7 @@ export async function getYoutubeTranscriptSegments(videoId: string): Promise<Sub
       const playerResponse = JSON.parse(playerResponseMatch[1]);
       const tracks = playerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
       if (tracks && Array.isArray(tracks)) {
-        return await fetchAndParseTranscriptXmlToSegments(tracks, videoId);
+        return await fetchAndParseTranscriptToSegments(tracks, videoId);
       }
     } catch (e) {
       logger.warn('[YouTube Scraper] Ошибка парсинга ytInitialPlayerResponse для сегментов:', e);

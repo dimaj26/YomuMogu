@@ -48,10 +48,12 @@ export async function POST(request: NextRequest) {
       if (!res.ok) {
         const errText = await res.text();
         logger.error(`[API] Ошибка микросервиса MeCab (статус: ${res.status}): ${errText}`);
-        return NextResponse.json(
-          { error: `Микросервис токенизации вернул ошибку: ${res.status}` },
-          { status: 502 }
-        );
+        return NextResponse.json({
+          success: true,
+          tokenizationSkipped: true,
+          lemmas: [],
+          tokens: [],
+        });
       }
 
       const data = await res.json();
@@ -64,16 +66,15 @@ export async function POST(request: NextRequest) {
       clearTimeout(timeoutId);
       if (fetchErr.name === 'AbortError') {
         logger.error('[API] Превышено время ожидания ответа от микросервиса MeCab');
-        return NextResponse.json(
-          { error: 'Превышено время ожидания ответа от сервера токенизации' },
-          { status: 504 }
-        );
+      } else {
+        logger.error('[API] Ошибка подключения к микросервису токенизации MeCab', fetchErr);
       }
-      logger.error('[API] Ошибка подключения к микросервису токенизации MeCab', fetchErr);
-      return NextResponse.json(
-        { error: 'Сервер токенизации временно недоступен' },
-        { status: 502 }
-      );
+      return NextResponse.json({
+        success: true,
+        tokenizationSkipped: true,
+        lemmas: [],
+        tokens: [],
+      });
     }
   } catch (error: any) {
     logger.error('[API] Исключение во время токенизации на /api/media/tokenize', error);

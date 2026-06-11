@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { verifyCsrf } from '@/lib/csrf';
 import { extractYoutubeVideoId, getYoutubeTranscriptSegments } from '@/lib/media/youtube';
-import { parseSrtOrVtt, parseSubtitlesToSegments, type SubtitleSegment } from '@/lib/media/parser';
+import { parseSrtOrVtt, parseSubtitlesToSegments, normalizeSegments, type SubtitleSegment } from '@/lib/media/parser';
+import { regroupIntoSentences } from '@/lib/media/sentences';
 import mediaTranscripts from '@/resources/media_transcripts.json';
 
 interface CacheEntry {
@@ -78,13 +79,12 @@ export async function POST(request: NextRequest) {
       const pregenerated = mediaTranscripts[videoId as keyof typeof mediaTranscripts];
       if (pregenerated) {
         logger.info(`[API] Использование предсгенерированных субтитров из JSON для видео ${videoId}`);
-        segments = pregenerated as SubtitleSegment[];
-        textToTokenize = segments.map(s => s.text).join('\n');
+        segments = (pregenerated as SubtitleSegment[]).map(s => ({ ...s, source: 'pregenerated' }));
       } else {
         try {
           // Скачиваем транскрипт с YouTube в виде временных сегментов
           segments = await getYoutubeTranscriptSegments(videoId);
-          textToTokenize = segments.map(s => s.text).join('\n');
+          segments = segments.map(s => ({ ...s, source: 'scraped' }));
         } catch (scrapingErr: any) {
           logger.error(`[API] Ошибка при получении субтитров YouTube для видео ${videoId}:`, scrapingErr);
           return NextResponse.json(
@@ -95,14 +95,22 @@ export async function POST(request: NextRequest) {
       }
     } else if (srtText) {
       // Парсим пользовательские субтитры SRT/VTT
-      textToTokenize = parseSrtOrVtt(srtText);
-      segments = parseSubtitlesToSegments(srtText);
-      if (!textToTokenize) {
-        return NextResponse.json(
-          { error: 'Не удалось извлечь текст из переданных субтитров' },
-          { status: 400 }
-        );
-      }
+      segments = parseSubtitlesToSegments(srtText).map(s => ({ ...s, source: 'upload' }));
+    }
+
+    // Нормализуем сегменты и склеиваем в предложения
+    segments = normalizeSegments(segments);
+    segments = regroupIntoSentences(segments);
+    textToTokenize = segments.map(s => s.text).join('\n');
+
+    if (!textToTokenize) {
+      return NextResponse.json(
+        { error: 'Не удалось извлечь текст из переданных субтитров' },
+        { status: 400 }
+      );
+    }
+
+    if (srtText) {
       logger.info(`[API] Успешно распарсен загруженный файл субтитров длиной ${textToTokenize.length} символов`);
     }
 

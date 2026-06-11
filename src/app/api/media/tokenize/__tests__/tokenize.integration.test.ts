@@ -49,7 +49,7 @@ describe('Tokenize Media Integration Test (Real MeCab)', () => {
     expect(data.tokens[0].lemma).toBeDefined();
   });
 
-  it('should return 502/504 when MeCab microservice is offline', async () => {
+  it('should return 200 with tokenizationSkipped when MeCab microservice is offline', async () => {
     // Временно перенаправляем на закрытый порт
     const originalUrl = process.env.TOKENIZER_URL;
     process.env.TOKENIZER_URL = 'http://127.0.0.1:9999';
@@ -64,10 +64,13 @@ describe('Tokenize Media Integration Test (Real MeCab)', () => {
       });
 
       const response = await tokenizePost(request);
-      expect(response.status).toBe(502);
+      expect(response.status).toBe(200);
       
       const data = await response.json();
-      expect(data.error).toContain('недоступен');
+      expect(data.success).toBe(true);
+      expect(data.tokenizationSkipped).toBe(true);
+      expect(data.tokens).toEqual([]);
+      expect(data.lemmas).toEqual([]);
     } finally {
       // Восстанавливаем оригинальный URL
       if (originalUrl) {
@@ -75,6 +78,19 @@ describe('Tokenize Media Integration Test (Real MeCab)', () => {
       } else {
         delete process.env.TOKENIZER_URL;
       }
+    }
+  });
+
+  it('should query tokenizer health check endpoint successfully if online', async () => {
+    const tokenizerUrl = process.env.TOKENIZER_URL || 'http://127.0.0.1:8000';
+    try {
+      const res = await fetch(`${tokenizerUrl}/health`);
+      if (res.ok) {
+        const data = await res.json();
+        expect(data.status).toBe('ok');
+      }
+    } catch {
+      // Игнорируем ошибку подключения, если микросервис выключен
     }
   });
 });

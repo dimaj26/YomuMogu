@@ -59,8 +59,8 @@ You are an expert **TypeScript / Next.js 16** developer. Your specialty is App R
 - **Situational Tags**: 10 themes + universal; static dict for N5, Gemini classifier for Anki imports.
 - **Adaptive Routing**: `active.stability < 3d` or `lapses ≥ 2` → chat; else → offline quiz. Sessions grouped by theme overlap.
 - **Contextual Distractors**: Warm-up multiple-choice uses same-theme words as distractors.
-- **Media Player**: YouTube/subtitle interactive player, MeCab tokenization, JitenDex lookup, Anki add; runs via `run-server.bat` (Next.js + MeCab on port 8000).
-- **Chrome Extension**: Manifest V3 subtitle interceptor relaying YouTube captions to YomuMogu via `postMessage`.
+- **Media Player**: YouTube/subtitle interactive player, MeCab tokenization (graceful fallback when down), JitenDex lookup, Anki add; karaoke word-level highlight, sentence regrouping, CC dedup; runs via `run-server.bat` (Next.js + MeCab on port 8000).
+- **Chrome Extension**: Manifest V3 subtitle interceptor relaying YouTube captions (tagged `source:'extension'`, adopted only when server has no segments) to YomuMogu via `postMessage`.
 
 ---
 

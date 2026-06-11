@@ -34,10 +34,13 @@ chrome.webRequest.onBeforeRequest.addListener(
         const videoId = urlObj.searchParams.get('v');
         console.log(`[YomuMogu Helper] Успешно распознано сегментов для видео ${videoId}: ${segments.length}`);
 
+        // Помечаем сегменты источником 'extension' для приоритетной фильтрации на стороне приложения
+        const taggedSegments = segments.map(s => ({ ...s, source: 'extension' }));
+
         const message = {
           type: 'YOMUMOGU_YT_SUBTITLES',
           videoId,
-          segments
+          segments: taggedSegments
         };
 
         // Отправляем во вкладку-источник запроса (keep origin-tab path)

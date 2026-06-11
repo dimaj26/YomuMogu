@@ -487,8 +487,8 @@ All Anki routes proxy requests to AnkiConnect at `http://localhost:8765`.
 | `/api/chat/hint` | POST | `{ scenario, targetWords, history, level }` | `HintResponse` |
 | `/api/chat/analyze` | POST | `{ history, deckName, frontField, backField, deckMappings? }` | `{ words: AnalyzedWord[] }` |
 | `/api/dict/lookup` | GET | `?word=WORD` | `{ definition: string }` |
-| `/api/media/parse` | POST | `{ url }` or `{ srtText }` | `{ success: boolean, lemmas: string[], segments: SubtitleSegment[] }` |
-| `/api/media/tokenize` | POST | `{ text, mode? }` | `{ tokens: MeCabToken[] }` or `{ lemmas: string[] }` |
+| `/api/media/parse` | POST | `{ url }` or `{ srtText }` | `{ success: boolean, lemmas: string[], segments: SubtitleSegment[] }` — segments tagged with `source: 'pregenerated' | 'scraped' | 'upload'` |
+| `/api/media/tokenize` | POST | `{ text, mode? }` | `{ tokens: MeCabToken[] }` or `{ lemmas: string[] }` or `{ tokenizationSkipped: true, tokens: [], lemmas: [] }` |
 
 ### [PL-4.3] ChatResponse & HintResponse
 ```typescript
@@ -698,4 +698,4 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-278 unit/integration tests across 43 test files. All passing.
+295 unit/integration tests across 46 test files. All passing.

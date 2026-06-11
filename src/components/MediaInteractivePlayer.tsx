@@ -4,7 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Play, Loader2, Sparkles, BookOpen, Plus, Check, AlertCircle, Upload } from 'lucide-react';
 import { getProfileItem, getActiveProfileId } from '@/lib/profile';
 import { sanitizeHtml } from '@/lib/sanitize';
-import { parseSubtitlesToSegments, type SubtitleSegment } from '@/lib/media/parser';
+import { parseSubtitlesToSegments, normalizeSegments, type SubtitleSegment } from '@/lib/media/parser';
+import { regroupIntoSentences } from '@/lib/media/sentences';
 import styles from './MediaInteractivePlayer.module.css';
 
 // Типизация подробного токена MeCab
@@ -36,6 +37,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
   const [error, setError] = useState<string | null>(null);
   const [segments, setSegments] = useState<SubtitleSegment[]>([]);
   const [activeSegmentIndex, setActiveSegmentIndex] = useState<number>(-1);
+  const [activeWordIndex, setActiveWordIndex] = useState<number>(-1);
   const [currentTime, setCurrentTime] = useState<number>(0);
   
   // Кэш токенизированных строк: SegmentText -> MeCabToken[]
@@ -43,6 +45,11 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
   const [activeTokens, setActiveTokens] = useState<MeCabToken[]>([]);
   const [isTokenizing, setIsTokenizing] = useState<boolean>(false);
   const [tokenizerDown, setTokenizerDown] = useState<boolean>(false);
+
+  // Флаг: сервер уже вернул сегменты (для выбора cc_load_policy при инициализации плеера)
+  const hasServerSegmentsRef = useRef<boolean>(false);
+  // Состояние кнопки CC (YouTube субтитры): true = показаны
+  const [ccEnabled, setCcEnabled] = useState<boolean>(false);
 
   // Словарь и Anki поповер
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
@@ -87,7 +94,9 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
 
       const data = await response.json();
       if (data.segments && data.segments.length > 0) {
-        setSegments(data.segments);
+        // Запоминаем, что сервер вернул сегменты — cc_load_policy будет 0
+        hasServerSegmentsRef.current = true;
+        setSegments(normalizeSegments(data.segments));
         setTokenizerDown(!!data.tokenizerDown);
       } else {
         throw new Error('Для этого видео отсутствуют дорожки японских субтитров.');
@@ -121,7 +130,13 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
 
         const receivedSegments = event.data.segments;
         if (Array.isArray(receivedSegments) && receivedSegments.length > 0) {
-          setSegments(receivedSegments);
+          // Принимаем субтитры от расширения только если сервер ещё не вернул свои
+          // (приоритет: pregenerated/scraped > extension > none) — предотвращает визуальный мерцание
+          if (hasServerSegmentsRef.current) {
+            console.log('[Player] Игнорируем субтитры расширения: сервер уже предоставил сегменты');
+            return;
+          }
+          setSegments(regroupIntoSentences(normalizeSegments(receivedSegments)));
           setError(null);
           setIsLoading(false);
         }
@@ -146,7 +161,9 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
         videoId: ytVideoId,
         playerVars: {
           origin: typeof window !== 'undefined' ? window.location.origin : '',
-          cc_load_policy: 1,
+          // cc_load_policy=0: сервер уже предоставил субтитры, YouTube CC не нужны
+          // cc_load_policy=1: субтитров нет, включаем CC чтобы расширение могло их перехватить
+          cc_load_policy: hasServerSegmentsRef.current ? 0 : 1,
           rel: 0,
         },
         events: {
@@ -238,13 +255,46 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
 
   // Поиск активного сегмента субтитров
   useEffect(() => {
-    const idx = segments.findIndex(
-      (s) => currentTime >= s.start && currentTime <= s.start + s.duration
-    );
+    // Находим последний сегмент, который уже начался (sticky)
+    const idx = segments.reduce((acc, s, i) => {
+      if (currentTime >= s.start) {
+        return i;
+      }
+      return acc;
+    }, -1);
+    
     if (idx !== activeSegmentIndex) {
       setActiveSegmentIndex(idx);
     }
   }, [currentTime, segments, activeSegmentIndex]);
+
+  // Поиск активного слова по tOffsetMs (караоке)
+  useEffect(() => {
+    if (activeSegmentIndex === -1) {
+      setActiveWordIndex(-1);
+      return;
+    }
+    const segment = segments[activeSegmentIndex];
+    if (!segment || !segment.words || segment.words.length === 0) {
+      setActiveWordIndex(-1);
+      return;
+    }
+
+    // Время относительно начала сегмента (в миллисекундах)
+    const relativeTimeMs = (currentTime - segment.start) * 1000;
+
+    let activeWordIdx = -1;
+    for (let i = 0; i < segment.words.length; i++) {
+      const word = segment.words[i];
+      if (relativeTimeMs >= word.offsetMs) {
+        activeWordIdx = i;
+      }
+    }
+    
+    if (activeWordIdx !== activeWordIndex) {
+      setActiveWordIndex(activeWordIdx);
+    }
+  }, [currentTime, activeSegmentIndex, segments, activeWordIndex]);
 
   // Запуск токенизации при смене активного сегмента
   useEffect(() => {
@@ -275,12 +325,22 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
 
         if (res.ok) {
           const data = await res.json();
-          const tokens: MeCabToken[] = data.tokens || [];
-          setTokenizedCache(prev => ({ ...prev, [text]: tokens }));
-          setActiveTokens(tokens);
+          if (data.tokenizationSkipped) {
+            setTokenizerDown(true);
+            setActiveTokens([]);
+          } else {
+            const tokens: MeCabToken[] = data.tokens || [];
+            setTokenizedCache(prev => ({ ...prev, [text]: tokens }));
+            setActiveTokens(tokens);
+          }
+        } else {
+          setTokenizerDown(true);
+          setActiveTokens([]);
         }
       } catch (err) {
         console.error('Ошибка токенизации субтитра:', err);
+        setTokenizerDown(true);
+        setActiveTokens([]);
       } finally {
         setIsTokenizing(false);
       }
@@ -400,7 +460,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
       const loadedSegments = parseSubtitlesToSegments(text);
       
       if (loadedSegments.length > 0) {
-        setSegments(loadedSegments);
+        setSegments(regroupIntoSentences(normalizeSegments(loadedSegments)));
         setError(null);
         setIsLoading(false);
       } else {
@@ -416,7 +476,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
       const loadedSegments = parseSubtitlesToSegments(text);
       
       if (loadedSegments.length > 0) {
-        setSegments(loadedSegments);
+        setSegments(regroupIntoSentences(normalizeSegments(loadedSegments)));
         setError(null);
         setIsLoading(false);
       } else {
@@ -434,9 +494,44 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
             <Sparkles size={20} className={styles.sparkleIcon} />
             <h2 className={styles.title}>{title}</h2>
           </div>
-          <button className={`${styles.closeBtn} btn-3d btn-red`} onClick={onClose}>
-            <X size={18} />
-          </button>
+          <div className={styles.headerActions}>
+            {/* Кнопка CC: управляет субтитрами YouTube через недокументированный API (best-effort) */}
+            {isYoutube && (
+              <button
+                className={`${styles.ccBtn} btn-3d ${ccEnabled ? 'btn-blue' : 'btn-gray'}`}
+                aria-label="Субтитры YouTube"
+                onClick={() => {
+                  const player = ytPlayerRef.current;
+                  if (ccEnabled) {
+                    // Скрываем CC
+                    try {
+                      if (player && typeof player.unloadModule === 'function') {
+                        player.unloadModule('captions');
+                      }
+                    } catch (e) {
+                      console.warn('[Player] Не удалось скрыть субтитры YouTube через unloadModule:', e);
+                    }
+                    setCcEnabled(false);
+                  } else {
+                    // Показываем CC
+                    try {
+                      if (player && typeof player.loadModule === 'function') {
+                        player.loadModule('captions');
+                      }
+                    } catch (e) {
+                      console.warn('[Player] Не удалось показать субтитры YouTube через loadModule:', e);
+                    }
+                    setCcEnabled(true);
+                  }
+                }}
+              >
+                CC
+              </button>
+            )}
+            <button className={`${styles.closeBtn} btn-3d btn-red`} onClick={onClose}>
+              <X size={18} />
+            </button>
+          </div>
         </header>
 
         {/* Тело модального окна */}
@@ -501,10 +596,10 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
                 <div className={styles.subtitlesBox}>
                   {/* Рендеринг активной строки с токенизацией */}
                   {activeSegmentIndex !== -1 ? (
-                    <div className={styles.activeLine}>
+                    <div className={`${styles.activeLine} ${currentTime >= segments[activeSegmentIndex].start + segments[activeSegmentIndex].duration ? styles.dimmedLine : ''}`}>
                       {tokenizerDown && (
                         <div className={styles.tokenizerWarning} data-testid="tokenizer-warning">
-                          Разбор слов недоступен (токенизатор не запущен)
+                          Разбор слов недоступен: токенизатор не запущен (run-server.bat)
                         </div>
                       )}
                       {isTokenizing ? (
@@ -514,21 +609,57 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
                         </div>
                       ) : activeTokens.length > 0 ? (
                         <div className={styles.tokensGrid}>
-                          {activeTokens.map((token, i) => {
-                            // Проверяем тип части речи, чтобы выделить важные (существительные, глаголы, прилагательные)
-                            const isContentWord = token.pos === '名詞' || token.pos === '動詞' || token.pos === '形容詞' || token.pos === '形状詞';
-                            return (
-                              <span
-                                key={i}
-                                data-testid="word-token"
-                                onClick={() => handleTokenClick(token)}
-                                className={`${styles.wordToken} ${isContentWord ? styles.contentWord : ''} ${selectedWord === token.surface ? styles.selectedToken : ''}`}
-                                title={token.reading ? `Чтение: ${katakanaToHiragana(token.reading)}` : undefined}
-                              >
-                                {token.surface}
-                              </span>
-                            );
-                          })}
+                          {(() => {
+                            // Рассчитываем символьные диапазоны для токенов активного сегмента
+                            let tokenSpans = [];
+                            let charAccumulator = 0;
+                            for (const t of activeTokens) {
+                              tokenSpans.push({
+                                start: charAccumulator,
+                                end: charAccumulator + t.surface.length
+                              });
+                              charAccumulator += t.surface.length;
+                            }
+
+                            // Рассчитываем символьный диапазон активного слова
+                            let activeWordCharStart = 0;
+                            let activeWordCharEnd = 0;
+                            const activeSegment = segments[activeSegmentIndex];
+                            
+                            if (activeWordIndex !== -1 && activeSegment && activeSegment.words) {
+                              let charAcc = 0;
+                              for (let idx = 0; idx < activeSegment.words.length; idx++) {
+                                const w = activeSegment.words[idx];
+                                if (idx === activeWordIndex) {
+                                  activeWordCharStart = charAcc;
+                                  activeWordCharEnd = charAcc + w.text.length;
+                                  break;
+                                }
+                                charAcc += w.text.length;
+                              }
+                            }
+
+                            return activeTokens.map((token, i) => {
+                              // Проверяем тип части речи, чтобы выделить важные (существительные, глаголы, прилагательные)
+                              const isContentWord = token.pos === '名詞' || token.pos === '動詞' || token.pos === '形容詞' || token.pos === '形状詞';
+                              
+                              const span = tokenSpans[i];
+                              const isWordActive = span && activeWordIndex !== -1 &&
+                                Math.max(span.start, activeWordCharStart) < Math.min(span.end, activeWordCharEnd);
+
+                              return (
+                                <span
+                                  key={i}
+                                  data-testid="word-token"
+                                  onClick={() => handleTokenClick(token)}
+                                  className={`${styles.wordToken} ${isContentWord ? styles.contentWord : ''} ${selectedWord === token.surface ? styles.selectedToken : ''} ${isWordActive ? styles.activeWord : ''}`}
+                                  title={token.reading ? `Чтение: ${katakanaToHiragana(token.reading)}` : undefined}
+                                >
+                                  {token.surface}
+                                </span>
+                              );
+                            });
+                          })()}
                         </div>
                       ) : (
                         <p className={styles.rawText}>{segments[activeSegmentIndex].text}</p>

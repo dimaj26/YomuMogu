@@ -84,7 +84,24 @@ describe('API Route POST /api/media/tokenize', () => {
     expect(data.tokens).toEqual(mockTokens);
   });
 
-  it('should return 502 if microservice returns an error status', async () => {
+  it('возвращает 200 с tokenizationSkipped при недоступном токенизаторе', async () => {
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error('Connection refused'));
+
+    const request = new NextRequest('http://localhost/api/media/tokenize', {
+      method: 'POST',
+      body: JSON.stringify({ text: '日本語' }),
+    });
+
+    const response = await tokenizePost(request);
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(data.tokenizationSkipped).toBe(true);
+    expect(data.tokens).toEqual([]);
+    expect(data.lemmas).toEqual([]);
+  });
+
+  it('возвращает 200 с tokenizationSkipped если микросервис вернул ошибку', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 500,
@@ -97,12 +114,15 @@ describe('API Route POST /api/media/tokenize', () => {
     });
 
     const response = await tokenizePost(request);
-    expect(response.status).toBe(502);
+    expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data.error).toContain('500');
+    expect(data.success).toBe(true);
+    expect(data.tokenizationSkipped).toBe(true);
+    expect(data.tokens).toEqual([]);
+    expect(data.lemmas).toEqual([]);
   });
 
-  it('should return 504 if microservice times out / aborts', async () => {
+  it('возвращает 200 с tokenizationSkipped при таймауте', async () => {
     const abortError = new Error('The user aborted a request.');
     abortError.name = 'AbortError';
     globalThis.fetch = vi.fn().mockRejectedValue(abortError);
@@ -113,8 +133,9 @@ describe('API Route POST /api/media/tokenize', () => {
     });
 
     const response = await tokenizePost(request);
-    expect(response.status).toBe(504);
+    expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data.error).toContain('ожидания');
+    expect(data.success).toBe(true);
+    expect(data.tokenizationSkipped).toBe(true);
   });
 });

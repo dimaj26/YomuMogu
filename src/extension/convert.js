@@ -12,10 +12,16 @@ export function convertJson3ToSegments(data) {
       const text = ev.segs.map(s => s.utf8).join('').trim();
       if (!text) continue;
 
+      const words = ev.segs.map(s => ({
+        text: s.utf8,
+        offsetMs: s.tOffsetMs || 0
+      }));
+
       segments.push({
         start: ev.tStartMs / 1000,
         duration: (ev.dDurationMs || 0) / 1000,
-        text: text
+        text: text,
+        words: words
       });
     }
   }
