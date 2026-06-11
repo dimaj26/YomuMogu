@@ -13,9 +13,10 @@ interface RetryOptions {
   baseDelayMs?: number;
   retryableStatusCodes?: number[];
   models?: readonly GeminiModel[];
+  modelChain?: readonly string[] | string[];
 }
 
-const DEFAULT_RETRY_OPTIONS: Required<Omit<RetryOptions, 'models'>> = {
+const DEFAULT_RETRY_OPTIONS: Required<Omit<RetryOptions, 'models' | 'modelChain'>> = {
   maxRetries: 3,
   baseDelayMs: 1000,
   retryableStatusCodes: [429, 500, 503],
@@ -30,7 +31,7 @@ export async function withRetry<T>(
   options?: RetryOptions
 ): Promise<T> {
   const opts = { ...DEFAULT_RETRY_OPTIONS, ...options };
-  const models = options?.models || GEMINI_MODELS;
+  const models = (options?.modelChain as readonly GeminiModel[]) || options?.models || GEMINI_MODELS;
   let lastError: any = null;
 
   // Пробуем каждую модель

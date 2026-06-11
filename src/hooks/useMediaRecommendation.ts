@@ -181,6 +181,7 @@ export function useMediaRecommendation() {
     isLoading,
     error,
     addCustomUrl,
-    refreshFeed: loadFeed
+    refreshFeed: loadFeed,
+    recalculateCoverage
   };
 }

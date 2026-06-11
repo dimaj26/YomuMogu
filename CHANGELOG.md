@@ -2,6 +2,18 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.45.0] - 2026-06-12
+
+### Added
+- **Automatic YouTube Video Search**: Implemented search functionality targeting Japanese learning content:
+  - **Query Expansion**: Service `queryExpansion.ts` utilizing a single cached Gemini 2.5 flash-lite call to expand Cyrillic/mixed searches into Japanese phrases with classification of situational themes and robust error degradation.
+  - **YouTube Search Scraper**: Module `search.ts` fetching InnerTube search results and continuation tokens, with parsing isolated in testable pure logic.
+  - **Relevance and Level Ranking**: Module `ranking.ts` scoring candidate videos based on local title/description keyword matching, subtitle quality composition by track kind (ASR vs manual), and vocabulary level fit (Comprehension Rate comfort window $[0.85, 0.98]$).
+  - **Diversity Selection**: Module `selection.ts` selecting a page of results using a seeded PRNG and profile history exclusion to guarantee less than 10% page overlap between refreshes.
+  - **Funnel API Route**: Orchestrator route `/api/media/search` with sequential evaluation for top candidates to prevent YouTube oEmbed/transcript 429 rate-limiting.
+  - **Search UI**: Integrated input box, refresh diversity button ("Обновить выдачу"), ranked result grid, and IndexedDB knownWords sync on the `/practice` launcher page.
+- **Unit and Live Integration Tests**: Added comprehensive unit test coverage for query expansion, ranking, selection, search parsing, and the API route, alongside a live search liveness integration test (`search-live.integration.test.ts`) and Playwright E2E spec (`media-search-live.spec.ts`).
+
 ## [1.44.0] - 2026-06-12
 
 ### Added

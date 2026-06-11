@@ -566,4 +566,56 @@ describe('PracticePage Component', () => {
     dateSpy.mockRestore();
     Date.now = originalNow;
   });
+
+  it('выполнение поиска запрашивает API и рендерит результаты', async () => {
+    const mockSearchResponse = {
+      success: true,
+      results: [
+        {
+          id: 'search_vid1',
+          title: 'Найденное видео 1',
+          description: 'Описание найденного видео 1',
+          url: 'https://www.youtube.com/watch?v=search_vid1',
+          platform: 'youtube',
+          comprehensionRate: 88,
+          trackKind: 'manual'
+        }
+      ]
+    };
+    
+    const originalFetch = global.fetch;
+    const fetchSpy = vi.fn().mockImplementation((url) => {
+      if (url === '/api/media/search') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(mockSearchResponse)
+        });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ success: true, results: [] }) });
+    });
+    global.fetch = fetchSpy as any;
+
+    render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+
+    // Переходим на вкладку Медиа
+    const mediaTabBtn = await screen.findByRole('button', { name: 'Рекомендации медиа' });
+    fireEvent.click(mediaTabBtn);
+
+    // Находим поле поиска
+    const searchInput = screen.getByPlaceholderText(/Найти обучающие видео/);
+    fireEvent.change(searchInput, { target: { value: 'разговор' } });
+
+    // Кликаем Найти
+    const searchBtn = screen.getByRole('button', { name: 'Найти' });
+    fireEvent.click(searchBtn);
+
+    // Проверяем вызов API и рендеринг результатов
+    await waitFor(() => {
+      expect(screen.getByText('Результаты поиска по запросу «разговор»')).toBeInTheDocument();
+      expect(screen.getByText('Найденное видео 1')).toBeInTheDocument();
+      expect(screen.getByText('88% знакомых слов')).toBeInTheDocument();
+    });
+
+    global.fetch = originalFetch;
+  });
 });

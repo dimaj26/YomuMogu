@@ -164,6 +164,95 @@ export default function PracticePage() {
   const [isAddingUrl, setIsAddingUrl] = useState<boolean>(false);
   const [importError, setImportError] = useState<string | null>(null);
 
+  // Новые состояния для поиска видео по запросу (Phase B)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeSearchQuery, setActiveSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchContinuation, setSearchContinuation] = useState<string | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [shownVideoIds, setShownVideoIds] = useState<string[]>([]);
+
+  const handleMediaSearch = useCallback(async (isRefresh = false, nextToken?: string) => {
+    const queryToSearch = isRefresh ? activeSearchQuery : searchQuery;
+    if (!queryToSearch.trim() && !nextToken) return;
+
+    setIsSearching(true);
+    setSearchError(null);
+    try {
+      const profileId = getActiveProfileId();
+
+      // Находим леммы известных пользователю слов
+      const localWords = await db.words.where('profileId').equals(profileId).toArray();
+      const now = Date.now();
+      const knownWords: string[] = [];
+      for (const w of localWords) {
+        const isActiveKnown = w.active && (w.active.status === 'mature' || (w.active.status === 'review' && w.active.interval >= 7));
+        const isPassiveKnown = w.passive && w.passive.due > now;
+        if (isActiveKnown || isPassiveKnown) {
+          knownWords.push(w.word);
+        }
+      }
+
+      // Генерируем новый seed для случайной перетасовки при нажатии «Обновить»
+      const seed = isRefresh ? Math.floor(Math.random() * 100000) : 42;
+
+      const res = await fetch('/api/media/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: queryToSearch,
+          excludeIds: shownVideoIds,
+          seed,
+          knownWords,
+          continuation: nextToken,
+          pageSize: 6
+        })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Не удалось выполнить поиск');
+      }
+
+      const data = await res.json();
+      const newResults = data.results || [];
+
+      if (nextToken) {
+        setSearchResults(prev => [...prev, ...newResults]);
+      } else {
+        setSearchResults(newResults);
+      }
+
+      setSearchContinuation(data.continuation || null);
+      if (!nextToken) {
+        setActiveSearchQuery(queryToSearch);
+      }
+
+      // Сохраняем видео в историю просмотренных
+      const newVideoIds = newResults.map((r: any) => r.id);
+      let updatedHistory = [...shownVideoIds, ...newVideoIds];
+      if (updatedHistory.length > 500) {
+        updatedHistory = updatedHistory.slice(updatedHistory.length - 500);
+      }
+      setShownVideoIds(updatedHistory);
+      setProfileItem('shown_video_ids', JSON.stringify(updatedHistory), profileId);
+
+    } catch (err: any) {
+      setSearchError(err.message || 'Ошибка поиска видео');
+    } finally {
+      setIsSearching(false);
+    }
+  }, [searchQuery, activeSearchQuery, shownVideoIds]);
+
+  const handleResetSearch = () => {
+    setSearchQuery('');
+    setActiveSearchQuery('');
+    setSearchResults([]);
+    setSearchContinuation(null);
+    setSearchError(null);
+  };
+
   // Загружаем данные профиля и сессий
   const loadProfileData = async () => {
     try {
@@ -247,6 +336,18 @@ export default function PracticePage() {
         progressMap[p.ruleId] = p;
       });
       setGrammarProgress(progressMap);
+
+      // Загружаем историю показанных видео для поиска
+      const savedShown = getProfileItem('shown_video_ids', profileId);
+      if (savedShown) {
+        try {
+          setShownVideoIds(JSON.parse(savedShown));
+        } catch {
+          setShownVideoIds([]);
+        }
+      } else {
+        setShownVideoIds([]);
+      }
     } catch (e) {
       console.error('Ошибка загрузки данных профиля для практики', e);
     } finally {
@@ -638,117 +739,271 @@ export default function PracticePage() {
   const renderMediaTab = () => {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
-        {/* Панель импорта ссылки */}
-        <form onSubmit={handleAddMediaUrl} className={styles.mediaImportForm} style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <input
-            type="text"
-            className="input-friendly"
-            placeholder="Вставьте ссылку на YouTube (например, https://www.youtube.com/watch?v=...)"
-            value={customUrlInput}
-            onChange={(e) => setCustomUrlInput(e.target.value)}
-            style={{ flex: 1, minWidth: '250px' }}
-            disabled={isAddingUrl}
-          />
-          <button
-            type="submit"
-            disabled={isAddingUrl || !customUrlInput.trim()}
-            className="btn-3d btn-green"
-            style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '8px' }}
-          >
-            {isAddingUrl ? (
-              <>
-                <RefreshCw size={16} className={styles.spin} />
-                Импорт...
-              </>
-            ) : (
-              'Импортировать'
+        
+        {/* Поиск видео на YouTube */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+          <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: 800 }}>Поиск видео на YouTube</h4>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              className="input-friendly"
+              placeholder="Найти обучающие видео (например: заказать суши, в аэропорту, разговорный)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleMediaSearch(false); }}
+              style={{ flex: 1, minWidth: '250px' }}
+              disabled={isSearching}
+            />
+            <button
+              onClick={() => handleMediaSearch(false)}
+              disabled={isSearching || !searchQuery.trim()}
+              className="btn-3d btn-blue"
+              style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              {isSearching ? <RefreshCw size={16} className={styles.spin} /> : null}
+              Найти
+            </button>
+            {activeSearchQuery && (
+              <button
+                onClick={handleResetSearch}
+                className="btn-3d btn-gray"
+                style={{ padding: '10px 20px' }}
+              >
+                Сбросить
+              </button>
             )}
-          </button>
-        </form>
+          </div>
+        </div>
 
-        {importError && (
+        {/* Панель импорта ссылки (прежний функционал) */}
+        {!activeSearchQuery && (
+          <form onSubmit={handleAddMediaUrl} className={styles.mediaImportForm} style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              className="input-friendly"
+              placeholder="Вставьте ссылку на YouTube для импорта (например, https://www.youtube.com/watch?v=...)"
+              value={customUrlInput}
+              onChange={(e) => setCustomUrlInput(e.target.value)}
+              style={{ flex: 1, minWidth: '250px' }}
+              disabled={isAddingUrl}
+            />
+            <button
+              type="submit"
+              disabled={isAddingUrl || !customUrlInput.trim()}
+              className="btn-3d btn-green"
+              style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              {isAddingUrl ? (
+                <>
+                  <RefreshCw size={16} className={styles.spin} />
+                  Импорт...
+                </>
+              ) : (
+                'Импортировать'
+              )}
+            </button>
+          </form>
+        )}
+
+        {importError && !activeSearchQuery && (
           <div className={styles.errorAlert} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <AlertCircle size={16} />
             <p style={{ margin: 0 }}>{importError}</p>
           </div>
         )}
 
-        {/* Сетка рекомендованного контента */}
-        <div>
-          <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 800 }}>Рекомендованный медиаконтент</h3>
-          
-          {isMediaLoading && mediaRecommendations.length === 0 ? (
-            <div className={styles.loadingText} style={{ padding: '48px 24px' }}>
-              <RefreshCw size={28} className={styles.spin} style={{ margin: '0 auto 16px auto', color: 'var(--color-blue)', display: 'block' }} />
-              <p style={{ margin: 0, fontWeight: 700, fontSize: '16px' }}>Анализируем ваш лексический профиль и подбираем Comprehensible Input...</p>
+        {searchError && (
+          <div className={styles.errorAlert} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <AlertCircle size={16} />
+            <p style={{ margin: 0 }}>{searchError}</p>
+          </div>
+        )}
+
+        {/* Основной контент вкладки */}
+        {activeSearchQuery ? (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '16px', flexWrap: 'wrap' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>
+                Результаты поиска по запросу «{activeSearchQuery}»
+              </h3>
+              {searchResults.length > 0 && (
+                <button
+                  onClick={() => handleMediaSearch(true)}
+                  disabled={isSearching}
+                  className="btn-3d btn-purple"
+                  style={{ padding: '8px 16px', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <RefreshCw size={14} className={isSearching ? styles.spin : ''} />
+                  Обновить выдачу
+                </button>
+              )}
             </div>
-          ) : mediaRecommendations.length === 0 ? (
-            <div className={styles.emptyState}>
-              <XCircle size={48} className={styles.emptyIcon} />
-              <p>Медиаконтент не найден. Попробуйте импортировать собственное видео по ссылке выше.</p>
-            </div>
-          ) : (
-            <div className={styles.mediaGrid}>
-              {mediaRecommendations.map((item) => {
-                const cr = item.comprehensionRate || 0;
-                let barColor = 'var(--color-red)';
-                let textColor = 'var(--color-red)';
-                if (cr >= 85) {
-                  barColor = 'var(--color-green)';
-                  textColor = 'var(--color-green)';
-                } else if (cr >= 70) {
-                  barColor = 'var(--color-yellow-shadow)';
-                  textColor = 'var(--color-yellow-shadow)';
-                } else if (cr >= 50) {
-                  barColor = 'var(--color-orange)';
-                  textColor = 'var(--color-orange)';
-                }
 
-                return (
-                  <div key={item.id} className={`${styles.mediaCard} card-friendly`}>
-                    <div className={styles.mediaCardHeader}>
-                      <span className={`${styles.platformBadge} ${item.platform === 'youtube' ? styles.ytBadge : styles.podcastBadge}`}>
-                        {item.platform === 'youtube' ? 'YouTube' : 'Подкаст'}
-                      </span>
-                      {item.dueOverlapCount !== undefined && item.dueOverlapCount > 0 && (
-                        <span className={styles.overlapBadge}>
-                          ✨ Повторение: {item.dueOverlapCount} слов
-                        </span>
-                      )}
-                    </div>
+            {isSearching && searchResults.length === 0 ? (
+              <div className={styles.loadingText} style={{ padding: '48px 24px' }}>
+                <RefreshCw size={28} className={styles.spin} style={{ margin: '0 auto 16px auto', color: 'var(--color-blue)', display: 'block' }} />
+                <p style={{ margin: 0, fontWeight: 700, fontSize: '16px' }}>Ищем подходящие видео и анализируем их субтитры...</p>
+              </div>
+            ) : searchResults.length === 0 ? (
+              <div className={styles.emptyState}>
+                <XCircle size={48} className={styles.emptyIcon} />
+                <p>По вашему запросу не найдено подходящих видео с японскими субтитрами.</p>
+              </div>
+            ) : (
+              <div>
+                <div className={styles.mediaGrid}>
+                  {searchResults.map((item) => {
+                    const cr = item.comprehensionRate || 0;
+                    let barColor = 'var(--color-red)';
+                    let textColor = 'var(--color-red)';
+                    if (cr >= 85) {
+                      barColor = 'var(--color-green)';
+                      textColor = 'var(--color-green)';
+                    } else if (cr >= 70) {
+                      barColor = 'var(--color-yellow-shadow)';
+                      textColor = 'var(--color-yellow-shadow)';
+                    } else if (cr >= 50) {
+                      barColor = 'var(--color-orange)';
+                      textColor = 'var(--color-orange)';
+                    }
 
-                    <h4 className={styles.mediaCardTitle}>{item.title}</h4>
-                    <p className={styles.mediaCardDesc}>{item.description}</p>
+                    return (
+                      <div key={item.id} className={`${styles.mediaCard} card-friendly`}>
+                        <div className={styles.mediaCardHeader}>
+                          <span className={`${styles.platformBadge} ${styles.ytBadge}`}>
+                            YouTube
+                          </span>
+                          {item.trackKind === 'manual' && (
+                            <span className={styles.overlapBadge} style={{ backgroundColor: 'var(--color-blue)', color: 'white' }}>
+                              ✍️ Ручные субтитры
+                            </span>
+                          )}
+                        </div>
 
-                    <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px', fontWeight: 800 }}>
-                        <span>Степень понимания:</span>
-                        <span style={{ color: textColor }}>{cr}% знакомых слов</span>
+                        <h4 className={styles.mediaCardTitle}>{item.title}</h4>
+                        <p className={styles.mediaCardDesc}>{item.description}</p>
+
+                        <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px', fontWeight: 800 }}>
+                            <span>Степень понимания:</span>
+                            <span style={{ color: textColor }}>{cr}% знакомых слов</span>
+                          </div>
+                          <div style={{ width: '100%', height: '10px', backgroundColor: 'var(--bg-secondary)', borderRadius: '5px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                            <div style={{ width: `${cr}%`, height: '100%', backgroundColor: barColor, transition: 'width 0.3s ease' }} />
+                          </div>
+                          {cr >= 80 && (
+                            <p style={{ margin: '8px 0 0 0', fontSize: '11px', fontWeight: 700, color: 'var(--color-green)' }}>
+                              🎯 Рекомендуется как Comprehensible Input
+                            </p>
+                          )}
+                        </div>
+
+                        <button
+                          onClick={() => setActiveMedia(item)}
+                          className="btn-3d btn-blue"
+                          style={{ marginTop: '16px', width: '100%', padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '13px' }}
+                        >
+                          <Play size={14} />
+                          Смотреть и учить
+                        </button>
                       </div>
-                      <div style={{ width: '100%', height: '10px', backgroundColor: 'var(--bg-secondary)', borderRadius: '5px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
-                        <div style={{ width: `${cr}%`, height: '100%', backgroundColor: barColor, transition: 'width 0.3s ease' }} />
-                      </div>
-                      {cr >= 80 && (
-                        <p style={{ margin: '8px 0 0 0', fontSize: '11px', fontWeight: 700, color: 'var(--color-green)' }}>
-                          🎯 Рекомендуется как Comprehensible Input
-                        </p>
-                      )}
-                    </div>
+                    );
+                  })}
+                </div>
 
+                {searchContinuation && (
+                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
                     <button
-                      onClick={() => setActiveMedia(item)}
-                      className="btn-3d btn-blue"
-                      style={{ marginTop: '16px', width: '100%', padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '13px' }}
+                      onClick={() => handleMediaSearch(false, searchContinuation)}
+                      disabled={isSearching}
+                      className="btn-3d btn-green"
+                      style={{ padding: '10px 24px', display: 'flex', alignItems: 'center', gap: '8px' }}
                     >
-                      <Play size={14} />
-                      Смотреть и учить
+                      {isSearching ? <RefreshCw size={16} className={styles.spin} /> : null}
+                      Показать еще
                     </button>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 800 }}>Рекомендованный медиаконтент</h3>
+            
+            {isMediaLoading && mediaRecommendations.length === 0 ? (
+              <div className={styles.loadingText} style={{ padding: '48px 24px' }}>
+                <RefreshCw size={28} className={styles.spin} style={{ margin: '0 auto 16px auto', color: 'var(--color-blue)', display: 'block' }} />
+                <p style={{ margin: 0, fontWeight: 700, fontSize: '16px' }}>Анализируем ваш лексический профиль и подбираем Comprehensible Input...</p>
+              </div>
+            ) : mediaRecommendations.length === 0 ? (
+              <div className={styles.emptyState}>
+                <XCircle size={48} className={styles.emptyIcon} />
+                <p>Медиаконтент не найден. Попробуйте найти обучающие видео по поиску выше.</p>
+              </div>
+            ) : (
+              <div className={styles.mediaGrid}>
+                {mediaRecommendations.map((item) => {
+                  const cr = item.comprehensionRate || 0;
+                  let barColor = 'var(--color-red)';
+                  let textColor = 'var(--color-red)';
+                  if (cr >= 85) {
+                    barColor = 'var(--color-green)';
+                    textColor = 'var(--color-green)';
+                  } else if (cr >= 70) {
+                    barColor = 'var(--color-yellow-shadow)';
+                    textColor = 'var(--color-yellow-shadow)';
+                  } else if (cr >= 50) {
+                    barColor = 'var(--color-orange)';
+                    textColor = 'var(--color-orange)';
+                  }
+
+                  return (
+                    <div key={item.id} className={`${styles.mediaCard} card-friendly`}>
+                      <div className={styles.mediaCardHeader}>
+                        <span className={`${styles.platformBadge} ${item.platform === 'youtube' ? styles.ytBadge : styles.podcastBadge}`}>
+                          {item.platform === 'youtube' ? 'YouTube' : 'Подкаст'}
+                        </span>
+                        {item.dueOverlapCount !== undefined && item.dueOverlapCount > 0 && (
+                          <span className={styles.overlapBadge}>
+                            ✨ Повторение: {item.dueOverlapCount} слов
+                          </span>
+                        )}
+                      </div>
+
+                      <h4 className={styles.mediaCardTitle}>{item.title}</h4>
+                      <p className={styles.mediaCardDesc}>{item.description}</p>
+
+                      <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px', fontWeight: 800 }}>
+                          <span>Степень понимания:</span>
+                          <span style={{ color: textColor }}>{cr}% знакомых слов</span>
+                        </div>
+                        <div style={{ width: '100%', height: '10px', backgroundColor: 'var(--bg-secondary)', borderRadius: '5px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                          <div style={{ width: `${cr}%`, height: '100%', backgroundColor: barColor, transition: 'width 0.3s ease' }} />
+                        </div>
+                        {cr >= 80 && (
+                          <p style={{ margin: '8px 0 0 0', fontSize: '11px', fontWeight: 700, color: 'var(--color-green)' }}>
+                            🎯 Рекомендуется как Comprehensible Input
+                          </p>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => setActiveMedia(item)}
+                        className="btn-3d btn-blue"
+                        style={{ marginTop: '16px', width: '100%', padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '13px' }}
+                      >
+                        <Play size={14} />
+                        Смотреть и учить
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   };

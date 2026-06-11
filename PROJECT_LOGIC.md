@@ -82,6 +82,8 @@ src/
           __tests__/parse.test.ts
         tokenize/route.ts # POST /api/media/tokenize (morphological analyzer proxy)
           __tests__/tokenize.test.ts
+        search/route.ts   # POST /api/media/search (funnel search route)
+          __tests__/route.test.ts
   hooks/
     useJapanification.tsx # XP progression, level, speed, chatLevel state
     useQuests.ts          # Daily quests state tracking (reviews, chats, mnemonics)
@@ -158,6 +160,9 @@ src/
     media/
       youtube.ts          # Zero-dependency Japanese YouTube caption extractor
       parser.ts           # SRT/VTT subtitle parser and duration rounding utility
+      search.ts           # YouTube search page scraper
+      ranking.ts          # Candidate scoring and ranking engine
+      selection.ts        # Seeded history-aware page diversity selection
 ```
 
 ### [PL-2.2] File Registry
@@ -206,6 +211,8 @@ src/
 | `app/api/media/tokenize/route.ts` | POST endpoint proxying tokenization to local MeCab microservice |
 | `app/api/media/tokenize/__tests__/tokenize.test.ts` | Unit tests for tokenize endpoint |
 | `app/api/media/tokenize/__tests__/tokenize.integration.test.ts` | Integration tests for tokenize media endpoint against running MeCab |
+| `app/api/media/search/route.ts` | POST endpoint to orchestrate query expansion, YouTube scraping, subtitle quality check, CR-ranking, and page diversity selection |
+| `app/api/media/search/__tests__/route.test.ts` | Unit tests for search API route funnel orchestration |
 | `lib/media/youtube.ts` | Zero-dependency Japanese YouTube caption extractor; json3-first (`fmt=json3` → `parseJson3ToSegments`), XML fallback with Russian logs per path |
 | `lib/media/parser.ts` | SRT/VTT subtitle file parser; `SubtitleSegment` interface (incl. optional `words[]`, `source`); `normalizeSegments` — sticky timing, gap-fill, overlap clamp, last-segment duration cap |
 | `lib/media/json3.ts` | TypeScript json3 subtitle parser: `parseJson3ToSegments(data)` preserving per-word `offsetMs` from `segs[].tOffsetMs` |
@@ -213,14 +220,24 @@ src/
 | `lib/media/availability.ts` | oEmbed/caption availability checker for YouTube videos |
 | `lib/media/karaokeQuality.ts` | Pure function `assessKaraokeQuality(segment)` that evaluates if subtitle segments pass quality criteria for karaoke rendering |
 | `lib/media/karaokeProgress.ts` | Pure function `computeFillFraction` for piecewise-linear progress interpolation, and `interpolatePlayerTime` for display clock estimation |
+| `lib/media/search.ts` | Zero-dependency Japanese YouTube search page scraper and continuation tracker |
+| `lib/media/ranking.ts` | Pure candidate ranking engine based on FSRS levelFit (0.6) and subtitle track kind quality score (0.4) |
+| `lib/media/selection.ts` | Pure seeded selection helper maintaining profile shown history (overlap <= 10%) |
+| `lib/gemini/queryExpansion.ts` | Singleton query expansion service running a single gemini-2.5-flash-lite call with caching and error degradation |
 | `lib/media/__tests__/availability.test.ts` | Unit tests for media availability helpers |
 | `lib/media/__tests__/json3.test.ts` | Unit tests for json3 subtitle parser |
 | `lib/media/__tests__/sentences.test.ts` | Unit tests for sentence regrouping logic |
 | `lib/media/__tests__/karaokeQuality.test.ts` | Unit tests for karaoke quality gate module |
 | `lib/media/__tests__/karaokeProgress.test.ts` | Unit tests for karaoke progress interpolation module |
+| `lib/media/__tests__/search.test.ts` | Unit tests for search result scraper and parser |
+| `lib/media/__tests__/ranking.test.ts` | Unit tests for candidate scoring and ranking rules |
+| `lib/media/__tests__/selection.test.ts` | Unit tests for seeded PRNG selection and history diversity |
+| `lib/gemini/__tests__/queryExpansion.test.ts` | Unit tests for Gemini query expansion and cache fallback |
+| `lib/media/__tests__/search-live.integration.test.ts` | Integration tests verifying search and caption check against live YouTube API |
 | `lib/media/__tests__/feed.integration.test.ts` | Integration tests verifying oEmbed embedding and caption tracks in media feed |
 | `lib/media/__tests__/feed-language.integration.test.ts` | Integration tests verifying that every video in the recommended feed has a valid Japanese caption track |
 | `lib/media/__tests__/transcript-fidelity.integration.test.ts` | Integration tests verifying that pregenerated transcripts match live scraped YouTube captions with high fidelity |
+| `tests/e2e/media-search-live.spec.ts` | Playwright E2E tests verifying search input, refresh diversity, and player loading |
 | `components/MediaInteractivePlayer.tsx` | Subtitle-synchronized player component: sticky segment matching, quality-gated smooth progress fill karaoke rendering, requestAnimationFrame display clock resynchronization, sentence regrouping pipeline, CC dedup (`cc_load_policy` conditional, extension priority guard, CC toggle button) |
 | `components/__tests__/MediaInteractivePlayer.test.tsx` | Unit tests for MediaInteractivePlayer component |
 | `hooks/useMediaRecommendation.ts` | Hook calculating Comprehension Rate (CR) and FSRS-due vocabulary matches for videos |
@@ -710,4 +727,4 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-321 unit/integration tests across 48 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+346 unit/integration tests across 54 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.

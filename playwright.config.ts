@@ -22,6 +22,9 @@ export default defineConfig({
     reuseExistingServer: true,
     stdout: 'pipe',
     stderr: 'pipe',
+    env: {
+      NODE_TLS_REJECT_UNAUTHORIZED: '0',
+    },
   },
   projects: [
     {

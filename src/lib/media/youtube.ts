@@ -223,3 +223,18 @@ export async function getYoutubeTranscriptSegments(videoId: string): Promise<Sub
   return await fetchAndParseTranscriptToSegments(tracks, videoId, cookieString);
 }
 
+/**
+ * Проверяет наличие японских субтитров у видео по его ID
+ */
+export async function hasJapaneseCaptions(videoId: string): Promise<boolean> {
+  try {
+    const { tracks } = await getTracksAndCookies(videoId);
+    const jaTrack = tracks.find(t => t.languageCode === 'ja' && t.kind !== 'asr') ||
+                    tracks.find(t => t.languageCode === 'ja' || t.languageCode?.startsWith('ja') || t.vssId?.includes('.ja'));
+    return !!jaTrack;
+  } catch (e: any) {
+    logger.warn(`[YouTube Captions Check] Ошибка проверки субтитров для ${videoId}: ${e.message || e}`);
+    return false;
+  }
+}
+
