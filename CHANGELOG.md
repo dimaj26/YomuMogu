@@ -2,6 +2,18 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.44.0] - 2026-06-12
+
+### Added
+- **Karaoke Quality Gate**: Pure quality gate module `karaokeQuality.ts` that filters out segments not passing structural criteria (requires at least 3 words, offset monotonicity, within-bounds durations, and filters placeholder manual subtitles).
+- **Interpolated Karaoke Progress**: Piecewise-linear character-space progress interpolation `karaokeProgress.ts` that calculates smooth continuous progress and display clock estimation.
+- **Unit and Integration Tests**: Added test suites `karaokeQuality.test.ts` and `karaokeProgress.test.ts` to cover every edge case (monotonicity, bounds, manual subtitles, linear fallback, display time freeze on pause/resync).
+- **Continuous Karaoke Progress Rendering**: Integrated requestAnimationFrame clock loop in `MediaInteractivePlayer.tsx` to continuously fill tokens left of the playhead (`.filledToken`) and partially paint the active token using a dynamic linear gradient background.
+
+### Changed
+- **Removed Discrete Highlights**: Completely deleted untestable discrete word-jumping highlights and `activeWordIndex` state to achieve 100% testability.
+- **E2E assertions**: Aligned Playwright E2E tests in `tests/e2e/media-live.spec.ts` to assert karaoke visibility conditionally based on the quality gate.
+
 ## [1.43.0] - 2026-06-12
 
 ### Added

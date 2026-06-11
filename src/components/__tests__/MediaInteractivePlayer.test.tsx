@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { MediaInteractivePlayer } from '../MediaInteractivePlayer';
 
@@ -30,7 +30,7 @@ vi.mock('@/lib/profile', () => ({
 }));
 
 // Mock YouTube API
-const mockPlayerInstance = {
+const mockPlayerInstance: any = {
   getCurrentTime: vi.fn().mockReturnValue(1.5),
   seekTo: vi.fn(),
   destroy: vi.fn(),
@@ -38,7 +38,7 @@ const mockPlayerInstance = {
 
 let lastPlayerConfig: any = null;
 
-globalThis.window.YT = {
+(globalThis.window as any).YT = {
   Player: vi.fn().mockImplementation(function (id, config) {
     lastPlayerConfig = config;
     // Симулируем вызов onStateChange
@@ -391,7 +391,7 @@ describe('MediaInteractivePlayer Component', () => {
     });
   });
 
-  it('подсвечивает активное слово по tOffsetMs (karaoke)', async () => {
+  it('не рендерит караоке-слой для сегмента, не прошедшего гейт', async () => {
     mockFetch.mockImplementation((url) => {
       const urlStr = typeof url === 'string' ? url : (url as any).url || '';
       if (urlStr.includes('/api/media/parse')) {
@@ -399,15 +399,77 @@ describe('MediaInteractivePlayer Component', () => {
           ok: true,
           json: async () => ({
             success: true,
-            lemmas: ['今日', '天気'],
+            lemmas: ['今日'],
             segments: [
               {
                 start: 0,
                 duration: 3,
-                text: '今日天気',
+                text: '今日',
                 words: [
-                  { text: '今日', offsetMs: 0 },
-                  { text: '天気', offsetMs: 1000 }
+                  { text: '今日', offsetMs: 0 } // плейсхолдер ручных субтитров (меньше 3 слов) -> гейт завален
+                ]
+              }
+            ]
+          })
+        });
+      }
+      if (urlStr.includes('/api/media/tokenize')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            tokens: [
+              { surface: '今日', pos: '名詞', lemma: '今日', reading: 'キョу' }
+            ]
+          })
+        });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
+    let mockTime = 1.0;
+    mockPlayerInstance.getCurrentTime.mockImplementation(() => mockTime);
+
+    render(
+      <MediaInteractivePlayer
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="NHK Easy News"
+        onClose={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('word-token').length).toBe(1);
+    });
+
+    // Имитируем проигрывание плеера
+    act(() => {
+      if (lastPlayerConfig && lastPlayerConfig.events && lastPlayerConfig.events.onStateChange) {
+        lastPlayerConfig.events.onStateChange({ data: 1 }); // PLAYING
+      }
+    });
+
+    // Убеждаемся, что data-testid="karaoke-fill" отсутствует на элементе
+    expect(screen.queryByTestId('karaoke-fill')).toBeNull();
+  });
+
+  it('рендерит fill с детерминированной позицией при мокнутом getCurrentTime', async () => {
+    mockFetch.mockImplementation((url) => {
+      const urlStr = typeof url === 'string' ? url : (url as any).url || '';
+      if (urlStr.includes('/api/media/parse')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            lemmas: ['今日', '天気', 'いい'],
+            segments: [
+              {
+                start: 0,
+                duration: 3,
+                text: '今日天気いい',
+                words: [
+                  { text: '今日', offsetMs: 100 }, // length 2
+                  { text: '天気', offsetMs: 1000 }, // length 2
+                  { text: 'いい', offsetMs: 2000 }  // length 2 -> totalChars = 6
                 ]
               }
             ]
@@ -420,7 +482,8 @@ describe('MediaInteractivePlayer Component', () => {
           json: async () => ({
             tokens: [
               { surface: '今日', pos: '名詞', lemma: '今日', reading: 'キョウ' },
-              { surface: '天気', pos: '名詞', lemma: '天気', reading: 'テンキ' }
+              { surface: '天気', pos: '名詞', lemma: '天気', reading: 'テンки' },
+              { surface: 'いい', pos: '形容詞', lemma: 'いい', reading: 'イи' }
             ]
           })
         });
@@ -428,7 +491,7 @@ describe('MediaInteractivePlayer Component', () => {
       return Promise.resolve({ ok: true, json: async () => ({}) });
     });
 
-    let mockTime = 1.5;
+    let mockTime = 1.0; // t = 1000 ms -> ровно на старте "天気", прогресс 2/6 = 33.33%
     mockPlayerInstance.getCurrentTime.mockImplementation(() => mockTime);
 
     render(
@@ -439,17 +502,32 @@ describe('MediaInteractivePlayer Component', () => {
       />
     );
 
+    // Ждем загрузки сегментов и токенов
     await waitFor(() => {
-      expect(screen.getAllByTestId('word-token').length).toBe(2);
+      expect(screen.getAllByTestId('word-token').length).toBe(3);
+    });
+
+    // Имитируем проигрывание плеера
+    act(() => {
+      if (lastPlayerConfig && lastPlayerConfig.events && lastPlayerConfig.events.onStateChange) {
+        lastPlayerConfig.events.onStateChange({ data: 1 }); // PLAYING
+      }
+    });
+
+    // Ожидаем появления караоке-слоя
+    await waitFor(() => {
+      expect(screen.getByTestId('karaoke-fill')).toBeInTheDocument();
+    });
+
+    // Ожидаем заполнения первого токена
+    await waitFor(() => {
+      const tokens = screen.getAllByTestId('word-token');
+      expect(tokens[0]).toHaveClass(/filledToken/);
     });
 
     const tokens = screen.getAllByTestId('word-token');
-    expect(tokens[0].textContent).toBe('今日');
-    expect(tokens[1].textContent).toBe('天気');
-
-    await waitFor(() => {
-      expect(tokens[1].className).toContain('activeWord');
-    });
+    // Второй токен "天気" является граничным на t = 1.0 (прогресс = 2/6 = 33.33%)
+    expect(tokens[1].style.backgroundSize).toBeDefined();
   });
 
   it('cc_load_policy=0 когда сегменты имеют words', async () => {

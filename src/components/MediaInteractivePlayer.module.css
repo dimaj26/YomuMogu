@@ -266,12 +266,17 @@
   border-radius: 6px;
   cursor: pointer;
   border: 2px solid transparent;
-  transition: all 0.15s ease;
+  transition: border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
   color: var(--text-primary, #1a202c);
+
+  /* Градиент для плавной караоке-подсветки */
+  background-image: linear-gradient(to right, rgba(236, 201, 75, 0.4) 100%, transparent 0%);
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
 }
 
 .wordToken:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background-color: rgba(0, 0, 0, 0.06);
   border-color: var(--border-color, #2d3748);
 }
 
@@ -596,10 +601,8 @@
   transition: opacity 0.3s ease;
 }
 
-.activeWord {
-  background-color: rgba(236, 201, 75, 0.4);
-  border-color: var(--color-yellow, #ecc94b) !important;
-  border-radius: 4px;
+.filledToken {
+  background-size: 100% 100% !important;
 }
 
 .statusDot {

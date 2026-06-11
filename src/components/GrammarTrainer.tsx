@@ -117,7 +117,7 @@ const Mascot: React.FC<{ state: 'idle' | 'happy' | 'worried' | 'cheering' }> = (
   // Стейты песочницы предложений
   const [tone, setTone] = useState<'polite' | 'plain' | 'dropped'>('polite');
   const [polarity, setPolarity] = useState<'affirmative' | 'negative'>('affirmative');
-  const [activeTooltip, setActiveTooltip] = useState<'wa' | 'desu' | null>(null);
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
 
   // Стейт активной вкладки справочника
   const [activeTab, setActiveTab] = useState<'sandbox' | 'secrets' | 'verify'>('sandbox');

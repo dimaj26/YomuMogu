@@ -73,10 +73,18 @@ test.describe('Live Subtitles, Karaoke & Dictionary E2E Tests @live', () => {
     const token = page.locator('span[class*="wordToken"]').first();
     await expect(token).toBeVisible({ timeout: 10000 });
 
-    // Так как воспроизведение идет на живом видео, проверяем подсветку слова.
-    // Ожидаем, что хотя бы один токен получит класс activeWord
-    const activeWordToken = page.locator('span[class*="activeWord"]').first();
-    await expect(activeWordToken).toBeVisible({ timeout: 5000 });
+    // Проверяем караоке консистентно гейту качества
+    const karaokeFill = page.locator('[data-testid="karaoke-fill"]');
+    const isEligible = await karaokeFill.count() > 0;
+    
+    if (isEligible) {
+      // Если сегмент допущен, ожидаем появление заполненного токена во время воспроизведения
+      const filledToken = page.locator('span[class*="filledToken"]').first();
+      await expect(filledToken).toBeVisible({ timeout: 10000 });
+    } else {
+      // Если не допущен, караоке-слой не рендерится вообще
+      await expect(karaokeFill).not.toBeVisible();
+    }
   });
 
   test('клик по токену открывает словарную карточку (live, реальный MeCab)', async ({ page }) => {

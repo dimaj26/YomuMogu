@@ -211,13 +211,17 @@ src/
 | `lib/media/json3.ts` | TypeScript json3 subtitle parser: `parseJson3ToSegments(data)` preserving per-word `offsetMs` from `segs[].tOffsetMs` |
 | `lib/media/sentences.ts` | Pure `regroupIntoSentences(segments)` — merges consecutive segments until Japanese terminal punctuation (。？！) with 90-char / 15-second safety caps; rebases `words[]` offsetMs |
 | `lib/media/availability.ts` | oEmbed/caption availability checker for YouTube videos |
+| `lib/media/karaokeQuality.ts` | Pure function `assessKaraokeQuality(segment)` that evaluates if subtitle segments pass quality criteria for karaoke rendering |
+| `lib/media/karaokeProgress.ts` | Pure function `computeFillFraction` for piecewise-linear progress interpolation, and `interpolatePlayerTime` for display clock estimation |
 | `lib/media/__tests__/availability.test.ts` | Unit tests for media availability helpers |
 | `lib/media/__tests__/json3.test.ts` | Unit tests for json3 subtitle parser |
 | `lib/media/__tests__/sentences.test.ts` | Unit tests for sentence regrouping logic |
+| `lib/media/__tests__/karaokeQuality.test.ts` | Unit tests for karaoke quality gate module |
+| `lib/media/__tests__/karaokeProgress.test.ts` | Unit tests for karaoke progress interpolation module |
 | `lib/media/__tests__/feed.integration.test.ts` | Integration tests verifying oEmbed embedding and caption tracks in media feed |
 | `lib/media/__tests__/feed-language.integration.test.ts` | Integration tests verifying that every video in the recommended feed has a valid Japanese caption track |
 | `lib/media/__tests__/transcript-fidelity.integration.test.ts` | Integration tests verifying that pregenerated transcripts match live scraped YouTube captions with high fidelity |
-| `components/MediaInteractivePlayer.tsx` | Subtitle-synchronized player component: sticky segment matching, karaoke word-level highlight (`activeWordIndex` + char-range overlap), sentence regrouping pipeline, CC dedup (`cc_load_policy` conditional, extension priority guard, CC toggle button) |
+| `components/MediaInteractivePlayer.tsx` | Subtitle-synchronized player component: sticky segment matching, quality-gated smooth progress fill karaoke rendering, requestAnimationFrame display clock resynchronization, sentence regrouping pipeline, CC dedup (`cc_load_policy` conditional, extension priority guard, CC toggle button) |
 | `components/__tests__/MediaInteractivePlayer.test.tsx` | Unit tests for MediaInteractivePlayer component |
 | `hooks/useMediaRecommendation.ts` | Hook calculating Comprehension Rate (CR) and FSRS-due vocabulary matches for videos |
 | `hooks/__tests__/useMediaRecommendation.test.ts` | Unit tests for useMediaRecommendation hook |
@@ -706,4 +710,4 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-305 unit/integration tests across 46 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+321 unit/integration tests across 48 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.

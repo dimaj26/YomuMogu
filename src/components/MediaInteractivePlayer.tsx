@@ -6,6 +6,8 @@ import { getProfileItem, getActiveProfileId } from '@/lib/profile';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { parseSubtitlesToSegments, normalizeSegments, type SubtitleSegment } from '@/lib/media/parser';
 import { regroupIntoSentences } from '@/lib/media/sentences';
+import { assessKaraokeQuality } from '@/lib/media/karaokeQuality';
+import { computeFillFraction, interpolatePlayerTime } from '@/lib/media/karaokeProgress';
 import styles from './MediaInteractivePlayer.module.css';
 
 // Типизация подробного токена MeCab
@@ -37,8 +39,13 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
   const [error, setError] = useState<string | null>(null);
   const [segments, setSegments] = useState<SubtitleSegment[]>([]);
   const [activeSegmentIndex, setActiveSegmentIndex] = useState<number>(-1);
-  const [activeWordIndex, setActiveWordIndex] = useState<number>(-1);
   const [currentTime, setCurrentTime] = useState<number>(0);
+
+  // Состояния для плавной караоке-интерполяции времени
+  const [displayTime, setDisplayTime] = useState<number>(0);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const lastPollTimeRef = useRef<number>(0);
+  const lastPollAtMsRef = useRef<number>(0);
   
   // Кэш токенизированных строк: SegmentText -> MeCabToken[]
   const [tokenizedCache, setTokenizedCache] = useState<Record<string, MeCabToken[]>>({});
@@ -52,6 +59,44 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
   segmentsRef.current = segments;
   // Состояние кнопки CC (YouTube субтитры): true = показаны
   const [ccEnabled, setCcEnabled] = useState<boolean>(false);
+
+  // Функция ресинхронизации часов дисплея с реальным временем плеера
+  const resyncClock = (playerTime: number, playingState: boolean) => {
+    lastPollTimeRef.current = playerTime;
+    lastPollAtMsRef.current = performance.now();
+    setDisplayTime(playerTime);
+    setIsPlaying(playingState);
+  };
+
+  // Эффект анимационного цикла (rAF) для плавного обновления displayTime
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    let animationFrameId: number;
+    const tick = () => {
+      const now = performance.now();
+      const interpolated = interpolatePlayerTime(
+        lastPollTimeRef.current,
+        lastPollAtMsRef.current,
+        now,
+        true
+      );
+      setDisplayTime(interpolated);
+      animationFrameId = requestAnimationFrame(tick);
+    };
+
+    animationFrameId = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [isPlaying]);
+
+  // Оценка качества караоке для текущего сегмента
+  const karaokeAssessment = React.useMemo(() => {
+    if (activeSegmentIndex === -1) return { eligible: false, reason: 'Нет активного сегмента' };
+    const segment = segments[activeSegmentIndex];
+    return assessKaraokeQuality(segment);
+  }, [activeSegmentIndex, segments]);
 
   // Словарь и Anki поповер
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
@@ -180,8 +225,14 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
             // @ts-ignore
             if (event.data === window.YT.PlayerState.PLAYING) {
               startYtTimer();
+              if (ytPlayerRef.current && typeof ytPlayerRef.current.getCurrentTime === 'function') {
+                resyncClock(ytPlayerRef.current.getCurrentTime(), true);
+              }
             } else {
               stopYtTimer();
+              if (ytPlayerRef.current && typeof ytPlayerRef.current.getCurrentTime === 'function') {
+                resyncClock(ytPlayerRef.current.getCurrentTime(), false);
+              }
             }
           },
           onError: (event: any) => {
@@ -244,6 +295,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
       if (ytPlayerRef.current && typeof ytPlayerRef.current.getCurrentTime === 'function') {
         const time = ytPlayerRef.current.getCurrentTime();
         setCurrentTime(time);
+        resyncClock(time, true);
       }
     }, 200);
   };
@@ -258,7 +310,9 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
   // Слушатель времени стандартного аудио плеера
   const handleAudioTimeUpdate = () => {
     if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
+      const time = audioRef.current.currentTime;
+      setCurrentTime(time);
+      resyncClock(time, !audioRef.current.paused);
     }
   };
 
@@ -277,33 +331,6 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
     }
   }, [currentTime, segments, activeSegmentIndex]);
 
-  // Поиск активного слова по tOffsetMs (караоке)
-  useEffect(() => {
-    if (activeSegmentIndex === -1) {
-      setActiveWordIndex(-1);
-      return;
-    }
-    const segment = segments[activeSegmentIndex];
-    if (!segment || !segment.words || segment.words.length === 0) {
-      setActiveWordIndex(-1);
-      return;
-    }
-
-    // Время относительно начала сегмента (в миллисекундах)
-    const relativeTimeMs = (currentTime - segment.start) * 1000;
-
-    let activeWordIdx = -1;
-    for (let i = 0; i < segment.words.length; i++) {
-      const word = segment.words[i];
-      if (relativeTimeMs >= word.offsetMs) {
-        activeWordIdx = i;
-      }
-    }
-    
-    if (activeWordIdx !== activeWordIndex) {
-      setActiveWordIndex(activeWordIdx);
-    }
-  }, [currentTime, activeSegmentIndex, segments, activeWordIndex]);
 
   // Запуск токенизации при смене активного сегмента
   useEffect(() => {
@@ -617,6 +644,16 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
                   src={url}
                   controls
                   onTimeUpdate={handleAudioTimeUpdate}
+                  onPlay={() => {
+                    if (audioRef.current) {
+                      resyncClock(audioRef.current.currentTime, true);
+                    }
+                  }}
+                  onPause={() => {
+                    if (audioRef.current) {
+                      resyncClock(audioRef.current.currentTime, false);
+                    }
+                  }}
                   className={styles.audioElement}
                 />
               </div>
@@ -672,7 +709,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
                           <span>Разбор японских морфем...</span>
                         </div>
                       ) : activeTokens.length > 0 ? (
-                        <div className={styles.tokensGrid}>
+                        <div className={styles.tokensGrid} data-testid={karaokeAssessment.eligible ? "karaoke-fill" : undefined}>
                           {(() => {
                             // Рассчитываем символьные диапазоны для токенов активного сегмента
                             let tokenSpans = [];
@@ -685,22 +722,17 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
                               charAccumulator += t.surface.length;
                             }
 
-                            // Рассчитываем символьный диапазон активного слова
-                            let activeWordCharStart = 0;
-                            let activeWordCharEnd = 0;
+                            // Вычисляем положение фронта заполнения караоке
                             const activeSegment = segments[activeSegmentIndex];
-                            
-                            if (activeWordIndex !== -1 && activeSegment && activeSegment.words) {
-                              let charAcc = 0;
-                              for (let idx = 0; idx < activeSegment.words.length; idx++) {
-                                const w = activeSegment.words[idx];
-                                if (idx === activeWordIndex) {
-                                  activeWordCharStart = charAcc;
-                                  activeWordCharEnd = charAcc + w.text.length;
-                                  break;
-                                }
-                                charAcc += w.text.length;
-                              }
+                            let currentCharFront = 0;
+                            if (karaokeAssessment.eligible && activeSegment) {
+                              const relativeTimeMs = (displayTime - activeSegment.start) * 1000;
+                              const fillFraction = computeFillFraction(
+                                relativeTimeMs,
+                                activeSegment.duration * 1000,
+                                activeSegment.words
+                              );
+                              currentCharFront = fillFraction * charAccumulator;
                             }
 
                             return activeTokens.map((token, i) => {
@@ -708,15 +740,36 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
                               const isContentWord = token.pos === '名詞' || token.pos === '動詞' || token.pos === '形容詞' || token.pos === '形状詞';
                               
                               const span = tokenSpans[i];
-                              const isWordActive = span && activeWordIndex !== -1 &&
-                                Math.max(span.start, activeWordCharStart) < Math.min(span.end, activeWordCharEnd);
+                              let isFilled = false;
+                              let fillPercentage = 0;
+
+                              if (karaokeAssessment.eligible && span) {
+                                if (span.end <= currentCharFront) {
+                                  isFilled = true;
+                                } else if (span.start < currentCharFront && span.end > currentCharFront) {
+                                  fillPercentage = ((currentCharFront - span.start) / (span.end - span.start)) * 100;
+                                }
+                              }
+
+                              const tokenStyle: React.CSSProperties = {};
+                              if (fillPercentage > 0) {
+                                tokenStyle.backgroundSize = `${Math.round(fillPercentage)}% 100%`;
+                              }
+
+                              const tokenClasses = [
+                                styles.wordToken,
+                                isContentWord ? styles.contentWord : '',
+                                selectedWord === token.surface ? styles.selectedToken : '',
+                                isFilled ? styles.filledToken : ''
+                              ].filter(Boolean).join(' ');
 
                               return (
                                 <span
                                   key={i}
                                   data-testid="word-token"
                                   onClick={() => handleTokenClick(token)}
-                                  className={`${styles.wordToken} ${isContentWord ? styles.contentWord : ''} ${selectedWord === token.surface ? styles.selectedToken : ''} ${isWordActive ? styles.activeWord : ''}`}
+                                  className={tokenClasses}
+                                  style={tokenStyle}
                                   title={token.reading ? `Чтение: ${katakanaToHiragana(token.reading)}` : undefined}
                                 >
                                   {token.surface}
@@ -742,6 +795,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
                           key={i}
                           onClick={() => {
                             setCurrentTime(seg.start);
+                            resyncClock(seg.start, isPlaying);
                             if (isYoutube && ytPlayerRef.current && typeof ytPlayerRef.current.seekTo === 'function') {
                               ytPlayerRef.current.seekTo(seg.start, true);
                             } else if (audioRef.current) {

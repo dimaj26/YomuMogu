@@ -1,8 +1,8 @@
 /**
  * Конвертирует структуру timedtext JSON3 от YouTube в формат SubtitleSegment[] приложения YomuMogu.
  * 
- * @param {object} data - Ответ timedtext в формате JSON3 (содержит events)
- * @returns {Array<{start: number, duration: number, text: string}>} Массив сегментов субтитров
+ * @param {any} data - Ответ timedtext в формате JSON3 (содержит events)
+ * @returns {Array<{start: number, duration: number, text: string, words: Array<{text: string, offsetMs: number}>}>} Массив сегментов субтитров
  */
 export function convertJson3ToSegments(data) {
   const segments = [];
