@@ -282,6 +282,21 @@
   line-height: 1.4;
 }
 
+.grammarShortNote {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-orange-shadow);
+  margin-bottom: 2px;
+}
+
+.grammarSelfRepairHint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-top: 4px;
+  opacity: 0.8;
+}
+
 /* === INPUT AREA === */
 .inputArea {
   display: flex;
@@ -353,19 +368,14 @@
 
 .hintOption {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 10px 14px;
   border-radius: var(--border-radius-sm);
   border: 2px solid var(--border-color);
   background-color: var(--bg-primary);
-  cursor: pointer;
   transition: all 0.15s ease;
-}
-
-.hintOption:hover {
-  border-color: var(--color-yellow);
-  background-color: #fffdf5;
 }
 
 .hintLevel {
@@ -392,17 +402,34 @@
   color: var(--color-red);
 }
 
-.hintText {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
+.hintKeywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
 }
 
-.hintTranslation {
+.keywordChip {
+  font-size: 13px;
+  font-weight: 600;
+  background-color: #f5f5f5;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: var(--text-primary);
+  border: 1px solid #e8e8e8;
+}
+
+.keywordTranslation {
   font-size: 12px;
   color: var(--text-secondary);
-  margin-left: auto;
-  text-align: right;
+  font-weight: normal;
+}
+
+.patternHintText {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 2px;
 }
 
 /* === LOADING STATE === */

@@ -46,9 +46,9 @@ describe('API Route POST /api/chat/hint', () => {
   it('should successfully return hints', async () => {
     const mockResponse = {
       hints: [
-        { level: 'easy', japanese: 'はい', translation: 'Да' },
-        { level: 'medium', japanese: '猫が好きです', translation: 'Мне нравятся кошки' },
-        { level: 'advanced', japanese: '猫は水を飲むのが好きですね', translation: 'Кошки ведь любят пить воду, правда?' }
+        { level: 'easy', keywords: [{ word: 'はい', translation: 'Да' }], patternHint: 'каркас' },
+        { level: 'medium', keywords: [{ word: '猫', translation: 'кошка' }], patternHint: 'каркас' },
+        { level: 'advanced', keywords: [{ word: '水', translation: 'вода' }], patternHint: 'каркас' }
       ]
     };
     mockGenerateHints.mockResolvedValue(mockResponse);

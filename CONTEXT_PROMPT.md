@@ -25,7 +25,7 @@ You are an expert **TypeScript / Next.js 16** developer. Your specialty is App R
 - **Session Generation**: Gemini structured JSON, 3 scenarios × 4–6 target words, prioritized by FSRS status.
 - **Chat System**: Multi-turn Gemini dialogue, 20-msg history window, persona enforcement, grammar analysis, XP.
 - **Difficulty Levels 1–5**: Japanese complexity + furigana rendering control; levels 1–2 exclude Keigo.
-- **Hint System**: `/api/chat/hint` generates 3 response variants (easy/medium/advanced).
+- **Hint System**: `/api/chat/hint` generates scaffolding hints (keywords + pattern skeletons) for 3 difficulty levels, preventing copy-pasting.
 - **XP & Progression**: Decorative levels 0–6 dashboard widget; XP from correct words, grammar, session completion.
 - **Profile System**: Multi-profile localStorage namespace `yomumogu_profile_${id}_${key}`; create/switch/delete.
 - **Gamified Dashboard**: Mascot 🍵, 3D buttons, Kumiko grid background, XP card widget, session resume/start.
@@ -65,6 +65,7 @@ You are an expert **TypeScript / Next.js 16** developer. Your specialty is App R
 - **JLPT Levels & N5 Completion**: Generated N5 and N4 levels mapping, pure matching/tagging module, idempotent sync/import merges, dev HUD bulk retag utility, and fully authored N5 grammar rule content (V-ta, tari, nagara).
 - **JLPT N3–N1 References & Derived Chat Scoping**: Generated N3, N2, and N1 level vocabulary database (v2) with duplicate and overlap cleans. Restricted AI chat grammar to the user's progress (mature/active rules + formulaic whitelist), selecting the active due rule as focus, validating response tags on the server, and logging violations.
 - **Competency Engine & JLPT Macro Ladder**: Pure competency helpers (`lexCoverage`, `grammarCoverage`, `buildCompetencyProfile`), N5→N1 winding SVG path `LearningTrack` component with progress rings, rolling chat session statistics (cap 10) in localStorage, and Chat Summary advisor suggesting level adjustments based on vocabulary/grammar thresholds.
+- **Honest Chat Feedback**: short metalinguistic Russian note for grammar errors and collapsed correction drawer (self-repair).
 
 ---
 

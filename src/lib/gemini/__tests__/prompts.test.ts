@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getChatSystemInstruction, LEVEL_INSTRUCTIONS } from '../prompts';
+import { getChatSystemInstruction, LEVEL_INSTRUCTIONS, getHintSystemInstruction } from '../prompts';
 
 describe('getChatSystemInstruction', () => {
   const options = {
@@ -37,6 +37,26 @@ describe('getChatSystemInstruction', () => {
     expect(prompt).toContain('Entirely Russian Input');
     expect(prompt).toContain('Furigana in Correction');
   });
+
+  it('should include shortNote instructions in system prompt', () => {
+    const prompt = getChatSystemInstruction(options);
+    expect(prompt).toContain('shortNote');
+    expect(prompt).toContain('«категория: неверное → верное»');
+  });
+});
+
+describe('getHintSystemInstruction', () => {
+  it('should contain ready-sentence ban and new scaffolding instructions in hint prompt', () => {
+    const prompt = getHintSystemInstruction({
+      scenario: 'Test Scenario',
+      targetWordsList: '猫 (кошка)',
+      unusedWordsList: '猫 (кошка)',
+      rubyInstruction: 'ruby rules'
+    });
+    expect(prompt).toContain('СТРОГО ЗАПРЕЩЕНО');
+    expect(prompt).toContain('keywords');
+    expect(prompt).toContain('patternHint');
+  });
 });
 
 describe('LEVEL_INSTRUCTIONS', () => {
@@ -48,3 +68,4 @@ describe('LEVEL_INSTRUCTIONS', () => {
     expect(LEVEL_INSTRUCTIONS[5]).toContain('grammarFeedback.correction');
   });
 });
+

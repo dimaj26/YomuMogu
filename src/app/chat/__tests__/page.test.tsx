@@ -344,3 +344,282 @@ describe('ChatPage Component', () => {
   });
 });
 
+describe('Self-Repair and Scaffolding Hint UI Tests', () => {
+  beforeEach(() => {
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
+    vi.restoreAllMocks();
+    localStorage.clear();
+    mockPush.mockReset();
+  });
+
+  const setupActiveSession = () => {
+    const session = {
+      id: 'test-session',
+      title: 'Тема тренировки',
+      description: 'Описание сценария',
+      scenario: 'Сценарий разговора',
+      targetWords: [
+        { word: '猫', translation: 'кошка' },
+      ],
+    };
+    localStorage.setItem('yomumogu_profile_default_active_session', JSON.stringify(session));
+    return session;
+  };
+
+  it('при isCorrect=false правка скрыта, виден shortNote и кнопка Показать правку', async () => {
+    setupActiveSession();
+
+    // 1. Initial welcome
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          reply: 'こんにちは！',
+          translation: 'Привет!',
+          wordsDetected: [],
+          grammarFeedback: { isCorrect: true },
+        }),
+      } as Response)
+      // 2. Submit wrong message -> return isCorrect: false
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          reply: 'こんにちは！',
+          translation: 'Привет!',
+          wordsDetected: [],
+          grammarFeedback: {
+            isCorrect: false,
+            shortNote: 'частица: に → で',
+            explanation: 'Надо использовать で вместо に.',
+            correction: '<ruby>公園<rt>こうえん</rt></ruby>で遊びます。',
+          },
+        }),
+      } as Response);
+
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    // Wait for chat to render
+    await waitFor(() => {
+      expect(screen.getByText('Тема тренировки')).toBeInTheDocument();
+    });
+
+    const textarea = screen.getByPlaceholderText('Напишите на японском...');
+    fireEvent.change(textarea, { target: { value: '公園に遊びます。' } });
+    
+    const sendBtn = screen.getByRole('button', { name: /Отправить/i });
+    fireEvent.click(sendBtn);
+
+    // Wait for feedback card
+    await waitFor(() => {
+      expect(screen.getByText('частица: に → で')).toBeInTheDocument();
+      expect(screen.getByText('Надо использовать で вместо に.')).toBeInTheDocument();
+      expect(screen.getByText('Попробуй исправить предложение сам и отправь снова — или открой правку.')).toBeInTheDocument();
+    });
+
+    // Correction text is hidden
+    expect(screen.queryByText('公園で遊びます。')).not.toBeInTheDocument();
+
+    // Show correction button is present
+    expect(screen.getByRole('button', { name: 'Показать правку' })).toBeInTheDocument();
+  });
+
+  it('клик по Показать правку раскрывает correction с ruby-разметкой', async () => {
+    setupActiveSession();
+
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          reply: 'こんにちは！',
+          translation: 'Привет!',
+          wordsDetected: [],
+          grammarFeedback: { isCorrect: true },
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          reply: 'こんにちは！',
+          translation: 'Привет!',
+          wordsDetected: [],
+          grammarFeedback: {
+            isCorrect: false,
+            shortNote: 'частица: に → で',
+            explanation: 'Надо использовать で вместо に.',
+            correction: '公園で遊びます',
+          },
+        }),
+      } as Response);
+
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    await waitFor(() => {
+      expect(screen.getByText('Тема тренировки')).toBeInTheDocument();
+    });
+
+    const textarea = screen.getByPlaceholderText('Напишите на японском...');
+    fireEvent.change(textarea, { target: { value: '公園に遊びます。' } });
+    const sendBtn = screen.getByRole('button', { name: /Отправить/i });
+    fireEvent.click(sendBtn);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Показать правку' })).toBeInTheDocument();
+    });
+
+    // Click "Показать правку"
+    const showBtn = screen.getByRole('button', { name: 'Показать правку' });
+    fireEvent.click(showBtn);
+
+    // Now correction is visible
+    expect(screen.getByText('公園で遊びます')).toBeInTheDocument();
+    // Button is hidden
+    expect(screen.queryByRole('button', { name: 'Показать правку' })).not.toBeInTheDocument();
+  });
+
+  it('при isCorrect=true карточка не содержит кнопку и подсказку self-repair', async () => {
+    setupActiveSession();
+
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          reply: 'こんにちは！',
+          translation: 'Привет!',
+          wordsDetected: [],
+          grammarFeedback: { isCorrect: true },
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          reply: '正解！',
+          translation: 'Правильно!',
+          wordsDetected: [],
+          grammarFeedback: {
+            isCorrect: true,
+            correction: '',
+            explanation: '',
+          },
+        }),
+      } as Response);
+
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    await waitFor(() => {
+      expect(screen.getByText('Тема тренировки')).toBeInTheDocument();
+    });
+
+    const textarea = screen.getByPlaceholderText('Напишите на японском...');
+    fireEvent.change(textarea, { target: { value: '正しい文です。' } });
+    const sendBtn = screen.getByRole('button', { name: /Отправить/i });
+    fireEvent.click(sendBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Грамматика верна!/)).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: 'Показать правку' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Попробуй исправить предложение сам и отправь снова — или открой правку.')).not.toBeInTheDocument();
+  });
+
+  it('фидбек без shortNote (легаси) рендерится без пустой строки заметки', async () => {
+    setupActiveSession();
+
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          reply: 'こんにちは！',
+          translation: 'Привет!',
+          wordsDetected: [],
+          grammarFeedback: { isCorrect: true },
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          reply: 'こんにちは！',
+          translation: 'Привет!',
+          wordsDetected: [],
+          grammarFeedback: {
+            isCorrect: false,
+            // shortNote is missing / undefined
+            explanation: 'Надо использовать で.',
+            correction: '公園で',
+          },
+        }),
+      } as Response);
+
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    await waitFor(() => {
+      expect(screen.getByText('Тема тренировки')).toBeInTheDocument();
+    });
+
+    const textarea = screen.getByPlaceholderText('Напишите на японском...');
+    fireEvent.change(textarea, { target: { value: '公園に' } });
+    const sendBtn = screen.getByRole('button', { name: /Отправить/i });
+    fireEvent.click(sendBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText('Надо использовать で.')).toBeInTheDocument();
+    });
+
+    // Check that no shortNote is rendered as empty box or empty text
+    expect(screen.queryByText('undefined')).not.toBeInTheDocument();
+  });
+
+  it('хинт-панель показывает чипы слов и patternHint и НЕ содержит кнопку вставки готовой фразы', async () => {
+    setupActiveSession();
+
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          reply: 'こんにちは！',
+          translation: 'Привет!',
+          wordsDetected: [],
+          grammarFeedback: { isCorrect: true },
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          hints: [
+            {
+              level: 'easy',
+              keywords: [
+                { word: '水', translation: 'вода' },
+                { word: '飲む', translation: 'пить' },
+              ],
+              patternHint: '[предмет] を 飲みます',
+            },
+          ],
+        }),
+      } as Response);
+
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    await waitFor(() => {
+      expect(screen.getByText('Тема тренировки')).toBeInTheDocument();
+    });
+
+    // Click hint button
+    const hintBtn = screen.getByTitle('Подсказка');
+    fireEvent.click(hintBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/вода/)).toBeInTheDocument();
+      expect(screen.getByText(/飲む/)).toBeInTheDocument();
+      expect(screen.getByText('[предмет] を 飲みます')).toBeInTheDocument();
+    });
+
+    // Ensure there is no click-to-insert handler
+    const textElem = screen.getByText('[предмет] を 飲みます');
+    const textarea = screen.getByPlaceholderText('Напишите на японском...');
+    expect(textarea.innerHTML).toBe('');
+    fireEvent.click(textElem);
+    expect(textarea.innerHTML).toBe('');
+  });
+});
+

@@ -2,6 +2,14 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.51.0] - 2026-06-13
+
+### Added
+- **Explicit Grammar Feedback (shortNote)**: Added a `shortNote` field to the `grammarFeedback` object in the `/api/chat` route and `ChatService.sendMessage` response schema. Generated concise Russian metalinguistic feedback (e.g. `частица: に → で`) for incorrect inputs. Added backward compatibility fallback to empty string `""` for legacy chat history.
+- **Self-Repair UI Flow**: Implemented collapsed-by-default grammar correction cards in `/chat`. The card immediately renders the `shortNote`, explanation, and a static hint prompting self-correction, hiding the target correction behind a "Показать правку" 3D button.
+- **Scaffolding Hints Rework**: Replaced ready-made hint sentences with a scaffolding contract. `/api/chat/hint` now returns `keywords` chips (Japanese word + Russian translation) and a `patternHint` structure (skeleton formula) with varying scaffolding detail based on difficulty level (full template with particles for easy, template with gaps for medium, intention description only for advanced). Removed click-to-insert actions, making hints display-only.
+- **TDD Test Suite**: Added a dedicated `src/lib/gemini/__tests__/chat.test.ts` unit test suite covering schema, prompt instruction assertions, and default properties. Appended 5 new UI tests in `page.test.tsx` and 2 live integration tests in `chat.integration.test.ts` (with SSL-reject-unauthorized bypass).
+
 ## [1.50.0] - 2026-06-13
 
 ### Added

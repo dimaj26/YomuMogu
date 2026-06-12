@@ -26,6 +26,7 @@ interface GrammarFeedback {
   isCorrect: boolean;
   correction: string;
   explanation: string;
+  shortNote?: string;
 }
 
 interface ChatMessageData {
@@ -37,10 +38,15 @@ interface ChatMessageData {
   wordsDetected?: string[];
 }
 
-interface HintVariant {
-  level: string;
-  japanese: string;
+interface KeywordInfo {
+  word: string;
   translation: string;
+}
+
+interface HintVariant {
+  level: 'easy' | 'medium' | 'advanced';
+  keywords: KeywordInfo[];
+  patternHint: string;
 }
 
 interface SessionData {
@@ -103,6 +109,7 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [collectedWords, setCollectedWords] = useState<Set<string>>(new Set());
   const [showTranslationFor, setShowTranslationFor] = useState<Set<string>>(new Set());
+  const [showCorrectionFor, setShowCorrectionFor] = useState<Set<string>>(new Set());
   const [expandedGrammar, setExpandedGrammar] = useState<Set<string>>(new Set());
   const [hints, setHints] = useState<HintVariant[]>([]);
   const [isLoadingHints, setIsLoadingHints] = useState(false);
@@ -489,10 +496,16 @@ export default function ChatPage() {
     }
   };
 
-  const selectHint = (hint: HintVariant) => {
-    setInputText(stripRuby(hint.japanese));
-    setShowHints(false);
-    inputRef.current?.focus();
+  const toggleShowCorrection = (msgId: string) => {
+    setShowCorrectionFor(prev => {
+      const next = new Set(prev);
+      if (next.has(msgId)) {
+        next.delete(msgId);
+      } else {
+        next.add(msgId);
+      }
+      return next;
+    });
   };
 
   const toggleTranslation = (msgId: string) => {
@@ -1854,8 +1867,7 @@ export default function ChatPage() {
                 {msg.role === 'user' && msg.grammarFeedback && !msg.grammarFeedback.isCorrect && (msg.grammarFeedback.correction || msg.grammarFeedback.explanation) && (
                   <div
                     className={styles.grammarCard}
-                    onClick={() => toggleGrammarExpand(msg.id)}
-                    title={t('Нажмите для подробностей', '詳細を見る')}
+                    title={t('Подсказка сэнсея', '先生のヒント')}
                   >
                     <img
                       src="/images/cat-sensei.png"
@@ -1863,21 +1875,43 @@ export default function ChatPage() {
                       className={styles.grammarCatIcon}
                     />
                     <div className={styles.grammarBody}>
-                      {msg.grammarFeedback.correction && (
-                        <span className={styles.grammarCorrection}>
-                          → <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.grammarFeedback.correction) }} />
-                        </span>
+                      {msg.grammarFeedback.shortNote && (
+                        <div className={styles.grammarShortNote}>
+                          {msg.grammarFeedback.shortNote}
+                        </div>
                       )}
-                      {!msg.grammarFeedback.correction && msg.grammarFeedback.explanation && (
-                        <span className={styles.grammarCorrection}>
-                          ⚠️ {t('Внимание', '注意')}
-                        </span>
-                      )}
-                      {(expandedGrammar.has(msg.id) || !msg.grammarFeedback.correction) && msg.grammarFeedback.explanation && (
+                      
+                      {msg.grammarFeedback.explanation && (
                         <span
                           className={styles.grammarExplanation}
                           dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.grammarFeedback.explanation) }}
                         />
+                      )}
+
+                      <div className={styles.grammarSelfRepairHint}>
+                        Попробуй исправить предложение сам и отправь снова — или открой правку.
+                      </div>
+
+                      {msg.grammarFeedback.correction && (
+                        <div style={{ marginTop: '8px' }}>
+                          {showCorrectionFor.has(msg.id) ? (
+                            <span className={styles.grammarCorrection}>
+                              → <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.grammarFeedback.correction) }} />
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn-3d btn-orange"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleShowCorrection(msg.id);
+                              }}
+                              style={{ padding: '4px 12px', fontSize: '0.85em' }}
+                            >
+                              Показать правку
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -2004,12 +2038,21 @@ export default function ChatPage() {
             </div>
           ) : (
             hints.map((hint, idx) => (
-              <div key={idx} className={styles.hintOption} onClick={() => selectHint(hint)}>
+              <div key={idx} className={styles.hintOption}>
                 <span className={`${styles.hintLevel} ${styles[hint.level] || ''}`}>
                   {hint.level === 'easy' ? '🟢' : hint.level === 'medium' ? '🟡' : '🔴'} {hint.level}
                 </span>
-                <span className={styles.hintText} dangerouslySetInnerHTML={{ __html: sanitizeHtml(hint.japanese) }} />
-                <span className={styles.hintTranslation}>{hint.translation}</span>
+                {hint.keywords && hint.keywords.length > 0 && (
+                  <div className={styles.hintKeywords}>
+                    {hint.keywords.map((kw, kwIdx) => (
+                      <span key={kwIdx} className={styles.keywordChip}>
+                        <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(kw.word) }} />
+                        <span className={styles.keywordTranslation}> ({kw.translation})</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className={styles.patternHintText}>{hint.patternHint}</div>
               </div>
             ))
           )}

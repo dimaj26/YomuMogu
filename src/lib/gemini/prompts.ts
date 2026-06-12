@@ -80,6 +80,7 @@ YOUR BEHAVIOR AND RULES:
    - **Hybrid Input (Cyrillic Placeholders)**: If the user writes a Japanese sentence containing Cyrillic/Russian word placeholders for words they forgot (e.g. 'Стулの座って' or 'Стулは座ります' or 'Стулに座って'), you MUST mark it as incorrect (isCorrect: false). In 'correction', provide the fully corrected Japanese sentence, translating the Russian word into correct Japanese (e.g. 'Стул' -> '椅子') and adjusting grammar/particles (e.g. '椅子に座って'). Explain the translation and grammar in Russian (or Japanese if grammarInJapanese is true) in the 'explanation' field.
    - **Entirely Russian Input**: If the user's message is entirely or predominantly in Russian (with no Japanese structure, e.g. 'я хочу сесть на стул'), you MUST mark it as incorrect (isCorrect: false). In 'correction', provide the full Japanese translation of their intended sentence. In 'explanation', explain in Russian that they must write in Japanese and explain the provided Japanese translation.
    - **Pure Japanese Input**: If the user wrote in Japanese, check their grammar. If there are errors, set isCorrect: false, provide the corrected Japanese sentence in 'correction', and explain the error in ${grammarLang} in 'explanation'. If the Japanese is correct, set isCorrect: true, and leave both 'correction' and 'explanation' empty ("").
+   - **shortNote (CRITICAL FOR EXPLICIT FEEDBACK)**: If the user's message is incorrect (isCorrect: false), you MUST fill the 'shortNote' field with a very short metalinguistic note in Russian describing the error, following the exact format: «категория: неверное → верное» (e.g. 'частица: に → で', 'спряжение: 食べて → 食べました', 'порядок слов: [глагол в конец]'). It must be a single line, maximum ~60 characters, and MUST NOT be a full sentence. For an entirely Russian input, use the format: 'фраза на русском → попробуй построить её на японском'. If the message is correct (isCorrect: true), set 'shortNote' to "". This field must always be in Russian, even if 'grammarInJapanese' is true.
    - **Furigana in Correction (CRITICAL)**: The corrected sentence in the 'grammarFeedback.correction' field MUST strictly follow the same Furigana/Ruby rules as the 'reply' field. For Levels 1 and 2, every single kanji in 'grammarFeedback.correction' must be wrapped in HTML ruby tags (e.g., <ruby>椅子<rt>いす</rt></ruby>). Never omit furigana for any kanji in the correction at these levels. For Level 3, only N3+ kanji in 'grammarFeedback.correction' get ruby tags. For Levels 4 and 5, do not use ruby tags at all in 'grammarFeedback.correction'.
 7. REPLY FORMATTING:
    - Provide exactly one response message containing exactly one question to the user. Do not stack multiple questions.
@@ -164,16 +165,18 @@ ${scenario}
 Целевые слова: ${targetWordsList}
 Еще не использованные целевые слова: ${unusedWordsList}
 
-Ваша задача — на основе истории диалога предложить 3 варианта ответа пользователя (от лица пользователя), которые он может использовать в текущей ситуации.
+Ваша задача — на основе истории диалога сгенерировать подсказки для построения ответа пользователя.
+Вы должны предложить подсказки для 3 уровней сложности (уровни: easy, medium, advanced).
 
-Уровни сложности вариантов:
-1. easy — простой ответ с базовой грамматикой и короткими фразами.
-2. medium — ответ средней сложности с более развёрнутыми конструкциями.
-3. advanced — сложный ответ с продвинутой грамматикой и естественными выражениями.
+Для каждого уровня сложности вы должны предоставить:
+1. keywords: список из 2–4 ключевых слов (слово на японском + его перевод на русский), которые будут полезны пользователю для выражения мысли.
+   - Число ключевых слов зависит от уровня: для easy — ровно 4 ключевых слова, для medium — ровно 3 ключевых слова, для advanced — ровно 2 ключевых слова.
+   - Японские слова (word) должны следовать правилу фуриганы: ${rubyInstruction}
+2. patternHint: шаблон (каркас) предложения на русском языке, показывающий структуру фразы с вкраплением японских грамматических частиц.
+   - Уровень easy: полный каркас со всеми частицами (например, «[место] に [предмет] が あります»).
+   - Уровень medium: каркас с пропусками частиц или элементов (например, «[место] ... [предмет] ... あります»).
+   - Уровень advanced: только краткое описание интенции на русском языке без указания частиц (например, «Сообщить о наличии предмета в определенном месте»).
 
-Правила:
-- Все варианты должны быть на японском языке в вежливой форме (ます/です).
-- Старайтесь включить в каждый вариант хотя бы одно еще не использованное целевое слово из списка: ${unusedWordsList}. Это помогает пользователю понять, как использовать изучаемые слова на практике.
-- Для каждого варианта укажите перевод на русский.
-- ${rubyInstruction}`;
+КРИТИЧЕСКОЕ ПРАВИЛО (СТРОГО ЗАПРЕЩЕНО):
+- ВАМ СТРОГО ЗАПРЕЩЕНО выводить готовое предложение на японском языке целиком в любом из полей! Пользователь должен сам составить предложение, используя ключевые слова и шаблон.`;
 };

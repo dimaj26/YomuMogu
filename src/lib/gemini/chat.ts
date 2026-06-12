@@ -17,6 +17,7 @@ export interface GrammarFeedback {
   isCorrect: boolean;
   correction: string;
   explanation: string;
+  shortNote?: string;
 }
 
 export interface ChatResponse {
@@ -32,10 +33,15 @@ export interface ChatResponse {
   };
 }
 
-export interface HintVariant {
-  level: string; // 'easy' | 'medium' | 'advanced'
-  japanese: string;
+export interface KeywordInfo {
+  word: string;
   translation: string;
+}
+
+export interface HintVariant {
+  level: 'easy' | 'medium' | 'advanced';
+  keywords: KeywordInfo[];
+  patternHint: string;
 }
 
 export interface HintResponse {
@@ -184,9 +190,10 @@ export class ChatService {
                   properties: {
                     isCorrect: { type: 'BOOLEAN', description: 'Корректна ли грамматика' },
                     correction: { type: 'STRING', description: 'Исправленное предложение (пустая строка если ошибок нет)' },
-                    explanation: { type: 'STRING', description: 'Объяснение ошибки на русском (пустая строка если ошибок нет)' }
+                    explanation: { type: 'STRING', description: 'Объяснение ошибки на русском (пустая строка если ошибок нет)' },
+                    shortNote: { type: 'STRING', description: 'Короткая метаязыковая заметка об ошибке на русском, формат "категория: неверное → верное" (пустая строка если ошибок нет)' }
                   },
-                  required: ['isCorrect', 'correction', 'explanation']
+                  required: ['isCorrect', 'correction', 'explanation', 'shortNote']
                 },
                 wordsDetected: {
                   type: 'ARRAY',
@@ -213,7 +220,11 @@ export class ChatService {
           throw new Error('Gemini API вернул пустой текст ответа в чате');
         }
 
-        return JSON.parse(responseText) as ChatResponse;
+        const parsed = JSON.parse(responseText) as ChatResponse;
+        if (parsed.grammarFeedback) {
+          parsed.grammarFeedback.shortNote = parsed.grammarFeedback.shortNote ?? '';
+        }
+        return parsed;
       });
 
       logger.info(`Ответ чата получен. Обнаружено целевых слов: ${parsed.wordsDetected?.length || 0}`);
@@ -308,15 +319,26 @@ export class ChatService {
               properties: {
                 hints: {
                   type: 'ARRAY',
-                  description: 'Три варианта ответа разного уровня сложности',
+                  description: 'Подсказки для построения ответа разного уровня сложности',
                   items: {
                     type: 'OBJECT',
                     properties: {
                       level: { type: 'STRING', description: 'Уровень сложности: easy, medium или advanced' },
-                      japanese: { type: 'STRING', description: 'Вариант ответа на японском языке' },
-                      translation: { type: 'STRING', description: 'Перевод варианта на русский язык' }
+                      keywords: {
+                        type: 'ARRAY',
+                        description: 'Ключевые слова для выражения мысли',
+                        items: {
+                          type: 'OBJECT',
+                          properties: {
+                            word: { type: 'STRING', description: 'Ключевое слово на японском (с тегами ruby)' },
+                            translation: { type: 'STRING', description: 'Перевод ключевого слова на русский' }
+                          },
+                          required: ['word', 'translation']
+                        }
+                      },
+                      patternHint: { type: 'STRING', description: 'Шаблон/каркас предложения на русском с японскими частицами' }
                     },
-                    required: ['level', 'japanese', 'translation']
+                    required: ['level', 'keywords', 'patternHint']
                   }
                 }
               },

@@ -278,6 +278,7 @@ src/
 | `lib/grammar/promptScope.ts` | Calculates allowed grammar scope, chooses focus nodes using Leitner intervals, validates responses, and generates prompt instructions |
 | `lib/grammar/__tests__/graph.test.ts` | Unit tests for grammar DAG graph validation, unlock calculations, and backward compatibility |
 | `lib/grammar/__tests__/promptScope.test.ts` | Unit tests for grammar prompt scoping, whitelist verification, focus prioritizing, and fallback scenarios |
+| `lib/gemini/__tests__/chat.test.ts` | Unit tests for ChatService schema parsing, prompts, and default properties |
 | `lib/gemini/__tests__/scenarios.integration.test.ts` | Integration tests verifying multi-turn conversational scenarios against live Gemini API |
 | `scratch/SCRATCH_LOG.md` | Permanent historical audit registry tracking sandbox scripts and side effects |
 | `hooks/useQuests.ts` | React custom hook managing namespaced daily quest progression and XP rewards |
@@ -429,6 +430,7 @@ interface GrammarFeedback {
   isCorrect: boolean;
   correction: string;
   explanation: string;
+  shortNote?: string;
 }
 
 // LocalWord (lib/db.ts)
@@ -565,6 +567,7 @@ interface ChatResponse {
     isCorrect: boolean;
     correction: string;   // Corrected sentence or ""
     explanation: string;  // Explanation in Russian (or Japanese if grammarInJapanese)
+    shortNote: string;    // Короткая метаязыковая заметка об ошибке на русском
   };
   wordsDetected: string[]; // Target words found in user's message
   grammarRuleDetected: boolean; // True if the user correctly used the active grammarFocus rule
@@ -578,8 +581,8 @@ interface ChatResponse {
 interface HintResponse {
   hints: Array<{
     level: 'easy' | 'medium' | 'advanced';
-    japanese: string;    // May contain <ruby> tags on chat levels 1-3
-    translation: string;
+    keywords: Array<{ word: string; translation: string }>; // 2–4 элемента; word может содержать <ruby> по правилам уровня
+    patternHint: string; // русский каркас фразы с японскими частицами
   }>;
   _debug?: {
     systemInstruction: string;
