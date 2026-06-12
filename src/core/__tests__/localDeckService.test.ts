@@ -23,6 +23,7 @@ const {
   getDailyNewWordsLimitOffset,
   incrementDailyNewWordsLimitOffset,
   syncDailyNewWordsCountWithDb,
+  retagAllWords,
 } = await import('../localDeckService');
 
 describe('LocalDeckService Unit Tests', () => {
@@ -750,4 +751,70 @@ describe('LocalDeckService Unit Tests', () => {
       expect(localStorage.getItem(`yomumogu_profile_${profileId}_${LOCAL_STORAGE_KEY_PREFIX}_2026-05-22`)).toBe('1');
     });
   });
+
+  describe('JLPT Retagging', () => {
+    it('retagAllWords помечает существующие слова и не создаёт дублей при повторном запуске', async () => {
+      const defaultState = {
+        stability: 0,
+        difficulty: 0,
+        interval: 0,
+        due: Date.now(),
+        reps: 0,
+        lapses: 0,
+        status: 'new' as const
+      };
+
+      // 1. Вставляем тестовые слова без тегов
+      await db.words.bulkPut([
+        {
+          profileId,
+          id: 10001,
+          word: '学生', // Должно стать N5 -> jlpt:n5
+          reading: 'がくせい',
+          translation: 'студент',
+          category: LOCAL_DECK_NAME,
+          source: 'anki',
+          passive: { ...defaultState },
+          active: { ...defaultState },
+          contextExamples: [],
+          tags: ['custom']
+        },
+        {
+          profileId,
+          id: 10002,
+          word: 'несуществующееслово', // Не должно получить тегов
+          reading: 'нет',
+          translation: 'нет',
+          category: LOCAL_DECK_NAME,
+          source: 'anki',
+          passive: { ...defaultState },
+          active: { ...defaultState },
+          contextExamples: [],
+          tags: []
+        }
+      ]);
+
+
+      // 2. Запускаем переразметку
+      const updatedCount = await retagAllWords(profileId);
+      expect(updatedCount).toBe(1); // Обновлено только 1 слово ('学生')
+
+      // Проверяем теги у '学生'
+      const word1 = await db.words.get([profileId, 10001]);
+      expect(word1?.tags).toContain('custom');
+      expect(word1?.tags).toContain('jlpt:n5');
+
+      // Проверяем 'несуществующееслово'
+      const word2 = await db.words.get([profileId, 10002]);
+      expect(word2?.tags).toEqual([]);
+
+      // 3. Запускаем повторно
+      const secondRunCount = await retagAllWords(profileId);
+      expect(secondRunCount).toBe(0); // Ничего не поменялось
+
+      const word1Again = await db.words.get([profileId, 10001]);
+      expect(word1Again?.tags).toEqual(['custom', 'jlpt:n5']);
+    });
+  });
 });
+

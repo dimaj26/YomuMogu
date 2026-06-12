@@ -2,6 +2,16 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.48.0] - 2026-06-12
+
+### Added
+- **JLPT level reference lists**: Created versioned database `jlpt_levels.json` using a custom-built, certificate-bypass scraper script `generate_jlpt_levels.mjs` fetching canonical lists from `jlptsensei.com` N5 and N4 pages.
+- **JLPT Levels Detection & Tagging Module**: Implemented pure matching logic in `src/lib/jlpt/levels.ts` supporting exact kanji form matching, kana-only word readings fallbacks, N5-over-N4 easiest level priority matching, and idempotent tag merging (`mergeJlptTag`).
+- **Anki/Starter-deck import integration**: Wired automatic tagging into the offline starter-deck loader and bilateral Anki synchronization (`syncDatabaseWithAnki` in `db.ts`) preserving existing word tags and merging new JLPT tags on import.
+- **Bulk Retagging Tool**: Added a bulk utility `retagAllWords` in `localDeckService.ts` and integrated a purple "Переразметить теги JLPT" settings action button in the dev-only Debug HUD drawer.
+- **N5 Grammar rule content completion**: Fully authored Russian pedagogical content and conjugation guides for the three remaining N5 placeholder nodes `g_n5_s7` (た-форма), `g_n5_s8` (〜たり…たりする), and `g_n5_s9` (〜ながら) in `grammar_rules.json`, removing their `isPlaceholder` flags.
+- **Unit testing coverage**: Added 7 test cases in `levels.test.ts` for matching/tagging boundaries, added a Dexie-backed test in `localDeckService.test.ts` for idempotent bulk retagging, and updated assertions in `GrammarTrack.test.tsx`.
+
 ## [1.47.0] - 2026-06-12
 
 ### Added

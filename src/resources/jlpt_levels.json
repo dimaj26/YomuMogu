@@ -1,0 +1,4693 @@
+{
+  "meta": {
+    "source": "https://jlptsensei.com/",
+    "license": "Content from jlptsensei.com vocabulary lists, compiled for study purposes.",
+    "fetchedAt": "2026-06-12T13:51:46.018Z",
+    "version": 1
+  },
+  "levels": {
+    "N5": [
+      {
+        "word": "浴びる",
+        "reading": "あびる"
+      },
+      {
+        "word": "危ない",
+        "reading": "あぶない"
+      },
+      {
+        "word": "あっち"
+      },
+      {
+        "word": "あちら"
+      },
+      {
+        "word": "上げる",
+        "reading": "あげる"
+      },
+      {
+        "word": "赤",
+        "reading": "あか"
+      },
+      {
+        "word": "赤い",
+        "reading": "あかい"
+      },
+      {
+        "word": "明るい",
+        "reading": "あかるい"
+      },
+      {
+        "word": "開ける",
+        "reading": "あける"
+      },
+      {
+        "word": "秋",
+        "reading": "あき"
+      },
+      {
+        "word": "開く",
+        "reading": "あく"
+      },
+      {
+        "word": "甘い",
+        "reading": "あまい"
+      },
+      {
+        "word": "雨",
+        "reading": "あめ"
+      },
+      {
+        "word": "飴",
+        "reading": "あめ"
+      },
+      {
+        "word": "あなた"
+      },
+      {
+        "word": "姉",
+        "reading": "あね"
+      },
+      {
+        "word": "兄",
+        "reading": "あに"
+      },
+      {
+        "word": "あの"
+      },
+      {
+        "word": "青",
+        "reading": "あお"
+      },
+      {
+        "word": "青い",
+        "reading": "あおい"
+      },
+      {
+        "word": "アパート"
+      },
+      {
+        "word": "洗う",
+        "reading": "あらう"
+      },
+      {
+        "word": "あれ"
+      },
+      {
+        "word": "ある"
+      },
+      {
+        "word": "歩く",
+        "reading": "あるく"
+      },
+      {
+        "word": "朝",
+        "reading": "あさ"
+      },
+      {
+        "word": "朝ご飯",
+        "reading": "あさごはん"
+      },
+      {
+        "word": "明後日",
+        "reading": "あさって"
+      },
+      {
+        "word": "足",
+        "reading": "あし"
+      },
+      {
+        "word": "明日",
+        "reading": "あした"
+      },
+      {
+        "word": "遊ぶ",
+        "reading": "あそぶ"
+      },
+      {
+        "word": "あそこ"
+      },
+      {
+        "word": "頭",
+        "reading": "あたま"
+      },
+      {
+        "word": "新しい",
+        "reading": "あたらしい"
+      },
+      {
+        "word": "暖かい",
+        "reading": "あたたかい"
+      },
+      {
+        "word": "後",
+        "reading": "あと"
+      },
+      {
+        "word": "暑い",
+        "reading": "あつい"
+      },
+      {
+        "word": "厚い",
+        "reading": "あつい"
+      },
+      {
+        "word": "熱い",
+        "reading": "あつい"
+      },
+      {
+        "word": "会う",
+        "reading": "あう"
+      },
+      {
+        "word": "晩ご飯",
+        "reading": "ばんごはん"
+      },
+      {
+        "word": "番号",
+        "reading": "ばんごう"
+      },
+      {
+        "word": "バス"
+      },
+      {
+        "word": "バター"
+      },
+      {
+        "word": "ベッド"
+      },
+      {
+        "word": "勉強",
+        "reading": "べんきょう"
+      },
+      {
+        "word": "便利",
+        "reading": "べんり"
+      },
+      {
+        "word": "ボールペン"
+      },
+      {
+        "word": "ボタン"
+      },
+      {
+        "word": "帽子",
+        "reading": "ぼうし"
+      },
+      {
+        "word": "文章",
+        "reading": "ぶんしょう"
+      },
+      {
+        "word": "豚肉",
+        "reading": "ぶたにく"
+      },
+      {
+        "word": "病院",
+        "reading": "びょういん"
+      },
+      {
+        "word": "病気",
+        "reading": "びょうき"
+      },
+      {
+        "word": "茶色",
+        "reading": "ちゃいろ"
+      },
+      {
+        "word": "茶碗",
+        "reading": "ちゃわん"
+      },
+      {
+        "word": "父",
+        "reading": "ちち"
+      },
+      {
+        "word": "違う",
+        "reading": "ちがう"
+      },
+      {
+        "word": "小さい",
+        "reading": "ちいさい"
+      },
+      {
+        "word": "小さな",
+        "reading": "ちいさな"
+      },
+      {
+        "word": "近い",
+        "reading": "ちかい"
+      },
+      {
+        "word": "地下鉄",
+        "reading": "ちかてつ"
+      },
+      {
+        "word": "地図",
+        "reading": "ちず"
+      },
+      {
+        "word": "ちょっと"
+      },
+      {
+        "word": "丁度",
+        "reading": "ちょうど"
+      },
+      {
+        "word": "台所",
+        "reading": "だいどころ"
+      },
+      {
+        "word": "大学",
+        "reading": "だいがく"
+      },
+      {
+        "word": "大丈夫",
+        "reading": "だいじょうぶ"
+      },
+      {
+        "word": "大好き",
+        "reading": "だいすき"
+      },
+      {
+        "word": "だんだん"
+      },
+      {
+        "word": "誰",
+        "reading": "だれ"
+      },
+      {
+        "word": "誰か",
+        "reading": "だれか"
+      },
+      {
+        "word": "出す",
+        "reading": "だす"
+      },
+      {
+        "word": "出口",
+        "reading": "でぐち"
+      },
+      {
+        "word": "出かける",
+        "reading": "でかける"
+      },
+      {
+        "word": "電気",
+        "reading": "でんき"
+      },
+      {
+        "word": "電車",
+        "reading": "でんしゃ"
+      },
+      {
+        "word": "電話",
+        "reading": "でんわ"
+      },
+      {
+        "word": "デパート"
+      },
+      {
+        "word": "出る",
+        "reading": "でる"
+      },
+      {
+        "word": "ドア"
+      },
+      {
+        "word": "どっち"
+      },
+      {
+        "word": "どちら"
+      },
+      {
+        "word": "どこ"
+      },
+      {
+        "word": "どなた"
+      },
+      {
+        "word": "どの"
+      },
+      {
+        "word": "どれ"
+      },
+      {
+        "word": "どう"
+      },
+      {
+        "word": "動物",
+        "reading": "どうぶつ"
+      },
+      {
+        "word": "どうも"
+      },
+      {
+        "word": "どうぞ"
+      },
+      {
+        "word": "土曜日",
+        "reading": "どようび"
+      },
+      {
+        "word": "絵",
+        "reading": "え"
+      },
+      {
+        "word": "ええ"
+      },
+      {
+        "word": "映画",
+        "reading": "えいが"
+      },
+      {
+        "word": "映画館",
+        "reading": "えいがかん"
+      },
+      {
+        "word": "英語",
+        "reading": "えいご"
+      },
+      {
+        "word": "駅",
+        "reading": "えき"
+      },
+      {
+        "word": "鉛筆",
+        "reading": "えんぴつ"
+      },
+      {
+        "word": "エレベーター"
+      },
+      {
+        "word": "フィルム"
+      },
+      {
+        "word": "フォーク"
+      },
+      {
+        "word": "服",
+        "reading": "ふく"
+      },
+      {
+        "word": "吹く",
+        "reading": "ふく"
+      },
+      {
+        "word": "降る",
+        "reading": "ふる"
+      },
+      {
+        "word": "古い",
+        "reading": "ふるい"
+      },
+      {
+        "word": "二人",
+        "reading": "ふたり"
+      },
+      {
+        "word": "二つ",
+        "reading": "ふたつ"
+      },
+      {
+        "word": "太い",
+        "reading": "ふとい"
+      },
+      {
+        "word": "二日",
+        "reading": "ふつか"
+      },
+      {
+        "word": "封筒",
+        "reading": "ふうとう"
+      },
+      {
+        "word": "冬",
+        "reading": "ふゆ"
+      },
+      {
+        "word": "外国",
+        "reading": "がいこく"
+      },
+      {
+        "word": "外国人",
+        "reading": "がいこくじん"
+      },
+      {
+        "word": "学校",
+        "reading": "がっこう"
+      },
+      {
+        "word": "学生",
+        "reading": "がくせい"
+      },
+      {
+        "word": "玄関",
+        "reading": "げんかん"
+      },
+      {
+        "word": "元気",
+        "reading": "げんき"
+      },
+      {
+        "word": "月曜日",
+        "reading": "げつようび"
+      },
+      {
+        "word": "銀行",
+        "reading": "ぎんこう"
+      },
+      {
+        "word": "ギター"
+      },
+      {
+        "word": "五",
+        "reading": "ご"
+      },
+      {
+        "word": "午後",
+        "reading": "ごご"
+      },
+      {
+        "word": "ご飯",
+        "reading": "ごはん"
+      },
+      {
+        "word": "午前",
+        "reading": "ごぜん"
+      },
+      {
+        "word": "グラム"
+      },
+      {
+        "word": "牛肉",
+        "reading": "ぎゅうにく"
+      },
+      {
+        "word": "牛乳",
+        "reading": "ぎゅうにゅう"
+      },
+      {
+        "word": "歯",
+        "reading": "は"
+      },
+      {
+        "word": "八",
+        "reading": "はち"
+      },
+      {
+        "word": "葉書",
+        "reading": "はがき"
+      },
+      {
+        "word": "母",
+        "reading": "はは"
+      },
+      {
+        "word": "はい"
+      },
+      {
+        "word": "入る",
+        "reading": "はいる"
+      },
+      {
+        "word": "灰皿",
+        "reading": "はいざら"
+      },
+      {
+        "word": "始まる",
+        "reading": "はじまる"
+      },
+      {
+        "word": "初めて",
+        "reading": "はじめて"
+      },
+      {
+        "word": "箱",
+        "reading": "はこ"
+      },
+      {
+        "word": "履く",
+        "reading": "はく"
+      },
+      {
+        "word": "半",
+        "reading": "はん"
+      },
+      {
+        "word": "花",
+        "reading": "はな"
+      },
+      {
+        "word": "鼻",
+        "reading": "はな"
+      },
+      {
+        "word": "話",
+        "reading": "はなし"
+      },
+      {
+        "word": "話す",
+        "reading": "はなす"
+      },
+      {
+        "word": "半分",
+        "reading": "はんぶん"
+      },
+      {
+        "word": "ハンカチ"
+      },
+      {
+        "word": "晴れ",
+        "reading": "はれ"
+      },
+      {
+        "word": "晴れる",
+        "reading": "はれる"
+      },
+      {
+        "word": "春",
+        "reading": "はる"
+      },
+      {
+        "word": "貼る",
+        "reading": "はる"
+      },
+      {
+        "word": "箸",
+        "reading": "はし"
+      },
+      {
+        "word": "橋",
+        "reading": "はし"
+      },
+      {
+        "word": "走る",
+        "reading": "はしる"
+      },
+      {
+        "word": "二十歳",
+        "reading": "はたち"
+      },
+      {
+        "word": "働く",
+        "reading": "はたらく"
+      },
+      {
+        "word": "二十日",
+        "reading": "はつか"
+      },
+      {
+        "word": "速い",
+        "reading": "はやい"
+      },
+      {
+        "word": "早い",
+        "reading": "はやい"
+      },
+      {
+        "word": "辺",
+        "reading": "へん"
+      },
+      {
+        "word": "下手",
+        "reading": "へた"
+      },
+      {
+        "word": "部屋",
+        "reading": "へや"
+      },
+      {
+        "word": "左",
+        "reading": "ひだり"
+      },
+      {
+        "word": "東",
+        "reading": "ひがし"
+      },
+      {
+        "word": "飛行機",
+        "reading": "ひこうき"
+      },
+      {
+        "word": "引く",
+        "reading": "ひく"
+      },
+      {
+        "word": "弾く",
+        "reading": "ひく"
+      },
+      {
+        "word": "低い",
+        "reading": "ひくい"
+      },
+      {
+        "word": "暇",
+        "reading": "ひま"
+      },
+      {
+        "word": "広い",
+        "reading": "ひろい"
+      },
+      {
+        "word": "昼",
+        "reading": "ひる"
+      },
+      {
+        "word": "昼ご飯",
+        "reading": "ひるごはん"
+      },
+      {
+        "word": "人",
+        "reading": "ひと"
+      },
+      {
+        "word": "一人",
+        "reading": "ひとり"
+      },
+      {
+        "word": "一つ",
+        "reading": "ひとつ"
+      },
+      {
+        "word": "ほか"
+      },
+      {
+        "word": "本",
+        "reading": "ほん"
+      },
+      {
+        "word": "本棚",
+        "reading": "ほんだな"
+      },
+      {
+        "word": "本当",
+        "reading": "ほんとう"
+      },
+      {
+        "word": "欲しい",
+        "reading": "ほしい"
+      },
+      {
+        "word": "細い",
+        "reading": "ほそい"
+      },
+      {
+        "word": "ホテル"
+      },
+      {
+        "word": "百",
+        "reading": "ひゃく"
+      },
+      {
+        "word": "一",
+        "reading": "いち"
+      },
+      {
+        "word": "一番",
+        "reading": "いちばん"
+      },
+      {
+        "word": "一日",
+        "reading": "いちにち"
+      },
+      {
+        "word": "家",
+        "reading": "いえ"
+      },
+      {
+        "word": "いかが"
+      },
+      {
+        "word": "池",
+        "reading": "いけ"
+      },
+      {
+        "word": "行く",
+        "reading": "いく"
+      },
+      {
+        "word": "いくら"
+      },
+      {
+        "word": "いくつ"
+      },
+      {
+        "word": "今",
+        "reading": "いま"
+      },
+      {
+        "word": "意味",
+        "reading": "いみ"
+      },
+      {
+        "word": "妹",
+        "reading": "いもうと"
+      },
+      {
+        "word": "犬",
+        "reading": "いぬ"
+      },
+      {
+        "word": "入れる",
+        "reading": "いれる"
+      },
+      {
+        "word": "入口",
+        "reading": "いりぐち"
+      },
+      {
+        "word": "色",
+        "reading": "いろ"
+      },
+      {
+        "word": "色々",
+        "reading": "いろいろ"
+      },
+      {
+        "word": "要る",
+        "reading": "いる"
+      },
+      {
+        "word": "居る",
+        "reading": "いる"
+      },
+      {
+        "word": "医者",
+        "reading": "いしゃ"
+      },
+      {
+        "word": "忙しい",
+        "reading": "いそがしい"
+      },
+      {
+        "word": "一緒",
+        "reading": "いっしょ"
+      },
+      {
+        "word": "椅子",
+        "reading": "いす"
+      },
+      {
+        "word": "痛い",
+        "reading": "いたい"
+      },
+      {
+        "word": "いつ"
+      },
+      {
+        "word": "五日",
+        "reading": "いつか"
+      },
+      {
+        "word": "五つ",
+        "reading": "いつつ"
+      },
+      {
+        "word": "言う",
+        "reading": "いう"
+      },
+      {
+        "word": "嫌",
+        "reading": "いや"
+      },
+      {
+        "word": "じゃあ"
+      },
+      {
+        "word": "字引",
+        "reading": "じびき"
+      },
+      {
+        "word": "自分",
+        "reading": "じぶん"
+      },
+      {
+        "word": "自動車",
+        "reading": "じどうしゃ"
+      },
+      {
+        "word": "時間",
+        "reading": "じかん"
+      },
+      {
+        "word": "辞書",
+        "reading": "じしょ"
+      },
+      {
+        "word": "自転車",
+        "reading": "じてんしゃ"
+      },
+      {
+        "word": "丈夫",
+        "reading": "じょうぶ"
+      },
+      {
+        "word": "上手",
+        "reading": "じょうず"
+      },
+      {
+        "word": "授業",
+        "reading": "じゅぎょう"
+      },
+      {
+        "word": "十",
+        "reading": "じゅう"
+      },
+      {
+        "word": "かばん"
+      },
+      {
+        "word": "花瓶",
+        "reading": "かびん"
+      },
+      {
+        "word": "角",
+        "reading": "かど"
+      },
+      {
+        "word": "帰る",
+        "reading": "かえる"
+      },
+      {
+        "word": "返す",
+        "reading": "かえす"
+      },
+      {
+        "word": "鍵",
+        "reading": "かぎ"
+      },
+      {
+        "word": "階段",
+        "reading": "かいだん"
+      },
+      {
+        "word": "買い物",
+        "reading": "かいもの"
+      },
+      {
+        "word": "会社",
+        "reading": "かいしゃ"
+      },
+      {
+        "word": "掛かる",
+        "reading": "かかる"
+      },
+      {
+        "word": "掛ける",
+        "reading": "かける"
+      },
+      {
+        "word": "書く",
+        "reading": "かく"
+      },
+      {
+        "word": "カメラ"
+      },
+      {
+        "word": "紙",
+        "reading": "かみ"
+      },
+      {
+        "word": "漢字",
+        "reading": "かんじ"
+      },
+      {
+        "word": "カップ"
+      },
+      {
+        "word": "体",
+        "reading": "からだ"
+      },
+      {
+        "word": "辛い",
+        "reading": "からい"
+      },
+      {
+        "word": "カレー"
+      },
+      {
+        "word": "カレンダー"
+      },
+      {
+        "word": "借りる",
+        "reading": "かりる"
+      },
+      {
+        "word": "軽い",
+        "reading": "かるい"
+      },
+      {
+        "word": "傘",
+        "reading": "かさ"
+      },
+      {
+        "word": "貸す",
+        "reading": "かす"
+      },
+      {
+        "word": "方",
+        "reading": "かた"
+      },
+      {
+        "word": "家庭",
+        "reading": "かてい"
+      },
+      {
+        "word": "買う",
+        "reading": "かう"
+      },
+      {
+        "word": "川",
+        "reading": "かわ"
+      },
+      {
+        "word": "可愛い",
+        "reading": "かわいい"
+      },
+      {
+        "word": "火曜日",
+        "reading": "かようび"
+      },
+      {
+        "word": "風",
+        "reading": "かぜ"
+      },
+      {
+        "word": "風邪",
+        "reading": "かぜ"
+      },
+      {
+        "word": "家族",
+        "reading": "かぞく"
+      },
+      {
+        "word": "警官",
+        "reading": "けいかん"
+      },
+      {
+        "word": "結婚",
+        "reading": "けっこん"
+      },
+      {
+        "word": "結構",
+        "reading": "けっこう"
+      },
+      {
+        "word": "今朝",
+        "reading": "けさ"
+      },
+      {
+        "word": "消す",
+        "reading": "けす"
+      },
+      {
+        "word": "木",
+        "reading": "き"
+      },
+      {
+        "word": "消える",
+        "reading": "きえる"
+      },
+      {
+        "word": "黄色い",
+        "reading": "きいろい"
+      },
+      {
+        "word": "聞く",
+        "reading": "きく"
+      },
+      {
+        "word": "昨日",
+        "reading": "きのう"
+      },
+      {
+        "word": "金曜日",
+        "reading": "きんようび"
+      },
+      {
+        "word": "切符",
+        "reading": "きっぷ"
+      },
+      {
+        "word": "嫌い",
+        "reading": "きらい"
+      },
+      {
+        "word": "綺麗",
+        "reading": "きれい"
+      },
+      {
+        "word": "キログラム"
+      },
+      {
+        "word": "キロメートル"
+      },
+      {
+        "word": "切る",
+        "reading": "きる"
+      },
+      {
+        "word": "着る",
+        "reading": "きる"
+      },
+      {
+        "word": "喫茶店",
+        "reading": "きっさてん"
+      },
+      {
+        "word": "北",
+        "reading": "きた"
+      },
+      {
+        "word": "汚い",
+        "reading": "きたない"
+      },
+      {
+        "word": "切手",
+        "reading": "きって"
+      },
+      {
+        "word": "こっち"
+      },
+      {
+        "word": "こちら"
+      },
+      {
+        "word": "子供",
+        "reading": "こども"
+      },
+      {
+        "word": "声",
+        "reading": "こえ"
+      },
+      {
+        "word": "ここ"
+      },
+      {
+        "word": "九日",
+        "reading": "ここのか"
+      },
+      {
+        "word": "九つ",
+        "reading": "ここのつ"
+      },
+      {
+        "word": "困る",
+        "reading": "こまる"
+      },
+      {
+        "word": "今晩",
+        "reading": "こんばん"
+      },
+      {
+        "word": "今月",
+        "reading": "こんげつ"
+      },
+      {
+        "word": "こんな"
+      },
+      {
+        "word": "この"
+      },
+      {
+        "word": "今週",
+        "reading": "こんしゅう"
+      },
+      {
+        "word": "コーヒー"
+      },
+      {
+        "word": "コート"
+      },
+      {
+        "word": "コピー"
+      },
+      {
+        "word": "コップ"
+      },
+      {
+        "word": "これ"
+      },
+      {
+        "word": "答える",
+        "reading": "こたえる"
+      },
+      {
+        "word": "言葉",
+        "reading": "ことば"
+      },
+      {
+        "word": "今年",
+        "reading": "ことし"
+      },
+      {
+        "word": "交番",
+        "reading": "こうばん"
+      },
+      {
+        "word": "紅茶",
+        "reading": "こうちゃ"
+      },
+      {
+        "word": "公園",
+        "reading": "こうえん"
+      },
+      {
+        "word": "交差点",
+        "reading": "こうさてん"
+      },
+      {
+        "word": "口",
+        "reading": "くち"
+      },
+      {
+        "word": "果物",
+        "reading": "くだもの"
+      },
+      {
+        "word": "下さい",
+        "reading": "ください"
+      },
+      {
+        "word": "曇り",
+        "reading": "くもり"
+      },
+      {
+        "word": "曇る",
+        "reading": "くもる"
+      },
+      {
+        "word": "国",
+        "reading": "くに"
+      },
+      {
+        "word": "暗い",
+        "reading": "くらい"
+      },
+      {
+        "word": "クラス"
+      },
+      {
+        "word": "黒",
+        "reading": "くろ"
+      },
+      {
+        "word": "黒い",
+        "reading": "くろい"
+      },
+      {
+        "word": "来る",
+        "reading": "くる"
+      },
+      {
+        "word": "車",
+        "reading": "くるま"
+      },
+      {
+        "word": "薬",
+        "reading": "くすり"
+      },
+      {
+        "word": "靴",
+        "reading": "くつ"
+      },
+      {
+        "word": "靴下",
+        "reading": "くつした"
+      },
+      {
+        "word": "去年",
+        "reading": "きょねん"
+      },
+      {
+        "word": "今日",
+        "reading": "きょう"
+      },
+      {
+        "word": "兄弟",
+        "reading": "きょうだい"
+      },
+      {
+        "word": "教室",
+        "reading": "きょうしつ"
+      },
+      {
+        "word": "九",
+        "reading": "きゅう"
+      },
+      {
+        "word": "マッチ"
+      },
+      {
+        "word": "町",
+        "reading": "まち"
+      },
+      {
+        "word": "窓",
+        "reading": "まど"
+      },
+      {
+        "word": "前",
+        "reading": "まえ"
+      },
+      {
+        "word": "曲がる",
+        "reading": "まがる"
+      },
+      {
+        "word": "毎朝",
+        "reading": "まいあさ"
+      },
+      {
+        "word": "毎晩",
+        "reading": "まいばん"
+      },
+      {
+        "word": "毎日",
+        "reading": "まいにち"
+      },
+      {
+        "word": "毎週",
+        "reading": "まいしゅう"
+      },
+      {
+        "word": "毎年",
+        "reading": "まいとしまいねん"
+      },
+      {
+        "word": "毎月",
+        "reading": "まいつき"
+      },
+      {
+        "word": "万",
+        "reading": "まん"
+      },
+      {
+        "word": "万年筆",
+        "reading": "まんねんひつ"
+      },
+      {
+        "word": "丸い",
+        "reading": "まるい"
+      },
+      {
+        "word": "真っ直ぐ",
+        "reading": "まっすぐ"
+      },
+      {
+        "word": "待つ",
+        "reading": "まつ"
+      },
+      {
+        "word": "不味い",
+        "reading": "まずい"
+      },
+      {
+        "word": "目",
+        "reading": "め"
+      },
+      {
+        "word": "メートル"
+      },
+      {
+        "word": "眼鏡",
+        "reading": "めがね"
+      },
+      {
+        "word": "道",
+        "reading": "みち"
+      },
+      {
+        "word": "緑",
+        "reading": "みどり"
+      },
+      {
+        "word": "磨く",
+        "reading": "みがく"
+      },
+      {
+        "word": "右",
+        "reading": "みぎ"
+      },
+      {
+        "word": "短い",
+        "reading": "みじかい"
+      },
+      {
+        "word": "三日",
+        "reading": "みっか"
+      },
+      {
+        "word": "耳",
+        "reading": "みみ"
+      },
+      {
+        "word": "南",
+        "reading": "みなみ"
+      },
+      {
+        "word": "皆さん",
+        "reading": "みなさん"
+      },
+      {
+        "word": "みんな"
+      },
+      {
+        "word": "見る",
+        "reading": "みる"
+      },
+      {
+        "word": "店",
+        "reading": "みせ"
+      },
+      {
+        "word": "見せる",
+        "reading": "みせる"
+      },
+      {
+        "word": "三つ",
+        "reading": "みっつ"
+      },
+      {
+        "word": "水",
+        "reading": "みず"
+      },
+      {
+        "word": "木曜日",
+        "reading": "もくようび"
+      },
+      {
+        "word": "門",
+        "reading": "もん"
+      },
+      {
+        "word": "問題",
+        "reading": "もんだい"
+      },
+      {
+        "word": "物",
+        "reading": "もの"
+      },
+      {
+        "word": "持つ",
+        "reading": "もつ"
+      },
+      {
+        "word": "もっと"
+      },
+      {
+        "word": "もう一度",
+        "reading": "もういちど"
+      },
+      {
+        "word": "六日",
+        "reading": "むいか"
+      },
+      {
+        "word": "向こう",
+        "reading": "むこう"
+      },
+      {
+        "word": "村",
+        "reading": "むら"
+      },
+      {
+        "word": "六つ",
+        "reading": "むっつ"
+      },
+      {
+        "word": "難しい",
+        "reading": "むずかしい"
+      },
+      {
+        "word": "長い",
+        "reading": "ながい"
+      },
+      {
+        "word": "ナイフ"
+      },
+      {
+        "word": "中",
+        "reading": "なか"
+      },
+      {
+        "word": "鳴く",
+        "reading": "なく"
+      },
+      {
+        "word": "無くす",
+        "reading": "なくす"
+      },
+      {
+        "word": "名前",
+        "reading": "なまえ"
+      },
+      {
+        "word": "七つ",
+        "reading": "ななつ"
+      },
+      {
+        "word": "何",
+        "reading": "なに"
+      },
+      {
+        "word": "七日",
+        "reading": "なのか"
+      },
+      {
+        "word": "並べる",
+        "reading": "ならべる"
+      },
+      {
+        "word": "並ぶ",
+        "reading": "ならぶ"
+      },
+      {
+        "word": "習う",
+        "reading": "ならう"
+      },
+      {
+        "word": "夏",
+        "reading": "なつ"
+      },
+      {
+        "word": "夏休み",
+        "reading": "なつやすみ"
+      },
+      {
+        "word": "何故",
+        "reading": "なぜ"
+      },
+      {
+        "word": "猫",
+        "reading": "ねこ"
+      },
+      {
+        "word": "ネクタイ"
+      },
+      {
+        "word": "寝る",
+        "reading": "ねる"
+      },
+      {
+        "word": "二",
+        "reading": "に"
+      },
+      {
+        "word": "日曜日",
+        "reading": "にちようび"
+      },
+      {
+        "word": "賑やか",
+        "reading": "にぎやか"
+      },
+      {
+        "word": "日記",
+        "reading": "にっき"
+      },
+      {
+        "word": "肉",
+        "reading": "にく"
+      },
+      {
+        "word": "荷物",
+        "reading": "にもつ"
+      },
+      {
+        "word": "西",
+        "reading": "にし"
+      },
+      {
+        "word": "庭",
+        "reading": "にわ"
+      },
+      {
+        "word": "登る",
+        "reading": "のぼる"
+      },
+      {
+        "word": "飲み物",
+        "reading": "のみもの"
+      },
+      {
+        "word": "飲む",
+        "reading": "のむ"
+      },
+      {
+        "word": "ノート"
+      },
+      {
+        "word": "乗る",
+        "reading": "のる"
+      },
+      {
+        "word": "脱ぐ",
+        "reading": "ぬぐ"
+      },
+      {
+        "word": "温い",
+        "reading": "ぬるい"
+      },
+      {
+        "word": "ニュース"
+      },
+      {
+        "word": "おばあさん"
+      },
+      {
+        "word": "伯母さん",
+        "reading": "おばさん"
+      },
+      {
+        "word": "お弁当",
+        "reading": "おべんとう"
+      },
+      {
+        "word": "覚える",
+        "reading": "おぼえる"
+      },
+      {
+        "word": "お茶",
+        "reading": "おちゃ"
+      },
+      {
+        "word": "お風呂",
+        "reading": "おふろ"
+      },
+      {
+        "word": "美味しい",
+        "reading": "おいしい"
+      },
+      {
+        "word": "伯父さん",
+        "reading": "おじさん"
+      },
+      {
+        "word": "お母さん",
+        "reading": "おかあさん"
+      },
+      {
+        "word": "お金",
+        "reading": "おかね"
+      },
+      {
+        "word": "お菓子",
+        "reading": "おかし"
+      },
+      {
+        "word": "起きる",
+        "reading": "おきる"
+      },
+      {
+        "word": "置く",
+        "reading": "おく"
+      },
+      {
+        "word": "奥さん",
+        "reading": "おくさん"
+      },
+      {
+        "word": "お巡りさん",
+        "reading": "おまわりさん"
+      },
+      {
+        "word": "重い",
+        "reading": "おもい"
+      },
+      {
+        "word": "面白い",
+        "reading": "おもしろい"
+      },
+      {
+        "word": "同じ",
+        "reading": "おなじ"
+      },
+      {
+        "word": "お腹",
+        "reading": "おなか"
+      },
+      {
+        "word": "お姉さん",
+        "reading": "おねえさん"
+      },
+      {
+        "word": "音楽",
+        "reading": "おんがく"
+      },
+      {
+        "word": "お兄さん",
+        "reading": "おにいさん"
+      },
+      {
+        "word": "女",
+        "reading": "おんな"
+      },
+      {
+        "word": "女の子",
+        "reading": "おんなのこ"
+      },
+      {
+        "word": "多い",
+        "reading": "おおい"
+      },
+      {
+        "word": "大きい",
+        "reading": "おおきい"
+      },
+      {
+        "word": "大きな",
+        "reading": "おおきな"
+      },
+      {
+        "word": "大勢",
+        "reading": "おおぜい"
+      },
+      {
+        "word": "降りる",
+        "reading": "おりる"
+      },
+      {
+        "word": "お酒",
+        "reading": "おさけ"
+      },
+      {
+        "word": "お皿",
+        "reading": "おさら"
+      },
+      {
+        "word": "教える",
+        "reading": "おしえる"
+      },
+      {
+        "word": "遅い",
+        "reading": "おそい"
+      },
+      {
+        "word": "押す",
+        "reading": "おす"
+      },
+      {
+        "word": "お手洗い",
+        "reading": "おてあらい"
+      },
+      {
+        "word": "男",
+        "reading": "おとこ"
+      },
+      {
+        "word": "男の子",
+        "reading": "おとこのこ"
+      },
+      {
+        "word": "大人",
+        "reading": "おとな"
+      },
+      {
+        "word": "一昨日",
+        "reading": "おととい"
+      },
+      {
+        "word": "一昨年",
+        "reading": "おととし"
+      },
+      {
+        "word": "お父さん",
+        "reading": "おとうさん"
+      },
+      {
+        "word": "弟",
+        "reading": "おとうと"
+      },
+      {
+        "word": "終わる",
+        "reading": "おわる"
+      },
+      {
+        "word": "泳ぐ",
+        "reading": "およぐ"
+      },
+      {
+        "word": "パーティー"
+      },
+      {
+        "word": "パン"
+      },
+      {
+        "word": "ページ"
+      },
+      {
+        "word": "ペン"
+      },
+      {
+        "word": "ペット"
+      },
+      {
+        "word": "ポケット"
+      },
+      {
+        "word": "ポスト"
+      },
+      {
+        "word": "プール"
+      },
+      {
+        "word": "来月",
+        "reading": "らいげつ"
+      },
+      {
+        "word": "来年",
+        "reading": "らいねん"
+      },
+      {
+        "word": "来週",
+        "reading": "らいしゅう"
+      },
+      {
+        "word": "ラジオ"
+      },
+      {
+        "word": "零",
+        "reading": "れい"
+      },
+      {
+        "word": "冷蔵庫",
+        "reading": "れいぞうこ"
+      },
+      {
+        "word": "レコード"
+      },
+      {
+        "word": "練習",
+        "reading": "れんしゅう"
+      },
+      {
+        "word": "レストラン"
+      },
+      {
+        "word": "立派",
+        "reading": "りっぱ"
+      },
+      {
+        "word": "六",
+        "reading": "ろく"
+      },
+      {
+        "word": "廊下",
+        "reading": "ろうか"
+      },
+      {
+        "word": "旅行",
+        "reading": "りょこう"
+      },
+      {
+        "word": "料理",
+        "reading": "りょうり"
+      },
+      {
+        "word": "両親",
+        "reading": "りょうしん"
+      },
+      {
+        "word": "留学生",
+        "reading": "りゅうがくせい"
+      },
+      {
+        "word": "さあ"
+      },
+      {
+        "word": "財布",
+        "reading": "さいふ"
+      },
+      {
+        "word": "魚",
+        "reading": "さかな"
+      },
+      {
+        "word": "先",
+        "reading": "さき"
+      },
+      {
+        "word": "咲く",
+        "reading": "さく"
+      },
+      {
+        "word": "作文",
+        "reading": "さくぶん"
+      },
+      {
+        "word": "寒い",
+        "reading": "さむい"
+      },
+      {
+        "word": "三",
+        "reading": "さん"
+      },
+      {
+        "word": "散歩",
+        "reading": "さんぽ"
+      },
+      {
+        "word": "再来年",
+        "reading": "さらいねん"
+      },
+      {
+        "word": "差す",
+        "reading": "さす"
+      },
+      {
+        "word": "砂糖",
+        "reading": "さとう"
+      },
+      {
+        "word": "背",
+        "reading": "せ"
+      },
+      {
+        "word": "背広",
+        "reading": "せびろ"
+      },
+      {
+        "word": "セーター"
+      },
+      {
+        "word": "生徒",
+        "reading": "せいと"
+      },
+      {
+        "word": "石鹼",
+        "reading": "せっけん"
+      },
+      {
+        "word": "狭い",
+        "reading": "せまい"
+      },
+      {
+        "word": "千",
+        "reading": "せん"
+      },
+      {
+        "word": "先月",
+        "reading": "せんげつ"
+      },
+      {
+        "word": "先生",
+        "reading": "せんせい"
+      },
+      {
+        "word": "先週",
+        "reading": "せんしゅう"
+      },
+      {
+        "word": "洗濯",
+        "reading": "せんたく"
+      },
+      {
+        "word": "写真",
+        "reading": "しゃしん"
+      },
+      {
+        "word": "シャツ"
+      },
+      {
+        "word": "シャワー"
+      },
+      {
+        "word": "四",
+        "reading": "し"
+      },
+      {
+        "word": "七",
+        "reading": "しち"
+      },
+      {
+        "word": "仕事",
+        "reading": "しごと"
+      },
+      {
+        "word": "閉まる",
+        "reading": "しまる"
+      },
+      {
+        "word": "閉める",
+        "reading": "しめる"
+      },
+      {
+        "word": "締める",
+        "reading": "しめる"
+      },
+      {
+        "word": "新聞",
+        "reading": "しんぶん"
+      },
+      {
+        "word": "死ぬ",
+        "reading": "しぬ"
+      },
+      {
+        "word": "塩",
+        "reading": "しお"
+      },
+      {
+        "word": "白",
+        "reading": "しろ"
+      },
+      {
+        "word": "白い",
+        "reading": "しろい"
+      },
+      {
+        "word": "知る",
+        "reading": "しる"
+      },
+      {
+        "word": "下",
+        "reading": "した"
+      },
+      {
+        "word": "質問",
+        "reading": "しつもん"
+      },
+      {
+        "word": "静か",
+        "reading": "しずか"
+      },
+      {
+        "word": "食堂",
+        "reading": "しょくどう"
+      },
+      {
+        "word": "醬油",
+        "reading": "しょうゆ"
+      },
+      {
+        "word": "宿題",
+        "reading": "しゅくだい"
+      },
+      {
+        "word": "そば"
+      },
+      {
+        "word": "そっち"
+      },
+      {
+        "word": "そちら"
+      },
+      {
+        "word": "そこ"
+      },
+      {
+        "word": "その"
+      },
+      {
+        "word": "空",
+        "reading": "そら"
+      },
+      {
+        "word": "それ"
+      },
+      {
+        "word": "それでは"
+      },
+      {
+        "word": "外",
+        "reading": "そと"
+      },
+      {
+        "word": "掃除",
+        "reading": "そうじ"
+      },
+      {
+        "word": "直ぐに",
+        "reading": "すぐに"
+      },
+      {
+        "word": "水曜日",
+        "reading": "すいようび"
+      },
+      {
+        "word": "スカート"
+      },
+      {
+        "word": "好き",
+        "reading": "すき"
+      },
+      {
+        "word": "少し",
+        "reading": "すこし"
+      },
+      {
+        "word": "少ない",
+        "reading": "すくない"
+      },
+      {
+        "word": "住む",
+        "reading": "すむ"
+      },
+      {
+        "word": "スポーツ"
+      },
+      {
+        "word": "スプーン"
+      },
+      {
+        "word": "スリッパ"
+      },
+      {
+        "word": "ストーブ"
+      },
+      {
+        "word": "吸う",
+        "reading": "すう"
+      },
+      {
+        "word": "座る",
+        "reading": "すわる"
+      },
+      {
+        "word": "涼しい",
+        "reading": "すずしい"
+      },
+      {
+        "word": "たばこ"
+      },
+      {
+        "word": "食べ物",
+        "reading": "たべもの"
+      },
+      {
+        "word": "食べる",
+        "reading": "たべる"
+      },
+      {
+        "word": "多分",
+        "reading": "たぶん"
+      },
+      {
+        "word": "大変",
+        "reading": "たいへん"
+      },
+      {
+        "word": "大切",
+        "reading": "たいせつ"
+      },
+      {
+        "word": "大使館",
+        "reading": "たいしかん"
+      },
+      {
+        "word": "高い",
+        "reading": "たかい"
+      },
+      {
+        "word": "沢山",
+        "reading": "たくさん"
+      },
+      {
+        "word": "タクシー"
+      },
+      {
+        "word": "卵",
+        "reading": "たまご"
+      },
+      {
+        "word": "誕生日",
+        "reading": "たんじょうび"
+      },
+      {
+        "word": "頼む",
+        "reading": "たのむ"
+      },
+      {
+        "word": "楽しい",
+        "reading": "たのしい"
+      },
+      {
+        "word": "縦",
+        "reading": "たて"
+      },
+      {
+        "word": "建物",
+        "reading": "たてもの"
+      },
+      {
+        "word": "立つ",
+        "reading": "たつ"
+      },
+      {
+        "word": "手",
+        "reading": "て"
+      },
+      {
+        "word": "テーブル"
+      },
+      {
+        "word": "テープ"
+      },
+      {
+        "word": "テープレコーダー"
+      },
+      {
+        "word": "手紙",
+        "reading": "てがみ"
+      },
+      {
+        "word": "天気",
+        "reading": "てんき"
+      },
+      {
+        "word": "テレビ"
+      },
+      {
+        "word": "テスト"
+      },
+      {
+        "word": "戸",
+        "reading": "と"
+      },
+      {
+        "word": "飛ぶ",
+        "reading": "とぶ"
+      },
+      {
+        "word": "トイレ"
+      },
+      {
+        "word": "時計",
+        "reading": "とけい"
+      },
+      {
+        "word": "時",
+        "reading": "とき"
+      },
+      {
+        "word": "時々",
+        "reading": "ときどき"
+      },
+      {
+        "word": "所",
+        "reading": "ところ"
+      },
+      {
+        "word": "止まる",
+        "reading": "とまる"
+      },
+      {
+        "word": "友達",
+        "reading": "ともだち"
+      },
+      {
+        "word": "隣",
+        "reading": "となり"
+      },
+      {
+        "word": "遠い",
+        "reading": "とおい"
+      },
+      {
+        "word": "十日",
+        "reading": "とおか"
+      },
+      {
+        "word": "鳥",
+        "reading": "とり"
+      },
+      {
+        "word": "鶏肉",
+        "reading": "とりにく"
+      },
+      {
+        "word": "取る",
+        "reading": "とる"
+      },
+      {
+        "word": "撮る",
+        "reading": "とる"
+      },
+      {
+        "word": "年",
+        "reading": "とし"
+      },
+      {
+        "word": "図書館",
+        "reading": "としょかん"
+      },
+      {
+        "word": "次",
+        "reading": "つぎ"
+      },
+      {
+        "word": "一日",
+        "reading": "ついたち"
+      },
+      {
+        "word": "疲れる",
+        "reading": "つかれる"
+      },
+      {
+        "word": "使う",
+        "reading": "つかう"
+      },
+      {
+        "word": "つける"
+      },
+      {
+        "word": "付ける",
+        "reading": "つける"
+      },
+      {
+        "word": "着く",
+        "reading": "つく"
+      },
+      {
+        "word": "机",
+        "reading": "つくえ"
+      },
+      {
+        "word": "作る",
+        "reading": "つくる"
+      },
+      {
+        "word": "詰まらない",
+        "reading": "つまらない"
+      },
+      {
+        "word": "冷たい",
+        "reading": "つめたい"
+      },
+      {
+        "word": "勤める",
+        "reading": "つとめる"
+      },
+      {
+        "word": "強い",
+        "reading": "つよい"
+      },
+      {
+        "word": "上",
+        "reading": "うえ"
+      },
+      {
+        "word": "生まれる",
+        "reading": "うまれる"
+      },
+      {
+        "word": "海",
+        "reading": "うみ"
+      },
+      {
+        "word": "売る",
+        "reading": "うる"
+      },
+      {
+        "word": "煩い",
+        "reading": "うるさい"
+      },
+      {
+        "word": "後ろ",
+        "reading": "うしろ"
+      },
+      {
+        "word": "薄い",
+        "reading": "うすい"
+      },
+      {
+        "word": "歌",
+        "reading": "うた"
+      },
+      {
+        "word": "歌う",
+        "reading": "うたう"
+      },
+      {
+        "word": "上着",
+        "reading": "うわぎ"
+      },
+      {
+        "word": "ワイシャツ"
+      },
+      {
+        "word": "若い",
+        "reading": "わかい"
+      },
+      {
+        "word": "分かる",
+        "reading": "わかる"
+      },
+      {
+        "word": "悪い",
+        "reading": "わるい"
+      },
+      {
+        "word": "忘れる",
+        "reading": "わすれる"
+      },
+      {
+        "word": "渡る",
+        "reading": "わたる"
+      },
+      {
+        "word": "私",
+        "reading": "わたし"
+      },
+      {
+        "word": "渡す",
+        "reading": "わたす"
+      },
+      {
+        "word": "山",
+        "reading": "やま"
+      },
+      {
+        "word": "八百屋",
+        "reading": "やおや"
+      },
+      {
+        "word": "やる"
+      },
+      {
+        "word": "野菜",
+        "reading": "やさい"
+      },
+      {
+        "word": "易しい",
+        "reading": "やさしい"
+      },
+      {
+        "word": "安い",
+        "reading": "やすい"
+      },
+      {
+        "word": "休み",
+        "reading": "やすみ"
+      },
+      {
+        "word": "休む",
+        "reading": "やすむ"
+      },
+      {
+        "word": "八つ",
+        "reading": "やっつ"
+      },
+      {
+        "word": "呼ぶ",
+        "reading": "よぶ"
+      },
+      {
+        "word": "良い",
+        "reading": "よいいい"
+      },
+      {
+        "word": "四日",
+        "reading": "よっか"
+      },
+      {
+        "word": "横",
+        "reading": "よこ"
+      },
+      {
+        "word": "よく"
+      },
+      {
+        "word": "読む",
+        "reading": "よむ"
+      },
+      {
+        "word": "夜",
+        "reading": "よる"
+      },
+      {
+        "word": "四つ",
+        "reading": "よつ"
+      },
+      {
+        "word": "洋服",
+        "reading": "ようふく"
+      },
+      {
+        "word": "八日",
+        "reading": "ようか"
+      },
+      {
+        "word": "弱い",
+        "reading": "よわい"
+      },
+      {
+        "word": "雪",
+        "reading": "ゆき"
+      },
+      {
+        "word": "ゆっくり"
+      },
+      {
+        "word": "昨夜",
+        "reading": "ゆうべ"
+      },
+      {
+        "word": "郵便局",
+        "reading": "ゆうびんきょく"
+      },
+      {
+        "word": "夕方",
+        "reading": "ゆうがた"
+      },
+      {
+        "word": "夕飯",
+        "reading": "ゆうはん"
+      },
+      {
+        "word": "有名",
+        "reading": "ゆうめい"
+      },
+      {
+        "word": "雑誌",
+        "reading": "ざっし"
+      },
+      {
+        "word": "全部",
+        "reading": "ぜんぶ"
+      },
+      {
+        "word": "ゼロ"
+      },
+      {
+        "word": "ズボン"
+      }
+    ],
+    "N4": [
+      {
+        "word": "あ"
+      },
+      {
+        "word": "ああ"
+      },
+      {
+        "word": "アフリカ"
+      },
+      {
+        "word": "上がる",
+        "reading": "あがる"
+      },
+      {
+        "word": "挨拶",
+        "reading": "あいさつ"
+      },
+      {
+        "word": "味",
+        "reading": "あじ"
+      },
+      {
+        "word": "アジア"
+      },
+      {
+        "word": "赤ちゃん",
+        "reading": "あかちゃん"
+      },
+      {
+        "word": "赤ん坊",
+        "reading": "あかんぼう"
+      },
+      {
+        "word": "アクセサリー"
+      },
+      {
+        "word": "アメリカ"
+      },
+      {
+        "word": "アナウンサー"
+      },
+      {
+        "word": "あんな"
+      },
+      {
+        "word": "案内",
+        "reading": "あんない"
+      },
+      {
+        "word": "安心",
+        "reading": "あんしん"
+      },
+      {
+        "word": "安全",
+        "reading": "あんぜん"
+      },
+      {
+        "word": "アルバイト"
+      },
+      {
+        "word": "アルコール"
+      },
+      {
+        "word": "浅い",
+        "reading": "あさい"
+      },
+      {
+        "word": "遊び",
+        "reading": "あそび"
+      },
+      {
+        "word": "集まる",
+        "reading": "あつまる"
+      },
+      {
+        "word": "集める",
+        "reading": "あつめる"
+      },
+      {
+        "word": "謝る",
+        "reading": "あやまる"
+      },
+      {
+        "word": "倍",
+        "reading": "ばい"
+      },
+      {
+        "word": "番組",
+        "reading": "ばんぐみ"
+      },
+      {
+        "word": "場所",
+        "reading": "ばしょ"
+      },
+      {
+        "word": "ベル"
+      },
+      {
+        "word": "美術館",
+        "reading": "びじゅつかん"
+      },
+      {
+        "word": "びっくり"
+      },
+      {
+        "word": "ビル"
+      },
+      {
+        "word": "僕",
+        "reading": "ぼく"
+      },
+      {
+        "word": "貿易",
+        "reading": "ぼうえき"
+      },
+      {
+        "word": "部長",
+        "reading": "ぶちょう"
+      },
+      {
+        "word": "ぶどう"
+      },
+      {
+        "word": "文学",
+        "reading": "ぶんがく"
+      },
+      {
+        "word": "文化",
+        "reading": "ぶんか"
+      },
+      {
+        "word": "文法",
+        "reading": "ぶんぽう"
+      },
+      {
+        "word": "ちゃん"
+      },
+      {
+        "word": "チェック"
+      },
+      {
+        "word": "血",
+        "reading": "ち"
+      },
+      {
+        "word": "力",
+        "reading": "ちから"
+      },
+      {
+        "word": "地理",
+        "reading": "ちり"
+      },
+      {
+        "word": "中学校",
+        "reading": "ちゅうがっこう"
+      },
+      {
+        "word": "注意",
+        "reading": "ちゅうい"
+      },
+      {
+        "word": "注射",
+        "reading": "ちゅうしゃ"
+      },
+      {
+        "word": "駐車場",
+        "reading": "ちゅうしゃじょう"
+      },
+      {
+        "word": "大分",
+        "reading": "だいぶ"
+      },
+      {
+        "word": "大学生",
+        "reading": "だいがくせい"
+      },
+      {
+        "word": "大事",
+        "reading": "だいじ"
+      },
+      {
+        "word": "大体",
+        "reading": "だいたい"
+      },
+      {
+        "word": "暖房",
+        "reading": "だんぼう"
+      },
+      {
+        "word": "男性",
+        "reading": "だんせい"
+      },
+      {
+        "word": "できるだけ"
+      },
+      {
+        "word": "電報",
+        "reading": "でんぽう"
+      },
+      {
+        "word": "電灯",
+        "reading": "でんとう"
+      },
+      {
+        "word": "どんどん"
+      },
+      {
+        "word": "泥棒",
+        "reading": "どろぼう"
+      },
+      {
+        "word": "動物園",
+        "reading": "どうぶつえん"
+      },
+      {
+        "word": "道具",
+        "reading": "どうぐ"
+      },
+      {
+        "word": "枝",
+        "reading": "えだ"
+      },
+      {
+        "word": "遠慮",
+        "reading": "えんりょ"
+      },
+      {
+        "word": "選ぶ",
+        "reading": "えらぶ"
+      },
+      {
+        "word": "エスカレーター"
+      },
+      {
+        "word": "ファックス"
+      },
+      {
+        "word": "不便",
+        "reading": "ふべん"
+      },
+      {
+        "word": "増える",
+        "reading": "ふえる"
+      },
+      {
+        "word": "深い",
+        "reading": "ふかい"
+      },
+      {
+        "word": "復習",
+        "reading": "ふくしゅう"
+      },
+      {
+        "word": "複雑",
+        "reading": "ふくざつ"
+      },
+      {
+        "word": "踏む",
+        "reading": "ふむ"
+      },
+      {
+        "word": "船",
+        "reading": "ふね"
+      },
+      {
+        "word": "降り出す",
+        "reading": "ふりだす"
+      },
+      {
+        "word": "布団",
+        "reading": "ふとん"
+      },
+      {
+        "word": "太る",
+        "reading": "ふとる"
+      },
+      {
+        "word": "普通",
+        "reading": "ふつう"
+      },
+      {
+        "word": "ガラス"
+      },
+      {
+        "word": "ガソリン"
+      },
+      {
+        "word": "ガソリンスタンド"
+      },
+      {
+        "word": "ガス"
+      },
+      {
+        "word": "原因",
+        "reading": "げんいん"
+      },
+      {
+        "word": "下宿",
+        "reading": "げしゅく"
+      },
+      {
+        "word": "技術",
+        "reading": "ぎじゅつ"
+      },
+      {
+        "word": "ごちそう"
+      },
+      {
+        "word": "ごみ"
+      },
+      {
+        "word": "ご覧になる",
+        "reading": "ごらんになる"
+      },
+      {
+        "word": "ご主人",
+        "reading": "ごしゅじん"
+      },
+      {
+        "word": "ご存じ",
+        "reading": "ごぞんじ"
+      },
+      {
+        "word": "具合",
+        "reading": "ぐあい"
+      },
+      {
+        "word": "葉",
+        "reading": "は"
+      },
+      {
+        "word": "拝見",
+        "reading": "はいけん"
+      },
+      {
+        "word": "歯医者",
+        "reading": "はいしゃ"
+      },
+      {
+        "word": "はっきり"
+      },
+      {
+        "word": "運ぶ",
+        "reading": "はこぶ"
+      },
+      {
+        "word": "花見",
+        "reading": "はなみ"
+      },
+      {
+        "word": "ハンドバッグ"
+      },
+      {
+        "word": "反対",
+        "reading": "はんたい"
+      },
+      {
+        "word": "払う",
+        "reading": "はらう"
+      },
+      {
+        "word": "発音",
+        "reading": "はつおん"
+      },
+      {
+        "word": "林",
+        "reading": "はやし"
+      },
+      {
+        "word": "恥ずかしい",
+        "reading": "はずかしい"
+      },
+      {
+        "word": "変",
+        "reading": "へん"
+      },
+      {
+        "word": "返事",
+        "reading": "へんじ"
+      },
+      {
+        "word": "火",
+        "reading": "ひ"
+      },
+      {
+        "word": "酷い",
+        "reading": "ひどい"
+      },
+      {
+        "word": "冷える",
+        "reading": "ひえる"
+      },
+      {
+        "word": "髭",
+        "reading": "ひげ"
+      },
+      {
+        "word": "非常に",
+        "reading": "ひじょうに"
+      },
+      {
+        "word": "光",
+        "reading": "ひかり"
+      },
+      {
+        "word": "光る",
+        "reading": "ひかる"
+      },
+      {
+        "word": "引き出し",
+        "reading": "ひきだし"
+      },
+      {
+        "word": "引き出す",
+        "reading": "ひきだす"
+      },
+      {
+        "word": "引っ越す",
+        "reading": "ひっこす"
+      },
+      {
+        "word": "飛行場",
+        "reading": "ひこうじょう"
+      },
+      {
+        "word": "開く",
+        "reading": "ひらく"
+      },
+      {
+        "word": "拾う",
+        "reading": "ひろう"
+      },
+      {
+        "word": "昼間",
+        "reading": "ひるま"
+      },
+      {
+        "word": "昼休み",
+        "reading": "ひるやすみ"
+      },
+      {
+        "word": "久しぶり",
+        "reading": "ひさしぶり"
+      },
+      {
+        "word": "褒める",
+        "reading": "ほめる"
+      },
+      {
+        "word": "翻訳",
+        "reading": "ほんやく"
+      },
+      {
+        "word": "星",
+        "reading": "ほし"
+      },
+      {
+        "word": "ほとんど"
+      },
+      {
+        "word": "法律",
+        "reading": "ほうりつ"
+      },
+      {
+        "word": "放送",
+        "reading": "ほうそう"
+      },
+      {
+        "word": "一度",
+        "reading": "いちど"
+      },
+      {
+        "word": "以外",
+        "reading": "いがい"
+      },
+      {
+        "word": "医学",
+        "reading": "いがく"
+      },
+      {
+        "word": "いじめる"
+      },
+      {
+        "word": "以上",
+        "reading": "いじょう"
+      },
+      {
+        "word": "以下",
+        "reading": "いか"
+      },
+      {
+        "word": "意見",
+        "reading": "いけん"
+      },
+      {
+        "word": "生き物",
+        "reading": "いきもの"
+      },
+      {
+        "word": "生きる",
+        "reading": "いきる"
+      },
+      {
+        "word": "以内",
+        "reading": "いない"
+      },
+      {
+        "word": "田舎",
+        "reading": "いなか"
+      },
+      {
+        "word": "祈る",
+        "reading": "いのる"
+      },
+      {
+        "word": "いっぱい"
+      },
+      {
+        "word": "色んな",
+        "reading": "いろんな"
+      },
+      {
+        "word": "石",
+        "reading": "いし"
+      },
+      {
+        "word": "急ぐ",
+        "reading": "いそぐ"
+      },
+      {
+        "word": "一生懸命",
+        "reading": "いっしょうけんめい"
+      },
+      {
+        "word": "頂く",
+        "reading": "いただく"
+      },
+      {
+        "word": "致す",
+        "reading": "いたす"
+      },
+      {
+        "word": "糸",
+        "reading": "いと"
+      },
+      {
+        "word": "ジャム"
+      },
+      {
+        "word": "字",
+        "reading": "じ"
+      },
+      {
+        "word": "時代",
+        "reading": "じだい"
+      },
+      {
+        "word": "事故",
+        "reading": "じこ"
+      },
+      {
+        "word": "事務所",
+        "reading": "じむしょ"
+      },
+      {
+        "word": "神社",
+        "reading": "じんじゃ"
+      },
+      {
+        "word": "人口",
+        "reading": "じんこう"
+      },
+      {
+        "word": "人生",
+        "reading": "じんせい"
+      },
+      {
+        "word": "地震",
+        "reading": "じしん"
+      },
+      {
+        "word": "辞典",
+        "reading": "じてん"
+      },
+      {
+        "word": "自由",
+        "reading": "じゆう"
+      },
+      {
+        "word": "女性",
+        "reading": "じょせい"
+      },
+      {
+        "word": "準備",
+        "reading": "じゅんび"
+      },
+      {
+        "word": "十分",
+        "reading": "じゅうぶん"
+      },
+      {
+        "word": "柔道",
+        "reading": "じゅうどう"
+      },
+      {
+        "word": "住所",
+        "reading": "じゅうしょ"
+      },
+      {
+        "word": "カーテン"
+      },
+      {
+        "word": "壁",
+        "reading": "かべ"
+      },
+      {
+        "word": "課長",
+        "reading": "かちょう"
+      },
+      {
+        "word": "帰り",
+        "reading": "かえり"
+      },
+      {
+        "word": "変える",
+        "reading": "かえる"
+      },
+      {
+        "word": "科学",
+        "reading": "かがく"
+      },
+      {
+        "word": "鏡",
+        "reading": "かがみ"
+      },
+      {
+        "word": "海岸",
+        "reading": "かいがん"
+      },
+      {
+        "word": "会議",
+        "reading": "かいぎ"
+      },
+      {
+        "word": "会議室",
+        "reading": "かいぎしつ"
+      },
+      {
+        "word": "会場",
+        "reading": "かいじょう"
+      },
+      {
+        "word": "会話",
+        "reading": "かいわ"
+      },
+      {
+        "word": "火事",
+        "reading": "かじ"
+      },
+      {
+        "word": "格好",
+        "reading": "かっこう"
+      },
+      {
+        "word": "構う",
+        "reading": "かまう"
+      },
+      {
+        "word": "髪",
+        "reading": "かみ"
+      },
+      {
+        "word": "噛む",
+        "reading": "かむ"
+      },
+      {
+        "word": "家内",
+        "reading": "かない"
+      },
+      {
+        "word": "必ず",
+        "reading": "かならず"
+      },
+      {
+        "word": "悲しい",
+        "reading": "かなしい"
+      },
+      {
+        "word": "考える",
+        "reading": "かんがえる"
+      },
+      {
+        "word": "看護婦",
+        "reading": "かんごふ"
+      },
+      {
+        "word": "関係",
+        "reading": "かんけい"
+      },
+      {
+        "word": "彼女",
+        "reading": "かのじょ"
+      },
+      {
+        "word": "簡単",
+        "reading": "かんたん"
+      },
+      {
+        "word": "彼",
+        "reading": "かれ"
+      },
+      {
+        "word": "彼ら",
+        "reading": "かれら"
+      },
+      {
+        "word": "形",
+        "reading": "かたち"
+      },
+      {
+        "word": "片付ける",
+        "reading": "かたづける"
+      },
+      {
+        "word": "硬い",
+        "reading": "かたい"
+      },
+      {
+        "word": "勝つ",
+        "reading": "かつ"
+      },
+      {
+        "word": "乾く",
+        "reading": "かわく"
+      },
+      {
+        "word": "代わり",
+        "reading": "かわり"
+      },
+      {
+        "word": "変わる",
+        "reading": "かわる"
+      },
+      {
+        "word": "通う",
+        "reading": "かよう"
+      },
+      {
+        "word": "飾る",
+        "reading": "かざる"
+      },
+      {
+        "word": "毛",
+        "reading": "け"
+      },
+      {
+        "word": "ケーキ"
+      },
+      {
+        "word": "怪我",
+        "reading": "けが"
+      },
+      {
+        "word": "計画",
+        "reading": "けいかく"
+      },
+      {
+        "word": "経験",
+        "reading": "けいけん"
+      },
+      {
+        "word": "警察",
+        "reading": "けいさつ"
+      },
+      {
+        "word": "経済",
+        "reading": "けいざい"
+      },
+      {
+        "word": "見物",
+        "reading": "けんぶつ"
+      },
+      {
+        "word": "喧嘩",
+        "reading": "けんか"
+      },
+      {
+        "word": "研究",
+        "reading": "けんきゅう"
+      },
+      {
+        "word": "研究室",
+        "reading": "けんきゅうしつ"
+      },
+      {
+        "word": "消しゴム",
+        "reading": ""
+      },
+      {
+        "word": "景色",
+        "reading": "けしき"
+      },
+      {
+        "word": "気",
+        "reading": "き"
+      },
+      {
+        "word": "厳しい",
+        "reading": "きびしい"
+      },
+      {
+        "word": "気分",
+        "reading": "きぶん"
+      },
+      {
+        "word": "機会",
+        "reading": "きかい"
+      },
+      {
+        "word": "危険",
+        "reading": "きけん"
+      },
+      {
+        "word": "聞こえる",
+        "reading": "きこえる"
+      },
+      {
+        "word": "決まる",
+        "reading": "きまる"
+      },
+      {
+        "word": "決める",
+        "reading": "きめる"
+      },
+      {
+        "word": "君",
+        "reading": "きみ"
+      },
+      {
+        "word": "気持ち",
+        "reading": "きもち"
+      },
+      {
+        "word": "着物",
+        "reading": "きもの"
+      },
+      {
+        "word": "近所",
+        "reading": "きんじょ"
+      },
+      {
+        "word": "絹",
+        "reading": "きぬ"
+      },
+      {
+        "word": "季節",
+        "reading": "きせつ"
+      },
+      {
+        "word": "汽車",
+        "reading": "きしゃ"
+      },
+      {
+        "word": "規則",
+        "reading": "きそく"
+      },
+      {
+        "word": "子",
+        "reading": "こ"
+      },
+      {
+        "word": "心",
+        "reading": "こころ"
+      },
+      {
+        "word": "国際",
+        "reading": "こくさい"
+      },
+      {
+        "word": "細かい",
+        "reading": "こまかい"
+      },
+      {
+        "word": "米",
+        "reading": "こめ"
+      },
+      {
+        "word": "込む",
+        "reading": "こむ"
+      },
+      {
+        "word": "今度",
+        "reading": "こんど"
+      },
+      {
+        "word": "この間",
+        "reading": "このあいだ"
+      },
+      {
+        "word": "このごろ"
+      },
+      {
+        "word": "コンピュータ"
+      },
+      {
+        "word": "コンサート"
+      },
+      {
+        "word": "今夜",
+        "reading": "こんや"
+      },
+      {
+        "word": "これから"
+      },
+      {
+        "word": "故障",
+        "reading": "こしょう"
+      },
+      {
+        "word": "答え",
+        "reading": "こたえ"
+      },
+      {
+        "word": "小鳥",
+        "reading": "ことり"
+      },
+      {
+        "word": "こう"
+      },
+      {
+        "word": "校長",
+        "reading": "こうちょう"
+      },
+      {
+        "word": "講堂",
+        "reading": "こうどう"
+      },
+      {
+        "word": "郊外",
+        "reading": "こうがい"
+      },
+      {
+        "word": "講義",
+        "reading": "こうぎ"
+      },
+      {
+        "word": "工業",
+        "reading": "こうぎょう"
+      },
+      {
+        "word": "工場",
+        "reading": "こうじょう"
+      },
+      {
+        "word": "高校",
+        "reading": "こうこう"
+      },
+      {
+        "word": "高校生",
+        "reading": "こうこうせい"
+      },
+      {
+        "word": "公務員",
+        "reading": "こうむいん"
+      },
+      {
+        "word": "高等学校",
+        "reading": "こうとうがっこう"
+      },
+      {
+        "word": "交通",
+        "reading": "こうつう"
+      },
+      {
+        "word": "怖い",
+        "reading": "こわい"
+      },
+      {
+        "word": "壊れる",
+        "reading": "こわれる"
+      },
+      {
+        "word": "壊す",
+        "reading": "こわす"
+      },
+      {
+        "word": "首",
+        "reading": "くび"
+      },
+      {
+        "word": "下さる",
+        "reading": "くださる"
+      },
+      {
+        "word": "雲",
+        "reading": "くも"
+      },
+      {
+        "word": "君",
+        "reading": "くん"
+      },
+      {
+        "word": "比べる",
+        "reading": "くらべる"
+      },
+      {
+        "word": "暮れる",
+        "reading": "くれる"
+      },
+      {
+        "word": "草",
+        "reading": "くさ"
+      },
+      {
+        "word": "空気",
+        "reading": "くうき"
+      },
+      {
+        "word": "空港",
+        "reading": "くうこう"
+      },
+      {
+        "word": "客",
+        "reading": "きゃく"
+      },
+      {
+        "word": "教育",
+        "reading": "きょういく"
+      },
+      {
+        "word": "教会",
+        "reading": "きょうかい"
+      },
+      {
+        "word": "興味",
+        "reading": "きょうみ"
+      },
+      {
+        "word": "競争",
+        "reading": "きょうそう"
+      },
+      {
+        "word": "急",
+        "reading": "きゅう"
+      },
+      {
+        "word": "急行",
+        "reading": "きゅうこう"
+      },
+      {
+        "word": "間違える",
+        "reading": "まちがえる"
+      },
+      {
+        "word": "参る",
+        "reading": "まいる"
+      },
+      {
+        "word": "負ける",
+        "reading": "まける"
+      },
+      {
+        "word": "漫画",
+        "reading": "まんが"
+      },
+      {
+        "word": "間に合う",
+        "reading": "まにあう"
+      },
+      {
+        "word": "真ん中",
+        "reading": "まんなか"
+      },
+      {
+        "word": "周り",
+        "reading": "まわり"
+      },
+      {
+        "word": "回る",
+        "reading": "まわる"
+      },
+      {
+        "word": "まず"
+      },
+      {
+        "word": "召し上がる",
+        "reading": "めしあがる"
+      },
+      {
+        "word": "珍しい",
+        "reading": "めずらしい"
+      },
+      {
+        "word": "見える",
+        "reading": "みえる"
+      },
+      {
+        "word": "港",
+        "reading": "みなと"
+      },
+      {
+        "word": "味噌",
+        "reading": "みそ"
+      },
+      {
+        "word": "見つかる",
+        "reading": "みつかる"
+      },
+      {
+        "word": "見つける",
+        "reading": "みつける"
+      },
+      {
+        "word": "都",
+        "reading": "みやこ"
+      },
+      {
+        "word": "湖",
+        "reading": "みずうみ"
+      },
+      {
+        "word": "戻る",
+        "reading": "もどる"
+      },
+      {
+        "word": "木綿",
+        "reading": "もめん"
+      },
+      {
+        "word": "森",
+        "reading": "もり"
+      },
+      {
+        "word": "もし"
+      },
+      {
+        "word": "申し上げる",
+        "reading": "もうしあげる"
+      },
+      {
+        "word": "申す",
+        "reading": "もうす"
+      },
+      {
+        "word": "もうすぐ"
+      },
+      {
+        "word": "迎える",
+        "reading": "むかえる"
+      },
+      {
+        "word": "昔",
+        "reading": "むかし"
+      },
+      {
+        "word": "向かう",
+        "reading": "むかう"
+      },
+      {
+        "word": "無理",
+        "reading": "むり"
+      },
+      {
+        "word": "虫",
+        "reading": "むし"
+      },
+      {
+        "word": "息子",
+        "reading": "むすこ"
+      },
+      {
+        "word": "娘",
+        "reading": "むすめ"
+      },
+      {
+        "word": "投げる",
+        "reading": "なげる"
+      },
+      {
+        "word": "泣く",
+        "reading": "なく"
+      },
+      {
+        "word": "無くなる",
+        "reading": "なくなる"
+      },
+      {
+        "word": "亡くなる",
+        "reading": "なくなる"
+      },
+      {
+        "word": "生",
+        "reading": "なま"
+      },
+      {
+        "word": "直る",
+        "reading": "なおる"
+      },
+      {
+        "word": "治る",
+        "reading": "なおる"
+      },
+      {
+        "word": "慣れる",
+        "reading": "なれる"
+      },
+      {
+        "word": "鳴る",
+        "reading": "なる"
+      },
+      {
+        "word": "なるほど"
+      },
+      {
+        "word": "寝坊",
+        "reading": "ねぼう"
+      },
+      {
+        "word": "値段",
+        "reading": "ねだん"
+      },
+      {
+        "word": "眠い",
+        "reading": "ねむい"
+      },
+      {
+        "word": "眠る",
+        "reading": "ねむる"
+      },
+      {
+        "word": "熱",
+        "reading": "ねつ"
+      },
+      {
+        "word": "苦い",
+        "reading": "にがい"
+      },
+      {
+        "word": "逃げる",
+        "reading": "にげる"
+      },
+      {
+        "word": "二階建て",
+        "reading": "にかいだて"
+      },
+      {
+        "word": "人形",
+        "reading": "にんぎょう"
+      },
+      {
+        "word": "匂い",
+        "reading": "におい"
+      },
+      {
+        "word": "似る",
+        "reading": "にる"
+      },
+      {
+        "word": "喉",
+        "reading": "のど"
+      },
+      {
+        "word": "残る",
+        "reading": "のこる"
+      },
+      {
+        "word": "乗り換える",
+        "reading": "のりかえる"
+      },
+      {
+        "word": "乗り物",
+        "reading": "のりもの"
+      },
+      {
+        "word": "濡れる",
+        "reading": "ぬれる"
+      },
+      {
+        "word": "塗る",
+        "reading": "ぬる"
+      },
+      {
+        "word": "盗む",
+        "reading": "ぬすむ"
+      },
+      {
+        "word": "入学",
+        "reading": "にゅうがく"
+      },
+      {
+        "word": "入院",
+        "reading": "にゅういん"
+      },
+      {
+        "word": "落ちる",
+        "reading": "おちる"
+      },
+      {
+        "word": "踊り",
+        "reading": "おどり"
+      },
+      {
+        "word": "驚く",
+        "reading": "おどろく"
+      },
+      {
+        "word": "踊る",
+        "reading": "おどる"
+      },
+      {
+        "word": "お出でになる",
+        "reading": "おいでになる"
+      },
+      {
+        "word": "お祝い",
+        "reading": "おいわい"
+      },
+      {
+        "word": "お嬢さん",
+        "reading": "おじょうさん"
+      },
+      {
+        "word": "可笑しい",
+        "reading": "おかしい"
+      },
+      {
+        "word": "行う",
+        "reading": "おこなう"
+      },
+      {
+        "word": "怒る",
+        "reading": "おこる"
+      },
+      {
+        "word": "起こす",
+        "reading": "おこす"
+      },
+      {
+        "word": "億",
+        "reading": "おく"
+      },
+      {
+        "word": "屋上",
+        "reading": "おくじょう"
+      },
+      {
+        "word": "遅れる",
+        "reading": "おくれる"
+      },
+      {
+        "word": "贈り物",
+        "reading": "おくりもの"
+      },
+      {
+        "word": "送る",
+        "reading": "おくる"
+      },
+      {
+        "word": "お祭り",
+        "reading": "おまつり"
+      },
+      {
+        "word": "お見舞い",
+        "reading": "おみまい"
+      },
+      {
+        "word": "お土産",
+        "reading": "おみやげ"
+      },
+      {
+        "word": "おもちゃ"
+      },
+      {
+        "word": "思い出す",
+        "reading": "おもいだす"
+      },
+      {
+        "word": "表",
+        "reading": "おもて"
+      },
+      {
+        "word": "オートバイ"
+      },
+      {
+        "word": "お礼",
+        "reading": "おれい"
+      },
+      {
+        "word": "折れる",
+        "reading": "おれる"
+      },
+      {
+        "word": "下りる",
+        "reading": "おりる"
+      },
+      {
+        "word": "折る",
+        "reading": "おる"
+      },
+      {
+        "word": "押し入れ",
+        "reading": "おしいれ"
+      },
+      {
+        "word": "仰る",
+        "reading": "おっしゃる"
+      },
+      {
+        "word": "お宅",
+        "reading": "おたく"
+      },
+      {
+        "word": "音",
+        "reading": "おと"
+      },
+      {
+        "word": "落とす",
+        "reading": "おとす"
+      },
+      {
+        "word": "お釣り",
+        "reading": "おつり"
+      },
+      {
+        "word": "夫",
+        "reading": "おっと"
+      },
+      {
+        "word": "終わり",
+        "reading": "おわり"
+      },
+      {
+        "word": "親",
+        "reading": "おや"
+      },
+      {
+        "word": "泳ぎ方",
+        "reading": "およぎかた"
+      },
+      {
+        "word": "パート"
+      },
+      {
+        "word": "パソコン"
+      },
+      {
+        "word": "ピアノ"
+      },
+      {
+        "word": "プレゼント"
+      },
+      {
+        "word": "冷房",
+        "reading": "れいぼう"
+      },
+      {
+        "word": "レジ"
+      },
+      {
+        "word": "歴史",
+        "reading": "れきし"
+      },
+      {
+        "word": "連絡",
+        "reading": "れんらく"
+      },
+      {
+        "word": "レポート"
+      },
+      {
+        "word": "利用",
+        "reading": "りよう"
+      },
+      {
+        "word": "理由",
+        "reading": "りゆう"
+      },
+      {
+        "word": "留守",
+        "reading": "るす"
+      },
+      {
+        "word": "旅館",
+        "reading": "りょかん"
+      },
+      {
+        "word": "両方",
+        "reading": "りょうほう"
+      },
+      {
+        "word": "寂しい",
+        "reading": "さびしい"
+      },
+      {
+        "word": "下がる",
+        "reading": "さがる"
+      },
+      {
+        "word": "探す",
+        "reading": "さがす"
+      },
+      {
+        "word": "下げる",
+        "reading": "さげる"
+      },
+      {
+        "word": "最後",
+        "reading": "さいご"
+      },
+      {
+        "word": "最近",
+        "reading": "さいきん"
+      },
+      {
+        "word": "最初",
+        "reading": "さいしょ"
+      },
+      {
+        "word": "坂",
+        "reading": "さか"
+      },
+      {
+        "word": "盛ん",
+        "reading": "さかん"
+      },
+      {
+        "word": "昨夜",
+        "reading": "さくや"
+      },
+      {
+        "word": "サンダル"
+      },
+      {
+        "word": "サンドイッチ"
+      },
+      {
+        "word": "産業",
+        "reading": "さんぎょう"
+      },
+      {
+        "word": "サラダ"
+      },
+      {
+        "word": "再来月",
+        "reading": "さらいげつ"
+      },
+      {
+        "word": "再来週",
+        "reading": "さらいしゅう"
+      },
+      {
+        "word": "差し上げる",
+        "reading": "さしあげる"
+      },
+      {
+        "word": "騒ぐ",
+        "reading": "さわぐ"
+      },
+      {
+        "word": "触る",
+        "reading": "さわる"
+      },
+      {
+        "word": "生物",
+        "reading": "せいぶつ"
+      },
+      {
+        "word": "政治",
+        "reading": "せいじ"
+      },
+      {
+        "word": "生活",
+        "reading": "せいかつ"
+      },
+      {
+        "word": "生命",
+        "reading": "せいめい"
+      },
+      {
+        "word": "生産",
+        "reading": "せいさん"
+      },
+      {
+        "word": "西洋",
+        "reading": "せいよう"
+      },
+      {
+        "word": "世界",
+        "reading": "せかい"
+      },
+      {
+        "word": "席",
+        "reading": "せき"
+      },
+      {
+        "word": "線",
+        "reading": "せん"
+      },
+      {
+        "word": "背中",
+        "reading": "せなか"
+      },
+      {
+        "word": "先輩",
+        "reading": "せんぱい"
+      },
+      {
+        "word": "戦争",
+        "reading": "せんそう"
+      },
+      {
+        "word": "説明",
+        "reading": "せつめい"
+      },
+      {
+        "word": "社長",
+        "reading": "しゃちょう"
+      },
+      {
+        "word": "社会",
+        "reading": "しゃかい"
+      },
+      {
+        "word": "市",
+        "reading": "し"
+      },
+      {
+        "word": "試合",
+        "reading": "しあい"
+      },
+      {
+        "word": "叱る",
+        "reading": "しかる"
+      },
+      {
+        "word": "仕方",
+        "reading": "しかた"
+      },
+      {
+        "word": "試験",
+        "reading": "しけん"
+      },
+      {
+        "word": "しっかり"
+      },
+      {
+        "word": "島",
+        "reading": "しま"
+      },
+      {
+        "word": "市民",
+        "reading": ""
+      },
+      {
+        "word": "品物",
+        "reading": "しなもの"
+      },
+      {
+        "word": "新聞社",
+        "reading": "しんぶんしゃ"
+      },
+      {
+        "word": "親切",
+        "reading": "しんせつ"
+      },
+      {
+        "word": "失敗",
+        "reading": "しっぱい"
+      },
+      {
+        "word": "調べる",
+        "reading": "しらべる"
+      },
+      {
+        "word": "知らせる",
+        "reading": "しらせる"
+      },
+      {
+        "word": "下着",
+        "reading": "したぎ"
+      },
+      {
+        "word": "食料品",
+        "reading": "しょくりょうひん"
+      },
+      {
+        "word": "小学校",
+        "reading": "しょうがっこう"
+      },
+      {
+        "word": "生じる",
+        "reading": "しょうじる"
+      },
+      {
+        "word": "紹介",
+        "reading": "しょうかい"
+      },
+      {
+        "word": "将来",
+        "reading": "しょうらい"
+      },
+      {
+        "word": "小説",
+        "reading": "しょうせつ"
+      },
+      {
+        "word": "趣味",
+        "reading": "しゅみ"
+      },
+      {
+        "word": "習慣",
+        "reading": "しゅうかん"
+      },
+      {
+        "word": "祖母",
+        "reading": "そぼ"
+      },
+      {
+        "word": "育てる",
+        "reading": "そだてる"
+      },
+      {
+        "word": "祖父",
+        "reading": "そふ"
+      },
+      {
+        "word": "ソフト"
+      },
+      {
+        "word": "そんな"
+      },
+      {
+        "word": "それで"
+      },
+      {
+        "word": "それほど"
+      },
+      {
+        "word": "そろそろ"
+      },
+      {
+        "word": "卒業",
+        "reading": "そつぎょう"
+      },
+      {
+        "word": "相談",
+        "reading": "そうだん"
+      },
+      {
+        "word": "素晴らしい",
+        "reading": "すばらしい"
+      },
+      {
+        "word": "滑る",
+        "reading": "すべる"
+      },
+      {
+        "word": "凄い",
+        "reading": "すごい"
+      },
+      {
+        "word": "水道",
+        "reading": "すいどう"
+      },
+      {
+        "word": "水泳",
+        "reading": "すいえい"
+      },
+      {
+        "word": "すっかり"
+      },
+      {
+        "word": "空く",
+        "reading": "すく"
+      },
+      {
+        "word": "スクリーン"
+      },
+      {
+        "word": "隅",
+        "reading": "すみ"
+      },
+      {
+        "word": "済む",
+        "reading": "すむ"
+      },
+      {
+        "word": "砂",
+        "reading": "すな"
+      },
+      {
+        "word": "すり"
+      },
+      {
+        "word": "スーツケース"
+      },
+      {
+        "word": "進む",
+        "reading": "すすむ"
+      },
+      {
+        "word": "ステーキ"
+      },
+      {
+        "word": "ステレオ"
+      },
+      {
+        "word": "捨てる",
+        "reading": "すてる"
+      },
+      {
+        "word": "数学",
+        "reading": "すうがく"
+      },
+      {
+        "word": "スーツ"
+      },
+      {
+        "word": "正しい",
+        "reading": "ただしい"
+      },
+      {
+        "word": "退院",
+        "reading": "たいいん"
+      },
+      {
+        "word": "台風",
+        "reading": "たいふう"
+      },
+      {
+        "word": "タイプ"
+      },
+      {
+        "word": "たいてい"
+      },
+      {
+        "word": "たまに"
+      },
+      {
+        "word": "棚",
+        "reading": "たな"
+      },
+      {
+        "word": "誕生",
+        "reading": "たんじょう"
+      },
+      {
+        "word": "楽しみ",
+        "reading": "たのしみ"
+      },
+      {
+        "word": "倒れる",
+        "reading": "たおれる"
+      },
+      {
+        "word": "足りる",
+        "reading": "たりる"
+      },
+      {
+        "word": "足す",
+        "reading": "たす"
+      },
+      {
+        "word": "畳",
+        "reading": "たたみ"
+      },
+      {
+        "word": "建てる",
+        "reading": "たてる"
+      },
+      {
+        "word": "尋ねる",
+        "reading": "たずねる"
+      },
+      {
+        "word": "訪ねる",
+        "reading": "たずねる"
+      },
+      {
+        "word": "手袋",
+        "reading": "てぶくろ"
+      },
+      {
+        "word": "丁寧",
+        "reading": "ていねい"
+      },
+      {
+        "word": "テキスト"
+      },
+      {
+        "word": "適当",
+        "reading": "てきとう"
+      },
+      {
+        "word": "点",
+        "reading": "てん"
+      },
+      {
+        "word": "店員",
+        "reading": "てんいん"
+      },
+      {
+        "word": "テニス"
+      },
+      {
+        "word": "天気予報",
+        "reading": "てんきよほう"
+      },
+      {
+        "word": "展覧会",
+        "reading": "てんらんかい"
+      },
+      {
+        "word": "寺",
+        "reading": "てら"
+      },
+      {
+        "word": "手伝う",
+        "reading": "てつだう"
+      },
+      {
+        "word": "途中",
+        "reading": "とちゅう"
+      },
+      {
+        "word": "届ける",
+        "reading": "とどける"
+      },
+      {
+        "word": "特急",
+        "reading": "とっきゅう"
+      },
+      {
+        "word": "床屋",
+        "reading": "とこや"
+      },
+      {
+        "word": "特別",
+        "reading": "とくべつ"
+      },
+      {
+        "word": "特に",
+        "reading": "とくに"
+      },
+      {
+        "word": "泊まる",
+        "reading": "とまる"
+      },
+      {
+        "word": "止める",
+        "reading": "とめる"
+      },
+      {
+        "word": "遠く",
+        "reading": "とおく"
+      },
+      {
+        "word": "通る",
+        "reading": "とおる"
+      },
+      {
+        "word": "取り替える",
+        "reading": "とりかえる"
+      },
+      {
+        "word": "到頭",
+        "reading": "とうとう"
+      },
+      {
+        "word": "続ける",
+        "reading": "つづける"
+      },
+      {
+        "word": "続く",
+        "reading": "つづく"
+      },
+      {
+        "word": "都合",
+        "reading": "つごう"
+      },
+      {
+        "word": "捕まえる",
+        "reading": "つかまえる"
+      },
+      {
+        "word": "漬ける",
+        "reading": "つける"
+      },
+      {
+        "word": "月",
+        "reading": "つき"
+      },
+      {
+        "word": "付く",
+        "reading": "つく"
+      },
+      {
+        "word": "妻",
+        "reading": "つま"
+      },
+      {
+        "word": "連れる",
+        "reading": "つれる"
+      },
+      {
+        "word": "釣る",
+        "reading": "つる"
+      },
+      {
+        "word": "伝える",
+        "reading": "つたえる"
+      },
+      {
+        "word": "包む",
+        "reading": "つつむ"
+      },
+      {
+        "word": "腕",
+        "reading": "うで"
+      },
+      {
+        "word": "植える",
+        "reading": "うえる"
+      },
+      {
+        "word": "動く",
+        "reading": "うごく"
+      },
+      {
+        "word": "伺う",
+        "reading": "うかがう"
+      },
+      {
+        "word": "受ける",
+        "reading": "うける"
+      },
+      {
+        "word": "受付",
+        "reading": "うけつけ"
+      },
+      {
+        "word": "生まれ",
+        "reading": "うまれ"
+      },
+      {
+        "word": "運転手",
+        "reading": "うんてんしゅ"
+      },
+      {
+        "word": "裏",
+        "reading": "うら"
+      },
+      {
+        "word": "嬉しい",
+        "reading": "うれしい"
+      },
+      {
+        "word": "売り場",
+        "reading": "うりば"
+      },
+      {
+        "word": "嘘",
+        "reading": "うそ"
+      },
+      {
+        "word": "打つ",
+        "reading": "うつ"
+      },
+      {
+        "word": "美しい",
+        "reading": "うつくしい"
+      },
+      {
+        "word": "移る",
+        "reading": "うつる"
+      },
+      {
+        "word": "写す",
+        "reading": "うつす"
+      },
+      {
+        "word": "ワープロ"
+      },
+      {
+        "word": "別れる",
+        "reading": "わかれる"
+      },
+      {
+        "word": "沸かす",
+        "reading": "わかす"
+      },
+      {
+        "word": "沸く",
+        "reading": "わく"
+      },
+      {
+        "word": "笑う",
+        "reading": "わらう"
+      },
+      {
+        "word": "割れる",
+        "reading": "われる"
+      },
+      {
+        "word": "割合",
+        "reading": "わりあい"
+      },
+      {
+        "word": "忘れ物",
+        "reading": "わすれもの"
+      },
+      {
+        "word": "焼ける",
+        "reading": "やける"
+      },
+      {
+        "word": "焼く",
+        "reading": "やく"
+      },
+      {
+        "word": "役に立つ",
+        "reading": "やくにたつ"
+      },
+      {
+        "word": "約束",
+        "reading": "やくそく"
+      },
+      {
+        "word": "止む",
+        "reading": "やむ"
+      },
+      {
+        "word": "やっぱり"
+      },
+      {
+        "word": "優しい",
+        "reading": "やさしい"
+      },
+      {
+        "word": "痩せる",
+        "reading": "やせる"
+      },
+      {
+        "word": "柔らかい",
+        "reading": "やわらかい"
+      },
+      {
+        "word": "汚れる",
+        "reading": "よごれる"
+      },
+      {
+        "word": "喜ぶ",
+        "reading": "よろこぶ"
+      },
+      {
+        "word": "寄る",
+        "reading": "よる"
+      },
+      {
+        "word": "予習",
+        "reading": "よしゅう"
+      },
+      {
+        "word": "予定",
+        "reading": "よてい"
+      },
+      {
+        "word": "用",
+        "reading": "よう"
+      },
+      {
+        "word": "用意",
+        "reading": "ようい"
+      },
+      {
+        "word": "用事",
+        "reading": "ようじ"
+      },
+      {
+        "word": "予約",
+        "reading": "よやく"
+      },
+      {
+        "word": "湯",
+        "reading": "ゆ"
+      },
+      {
+        "word": "指",
+        "reading": "ゆび"
+      },
+      {
+        "word": "指輪",
+        "reading": "ゆびわ"
+      },
+      {
+        "word": "夢",
+        "reading": "ゆめ"
+      },
+      {
+        "word": "揺れる",
+        "reading": "ゆれる"
+      },
+      {
+        "word": "残念",
+        "reading": "ざんねん"
+      },
+      {
+        "word": "全然",
+        "reading": "ぜんぜん"
+      }
+    ],
+    "N3": [],
+    "N2": [],
+    "N1": []
+  }
+}

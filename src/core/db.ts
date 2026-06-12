@@ -3,6 +3,8 @@ import { calculateNextFsrsState, createDefaultFsrsState, alignPassiveToActiveSta
 import { getProfileItem } from '../lib/profile';
 import { logger } from '../lib/logger';
 import { LocalWord, LocalReview, UiWord, GrammarProgress } from './types';
+import { getJlptLevel, mergeJlptTag } from '../lib/jlpt/levels';
+import { stripHtml } from '../plugins/anki/filter';
 
 export type { LocalWord, LocalReview, UiWord, GrammarProgress };
 
@@ -311,6 +313,9 @@ export async function syncLocalDatabaseWithAnki(
             // Сортируем отзывы по возрастанию времени (хронологически)
             const sortedReviews = [...reviews].sort((a, b) => a.id - b.id);
 
+            // Получаем существующее слово, чтобы сохранить его свойства
+            const exists = await db.words.get([profileId, cid]);
+
             // Инициализируем пустое/новое состояние
             let localWord: LocalWord = {
               profileId,
@@ -320,9 +325,11 @@ export async function syncLocalDatabaseWithAnki(
               translation: card.translation,
               category: card.deckName || deckName,
               source: 'anki',
-              passive: createDefaultFsrsState(Date.now()),
-              active: createDefaultFsrsState(Date.now()),
-              contextExamples: []
+              passive: exists?.passive || createDefaultFsrsState(Date.now()),
+              active: exists?.active || createDefaultFsrsState(Date.now()),
+              contextExamples: exists?.contextExamples || [],
+              mnemonic: exists?.mnemonic,
+              tags: exists?.tags || []
             };
 
             // Прокручиваем FSRS по всей истории для обеих шкал
@@ -359,6 +366,13 @@ export async function syncLocalDatabaseWithAnki(
               }
             }
 
+            // Добавляем JLPT-тег при совпадении уровня
+            const cleanedWord = stripHtml(localWord.word);
+            const jlptLevel = getJlptLevel(cleanedWord);
+            if (jlptLevel) {
+              localWord.tags = mergeJlptTag(localWord.tags || [], jlptLevel);
+            }
+
             // Перезаписываем/сохраняем слово в БД
             if (isValidIndexedDbKey([localWord.profileId, localWord.id])) {
               await db.words.put(localWord);
@@ -384,6 +398,13 @@ export async function syncLocalDatabaseWithAnki(
                 status: card.status
               };
 
+              let tags: string[] = [];
+              const cleanedWord = stripHtml(card.word);
+              const jlptLevel = getJlptLevel(cleanedWord);
+              if (jlptLevel) {
+                tags = mergeJlptTag(tags, jlptLevel);
+              }
+
               await db.words.put({
                 profileId,
                 id: cid,
@@ -394,7 +415,8 @@ export async function syncLocalDatabaseWithAnki(
                 source: 'anki',
                 passive: { ...approximatedState },
                 active: { ...approximatedState },
-                contextExamples: []
+                contextExamples: [],
+                tags
               });
             } else {
               // Если слово есть, но отзывы не поменялись, обновляем базовые свойства

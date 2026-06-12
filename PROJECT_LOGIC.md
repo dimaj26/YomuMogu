@@ -148,6 +148,7 @@ src/
     grammar_rules.json    # 7-step JLPT N5 grammar curriculum (IDs: g_n5_s1_1..g_n5_s6)
     media_feed.json       # Static metadata for recommended video/podcast channels
     media_transcripts.json # Pre-generated timed transcripts for recommended YouTube videos
+    jlpt_levels.json      # Generated versioned JLPT levels resource containing N5 and N4 vocabulary lists
   services/
     tokenizer/
       server.py           # MeCab FastAPI microservice (port 8000)
@@ -157,6 +158,10 @@ src/
     profile.ts            # localStorage profile helpers + multi-profile management
     csrf.ts               # CSRF protection helpers (same-origin Origin/Referer verification)
     sanitize.ts           # DOMPurify HTML sanitization utility for dangerouslySetInnerHTML
+    jlpt/
+      levels.ts           # JLPT level detection and tag merging logic
+      __tests__/
+        levels.test.ts    # Unit tests for JLPT levels detection
     media/
       youtube.ts          # Zero-dependency Japanese YouTube caption extractor
       parser.ts           # SRT/VTT subtitle parser and duration rounding utility
@@ -277,6 +282,9 @@ src/
 | `app/api/anki/setup-deck/route.ts` | POST endpoint to create a YomuMogu deck and note model in Anki if absent |
 | `app/api/anki/setup-deck/__tests__/setup-deck.test.ts` | Unit tests for setup-deck route |
 | `app/api/words/route.ts` | GET endpoint resolving words via active `WordSource` plugin or local IndexedDB fallback |
+| `lib/jlpt/levels.ts` | `getJlptLevel(word, reading)` — level detection, `toJlptTag` tag format helper, and idempotent `mergeJlptTag` utility |
+| `lib/jlpt/__tests__/levels.test.ts` | Unit tests for JLPT levels detection and tagging logic |
+| `resources/jlpt_levels.json` | Generated versioned JLPT levels resource containing N5 and N4 vocabulary lists |
 | `services/tokenizer/server.py` | FastAPI MeCab microservice providing morphological analysis on port 8000; `GET /health` returns `{status:'ok'\|'error'}` |
 | `services/tokenizer/Dockerfile` | Docker container definition for the MeCab tokenizer service |
 | `scripts/generate-transcripts.mjs` | Node script to scrape real `ja` captions for all feed videos and output `media_transcripts.json` |
@@ -744,4 +752,4 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-361 unit/integration tests across 56 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+370 unit/integration tests across 57 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.

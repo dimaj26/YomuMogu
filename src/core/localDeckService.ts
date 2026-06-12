@@ -2,6 +2,8 @@ import { db } from './db';
 import type { LocalWord, CardWord as AnkiWord } from './types';
 import { getProfileItem, setProfileItem } from '../lib/profile';
 import { alignToDayBoundary, createDefaultFsrsState } from './scheduler';
+import { getJlptLevel, mergeJlptTag } from '../lib/jlpt/levels';
+import { stripHtml } from '../plugins/anki/filter';
 
 // Константы системы
 export const LOCAL_DECK_NAME = '__local_starter__';
@@ -118,7 +120,14 @@ export async function importStarterDeck(profileId: string, knownWordIds: Set<num
     const isKnown = knownWordIds.has(wordId);
     
     // Получаем ситуационные теги из словаря
-    const tags = dictionary[item.word] || ["universal"];
+    let tags = dictionary[item.word] || ["universal"];
+    
+    // Добавляем JLPT-тег при совпадении уровня
+    const cleanedWord = stripHtml(item.word);
+    const jlptLevel = getJlptLevel(cleanedWord);
+    if (jlptLevel) {
+      tags = mergeJlptTag(tags, jlptLevel);
+    }
     
     const wordRecord: LocalWord = {
       profileId,
@@ -662,7 +671,47 @@ export async function classifyMissingWords(profileId: string, words: LocalWord[]
   }
 
   if (wordsToSaveLocally.length > 0) {
+    for (const w of wordsToSaveLocally) {
+      const cleanedWord = stripHtml(w.word);
+      const jlptLevel = getJlptLevel(cleanedWord);
+      if (jlptLevel) {
+        w.tags = mergeJlptTag(w.tags || [], jlptLevel);
+      }
+    }
     await db.words.bulkPut(wordsToSaveLocally);
     console.log(`[LazyTagger] Классифицировано слов: ${wordsToSaveLocally.length}`);
   }
 }
+
+/**
+ * Переразмечает все слова в БД для указанного профиля JLPT-тегами.
+ * Идемпотентна и не создает дублей.
+ */
+export async function retagAllWords(profileId: string): Promise<number> {
+  if (typeof window === 'undefined') return 0;
+  
+  const allWords = await db.words.where('profileId').equals(profileId).toArray();
+  const wordsToUpdate: LocalWord[] = [];
+  
+  for (const w of allWords) {
+    const cleanedWord = stripHtml(w.word);
+    const jlptLevel = getJlptLevel(cleanedWord);
+    if (jlptLevel) {
+      const oldTags = w.tags || [];
+      const newTags = mergeJlptTag(oldTags, jlptLevel);
+      
+      // Сравниваем массивы тегов, чтобы не делать лишних операций записи
+      if (JSON.stringify(oldTags) !== JSON.stringify(newTags)) {
+        w.tags = newTags;
+        wordsToUpdate.push(w);
+      }
+    }
+  }
+  
+  if (wordsToUpdate.length > 0) {
+    await db.words.bulkPut(wordsToUpdate);
+  }
+  
+  return wordsToUpdate.length;
+}
+

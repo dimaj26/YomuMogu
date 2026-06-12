@@ -209,4 +209,12 @@ describe('GrammarTrack Component', () => {
     const paths = container.querySelectorAll('svg path');
     expect(paths.length).toBe(14);
   });
+
+  it('после авторинга контента плейсхолдером остаётся только g_n5_exam', () => {
+    const grammarRules = require('../../resources/grammar_rules.json');
+    const placeholders = grammarRules.filter((r: any) => r.isPlaceholder);
+    expect(placeholders.length).toBe(1);
+    expect(placeholders[0].id).toBe('g_n5_exam');
+  });
 });
+

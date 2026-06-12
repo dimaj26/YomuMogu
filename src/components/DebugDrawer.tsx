@@ -10,7 +10,7 @@ import {
   getProfileItem, 
   setProfileItem 
 } from '@/lib/profile';
-import { LOCAL_DECK_NAME } from '@/core/localDeckService';
+import { LOCAL_DECK_NAME, retagAllWords } from '@/core/localDeckService';
 import styles from './DebugDrawer.module.css';
 
 interface LocalStorageKeyValue {
@@ -193,6 +193,18 @@ export function DebugDrawer() {
       } catch (e) {
         console.error('Ошибка обновления XP:', e);
       }
+    }
+  };
+
+  const handleRetagAll = async () => {
+    try {
+      const activePid = getActiveProfileId();
+      const updatedCount = await retagAllWords(activePid);
+      alert(`Синхронизация тегов завершена! Обновлено слов: ${updatedCount}`);
+      loadData();
+    } catch (e) {
+      console.error('Ошибка переразметки тегов:', e);
+      alert('Ошибка при переразметке тегов.');
     }
   };
 
@@ -454,6 +466,10 @@ export function DebugDrawer() {
                   <button className={`${styles.actionBtn} ${styles.btnSuccess}`} onClick={handleAddXp}>
                     <Flame size={16} />
                     Добавить +20 XP (Погружение)
+                  </button>
+                  <button className={styles.actionBtn} style={{ backgroundColor: '#a855f7', color: 'white' }} onClick={handleRetagAll}>
+                    <Settings size={16} />
+                    Переразметить теги JLPT
                   </button>
                   <button className={`${styles.actionBtn} ${styles.btnDanger}`} onClick={handleResetDb}>
                     <RefreshCw size={16} />
