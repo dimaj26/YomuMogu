@@ -13,6 +13,8 @@ import { calculateNextFsrsState, createDefaultFsrsState, alignPassiveToActiveSta
 import { incrementDailyNewWordsCount } from '@/core/localDeckService';
 import { getAllowedScope } from '@/lib/grammar/promptScope';
 import grammarRules from '@/resources/grammar_rules.json';
+import { buildCompetencyProfile, getPresetAdvice } from '@/lib/competency/profile';
+import type { SessionStat, CompetencyProfile, PresetAdvice } from '@/lib/competency/profile';
 import styles from './chat.module.css';
 
 interface TargetWord {
@@ -92,7 +94,7 @@ const stripRuby = (html: string) => {
 
 export default function ChatPage() {
   const router = useRouter();
-  const { t, state, shouldShowTranslation, shouldGrammarBeJapanese, addPoints, trackWordUsed, completeSession } = useJapanification();
+  const { t, state, shouldShowTranslation, shouldGrammarBeJapanese, addPoints, trackWordUsed, completeSession, setChatLevel } = useJapanification();
   const { incrementQuestProgress } = useQuests();
 
   const [session, setSession] = useState<SessionData | null>(null);
@@ -129,6 +131,11 @@ export default function ChatPage() {
   const [isStateLoaded, setIsStateLoaded] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [selectedGrammarGrade, setSelectedGrammarGrade] = useState<'forgot' | 'hard' | 'good'>('good');
+
+  // Состояния советника по уровню сложности
+  const [competencyProfile, setCompetencyProfile] = useState<CompetencyProfile | null>(null);
+  const [advisorAdvice, setAdvisorAdvice] = useState<PresetAdvice | null>(null);
+  const [advisorDismissed, setAdvisorDismissed] = useState(false);
 
   // Состояния для интерактивного маскота 🍵
   const [mascotState, setMascotState] = useState<'idle' | 'happy' | 'worried' | 'cheering'>('idle');
@@ -614,7 +621,38 @@ export default function ChatPage() {
       });
       setSessionExamples(examplesList);
 
-      // Auto-select due/learning cards for syncing
+      // Записываем статистику сессии в competency_sessions (макс. 10, нулевые сессии пропускаем)
+      const turnCount = messages.filter(m => m.role === 'user').length;
+      if (turnCount > 0) {
+        const profileId = getActiveProfileId();
+        const newStat: SessionStat = {
+          date: Date.now(),
+          chatLevel: state.chatLevel,
+          userTurns: turnCount,
+          correctTurns: words.filter(w => w.inAnki && (w.isDue || w.status === 'learning')).length
+        };
+        const rawSaved = getProfileItem('competency_sessions');
+        const prevSessions: SessionStat[] = rawSaved ? JSON.parse(rawSaved) : [];
+        const updatedSessions = [...prevSessions, newStat].slice(-10);
+        setProfileItem('competency_sessions', JSON.stringify(updatedSessions));
+
+        // Вычисляем профиль компетентности и советника
+        try {
+          const progressList = await import('@/core/db').then(m => m.getGrammarProgressList(profileId));
+          const progressMap: Record<string, import('@/core/db').GrammarProgress> = {};
+          progressList.forEach((p: import('@/core/db').GrammarProgress) => { progressMap[p.ruleId] = p; });
+          const allWords = await import('@/core/db').then(m => m.db.words.where('profileId').equals(profileId).toArray());
+          const profile = buildCompetencyProfile(allWords as any, progressMap, updatedSessions);
+          setCompetencyProfile(profile);
+          const advice = getPresetAdvice(profile, state.chatLevel);
+          setAdvisorAdvice(advice);
+          setAdvisorDismissed(false);
+        } catch (e) {
+          console.error('Ошибка вычисления профиля компетентности:', e);
+        }
+      }
+
+
       const syncs = new Set<number>();
       const grades: Record<number, number> = {};
       words.forEach(w => {
@@ -1294,6 +1332,105 @@ export default function ChatPage() {
                       disabled={isSubmittingSync}
                     >
                       Хорошо помню
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ADVISOR CARD — совет по уровню сложности */}
+              {advisorAdvice && !advisorDismissed && competencyProfile && advisorAdvice.suggestion !== 'stay' && (
+                <div
+                  data-testid="advisor-card"
+                  className={styles.summarySection}
+                  style={{
+                    border: '2.5px solid var(--color-orange)',
+                    backgroundColor: 'rgba(245, 158, 11, 0.06)',
+                    padding: '16px',
+                    borderRadius: '16px',
+                    marginBottom: '24px'
+                  }}
+                >
+                  <h3 className={styles.sectionTitle} style={{ color: 'var(--color-orange)', margin: '0 0 8px 0' }}>
+                    📊 Компетентность: {competencyProfile.level}
+                  </h3>
+
+                  {/* Полосы прогресса */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700, marginBottom: '3px' }}>
+                        <span>Лексика ({competencyProfile.level})</span>
+                        <span>{Math.round(competencyProfile.lexCoverage * 100)}%</span>
+                      </div>
+                      <div style={{ height: '7px', borderRadius: '4px', background: 'var(--bg-tertiary)' }}>
+                        <div style={{
+                          height: '100%',
+                          borderRadius: '4px',
+                          background: 'var(--color-blue)',
+                          width: `${Math.round(competencyProfile.lexCoverage * 100)}%`,
+                          transition: 'width 0.5s ease'
+                        }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700, marginBottom: '3px' }}>
+                        <span>Грамматика ({competencyProfile.level})</span>
+                        <span>{Math.round(competencyProfile.grammarCoverage * 100)}%</span>
+                      </div>
+                      <div style={{ height: '7px', borderRadius: '4px', background: 'var(--bg-tertiary)' }}>
+                        <div style={{
+                          height: '100%',
+                          borderRadius: '4px',
+                          background: 'var(--color-green)',
+                          width: `${Math.round(competencyProfile.grammarCoverage * 100)}%`,
+                          transition: 'width 0.5s ease'
+                        }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Текст совета */}
+                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600, margin: '0 0 12px 0', lineHeight: 1.5 }}>
+                    {advisorAdvice.reason}
+                  </p>
+
+                  {/* Кнопки действий */}
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {advisorAdvice.suggestion === 'up' && (
+                      <button
+                        type="button"
+                        className="btn-3d btn-orange"
+                        style={{ flex: 1, padding: '8px 12px', fontSize: '13px' }}
+                        onClick={() => {
+                          setChatLevel(state.chatLevel + 1);
+                          setAdvisorDismissed(true);
+                        }}
+                        data-testid="advisor-accept-btn"
+                      >
+                        Принять (уровень {state.chatLevel + 1})
+                      </button>
+                    )}
+                    {advisorAdvice.suggestion === 'down' && (
+                      <button
+                        type="button"
+                        className="btn-3d btn-orange"
+                        style={{ flex: 1, padding: '8px 12px', fontSize: '13px' }}
+                        onClick={() => {
+                          setChatLevel(state.chatLevel - 1);
+                          setAdvisorDismissed(true);
+                        }}
+                        data-testid="advisor-accept-btn"
+                      >
+                        Принять (уровень {state.chatLevel - 1})
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="btn-3d"
+                      style={{ padding: '8px 12px', fontSize: '13px' }}
+                      onClick={() => setAdvisorDismissed(true)}
+                      data-testid="advisor-dismiss-btn"
+                    >
+                      Не сейчас
                     </button>
                   </div>
                 </div>

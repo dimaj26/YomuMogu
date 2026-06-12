@@ -9,6 +9,8 @@ import { useQuests } from '@/hooks/useQuests';
 import { useMediaRecommendation, type MediaItem } from '@/hooks/useMediaRecommendation';
 import { MediaInteractivePlayer } from '@/components/MediaInteractivePlayer';
 import { LearningTrack } from '@/components/LearningTrack';
+import type { MacroLadderProfile } from '@/components/LearningTrack';
+import { buildCompetencyProfile } from '@/lib/competency/profile';
 import { getProfileItem, setProfileItem, removeProfileItem, getActiveProfileId } from '@/lib/profile';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { JpUI } from '@/components/JpUI';
@@ -150,6 +152,12 @@ export default function PracticePage() {
   const [activeTab, setActiveTab] = useState<'words' | 'grammar' | 'media'>('words');
   const [grammarProgress, setGrammarProgress] = useState<Record<string, GrammarProgress>>({});
   const [activeGrammarRuleId, setActiveGrammarRuleId] = useState<string | null>(null);
+
+  // Профиль компетентности для макро-лестницы
+  const [macroLadderProfile, setMacroLadderProfile] = useState<MacroLadderProfile>({
+    activeLevelId: 'N5',
+    coverages: {}
+  });
 
   // Состояния для медиа-рекомендаций
   const {
@@ -336,6 +344,27 @@ export default function PracticePage() {
         progressMap[p.ruleId] = p;
       });
       setGrammarProgress(progressMap);
+
+      // Вычисляем профиль компетентности для макро-лестницы N5→N1
+      const allProfileWords = await db.words.where('profileId').equals(profileId).toArray();
+      const sessionsRaw = getProfileItem('competency_sessions');
+      const competencySessions: import('@/lib/competency/profile').SessionStat[] = sessionsRaw
+        ? JSON.parse(sessionsRaw)
+        : [];
+      const computedProfile = buildCompetencyProfile(
+        allProfileWords as any,
+        progressMap,
+        competencySessions
+      );
+      setMacroLadderProfile({
+        activeLevelId: computedProfile.level,
+        coverages: {
+          [computedProfile.level]: {
+            lexCoverage: computedProfile.lexCoverage,
+            grammarCoverage: computedProfile.grammarCoverage
+          }
+        }
+      });
 
       // Загружаем историю показанных видео для поиска
       const savedShown = getProfileItem('shown_video_ids', profileId);
@@ -1210,15 +1239,70 @@ export default function PracticePage() {
 
                   {!isLoadingSessions && sessions.length > 0 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
-                      <LearningTrack
-                        sessions={sessions}
-                        inProgressSessions={inProgressSessions}
-                        completedSessions={completedSessions}
-                        dueReviewsCount={dueActiveWordsCount}
-                        completedSessionsCountToday={completedSessionsCountToday}
-                        onStartSession={startSession}
-                        onDiscardSession={handleDiscardSession}
-                      />
+                      <LearningTrack profile={macroLadderProfile} />
+
+                      {/* Список текущих сессий для навигации */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+                        <h3 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>
+                          Сценарии сегодня
+                        </h3>
+                        {sessions.map((session: any) => {
+                          const isCompleted = completedSessions.has(session.id);
+                          const isInProgress = inProgressSessions.has(session.id);
+                          return (
+                            <div
+                              key={session.id}
+                              title={session.title}
+                              style={{
+                                background: 'var(--bg-primary)',
+                                border: '2px solid var(--border-color)',
+                                borderRadius: '14px',
+                                padding: '14px 16px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: '12px',
+                                opacity: isCompleted ? 0.7 : 1
+                              }}
+                            >
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '2px' }}>
+                                  {session.title}
+                                </div>
+                                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                                  {session.description}
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                                {isCompleted ? (
+                                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-green)' }}>✅ Готово</span>
+                                ) : (
+                                  <>
+                                    <button
+                                      type="button"
+                                      className="btn-3d btn-green"
+                                      style={{ padding: '6px 14px', fontSize: '12px' }}
+                                      onClick={() => startSession(session)}
+                                    >
+                                      {isInProgress ? 'Продолжить' : 'Начать практику'}
+                                    </button>
+                                    {isInProgress && (
+                                      <button
+                                        type="button"
+                                        className="btn-3d btn-red"
+                                        style={{ padding: '6px 10px', fontSize: '12px' }}
+                                        onClick={() => handleDiscardSession(session.id)}
+                                      >
+                                        Сброс
+                                      </button>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
 
                       <button
                         onClick={generateSessions}

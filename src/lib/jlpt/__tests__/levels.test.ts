@@ -57,9 +57,11 @@ describe('JLPT levels detection', () => {
     expect(tags3).not.toContain('jlpt:n4');
   });
 
-  it('ресурс v2 валиден: все 5 уровней заполнены, без дублей внутри уровня и пересечений между уровнями', () => {
+  it('ресурс v3 валиден: все 5 уровней заполнены, без дублей внутри уровня и пересечений между уровнями', () => {
     expect(jlptLevels.meta).toBeDefined();
-    expect(jlptLevels.meta.version).toBe(2);
+    expect(jlptLevels.meta.version).toBeGreaterThanOrEqual(3);
+    expect(jlptLevels.meta.license).toContain('MIT');
+    expect(jlptLevels.meta.license).toContain('tanos.co.uk');
     expect(jlptLevels.levels).toBeDefined();
 
     const levels = jlptLevels.levels as Record<string, Array<{ word: string; reading?: string }>>;

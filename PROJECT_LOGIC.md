@@ -124,7 +124,7 @@ src/
     PhonosemanticHint.module.css # Styles for PhonosemanticHint accordion
     DebugDrawer.tsx       # Client component implementing the sliding debug drawer HUD
     DebugDrawer.module.css # Styles for the DebugDrawer
-    LearningTrack.tsx     # Duolingo winding SVG track client component
+    LearningTrack.tsx     # N5→N1 macro competency ladder — SVG winding track showing JLPT-level coverage progress rings
     LearningTrack.module.css # Styles for the LearningTrack component
     GrammarTrack.tsx      # Duolingo winding SVG path client component for grammar rules
     GrammarTrack.module.css # Styles for the GrammarTrack component
@@ -168,6 +168,10 @@ src/
       levels.ts           # JLPT level detection and tag merging logic
       __tests__/
         levels.test.ts    # Unit tests for JLPT levels detection
+    competency/
+      profile.ts          # Competency engine: lexCoverage, grammarCoverage, recentCorrectionRate, buildCompetencyProfile, getPresetAdvice
+      __tests__/
+        profile.test.ts   # Unit tests for competency profile logic
     media/
       youtube.ts          # Zero-dependency Japanese YouTube caption extractor
       parser.ts           # SRT/VTT subtitle parser and duration rounding utility
@@ -277,8 +281,8 @@ src/
 | `lib/gemini/__tests__/scenarios.integration.test.ts` | Integration tests verifying multi-turn conversational scenarios against live Gemini API |
 | `scratch/SCRATCH_LOG.md` | Permanent historical audit registry tracking sandbox scripts and side effects |
 | `hooks/useQuests.ts` | React custom hook managing namespaced daily quest progression and XP rewards |
-| `components/LearningTrack.tsx` | Duolingo winding vertical pathway component with 3D nodes and popovers |
-| `components/__tests__/LearningTrack.test.tsx` | Unit tests for LearningTrack component rendering and popover triggers |
+| `components/LearningTrack.tsx` | N5→N1 macro JLPT competency ladder — shows lexCoverage and grammarCoverage progress bars per level; receives `MacroLadderProfile` prop |
+| `components/__tests__/LearningTrack.test.tsx` | Unit tests for macro ladder node states, coverage bars, and popover content |
 | `components/GrammarTrack.tsx` | Duolingo winding SVG path component for N5 grammar curriculum showing forks and path connections dynamically generated from prerequisite DAG |
 | `components/GrammarTrainer.tsx` | Interactive overlays explaining grammar theory and prompting user custom sentences checked by AI |
 | `components/__tests__/GrammarTrainer.test.tsx` | Unit tests verifying GrammarTrainer component rendering and interactive sandbox |
@@ -770,4 +774,4 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-379 unit/integration tests across 58 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+389 unit/integration tests across 59 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.

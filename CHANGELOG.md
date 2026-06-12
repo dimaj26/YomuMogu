@@ -2,6 +2,14 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.50.0] - 2026-06-13
+
+### Added
+- **Competency Engine**: Created `src/lib/competency/profile.ts` helper modules containing coverage calculations (`lexCoverage`, `grammarCoverage`), recent correction rate computation, and core profile builders (`buildCompetencyProfile`, `getPresetAdvice`). Added exhaustive TDD suite in `profile.test.ts`.
+- **Macro Competency Ladder UI**: Redesigned `LearningTrack.tsx` to render a vertical N5→N1 winding SVG path with progress rings and detail tooltips displaying exact coverage rates. Updated dashboard bindings and unit tests in `LearningTrack.test.tsx`.
+- **Chat Session Stats Tracking**: Implemented persistent rolling localStorage log (up to 10 entries) tracking active chat session turns, grammar correction rates, and JLPT levels inside `/chat` exit flows, disregarding zero-turn sessions.
+- **Chat Summary Advisor**: Built AI-driven recommendations panel advising chat level adjustments (UP/DOWN/STAY) based on vocabulary and grammar stability thresholds, integrating "Принять" and "Не сейчас" actions with local settings updates.
+
 ## [1.49.0] - 2026-06-12
 
 ### Added

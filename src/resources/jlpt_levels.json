@@ -1,9 +1,9 @@
 {
   "meta": {
     "source": "https://github.com/jamsinclair/open-anki-jlpt-decks",
-    "license": "Content from jamsinclair/open-anki-jlpt-decks vocabulary CSV lists, compiled for study purposes.",
-    "fetchedAt": "2026-06-12T16:30:30.119Z",
-    "version": 2
+    "license": "MIT (jamsinclair/open-anki-jlpt-decks); data derived from chyyran/jlpt-anki-decks, originally based on JLPT lists by Jonathan Waller, tanos.co.uk (CC BY)",
+    "fetchedAt": "2026-06-12T17:08:50.215Z",
+    "version": 3
   },
   "levels": {
     "N5": [

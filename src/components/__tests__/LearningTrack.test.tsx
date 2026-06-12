@@ -2,6 +2,7 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { LearningTrack } from '../LearningTrack';
+import type { MacroLadderProfile } from '../LearningTrack';
 import { JapanificationProvider } from '../../hooks/useJapanification';
 
 // Мокаем next/navigation
@@ -14,116 +15,98 @@ vi.mock('next/navigation', () => ({
 
 // Мокаем lucide-react
 vi.mock('lucide-react', () => ({
-  Sparkles: () => <span data-testid="icon-sparkles" />,
-  Play: () => <span data-testid="icon-play" />,
-  BookOpen: () => <span data-testid="icon-book" />,
   Lock: () => <span data-testid="icon-lock" />,
   Check: () => <span data-testid="icon-check" />,
   X: () => <span data-testid="icon-x" />,
 }));
 
-const mockSessions = [
-  {
-    id: 'sess-1',
-    title: 'Кафе и еда',
-    description: 'Разговор о заказе суши в японском кафе.',
-    scenario: 'Кафе суши',
-    targetWords: [
-      { word: '寿司', translation: 'суши' },
-      { word: '美味しい', translation: 'вкусный' }
-    ]
-  },
-  {
-    id: 'sess-2',
-    title: 'Аренда жилья',
-    description: 'Обсуждение аренды квартиры в Токио.',
-    scenario: 'Аренда Токио',
-    targetWords: [
-      { word: '部屋', translation: 'комната' },
-      { word: '家賃', translation: 'арендная плата' }
-    ]
-  }
-];
+const renderWithProvider = (ui: React.ReactElement) =>
+  render(<JapanificationProvider>{ui}</JapanificationProvider>);
 
-describe('LearningTrack Component', () => {
+describe('LearningTrack Component (Macro Ladder N5→N1)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  const renderWithProvider = (ui: React.ReactElement) => {
-    return render(
-      <JapanificationProvider>
-        {ui}
-      </JapanificationProvider>
-    );
-  };
+  it('рендерит 5 макро-уровней, N5 активен с процентом, N4–N1 заблокированы', () => {
+    const profile: MacroLadderProfile = {
+      activeLevelId: 'N5',
+      coverages: {
+        N5: { lexCoverage: 0.3, grammarCoverage: 0.5 } // 50*0.3 + 50*0.5 = 40%
+      }
+    };
 
-  it('renders the SVG path and node circles', () => {
-    const { container } = renderWithProvider(
-      <LearningTrack
-        sessions={mockSessions}
-        inProgressSessions={new Set()}
-        completedSessions={new Set()}
-        dueReviewsCount={3}
-        completedSessionsCountToday={0}
-        onStartSession={vi.fn()}
-        onDiscardSession={vi.fn()}
-      />
-    );
+    renderWithProvider(<LearningTrack profile={profile} />);
 
-    // Должен отрендерить SVG контейнер
-    const svg = container.querySelector('svg');
-    expect(svg).toBeInTheDocument();
-
-    // Должен отрендерить 5 узлов (2 сессии + повторение + квиз + чекпоинт)
+    // Проверяем наличие всех 5 кнопок-узлов
     const nodes = screen.getAllByRole('button');
     expect(nodes.length).toBe(5);
+
+    // N5 должен быть активным (показывает процент)
+    const n5Node = screen.getByTestId('level-node-N5');
+    expect(n5Node).toBeInTheDocument();
+    expect(n5Node).not.toBeDisabled();
+    expect(n5Node.textContent).toContain('40%'); // round(50*0.3 + 50*0.5) = 40
+
+    // N4–N1 должны быть заблокированы
+    const n4Node = screen.getByTestId('level-node-N4');
+    expect(n4Node).toBeDisabled();
+
+    const n1Node = screen.getByTestId('level-node-N1');
+    expect(n1Node).toBeDisabled();
   });
 
-  it('displays active, locked, and completed states correctly', () => {
-    // Первая сессия пройдена, вторая в процессе
-    renderWithProvider(
-      <LearningTrack
-        sessions={mockSessions}
-        inProgressSessions={new Set(['sess-2'])}
-        completedSessions={new Set(['sess-1'])}
-        dueReviewsCount={0}
-        completedSessionsCountToday={1}
-        onStartSession={vi.fn()}
-        onDiscardSession={vi.fn()}
-      />
-    );
+  it('уровень completed при lex ≥ 0.8 и grammar = 1.0', () => {
+    const profile: MacroLadderProfile = {
+      activeLevelId: 'N5',
+      coverages: {
+        N5: { lexCoverage: 0.85, grammarCoverage: 1.0 },   // completed
+        N4: { lexCoverage: 0.3, grammarCoverage: 0.2 }      // active
+      }
+    };
 
-    // Узел 1 (sess-1) должен отображать галку выполненности
-    const completedNode = screen.getByTitle(/Кафе и еда/i);
-    expect(completedNode).toBeInTheDocument();
+    renderWithProvider(<LearningTrack profile={profile} />);
 
-    // Узел 2 (sess-2) должен быть активным (в процессе)
-    const activeNode = screen.getByTitle(/Аренда жилья/i);
-    expect(activeNode).toBeInTheDocument();
+    const n5Node = screen.getByTestId('level-node-N5');
+    const n4Node = screen.getByTestId('level-node-N4');
+
+    // N5 не должен быть заблокирован и должен показывать галочку
+    expect(n5Node).not.toBeDisabled();
+    expect(screen.getAllByTestId('icon-check').length).toBeGreaterThanOrEqual(1);
+
+    // N4 должен быть активным (не заблокирован)
+    expect(n4Node).not.toBeDisabled();
   });
 
-  it('opens details popover on node click', () => {
-    renderWithProvider(
-      <LearningTrack
-        sessions={mockSessions}
-        inProgressSessions={new Set()}
-        completedSessions={new Set()}
-        dueReviewsCount={3}
-        completedSessionsCountToday={0}
-        onStartSession={vi.fn()}
-        onDiscardSession={vi.fn()}
-      />
-    );
+  it('при нулевых покрытиях N5 активен с 0%, не крашится', () => {
+    const profile: MacroLadderProfile = {
+      activeLevelId: 'N5',
+      coverages: {}
+    };
 
-    // Кликаем по первой сессии
-    const node = screen.getByTitle(/Кафе и еда/i);
-    fireEvent.click(node);
+    renderWithProvider(<LearningTrack profile={profile} />);
 
-    // Должно открыться всплывающее окно
-    expect(screen.getByText('Разговор о заказе суши в японском кафе.')).toBeInTheDocument();
-    expect(screen.getByText('Целевые слова:')).toBeInTheDocument();
-    expect(screen.getByText('суши')).toBeInTheDocument();
-    expect(screen.getByText('вкусный')).toBeInTheDocument();
+    const n5Node = screen.getByTestId('level-node-N5');
+    expect(n5Node).not.toBeDisabled();
+    expect(n5Node.textContent).toContain('0%');
+  });
+
+  it('попап показывает полосы покрытия при клике на активный узел', () => {
+    const profile: MacroLadderProfile = {
+      activeLevelId: 'N5',
+      coverages: {
+        N5: { lexCoverage: 0.5, grammarCoverage: 0.7 }
+      }
+    };
+
+    renderWithProvider(<LearningTrack profile={profile} />);
+
+    const n5Node = screen.getByTestId('level-node-N5');
+    fireEvent.click(n5Node);
+
+    // Попап должен показывать заголовок
+    expect(screen.getByText('Уровень N5')).toBeInTheDocument();
+    expect(screen.getByText('Лексика')).toBeInTheDocument();
+    expect(screen.getByText('Грамматика')).toBeInTheDocument();
   });
 });
