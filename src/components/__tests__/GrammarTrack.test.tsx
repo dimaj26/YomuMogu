@@ -103,40 +103,55 @@ describe('GrammarTrack Component', () => {
     expect(node2).toBeDisabled();
   });
 
-  it('блокирует ない-форму (S4) если ます-форма (S3) не начата', () => {
-    // Прогресс: 1.1–2 пройдены, 3 начата, но всё ещё «new»
-    const progressUpToS3New = {
+  it('разблокирует ない-форму (S4) независимо от ます-формы (S3), если S2 начата', () => {
+    // Прогресс: S2 пройдена, но S3 еще «new»
+    const progressS2StartedS3New = {
       g_n5_s1_1: { ruleId: 'g_n5_s1_1', profileId: 'default', status: 'mature' as const, due: 0, stepIndex: 4 },
       g_n5_s1_2: { ruleId: 'g_n5_s1_2', profileId: 'default', status: 'mature' as const, due: 0, stepIndex: 4 },
-      g_n5_s2:   { ruleId: 'g_n5_s2',   profileId: 'default', status: 'mature' as const, due: 0, stepIndex: 4 },
+      g_n5_s2:   { ruleId: 'g_n5_s2',   profileId: 'default', status: 'learning' as const, due: 0, stepIndex: 1 },
       g_n5_s3:   { ruleId: 'g_n5_s3',   profileId: 'default', status: 'new' as const,    due: 0, stepIndex: 0 },
     };
 
     renderWithProvider(
       <GrammarTrack
-        grammarProgress={progressUpToS3New}
+        grammarProgress={progressS2StartedS3New}
         onSelectRule={vi.fn()}
       />
     );
 
-    // S4 (ない-форма) должна быть заблокирована, т.к. S3 ещё status='new'
+    // S4 (ない-форма) должна быть разблокирована, т.к. зависит только от S2
     const nodeNai = screen.getByTitle('Отрицательная форма (ない-форма)');
-    expect(nodeNai).toBeDisabled();
+    expect(nodeNai).not.toBeDisabled();
   });
 
-  it('разблокирует て-форму (S5) после завершения ない-формы (S4)', () => {
-    // Прогресс: вся цепь до S4 пройдена
-    const progressUpToS4 = {
+  it('блокирует ない-форму (S4) если S2 не начата', () => {
+    // Прогресс: S1_1 начата, но S2 еще нет
+    const progressS1Started = {
       g_n5_s1_1: { ruleId: 'g_n5_s1_1', profileId: 'default', status: 'mature' as const, due: 0, stepIndex: 4 },
-      g_n5_s1_2: { ruleId: 'g_n5_s1_2', profileId: 'default', status: 'mature' as const, due: 0, stepIndex: 4 },
-      g_n5_s2:   { ruleId: 'g_n5_s2',   profileId: 'default', status: 'mature' as const, due: 0, stepIndex: 4 },
-      g_n5_s3:   { ruleId: 'g_n5_s3',   profileId: 'default', status: 'mature' as const, due: 0, stepIndex: 4 },
-      g_n5_s4:   { ruleId: 'g_n5_s4',   profileId: 'default', status: 'learning' as const, due: 0, stepIndex: 1 },
     };
 
     renderWithProvider(
       <GrammarTrack
-        grammarProgress={progressUpToS4}
+        grammarProgress={progressS1Started}
+        onSelectRule={vi.fn()}
+      />
+    );
+
+    // S4 (ない-форма) должна быть заблокирована, т.к. S2 не начата
+    const nodeNai = screen.getByTitle('Отрицательная форма (ない-форма)');
+    expect(nodeNai).toBeDisabled();
+  });
+
+  it('разблокирует て-форму (S5) независимо от S4, если S2 начата', () => {
+    // Прогресс: S2 начата, остальные ноды еще 'new'
+    const progressS2Started = {
+      g_n5_s1_1: { ruleId: 'g_n5_s1_1', profileId: 'default', status: 'mature' as const, due: 0, stepIndex: 4 },
+      g_n5_s2:   { ruleId: 'g_n5_s2',   profileId: 'default', status: 'learning' as const, due: 0, stepIndex: 1 },
+    };
+
+    renderWithProvider(
+      <GrammarTrack
+        grammarProgress={progressS2Started}
         onSelectRule={vi.fn()}
       />
     );
@@ -144,5 +159,54 @@ describe('GrammarTrack Component', () => {
     // S5 (て-форма) должна быть разблокирована
     const nodeTe = screen.getByTitle('Морфология て-формы');
     expect(nodeTe).not.toBeDisabled();
+  });
+
+  it('отображает s3 и s4 одновременно доступными после старта s2', () => {
+    const progressS2Started = {
+      g_n5_s1_1: { ruleId: 'g_n5_s1_1', profileId: 'default', status: 'mature' as const, due: 0, stepIndex: 4 },
+      g_n5_s2:   { ruleId: 'g_n5_s2',   profileId: 'default', status: 'learning' as const, due: 0, stepIndex: 1 },
+    };
+
+    renderWithProvider(
+      <GrammarTrack
+        grammarProgress={progressS2Started}
+        onSelectRule={vi.fn()}
+      />
+    );
+
+    // S3 и S4 должны быть доступны одновременно
+    const nodeS3 = screen.getByTitle('Вежливое спряжение');
+    const nodeS4 = screen.getByTitle('Отрицательная форма (ない-форма)');
+    
+    expect(nodeS3).not.toBeDisabled();
+    expect(nodeS4).not.toBeDisabled();
+  });
+
+  it('рисует рёбра по prerequisites, а не по линейному порядку', () => {
+    const { container } = renderWithProvider(
+      <GrammarTrack
+        grammarProgress={{}}
+        onSelectRule={vi.fn()}
+      />
+    );
+
+    // В DAG-таблице ровно 14 рёбер:
+    // s1_1 -> s1_2
+    // s1_1 -> s2
+    // s2 -> s3
+    // s2 -> s4
+    // s2 -> s5
+    // s5 -> s6
+    // s5 -> s7
+    // s7 -> s8
+    // s3 -> s9
+    // s1_2 -> exam
+    // s4 -> exam
+    // s6 -> exam
+    // s8 -> exam
+    // s9 -> exam
+    // Каждое ребро отображается в виде dashed-линии в SVG
+    const paths = container.querySelectorAll('svg path');
+    expect(paths.length).toBe(14);
   });
 });

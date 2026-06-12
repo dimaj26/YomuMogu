@@ -2,6 +2,17 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.47.0] - 2026-06-12
+
+### Added
+- **Grammar DAG Graph Engine**: Implemented `graph.ts` inside `src/lib/grammar/` defining pure helper functions `validateGraph`, `isNodeStarted`, `isNodeUnlocked`, `isNodeClosed`, and `getEdges` to support prerequisite directed acyclic graphs for grammar curriculums.
+- **Grammar DAG Test Suite**: Added a comprehensive unit test suite `graph.test.ts` covering 9 critical TDD test cases including fork unlock behavior, placeholder lock gates, cycle and dangling prerequisite detection, and profile backward compatibility.
+
+### Changed
+- **Grammar Prerequisite DAG rules**: Extended `grammar_rules.json` config with layout coordinates (`coords`), situational themes levels (`level: "N5"`), and structural morphological dependencies (`prerequisites`). Migrated placeholder rules (`g_n5_s7` through `g_n5_exam`) from component to rules JSON.
+- **Dynamic SVGs in GrammarTrack UI**: Refactored `GrammarTrack.tsx` to generate connection Bezier edges programmatically using `getEdges` and coordinate mappings instead of hardcoded paths. Replaced linear unlock chain check with DAG prerequisites lookup via `isNodeUnlocked`.
+- **Component Test Suite**: Updated `GrammarTrack.test.tsx` to assert multi-path coordinate renderings (14 dashed edges) and concurrent fork unlock behaviors.
+
 ## [1.46.0] - 2026-06-12
 
 ### Added

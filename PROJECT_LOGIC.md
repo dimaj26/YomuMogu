@@ -259,15 +259,17 @@ src/
 | `lib/gemini/chat.ts` | `ChatService.sendMessage()`, `ChatService.generateHints()` — singleton `chatService` |
 | `lib/gemini/prompts.ts` | Centralized prompt templates for Gemini AI character persona and difficulty levels |
 | `lib/gemini/retry.ts` | Singleton wrapper implementing exponential backoffs and model fallback loops |
+| `lib/grammar/graph.ts` | Pure, side-effect-free graph operations (validation, unlocks, edges generation) for grammar DAG |
+| `lib/grammar/__tests__/graph.test.ts` | Unit tests for grammar DAG graph validation, unlock calculations, and backward compatibility |
 | `lib/gemini/__tests__/scenarios.integration.test.ts` | Integration tests verifying multi-turn conversational scenarios against live Gemini API |
 | `scratch/SCRATCH_LOG.md` | Permanent historical audit registry tracking sandbox scripts and side effects |
 | `hooks/useQuests.ts` | React custom hook managing namespaced daily quest progression and XP rewards |
 | `components/LearningTrack.tsx` | Duolingo winding vertical pathway component with 3D nodes and popovers |
 | `components/__tests__/LearningTrack.test.tsx` | Unit tests for LearningTrack component rendering and popover triggers |
-| `components/GrammarTrack.tsx` | Duolingo winding SVG path component for 7-step N5 grammar curriculum with linear unlock chain (1.1→1.2→2→3→4→5→6) |
+| `components/GrammarTrack.tsx` | Duolingo winding SVG path component for N5 grammar curriculum showing forks and path connections dynamically generated from prerequisite DAG |
 | `components/GrammarTrainer.tsx` | Interactive overlays explaining grammar theory and prompting user custom sentences checked by AI |
 | `components/__tests__/GrammarTrainer.test.tsx` | Unit tests verifying GrammarTrainer component rendering and interactive sandbox |
-| `src/resources/grammar_rules.json` | 7-step JLPT N5 grammar curriculum JSON (IDs: `g_n5_s1_1`..`g_n5_s6`) aligned with Morphology-Before-Syntax pedagogy |
+| `src/resources/grammar_rules.json` | 7-step JLPT N5 grammar curriculum JSON with placeholders and coordinates, aligned with Morphology-Before-Syntax prerequisite DAG |
 | `app/api/gemini/grammar-verify/route.ts` | POST endpoint using Gemini client to verify user Japanese sentences against grammar rules |
 | `app/api/gemini/__tests__/grammar-verify.test.ts` | Unit tests verifying the grammar verification API route behavior under standard inputs |
 | `app/api/anki/sync-db/route.ts` | POST endpoint for bilateral FSRS sync between IndexedDB and Anki; handles deduplication, bulk queries, FSRS approximation |
@@ -742,4 +744,4 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-349 unit/integration tests across 55 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+361 unit/integration tests across 56 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.

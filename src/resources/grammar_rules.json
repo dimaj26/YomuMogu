@@ -1,6 +1,9 @@
 [
   {
     "id": "g_n5_s1_1",
+    "level": "N5",
+    "prerequisites": [],
+    "coords": { "x": 250, "y": 80 },
     "construction": "AはBです",
     "topic": "Именной предикат и частицы",
     "translation": "А является Б",
@@ -92,6 +95,9 @@
   },
   {
     "id": "g_n5_s1_2",
+    "level": "N5",
+    "prerequisites": ["g_n5_s1_1"],
+    "coords": { "x": 130, "y": 220 },
     "construction": "い / な-прилагательные",
     "topic": "Морфология прилагательных",
     "translation": "Большой / Тихий",
@@ -183,6 +189,9 @@
   },
   {
     "id": "g_n5_s2",
+    "level": "N5",
+    "prerequisites": ["g_n5_s1_1"],
+    "coords": { "x": 370, "y": 220 },
     "construction": "動詞の分類",
     "topic": "Классификация глаголов",
     "translation": "Группы глаголов",
@@ -267,6 +276,9 @@
   },
   {
     "id": "g_n5_s3",
+    "level": "N5",
+    "prerequisites": ["g_n5_s2"],
+    "coords": { "x": 130, "y": 380 },
     "construction": "〜ます / 〜ません",
     "topic": "Вежливое спряжение",
     "translation": "Делаю / Не делаю (вежл.)",
@@ -362,6 +374,9 @@
   },
   {
     "id": "g_n5_s4",
+    "level": "N5",
+    "prerequisites": ["g_n5_s2"],
+    "coords": { "x": 370, "y": 380 },
     "construction": "〜ない / 〜なかった",
     "topic": "Отрицательная форма (ない-форма)",
     "translation": "Не делаю / Не делал",
@@ -435,6 +450,9 @@
   },
   {
     "id": "g_n5_s5",
+    "level": "N5",
+    "prerequisites": ["g_n5_s2"],
+    "coords": { "x": 250, "y": 500 },
     "construction": "〜て / 〜で",
     "topic": "Морфология て-формы",
     "translation": "Деепричастие",
@@ -508,6 +526,9 @@
   },
   {
     "id": "g_n5_s6",
+    "level": "N5",
+    "prerequisites": ["g_n5_s5"],
+    "coords": { "x": 130, "y": 640 },
     "construction": "〜てください / 〜ている",
     "topic": "Конструкции на て-форме",
     "translation": "Пожалуйста, сделайте / Делаю сейчас",
@@ -578,5 +599,49 @@
         "tokens": ["入って", "も", "いい", "ですか"]
       }
     ]
+  },
+  {
+    "id": "g_n5_s7",
+    "construction": "〜た / 〜たことがある",
+    "topic": "Прошедшее простое (た-форма)",
+    "translation": "Делал / Приходилось делать...",
+    "explanation": "Прошедшее простое время образуется по тем же правилам, что и て-форма, с заменой て→та, で→да. Конструкция 〜таことがある выражает опыт в прошлом.",
+    "isPlaceholder": true,
+    "level": "N5",
+    "prerequisites": ["g_n5_s5"],
+    "coords": { "x": 370, "y": 640 }
+  },
+  {
+    "id": "g_n5_s8",
+    "construction": "〜たり...たりする",
+    "topic": "Перечисление действий",
+    "translation": "Делать то одно, то другое",
+    "explanation": "Конструкция для неисчерпывающего перечисления действий: V-та + ри...V-та + риする.",
+    "isPlaceholder": true,
+    "level": "N5",
+    "prerequisites": ["g_n5_s7"],
+    "coords": { "x": 370, "y": 780 }
+  },
+  {
+    "id": "g_n5_s9",
+    "construction": "〜ながら",
+    "topic": "Одновременность",
+    "translation": "Делая одновременно...",
+    "explanation": "Используется для описания двух действий, совершаемых одновременно одним лицом (V-masu + ながら).",
+    "isPlaceholder": true,
+    "level": "N5",
+    "prerequisites": ["g_n5_s3"],
+    "coords": { "x": 130, "y": 780 }
+  },
+  {
+    "id": "g_n5_exam",
+    "construction": "JLPT N5 Финал",
+    "topic": "Аттестация",
+    "translation": "Итоговый экзамен",
+    "explanation": "Комплексный экзамен на знание всей грамматики и лексики уровня N5.",
+    "isPlaceholder": true,
+    "level": "N5",
+    "prerequisites": ["g_n5_s1_2", "g_n5_s4", "g_n5_s6", "g_n5_s8", "g_n5_s9"],
+    "coords": { "x": 250, "y": 880 }
   }
 ]

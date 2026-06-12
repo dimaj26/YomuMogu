@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     // Быстрая проверка на точное совпадение с готовыми примерами
     const cleanedInput = cleanJapanese(userInput);
-    const matchesSuggestion = rule.suggestions.some(s => cleanJapanese(s.sampleAnswer) === cleanedInput);
+    const matchesSuggestion = (rule.suggestions || []).some(s => cleanJapanese(s.sampleAnswer) === cleanedInput);
 
     if (matchesSuggestion) {
       logger.info(`[API] Обнаружено точное совпадение с примером для "${ruleId}". Пропуск вызова Gemini.`);
@@ -78,12 +78,12 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await geminiClient.verifyGrammar(
-      rule.construction,
-      rule.topic,
-      rule.explanation,
-      rule.conjugationGuide,
+      rule.construction || '',
+      rule.topic || '',
+      rule.explanation || '',
+      rule.conjugationGuide || '',
       userInput.trim(),
-      rule.suggestions
+      rule.suggestions || []
     );
 
     return NextResponse.json(result);

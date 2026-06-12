@@ -420,7 +420,7 @@ const Mascot: React.FC<{ state: 'idle' | 'happy' | 'worried' | 'cheering' }> = (
                   <div className={styles.sectionSuggestions}>
                     <h4 className={styles.subTitle}>Примеры и подсказки (кликните, чтобы использовать):</h4>
                     <div className={styles.suggestionsGrid}>
-                      {rule.suggestions.map((s, idx) => (
+                      {(rule.suggestions || []).map((s, idx) => (
                         <div key={idx} className={styles.suggestionCard} style={{ padding: '8px 12px' }}>
                           <div className={styles.suggestionHeader}>
                             <span className={styles.suggestionHint}>{s.hint}</span>
