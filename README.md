@@ -124,6 +124,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to start pra
 - **Grammar Roadmap & Trainer**: A winding vertical pathway on the Practice launcher page implementing a strict 7-step N5 grammar curriculum. Practicing a rule launches the interactive "Grammar Lab / Sandbox" sentence builder (supporting formality, polarity, and spoken contractions/omissions), displaying popover cards, vector SVG mascot `🍵` reactions, and spoken Japanese secrets. Custom compositions are verified via Gemini API, utilizing a 0ms suggestion match bypass layer.
 - **JLPT Levels & N5 Grammar Completion**: Built-in automatic JLPT levels (N5 and N4) detection and tagging using a scraped database (`jlpt_levels.json`). Integrates tagging into the offline starter deck loader and bilateral Anki synchronizer. Fully authored curriculum content for the three remaining N5 grammar rules (`g_n5_s7` た-форма, `g_n5_s8` 〜たり…たりする, and `g_n5_s9` 〜ながら) with detailed Russian explanations, conjugation rules, and interactive sandbox setups.
 - **JLPT N3–N1 References & Derived Chat Scoping**: Extended JLPT levels detection database with clean N3, N2, and N1 lists. Computes active allowed grammar scope (mature + active unlocked rules + formulaic whitelist) to restrict the Gemini chat complexity. Prioritizes active rules by due date for focus guidance, validates used constructions, and logs warnings on violations.
+- **Fluency Mode (Phase 8)**: Timed scenario replay with a per-turn horizontal countdown bar, tightening flat time limits across rounds 1–3, timer starting on mascot/sensei response completion, mature-only grammar scoping logic, and fluency statistics panel.
 
 ---
 
@@ -161,6 +162,7 @@ src/
     media/                # YouTube subtitle scrapers, VTT/SRT parsers, and availability probes
     jlpt/                 # JLPT level detection and tag merging logic
     grammar/              # Pure prerequisite DAG graph and chat scoping helpers
+    chat/                 # Pure timed scenario replay calculations and faded furigana processor
     logger.ts             # Structured log writer
     profile.ts            # Namespaced profile storage helpers
     csrf.ts               # CSRF verification helper
