@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getProfileItem, setProfileItem, getActiveProfileId } from '../lib/profile';
-import { useJapanification } from './useJapanification';
 
 export interface DailyQuest {
   id: string;
@@ -13,6 +12,7 @@ export interface DailyQuest {
   current: number;
   rewardXp: number;
   completed: boolean;
+  // Поле claimed — легаси, сохранено для совместимости со старыми данными; больше не используется.
   claimed: boolean;
 }
 
@@ -67,7 +67,6 @@ const createDefaultQuests = (): DailyQuest[] => [
 ];
 
 export function useQuests() {
-  const { addPoints } = useJapanification();
   const [quests, setQuests] = useState<DailyQuest[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [profileId, setProfileId] = useState<string>('default');
@@ -126,7 +125,7 @@ export function useQuests() {
 
     let updated = false;
     const nextQuests = currentQuests.map(q => {
-      if (q.type === type && !q.claimed && !q.completed) {
+      if (q.type === type && !q.completed) {
         const nextCurrent = Math.min(q.target, q.current + amount);
         const nextCompleted = nextCurrent >= q.target;
         updated = true;
@@ -145,47 +144,10 @@ export function useQuests() {
     }
   }, []);
 
-  // Получение награды
-  const claimQuestReward = useCallback((questId: string): boolean => {
-    if (typeof window === 'undefined') return false;
-    const activeProfile = getActiveProfileId();
-    const dateKey = getTodayKey();
-    const storageKey = getQuestsStorageKey(activeProfile, dateKey);
-
-    const saved = getProfileItem(storageKey);
-    if (!saved) return false;
-
-    try {
-      const currentQuests: DailyQuest[] = JSON.parse(saved);
-      let rewardAmount = 0;
-      let success = false;
-
-      const nextQuests = currentQuests.map(q => {
-        if (q.id === questId && q.completed && !q.claimed) {
-          rewardAmount = q.rewardXp;
-          success = true;
-          return { ...q, claimed: true };
-        }
-        return q;
-      });
-
-      if (success) {
-        setQuests(nextQuests);
-        setProfileItem(storageKey, JSON.stringify(nextQuests));
-        addPoints(rewardAmount);
-        return true;
-      }
-    } catch (e) {
-      console.error('Ошибка получения награды за квест:', e);
-    }
-    return false;
-  }, [addPoints]);
-
   return {
     quests,
     loading,
     incrementQuestProgress,
-    claimQuestReward,
     refreshQuests: loadQuests,
     todayKey,
   };

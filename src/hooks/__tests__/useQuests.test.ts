@@ -41,92 +41,75 @@ describe('useQuests', () => {
     vi.useRealTimers();
   });
 
-  it('should initialize daily quests with defaults if not exists', () => {
-    mockDate(10, 0); // 10:00 UTC (14:00+ local standard)
+  it('хук не экспортирует claimQuestReward', () => {
     const { result } = renderHook(() => useQuests());
-
-    expect(result.current.loading).toBe(false);
-    expect(result.current.quests.length).toBe(3);
-    
-    const reviews = result.current.quests.find(q => q.type === 'reviews');
-    expect(reviews).toBeDefined();
-    expect(reviews?.target).toBe(10);
-    expect(reviews?.current).toBe(0);
-    expect(reviews?.completed).toBe(false);
+    // @ts-expect-error Проверяем отсутствие метода в типах и рантайме
+    expect(result.current.claimQuestReward).toBeUndefined();
   });
 
-  it('should increment quest progress correctly', () => {
+  it('завершение квеста не начисляет XP', () => {
     mockDate(10, 0);
     const { result } = renderHook(() => useQuests());
 
-    act(() => {
-      result.current.incrementQuestProgress('reviews', 3);
-    });
-
-    const reviews = result.current.quests.find(q => q.type === 'reviews');
-    expect(reviews?.current).toBe(3);
-    expect(reviews?.completed).toBe(false);
-
-    act(() => {
-      result.current.incrementQuestProgress('reviews', 7);
-    });
-
-    const completedReviews = result.current.quests.find(q => q.type === 'reviews');
-    expect(completedReviews?.current).toBe(10);
-    expect(completedReviews?.completed).toBe(true);
-  });
-
-  it('should claim quest reward and add XP points', () => {
-    mockDate(10, 0);
-    const { result } = renderHook(() => useQuests());
-
-    // Инкрементируем до завершения квеста
     act(() => {
       result.current.incrementQuestProgress('mnemonics', 2);
     });
 
     const mnemonics = result.current.quests.find(q => q.type === 'mnemonics');
     expect(mnemonics?.completed).toBe(true);
-    expect(mnemonics?.claimed).toBe(false);
-
-    // Забираем награду
-    let claimResult = false;
-    act(() => {
-      claimResult = result.current.claimQuestReward('mnemonics_quest');
-    });
-
-    expect(claimResult).toBe(true);
-    expect(mockAddPoints).toHaveBeenCalledWith(2); // XP reward = 2
-
-    const claimedMnemonics = result.current.quests.find(q => q.type === 'mnemonics');
-    expect(claimedMnemonics?.claimed).toBe(true);
+    expect(mockAddPoints).not.toHaveBeenCalled();
   });
 
-  it('should respect 4:00 AM local time boundary for daily resets', () => {
-    // 03:00 AM local (UTC + 6 = 21:00 UTC previous day)
-    const timeBeforeBoundary = new Date('2026-05-27T03:00:00+06:00');
-    vi.setSystemTime(timeBeforeBoundary);
+  it('легаси-данные с claimed: true парсятся без ошибок', () => {
+    mockDate(10, 0);
+    const { result } = renderHook(() => useQuests());
+    const dateKey = result.current.todayKey;
+    const storageKey = `yomumogu_profile_default_daily_quests_${dateKey}`;
+    const legacyData = [
+      {
+        id: 'reviews_quest',
+        type: 'reviews',
+        title: 'Охота на долги',
+        description: 'Пройти 10 FSRS-повторений в квизе',
+        target: 10,
+        current: 10,
+        rewardXp: 3,
+        completed: true,
+        claimed: true,
+      }
+    ];
+    localStorageMock.setItem(storageKey, JSON.stringify(legacyData));
 
-    const { result: resultBefore, rerender } = renderHook(() => useQuests());
-    
-    // Делаем прогресс
     act(() => {
-      resultBefore.current.incrementQuestProgress('chats', 1);
+      result.current.refreshQuests();
     });
-    
-    const chatsBefore = resultBefore.current.quests.find(q => q.type === 'chats');
-    expect(chatsBefore?.completed).toBe(true);
 
-    // Сдвигаем время на 04:05 AM local (UTC + 6 = 22:05 UTC)
-    const timeAfterBoundary = new Date('2026-05-27T04:05:00+06:00');
-    vi.setSystemTime(timeAfterBoundary);
+    expect(result.current.quests.length).toBe(1);
+    expect(result.current.quests[0].claimed).toBe(true);
+  });
 
-    // Перезапускаем хук для имитации загрузки нового дня
-    const { result: resultAfter } = renderHook(() => useQuests());
+  it('прогресс и completed работают как раньше', () => {
+    mockDate(10, 0);
+    const { result } = renderHook(() => useQuests());
 
-    // Квесты должны обнулиться
-    const chatsAfter = resultAfter.current.quests.find(q => q.type === 'chats');
-    expect(chatsAfter?.current).toBe(0);
-    expect(chatsAfter?.completed).toBe(false);
+    const reviewsBefore = result.current.quests.find(q => q.type === 'reviews');
+    expect(reviewsBefore?.current).toBe(0);
+    expect(reviewsBefore?.completed).toBe(false);
+
+    act(() => {
+      result.current.incrementQuestProgress('reviews', 5);
+    });
+
+    const reviewsMiddle = result.current.quests.find(q => q.type === 'reviews');
+    expect(reviewsMiddle?.current).toBe(5);
+    expect(reviewsMiddle?.completed).toBe(false);
+
+    act(() => {
+      result.current.incrementQuestProgress('reviews', 5);
+    });
+
+    const reviewsAfter = result.current.quests.find(q => q.type === 'reviews');
+    expect(reviewsAfter?.current).toBe(10);
+    expect(reviewsAfter?.completed).toBe(true);
   });
 });

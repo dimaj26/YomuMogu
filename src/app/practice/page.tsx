@@ -123,7 +123,7 @@ function generateOptions(
 export default function PracticePage() {
   const router = useRouter();
   const { state: jState, t } = useJapanification();
-  const { quests, claimQuestReward } = useQuests();
+  const { quests } = useQuests();
 
   const [activeProfileId, setActiveProfileId] = useState<string>('default');
   const [deckMode, setDeckMode] = useState<'standard' | 'custom' | 'local'>('local');
@@ -1410,7 +1410,6 @@ export default function PracticePage() {
                           <h4 className={styles.questItemTitle}>{quest.title}</h4>
                           <p className={styles.questDesc}>{quest.description}</p>
                         </div>
-                        <span className={styles.xpBadge}>+{quest.rewardXp} XP</span>
                       </div>
                       
                       <div className={styles.questProgressContainer}>
@@ -1425,22 +1424,11 @@ export default function PracticePage() {
                         </span>
                       </div>
 
-                      {quest.completed && !quest.claimed && (
-                        <button
-                          type="button"
-                          onClick={() => claimQuestReward(quest.id)}
-                          className={`btn-3d btn-green ${styles.claimQuestBtn}`}
-                          style={{ marginTop: '8px', padding: '6px 12px', width: '100%', fontSize: '12px', fontWeight: 800 }}
-                        >
-                          {t('Забрать награду', '報酬を受け取る')}
-                        </button>
-                      )}
-
-                      {quest.claimed && (
+                      {quest.completed && (
                         <div style={{ marginTop: '6px', textAlign: 'right' }}>
                           <span className={styles.claimedLabel}>
                             <CheckCircle size={14} />
-                            {t('Получено', '受取済')}
+                            {t('Выполнено ✓', '達成 ✓')}
                           </span>
                         </div>
                       )}

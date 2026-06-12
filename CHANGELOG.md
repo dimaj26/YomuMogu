@@ -2,6 +2,12 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.53.0] - 2026-06-13
+
+### Changed
+- **Quests Motivation Cleanup ([XP-CLAIM])**: Removed the claim-for-XP mechanic. Quests now act strictly as goal-setting and feedback benchmarks, showing a static "Выполнено ✓" badge on completion and awarding no XP points. Kept the `claimed` field in storage for backward compatibility.
+- **Japanification XP Independence ([JAPANIFICATION-SOURCE])**: Added regression tests locking the XP-independent behavior of the manual `uiMode` settings for `t()`, `shouldShowTranslation()`, and `shouldGrammarBeJapanese()`. Explicitly documented XP as write-only decoration in `PROJECT_LOGIC.md` and updated the `CONTEXT_PROMPT.md` feature registry.
+
 ## [1.52.0] - 2026-06-13
 
 ### Added

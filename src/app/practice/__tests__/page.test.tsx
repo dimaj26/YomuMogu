@@ -51,12 +51,72 @@ vi.mock('next/navigation', () => {
   };
 });
 
+// Мокаем useQuests
+let mockQuestsData = [
+  {
+    id: 'reviews_quest',
+    type: 'reviews',
+    title: 'Охота на долги',
+    description: 'Пройти 10 FSRS-повторений в квизе',
+    target: 10,
+    current: 0,
+    rewardXp: 3,
+    completed: false,
+    claimed: false,
+  },
+  {
+    id: 'chats_quest',
+    type: 'chats',
+    title: 'Красноречие',
+    description: 'Завершить 1 разговорную сессию с ИИ-Sensei',
+    target: 1,
+    current: 1,
+    rewardXp: 5,
+    completed: true,
+    claimed: false,
+  }
+];
+
+vi.mock('@/hooks/useQuests', () => ({
+  useQuests: () => ({
+    quests: mockQuestsData,
+    loading: false,
+    incrementQuestProgress: vi.fn(),
+    refreshQuests: vi.fn(),
+    todayKey: '2026-06-13',
+  })
+}));
+
 describe('PracticePage Component', () => {
   beforeEach(async () => {
     vi.restoreAllMocks();
     localStorage.clear();
     await db.words.clear();
     await db.reviews.clear();
+    mockQuestsData = [
+      {
+        id: 'reviews_quest',
+        type: 'reviews',
+        title: 'Охота на долги',
+        description: 'Пройти 10 FSRS-повторений в квизе',
+        target: 10,
+        current: 0,
+        rewardXp: 3,
+        completed: false,
+        claimed: false,
+      },
+      {
+        id: 'chats_quest',
+        type: 'chats',
+        title: 'Красноречие',
+        description: 'Завершить 1 разговорную сессию с ИИ-Sensei',
+        target: 1,
+        current: 1,
+        rewardXp: 5,
+        completed: true,
+        claimed: false,
+      }
+    ];
   });
 
   it('отображает заголовок страницы и загрузку данных', async () => {
@@ -729,6 +789,54 @@ describe('PracticePage Component', () => {
       const optionButtons = buttons.filter(btn => ['кошка', 'транс0', 'ёми0', 'Вормуп0'].every(t => btn.textContent !== t) && btn.textContent !== 'Далее →');
       // Проверим, что кнопка с правильным ответом есть
       expect(screen.getByRole('button', { name: 'кошка' })).toBeInTheDocument();
+    });
+  });
+
+  describe('Квесты', () => {
+    it('завершённый квест показывает бейдж Выполнено ✓ и не содержит кнопки', async () => {
+      mockQuestsData = [
+        {
+          id: 'chats_quest',
+          type: 'chats',
+          title: 'Красноречие',
+          description: 'Завершить 1 разговорную сессию с ИИ-Sensei',
+          target: 1,
+          current: 1,
+          rewardXp: 5,
+          completed: true,
+          claimed: false,
+        }
+      ];
+
+      render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+
+      expect(await screen.findByText('Красноречие')).toBeInTheDocument();
+      expect(screen.getByText('Выполнено ✓')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Забрать награду/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Получено/ })).not.toBeInTheDocument();
+    });
+
+    it('незавершённый квест показывает прогресс без упоминания XP-награды', async () => {
+      mockQuestsData = [
+        {
+          id: 'reviews_quest',
+          type: 'reviews',
+          title: 'Охота на долги',
+          description: 'Пройти 10 FSRS-повторений в квизе',
+          target: 10,
+          current: 4,
+          rewardXp: 3,
+          completed: false,
+          claimed: false,
+        }
+      ];
+
+      render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+
+      expect(await screen.findByText('Охота на долги')).toBeInTheDocument();
+      expect(screen.getByText('4 / 10')).toBeInTheDocument();
+      expect(screen.queryByText(/\+3 XP/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/XP/)).not.toBeInTheDocument();
     });
   });
 });

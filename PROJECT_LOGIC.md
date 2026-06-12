@@ -721,13 +721,15 @@ To ensure state parity and permit offline study without losing scheduling progre
 To encourage user engagement, YomuMogu displays decorative progression levels and XP stats in the UI.
 
 ### [PL-7.1] Decorative XP and Level
-- XP is displayed as a decorative progress bar on the dashboard.
+- XP is write-only decoration feeding the dashboard widget; it must never be read as an input by any functional feature.
 - Levels (0–6) are calculated based on earned XP to serve as a decorative progress indicator.
+- UI immersion is determined solely by the manual `uiMode` setting, completely independent of XP.
 
 ### [PL-7.2] XP Sources
 - Word used correctly in chat: +1 XP per word
 - Grammar correct: +1 XP bonus
 - Session completed (80% words collected): +5 XP
+- Quests: Daily quests serve as goal-setting and feedback and do not award any XP.
 
 ---
 

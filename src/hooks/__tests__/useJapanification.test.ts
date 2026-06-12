@@ -153,4 +153,47 @@ describe('useJapanification', () => {
     expect(result.current.state.chatLevel).toBe(3);
     expect(localStorageMock.setItem).toHaveBeenCalled();
   });
+
+  it('t() не зависит от XP: одинаковый результат при 0 и 10000 очков в каждом uiMode', () => {
+    const { result } = renderHook(() => useJapanification(), { wrapper: JapanificationProvider });
+
+    const modes: ('ru' | 'smart' | 'ja')[] = ['ru', 'smart', 'ja'];
+    for (const mode of modes) {
+      act(() => {
+        result.current.setUiMode(mode);
+        result.current.resetProgress();
+      });
+      const tAtZero = result.current.t('Привет', 'こんにちは');
+
+      act(() => {
+        result.current.addPoints(10000);
+      });
+      const tAtTenThousand = result.current.t('Привет', 'こんにちは');
+
+      expect(tAtZero).toBe(tAtTenThousand);
+    }
+  });
+
+  it('shouldShowTranslation и shouldGrammarBeJapanese не зависят от points', () => {
+    const { result } = renderHook(() => useJapanification(), { wrapper: JapanificationProvider });
+
+    const modes: ('ru' | 'smart' | 'ja')[] = ['ru', 'smart', 'ja'];
+    for (const mode of modes) {
+      act(() => {
+        result.current.setUiMode(mode);
+        result.current.resetProgress();
+      });
+      const showTranslationAtZero = result.current.shouldShowTranslation();
+      const grammarJaAtZero = result.current.shouldGrammarBeJapanese();
+
+      act(() => {
+        result.current.addPoints(10000);
+      });
+      const showTranslationAtTenThousand = result.current.shouldShowTranslation();
+      const grammarJaAtTenThousand = result.current.shouldGrammarBeJapanese();
+
+      expect(showTranslationAtZero).toBe(showTranslationAtTenThousand);
+      expect(grammarJaAtZero).toBe(grammarJaAtTenThousand);
+    }
+  });
 });
