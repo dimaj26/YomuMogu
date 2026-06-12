@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { chatService } from '@/lib/gemini/chat';
 import { logger } from '@/lib/logger';
+import { getGrammarScopeInstruction, validateUsedConstructions } from '@/lib/grammar/promptScope';
 
 export async function POST(request: NextRequest) {
   // 1. Проверяем наличие ключа в переменных окружения
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { scenario, targetWords, history, message, level, grammarInJapanese, collectedWords, grammarFocus } = body;
+    const { scenario, targetWords, history, message, level, grammarInJapanese, collectedWords, grammarFocus, grammarScope } = body;
 
     // 2. Валидация обязательных полей
     if (!scenario || typeof scenario !== 'string') {
@@ -62,8 +63,33 @@ export async function POST(request: NextRequest) {
     const chatLevel = typeof level === 'number' && level >= 1 && level <= 5 ? level : 1;
     const grammarInJa = typeof grammarInJapanese === 'boolean' ? grammarInJapanese : false;
 
+    // Сгенерируем системную инструкцию ограничений грамматики, если передан скоуп
+    let grammarScopeInstruction: string | undefined;
+    if (grammarScope && Array.isArray(grammarScope.allowedConstructions)) {
+      grammarScopeInstruction = getGrammarScopeInstruction(grammarScope);
+    }
+
     logger.info(`Запрос на отправку сообщения в чат (сложность: ${chatLevel}, сообщение: "${message.substring(0, 50)}...")`);
-    const chatResponse = await chatService.sendMessage(scenario, targetWords, history, message, chatLevel, grammarInJa, collectedWords, grammarFocus);
+    const chatResponse = await chatService.sendMessage(
+      scenario,
+      targetWords,
+      history,
+      message,
+      chatLevel,
+      grammarInJa,
+      collectedWords,
+      grammarFocus,
+      grammarScopeInstruction
+    );
+
+    // Валидируем конструкции, использованные моделью
+    if (grammarScope && Array.isArray(grammarScope.allowedConstructions) && chatResponse.usedConstructions) {
+      const allowedIds = grammarScope.allowedConstructions.map((c: any) => c.id);
+      const validation = validateUsedConstructions(chatResponse.usedConstructions, allowedIds);
+      if (!validation.ok) {
+        logger.warn(`[Grammar Scope Check] Нарушение ограничений грамматики ИИ: ${validation.violations.join(', ')}. Разрешенные ID: ${allowedIds.join(', ')}`);
+      }
+    }
 
     return NextResponse.json(chatResponse);
   } catch (error: any) {

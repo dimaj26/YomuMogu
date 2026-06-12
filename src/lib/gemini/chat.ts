@@ -25,6 +25,7 @@ export interface ChatResponse {
   grammarFeedback: GrammarFeedback;
   wordsDetected: string[];
   grammarRuleDetected: boolean;
+  usedConstructions?: string[];
   _debug?: {
     systemInstruction: string;
     contents: any;
@@ -73,7 +74,8 @@ export class ChatService {
       construction: string;
       topic: string;
       explanation: string;
-    }
+    },
+    grammarScopeInstruction?: string
   ): Promise<ChatResponse> {
     if (!this.ai) {
       const apiKey = process.env.GEMINI_API_KEY;
@@ -131,7 +133,8 @@ export class ChatService {
       grammarLang,
       isStart,
       modelTurnCount,
-      grammarFocus
+      grammarFocus,
+      grammarScopeInstruction
     });
 
     // Ограничиваем историю диалога для Gemini до последних 20 сообщений для экономии токенов и сохранения контекста
@@ -193,9 +196,14 @@ export class ChatService {
                 grammarRuleDetected: {
                   type: 'BOOLEAN',
                   description: 'Использовал ли пользователь целевую грамматическую конструкцию'
+                },
+                usedConstructions: {
+                  type: 'ARRAY',
+                  description: 'Список грамматических конструкций (идентификаторов правил, например g_n5_s1_1, g_n5_s6), которые ИИ использовал в своем ответе (reply)',
+                  items: { type: 'STRING' }
                 }
               },
-              required: ['reply', 'translation', 'grammarFeedback', 'wordsDetected', 'grammarRuleDetected']
+              required: ['reply', 'translation', 'grammarFeedback', 'wordsDetected', 'grammarRuleDetected', 'usedConstructions']
             }
           }
         });

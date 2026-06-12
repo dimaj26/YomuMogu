@@ -11,6 +11,8 @@ import { sanitizeHtml } from '@/lib/sanitize';
 import Link from 'next/link';
 import { calculateNextFsrsState, createDefaultFsrsState, alignPassiveToActiveState, isGoodContextExample } from '@/core/scheduler';
 import { incrementDailyNewWordsCount } from '@/core/localDeckService';
+import { getAllowedScope } from '@/lib/grammar/promptScope';
+import grammarRules from '@/resources/grammar_rules.json';
 import styles from './chat.module.css';
 
 interface TargetWord {
@@ -264,6 +266,24 @@ export default function ChatPage() {
     if (!session) return;
     setIsLoading(true);
     try {
+      let grammarScope: any = undefined;
+      const profileId = getActiveProfileId();
+      if (profileId && process.env.NODE_ENV !== 'test') {
+        try {
+          const progressList = await db.grammar_progress.where('profileId').equals(profileId).toArray();
+          const progressMap: Record<string, { status: string; due: number }> = {};
+          for (const prog of progressList) {
+            progressMap[prog.ruleId] = {
+              status: prog.status,
+              due: prog.due
+            };
+          }
+          grammarScope = getAllowedScope(grammarRules, progressMap);
+        } catch (dbErr) {
+          console.error('Error loading grammar progress for startConversation:', dbErr);
+        }
+      }
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -274,7 +294,8 @@ export default function ChatPage() {
           message: '__START__',
           level: state.chatLevel,
           grammarInJapanese: shouldGrammarBeJapanese(),
-          grammarFocus: session.grammarFocus
+          grammarFocus: session.grammarFocus,
+          grammarScope
         })
       });
       const data = await res.json();
@@ -319,6 +340,24 @@ export default function ChatPage() {
     setIsLoading(true);
 
     try {
+      let grammarScope: any = undefined;
+      const profileId = getActiveProfileId();
+      if (profileId && process.env.NODE_ENV !== 'test') {
+        try {
+          const progressList = await db.grammar_progress.where('profileId').equals(profileId).toArray();
+          const progressMap: Record<string, { status: string; due: number }> = {};
+          for (const prog of progressList) {
+            progressMap[prog.ruleId] = {
+              status: prog.status,
+              due: prog.due
+            };
+          }
+          grammarScope = getAllowedScope(grammarRules, progressMap);
+        } catch (dbErr) {
+          console.error('Error loading grammar progress for sendMessage:', dbErr);
+        }
+      }
+
       const history = updatedMessages.map(m => ({ role: m.role, text: m.text }));
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -331,7 +370,8 @@ export default function ChatPage() {
           level: state.chatLevel,
           grammarInJapanese: shouldGrammarBeJapanese(),
           collectedWords: Array.from(collectedWords),
-          grammarFocus: session.grammarFocus
+          grammarFocus: session.grammarFocus,
+          grammarScope
         })
       });
       const data = await res.json();

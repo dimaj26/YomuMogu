@@ -2,6 +2,16 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.49.0] - 2026-06-12
+
+### Added
+- **JLPT N3–N1 Level References (v2)**: Extended `scratch/generate_jlpt_levels.mjs` scraper to fetch canonical lists for N3, N2, and N1 vocabulary from `jlptsensei.com`. Generated versioned `src/resources/jlpt_levels.json` containing N5 (710), N4 (663), N3 (2078), N2 (1790), N1 (2655) entries with exact kanji/reading cleans and duplicate/cross-level overlap removal.
+- **Derived Chat Grammar Scoping Logic**: Implemented `promptScope.ts` inside `src/lib/grammar/` calculating allowed grammar patterns (mature/closed rules + active unlocked rules + formulaic whitelist of chunks like `ください`, `お願いします`, `すみません` etc.).
+- **Spaced repetition focus selection**: Implemented Leitner-based priority selection of active/unlocked rule in progress with the nearest due date, falling back to overdue mature rules for spaced repetition, or fallback base rule (`g_n5_s1_1`).
+- **Server-Side Validation & Warn Logging**: Updated `/api/chat` route and `chatService` to accept `grammarScope`, inject strict constraints into system prompts, ask Gemini to self-report used rules via `usedConstructions` response schema, validate them, and log warnings on violations.
+- **Client-Side Chat Page Integration**: Updated `/chat` page to dynamically query Dexie `grammar_progress` for the active profile, compute grammar scope using `getAllowedScope()`, and propagate the parameters to `/api/chat` calls. Defer Dexie queries in unit testing environments to prevent JSDOM timing race conditions.
+- **Resource & Scoping Unit Tests**: Added levels coverage verifying that all 5 levels are populated with zero duplicates or overlaps. Added 7 unit tests in `promptScope.test.ts` for whitelist checks, focus priorities, and fallbacks. Added API route tests in `chat.test.ts` validating scope instructions propagation, response schema fields, and warnings.
+
 ## [1.48.0] - 2026-06-12
 
 ### Added

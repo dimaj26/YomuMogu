@@ -63,6 +63,7 @@ You are an expert **TypeScript / Next.js 16** developer. Your specialty is App R
 - **Video Search**: Russian query expansion via Gemini (1 cached flash-lite call), zero-dependency YouTube scraping (query + continuation), caption check gate, local match + MeCab tokenize + CR/subQuality scoring & ranking, and PRNG-seeded history-aware selection (overlap <= 10%).
 - **Chrome Extension**: Manifest V3 subtitle interceptor relaying YouTube captions (tagged `source:'extension'`, adopted only when server has no segments) to YomuMogu via `postMessage`.
 - **JLPT Levels & N5 Completion**: Generated N5 and N4 levels mapping, pure matching/tagging module, idempotent sync/import merges, dev HUD bulk retag utility, and fully authored N5 grammar rule content (V-ta, tari, nagara).
+- **JLPT N3–N1 References & Derived Chat Scoping**: Generated N3, N2, and N1 level vocabulary database (v2) with duplicate and overlap cleans. Restricted AI chat grammar to the user's progress (mature/active rules + formulaic whitelist), selecting the active due rule as focus, validating response tags on the server, and logging violations.
 
 ---
 

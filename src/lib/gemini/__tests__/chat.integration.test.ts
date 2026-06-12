@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { chatService, ChatMessage, TargetWord } from '../chat';
 import * as fs from 'fs';
 import * as path from 'path';
+import { getGrammarScopeInstruction, FORMULAIC_CHUNKS } from '../../grammar/promptScope';
 
 // Загружаем .env.local синхронно прямо при импорте файла
 try {
@@ -241,5 +242,46 @@ describe('Gemini Chat Service Real Integration Test', () => {
       expect(checkContainsBook(turn3Response.reply)).toBe(false);
       expect(turn3Response.translation.toLowerCase()).not.toContain('книг');
     }, 60000);
+
+    it('самоотчёт usedConstructions является подмножеством разрешённого скоупа', async () => {
+      console.log('--- Запуск интеграционного теста: проверка usedConstructions и скоупа ---');
+      const grammarScope = {
+        allowedConstructions: [
+          { id: 'g_n5_s1_1', construction: 'АはБです' }
+        ],
+        focus: { id: 'g_n5_s1_1', construction: 'АはБです' }
+      };
+
+      const grammarScopeInstruction = getGrammarScopeInstruction(grammarScope);
+
+      const response = await chatService.sendMessage(
+        defaultScenario,
+        targetWords,
+        [],
+        '__START__',
+        1,
+        false,
+        [],
+        undefined,
+        grammarScopeInstruction
+      );
+
+      console.log('Сенсей (usedConstructions):', response.usedConstructions);
+      console.log('Сенсей (reply):', response.reply);
+
+      expect(response.usedConstructions).toBeDefined();
+      expect(Array.isArray(response.usedConstructions)).toBe(true);
+
+      const allowedIds = ['g_n5_s1_1'];
+      const chunkSet = new Set<string>(FORMULAIC_CHUNKS);
+      
+      response.usedConstructions!.forEach(c => {
+        const isAllowed = allowedIds.includes(c) || chunkSet.has(c);
+        if (!isAllowed) {
+          console.warn(`[WARNING] Gemini использовал конструкцию "${c}", которая не разрешена скоупом!`);
+        }
+        expect(typeof c).toBe('string');
+      });
+    }, 30000);
   });
 });

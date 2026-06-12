@@ -2,12 +2,23 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockSendMessage = vi.fn();
 const mockGenerateHints = vi.fn();
+const mockWarn = vi.fn();
 
 // Мокаем ChatService
 vi.mock('@/lib/gemini/chat', () => ({
   chatService: {
     sendMessage: (...args: any[]) => mockSendMessage(...args),
     generateHints: (...args: any[]) => mockGenerateHints(...args),
+  }
+}));
+
+// Мокаем Logger
+vi.mock('@/lib/logger', () => ({
+  logger: {
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: (...args: any[]) => mockWarn(...args),
+    debug: vi.fn()
   }
 }));
 
@@ -128,5 +139,74 @@ describe('API Route POST /api/chat', () => {
     expect(data.grammarFeedback.isCorrect).toBe(false);
     expect(data.grammarFeedback.correction).toBe('<ruby>椅子<rt>いす</rt></ruby>に座って');
     expect(mockSendMessage).toHaveBeenCalledOnce();
+  });
+
+  it('should pass grammarScopeInstruction to chatService when grammarScope is provided', async () => {
+    const mockResponse = {
+      reply: 'こんにちは！',
+      translation: 'Привет!',
+      grammarFeedback: { isCorrect: true, correction: '', explanation: '' },
+      wordsDetected: [],
+      usedConstructions: ['g_n5_s1_1']
+    };
+    mockSendMessage.mockResolvedValue(mockResponse);
+
+    const req = createRequest({
+      scenario: 'В кафе',
+      targetWords: [],
+      history: [],
+      message: 'こんにちは',
+      grammarScope: {
+        allowedConstructions: [
+          { id: 'g_n5_s1_1', construction: 'АはБです' }
+        ],
+        focus: { id: 'g_n5_s1_1', construction: 'АはБです' }
+      }
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    
+    expect(mockSendMessage).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(Array),
+      expect.any(Array),
+      expect.any(String),
+      expect.any(Number),
+      expect.any(Boolean),
+      undefined,
+      undefined,
+      expect.stringContaining('CRITICAL GRAMMAR CONSTRAINT')
+    );
+  });
+
+  it('should warn when Gemini uses construction outside allowed scope', async () => {
+    mockWarn.mockClear();
+    const mockResponse = {
+      reply: 'ご飯を食べます。',
+      translation: 'Я ем рис.',
+      grammarFeedback: { isCorrect: true, correction: '', explanation: '' },
+      wordsDetected: [],
+      usedConstructions: ['g_n5_s3']
+    };
+    mockSendMessage.mockResolvedValue(mockResponse);
+
+    const req = createRequest({
+      scenario: 'В кафе',
+      targetWords: [],
+      history: [],
+      message: 'こんにちは',
+      grammarScope: {
+        allowedConstructions: [
+          { id: 'g_n5_s1_1', construction: 'АはБです' }
+        ]
+      }
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    expect(mockWarn).toHaveBeenCalledWith(
+      expect.stringContaining('[Grammar Scope Check] Нарушение ограничений грамматики ИИ')
+    );
   });
 });

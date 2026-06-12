@@ -122,6 +122,8 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to start pra
 - **Phonosemantic Hints (声符)**: Custom Accordion component displaying Kanji phonetic components and semantic relative chips, aiding vocabulary association.
 - **Interactive Mnemonics & AI Etymology**: Offline notes editor in the Quiz with a "✨ ИИ-Этимология" action to fetch origin breakdowns from Gemini API.
 - **Grammar Roadmap & Trainer**: A winding vertical pathway on the Practice launcher page implementing a strict 7-step N5 grammar curriculum. Practicing a rule launches the interactive "Grammar Lab / Sandbox" sentence builder (supporting formality, polarity, and spoken contractions/omissions), displaying popover cards, vector SVG mascot `🍵` reactions, and spoken Japanese secrets. Custom compositions are verified via Gemini API, utilizing a 0ms suggestion match bypass layer.
+- **JLPT Levels & N5 Grammar Completion**: Built-in automatic JLPT levels (N5 and N4) detection and tagging using a scraped database (`jlpt_levels.json`). Integrates tagging into the offline starter deck loader and bilateral Anki synchronizer. Fully authored curriculum content for the three remaining N5 grammar rules (`g_n5_s7` た-форма, `g_n5_s8` 〜たり…たりする, and `g_n5_s9` 〜ながら) with detailed Russian explanations, conjugation rules, and interactive sandbox setups.
+- **JLPT N3–N1 References & Derived Chat Scoping**: Extended JLPT levels detection database with clean N3, N2, and N1 lists. Computes active allowed grammar scope (mature + active unlocked rules + formulaic whitelist) to restrict the Gemini chat complexity. Prioritizes active rules by due date for focus guidance, validates used constructions, and logs warnings on violations.
 
 ---
 
@@ -152,10 +154,13 @@ src/
     pluginRegistry.ts     # Interface for custom data sources & plugins
   resources/              # Static resources and dictionaries
     situational_dictionary.json # Static situational tags dictionary (N5 starter deck)
+    jlpt_levels.json      # Generated versioned JLPT levels resource containing N5 and N4 vocabulary lists
   lib/
     dict/                 # SQLite dictionary lookup script and helper
     gemini/               # Gemini content generation, fallbacks, & withRetry wrapper
     media/                # YouTube subtitle scrapers, VTT/SRT parsers, and availability probes
+    jlpt/                 # JLPT level detection and tag merging logic
+    grammar/              # Pure prerequisite DAG graph and chat scoping helpers
     logger.ts             # Structured log writer
     profile.ts            # Namespaced profile storage helpers
     csrf.ts               # CSRF verification helper

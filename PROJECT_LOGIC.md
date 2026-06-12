@@ -158,6 +158,12 @@ src/
     profile.ts            # localStorage profile helpers + multi-profile management
     csrf.ts               # CSRF protection helpers (same-origin Origin/Referer verification)
     sanitize.ts           # DOMPurify HTML sanitization utility for dangerouslySetInnerHTML
+    grammar/
+      graph.ts            # Pure, side-effect-free graph operations (validation, unlocks, edges generation) for grammar DAG
+      promptScope.ts      # Derived grammar scope calculator, validator, and prompt builder
+      __tests__/
+        graph.test.ts     # Unit tests for grammar DAG graph validation
+        promptScope.test.ts # Unit tests for active grammar scoping and whitelist validation
     jlpt/
       levels.ts           # JLPT level detection and tag merging logic
       __tests__/
@@ -265,7 +271,9 @@ src/
 | `lib/gemini/prompts.ts` | Centralized prompt templates for Gemini AI character persona and difficulty levels |
 | `lib/gemini/retry.ts` | Singleton wrapper implementing exponential backoffs and model fallback loops |
 | `lib/grammar/graph.ts` | Pure, side-effect-free graph operations (validation, unlocks, edges generation) for grammar DAG |
+| `lib/grammar/promptScope.ts` | Calculates allowed grammar scope, chooses focus nodes using Leitner intervals, validates responses, and generates prompt instructions |
 | `lib/grammar/__tests__/graph.test.ts` | Unit tests for grammar DAG graph validation, unlock calculations, and backward compatibility |
+| `lib/grammar/__tests__/promptScope.test.ts` | Unit tests for grammar prompt scoping, whitelist verification, focus prioritizing, and fallback scenarios |
 | `lib/gemini/__tests__/scenarios.integration.test.ts` | Integration tests verifying multi-turn conversational scenarios against live Gemini API |
 | `scratch/SCRATCH_LOG.md` | Permanent historical audit registry tracking sandbox scripts and side effects |
 | `hooks/useQuests.ts` | React custom hook managing namespaced daily quest progression and XP rewards |
@@ -536,7 +544,7 @@ All Anki routes proxy requests to AnkiConnect at `http://localhost:8765`.
 | `/api/gemini/etymology` | POST | `{ word }` | `{ components: string[], etymology: string }` |
 | `/api/gemini/classify` | POST | `{ words: string[] }` | `{ classifications: Array<{ word: string; tags: string[] }> }` |
 | `/api/gemini/grammar-verify` | POST | `{ ruleId, userInput }` | `{ isCorrect: boolean, correction: string, explanation: string }` |
-| `/api/chat` | POST | `{ scenario, targetWords, history, message, level, grammarInJapanese, collectedWords? }` | `ChatResponse` |
+| `/api/chat` | POST | `{ scenario, targetWords, history, message, level, grammarInJapanese, collectedWords?, grammarFocus?, grammarScope? }` | `ChatResponse` |
 | `/api/chat/hint` | POST | `{ scenario, targetWords, history, level }` | `HintResponse` |
 | `/api/chat/analyze` | POST | `{ history, deckName, frontField, backField, deckMappings? }` | `{ words: AnalyzedWord[] }` |
 | `/api/dict/lookup` | GET | `?word=WORD` | `{ definition: string }` |
@@ -555,6 +563,8 @@ interface ChatResponse {
     explanation: string;  // Explanation in Russian (or Japanese if grammarInJapanese)
   };
   wordsDetected: string[]; // Target words found in user's message
+  grammarRuleDetected: boolean; // True if the user correctly used the active grammarFocus rule
+  usedConstructions?: string[]; // Grammar rules/tags utilized by Gemini in the reply
   _debug?: {
     systemInstruction: string;
     contents: any;
@@ -637,6 +647,14 @@ To prevent "leakage" of target words and encourage user recall:
 - **Situational Clustering**: The system programmatically groups the daily active vocabulary pool using `groupWordsIntoThemes` by finding overlaps among the 10 situational themes (`shopping`, `restaurant`, `travel`, `home`, `work`, `hobbies`, `social`, `health`, `weather`, `education`). It matches nouns matching a specific theme and fills the remaining slots with `universal` verbs and adjectives to form coherent 4-6 word target sets for dialogue practice.
 - **Contextual Distractors**: The multiple-choice Warm-up selector queries words matching the target's situational tag to provide high-quality, contextually similar distractors.
 
+### [PL-5.10] Derived Chat Grammar Scoping
+To ensure the AI chat remains pedagogically accessible and restricts its vocabulary/grammar complexity to the user's current progress:
+- **Allowed Scope**: The grammar scope is computed on the client side based on the user's Leitner progress. The allowed scope contains:
+  1. Mature grammar nodes (`status === 'mature'`).
+  2. Active/target grammar nodes that are unlocked but not yet mature (`unlocked && status !== 'new'`).
+  3. A formulaic chunk whitelist (`FORMULAIC_CHUNKS` e.g., `ください`, `お願いします`, `すみません`, etc.) which are exempt from checking.
+- **Active Focus Node**: The system automatically determines a focus grammar construction for the chat. It prioritizes the active/unlocked rule in progress with the nearest Leitner due date. If none exist, it picks the oldest overdue mature rule for spaced repetition. Otherwise, it falls back to the base rule (`g_n5_s1_1`, `АはБです`).
+- **Server-Side Validation**: The client sends the calculated `grammarScope` to `/api/chat`. The server generates a prompt constraint list and passes it to Gemini. Gemini is instructed to return the list of tags of all grammar constructions it used in the `usedConstructions` field of its JSON response. The server validates `usedConstructions` against the allowed scope and logs warnings in cases of violations.
 
 ---
 
@@ -752,4 +770,4 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-370 unit/integration tests across 57 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+379 unit/integration tests across 58 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.

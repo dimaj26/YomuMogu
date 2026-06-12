@@ -57,11 +57,40 @@ describe('JLPT levels detection', () => {
     expect(tags3).not.toContain('jlpt:n4');
   });
 
-  it('ресурс jlpt_levels.json валиден: meta заполнена, N5 содержит не менее 500 записей', () => {
+  it('ресурс v2 валиден: все 5 уровней заполнены, без дублей внутри уровня и пересечений между уровнями', () => {
     expect(jlptLevels.meta).toBeDefined();
-    expect(jlptLevels.meta.source).toBeDefined();
-    expect(jlptLevels.meta.fetchedAt).toBeDefined();
+    expect(jlptLevels.meta.version).toBe(2);
     expect(jlptLevels.levels).toBeDefined();
-    expect(jlptLevels.levels.N5.length).toBeGreaterThanOrEqual(500);
+
+    const levels = jlptLevels.levels as Record<string, Array<{ word: string; reading?: string }>>;
+    
+    // Проверка лимитов количества слов по уровням
+    expect(levels.N5.length).toBeGreaterThanOrEqual(600);
+    expect(levels.N4.length).toBeGreaterThanOrEqual(500);
+    expect(levels.N3.length).toBeGreaterThanOrEqual(1200);
+    expect(levels.N2.length).toBeGreaterThanOrEqual(1200);
+    expect(levels.N1.length).toBeGreaterThanOrEqual(2000);
+
+    const allWords = new Set<string>();
+    const levelKeys = ['N5', 'N4', 'N3', 'N2', 'N1'];
+
+    for (const key of levelKeys) {
+      const list = levels[key];
+      const uniqueInLevel = new Set<string>();
+
+      for (const entry of list) {
+        // Проверяем на дубли внутри уровня (выводим слово при ошибке для простоты отладки)
+        if (uniqueInLevel.has(entry.word)) {
+          throw new Error(`Дубликат внутри ${key}: ${entry.word}`);
+        }
+        uniqueInLevel.add(entry.word);
+
+        // Проверяем на кросс-уровневые пересечения
+        if (allWords.has(entry.word)) {
+          throw new Error(`Пересечение слова ${entry.word} между уровнями (найдено в ${key})`);
+        }
+        allWords.add(entry.word);
+      }
+    }
   });
 });

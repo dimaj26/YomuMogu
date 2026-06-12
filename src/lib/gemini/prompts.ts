@@ -12,6 +12,7 @@ export interface SystemPromptOptions {
     topic: string;
     explanation: string;
   };
+  grammarScopeInstruction?: string;
 }
 
 export interface HintPromptOptions {
@@ -25,7 +26,7 @@ export interface HintPromptOptions {
  * Генерирует системную инструкцию для чат-собеседника ИИ.
  */
 export const getChatSystemInstruction = (options: SystemPromptOptions): string => {
-  const { scenario, targetWordsList, unusedWordsList, usedWordsList, levelInstruction, grammarLang, isStart, modelTurnCount, grammarFocus } = options;
+  const { scenario, targetWordsList, unusedWordsList, usedWordsList, levelInstruction, grammarLang, isStart, modelTurnCount, grammarFocus, grammarScopeInstruction } = options;
 
   const grammarFocusSection = grammarFocus
     ? `
@@ -51,6 +52,7 @@ All target words for practice: ${targetWordsList}
 Target words already used by the user in previous turns: ${usedWordsList}
 Target words not yet used by the user: ${unusedWordsList}
 ${grammarFocusSection}
+${grammarScopeInstruction ? `\n${grammarScopeInstruction}\n` : ''}
 
 CURRENT TURN NUMBER: ${modelTurnCount}
 
