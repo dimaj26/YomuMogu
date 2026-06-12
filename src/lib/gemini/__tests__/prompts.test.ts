@@ -67,5 +67,12 @@ describe('LEVEL_INSTRUCTIONS', () => {
     expect(LEVEL_INSTRUCTIONS[4]).toContain('grammarFeedback.correction');
     expect(LEVEL_INSTRUCTIONS[5]).toContain('grammarFeedback.correction');
   });
+
+  it('все уровни LEVEL_INSTRUCTIONS требуют полную ruby-разметку', () => {
+    for (let level = 1; level <= 5; level++) {
+      expect(LEVEL_INSTRUCTIONS[level]).toContain('EVERY single kanji word');
+      expect(LEVEL_INSTRUCTIONS[level]).toContain('MUST be wrapped in HTML ruby tags');
+    }
+  });
 });
 

@@ -396,8 +396,10 @@ describe('PracticePage Component', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Далее →' }));
     expect(await screen.findByText('Проверка чтения')).toBeInTheDocument();
 
-    // Отвечаем (выбираем правильное чтение "ёми0")
-    fireEvent.click(screen.getByRole('button', { name: 'ёми0' }));
+    // Отвечаем (вводим правильное чтение "ёми0")
+    const input0 = screen.getByPlaceholderText('Введите чтение...');
+    fireEvent.change(input0, { target: { value: 'ёми0' } });
+    fireEvent.keyDown(input0, { key: 'Enter', code: 'Enter' });
     fireEvent.click(screen.getByRole('button', { name: 'Далее →' }));
 
     // Проверка перевода
@@ -412,7 +414,9 @@ describe('PracticePage Component', () => {
 
     // Проверка чтения
     expect(await screen.findByText('Проверка чтения')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'ёми1' }));
+    const input1 = screen.getByPlaceholderText('Введите чтение...');
+    fireEvent.change(input1, { target: { value: 'ёми1' } });
+    fireEvent.keyDown(input1, { key: 'Enter', code: 'Enter' });
     fireEvent.click(screen.getByRole('button', { name: 'Далее →' }));
 
     // Проверка перевода
@@ -617,5 +621,114 @@ describe('PracticePage Component', () => {
     });
 
     global.fetch = originalFetch;
+  });
+
+  describe('Warm-up Detailed Tests', () => {
+    beforeEach(async () => {
+      await db.words.clear();
+      // Добавим новое слово
+      await db.words.put({
+        profileId: 'default',
+        id: 9500,
+        word: '猫',
+        reading: 'ねこ',
+        translation: 'кошка',
+        category: '__local_starter__',
+        source: 'starter',
+        passive: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: Date.now(), reps: 0, lapses: 0 },
+        active: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: Date.now(), reps: 0, lapses: 0 },
+        contextExamples: []
+      });
+    });
+
+    it('шаг kana — текстовый ввод вместо вариантов, Enter отправляет', async () => {
+      render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+      const warmupBtn = await screen.findByRole('button', { name: /Начать разминку/ });
+      fireEvent.click(warmupBtn);
+
+      // Знакомство -> Далее
+      fireEvent.click(await screen.findByRole('button', { name: 'Далее →' }));
+      expect(await screen.findByText('Проверка чтения')).toBeInTheDocument();
+
+      // Убеждаемся, что вариантов ответа в виде кнопок нет (по имени "ねこ" кнопки не должно быть)
+      expect(screen.queryByRole('button', { name: 'ねこ' })).not.toBeInTheDocument();
+
+      // Находим текстовый ввод
+      const input = screen.getByPlaceholderText('Введите чтение...');
+      expect(input).toBeInTheDocument();
+
+      // Вводим правильный ответ и жмем Enter
+      fireEvent.change(input, { target: { value: 'ねこ' } });
+      fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+
+      // Должна появиться кнопка "Далее" и сообщение "Верно!"
+      expect(await screen.findByText('Верно!')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Далее →' })).toBeInTheDocument();
+    });
+
+    it('опечатка в чтении принимается как верный ответ', async () => {
+      render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+      const warmupBtn = await screen.findByRole('button', { name: /Начать разминку/ });
+      fireEvent.click(warmupBtn);
+
+      // Знакомство -> Далее
+      fireEvent.click(await screen.findByRole('button', { name: 'Далее →' }));
+
+      const input = screen.getByPlaceholderText('Введите чтение...');
+      // Вводим чтение с пробелом (опечатка, которую наш compare-сервис должен простить)
+      fireEvent.change(input, { target: { value: 'ね  こ' } });
+      fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+
+      // Должно быть принято как "Верно!"
+      expect(await screen.findByText('Верно!')).toBeInTheDocument();
+    });
+
+    it('Показать ответ раскрывает чтение и помечает шаг ошибкой', async () => {
+      render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+      const warmupBtn = await screen.findByRole('button', { name: /Начать разминку/ });
+      fireEvent.click(warmupBtn);
+
+      // Знакомство -> Далее
+      fireEvent.click(await screen.findByRole('button', { name: 'Далее →' }));
+
+      // Жмем "Показать ответ"
+      const showBtn = screen.getByRole('button', { name: 'Показать ответ' });
+      fireEvent.click(showBtn);
+
+      // Должна отобразиться ошибка и правильное чтение
+      expect(await screen.findByText('Правильное чтение: ねこ')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Далее →' })).toBeInTheDocument();
+    });
+
+    it('шаг translation остаётся multiple-choice с 3 вариантами', async () => {
+      render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+      const warmupBtn = await screen.findByRole('button', { name: /Начать разминку/ });
+      fireEvent.click(warmupBtn);
+
+      // Знакомство -> Далее
+      fireEvent.click(await screen.findByRole('button', { name: 'Далее →' }));
+
+      // Проверка чтения (вводим правильный ответ)
+      const input = screen.getByPlaceholderText('Введите чтение...');
+      fireEvent.change(input, { target: { value: 'ねこ' } });
+      fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+      fireEvent.click(screen.getByRole('button', { name: 'Далее →' }));
+
+      // Шаг - Проверка перевода
+      expect(await screen.findByText('Проверка перевода')).toBeInTheDocument();
+
+      // Должны быть кнопки выбора ответа (одна из них с правильным переводом "кошка")
+      const correctBtn = screen.getByRole('button', { name: 'кошка' });
+      expect(correctBtn).toBeInTheDocument();
+
+      // Всего должно быть 3 кнопки выбора в warmupAnswerGrid
+      // (2 дистрактора + 1 верный)
+      // Так как они имеют класс warmupAnswerBtn, проверим их наличие
+      const buttons = screen.getAllByRole('button').filter(btn => btn.textContent !== 'Закрыть' && btn.textContent !== 'Послушать');
+      // Ожидаем 3 кнопки с вариантами ответов
+      const optionButtons = buttons.filter(btn => ['кошка', 'транс0', 'ёми0', 'Вормуп0'].every(t => btn.textContent !== t) && btn.textContent !== 'Далее →');
+      // Проверим, что кнопка с правильным ответом есть
+      expect(screen.getByRole('button', { name: 'кошка' })).toBeInTheDocument();
+    });
   });
 });

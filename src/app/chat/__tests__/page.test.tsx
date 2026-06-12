@@ -1,7 +1,11 @@
 import React from 'react';
+import fakeIndexedDB, { IDBKeyRange } from 'fake-indexeddb';
+globalThis.indexedDB = fakeIndexedDB;
+globalThis.IDBKeyRange = IDBKeyRange;
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ChatPage from '../page';
+import { db } from '@/core/db';
 import { JapanificationProvider } from '@/hooks/useJapanification';
 
 // Mock Lucide icons
@@ -207,6 +211,10 @@ describe('ChatPage Component', () => {
     expect(mascot).toBeInTheDocument();
     expect(mascot.getAttribute('data-state')).toBe('idle');
 
+    // Wait for startConversation to finish
+    await screen.findByText(/こんにちは/);
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     // Send first user message (detects word '猫')
     const textarea = screen.getByPlaceholderText('Напишите на японском...');
     fireEvent.change(textarea, { target: { value: '猫が好きです。' } });
@@ -369,19 +377,21 @@ describe('Self-Repair and Scaffolding Hint UI Tests', () => {
   it('при isCorrect=false правка скрыта, виден shortNote и кнопка Показать правку', async () => {
     setupActiveSession();
 
-    // 1. Initial welcome
-    vi.spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          reply: 'こんにちは！',
-          translation: 'Привет!',
-          wordsDetected: [],
-          grammarFeedback: { isCorrect: true },
-        }),
-      } as Response)
-      // 2. Submit wrong message -> return isCorrect: false
-      .mockResolvedValueOnce({
+    // Mock fetch with implementation checking if it's the start message
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
+      const isStart = init?.body && typeof init.body === 'string' && init.body.includes('__START__');
+      if (isStart) {
+        return {
+          ok: true,
+          json: async () => ({
+            reply: 'こんにちは！',
+            translation: 'Привет!',
+            wordsDetected: [],
+            grammarFeedback: { isCorrect: true },
+          }),
+        } as Response;
+      }
+      return {
         ok: true,
         json: async () => ({
           reply: 'こんにちは！',
@@ -394,7 +404,8 @@ describe('Self-Repair and Scaffolding Hint UI Tests', () => {
             correction: '<ruby>公園<rt>こうえん</rt></ruby>で遊びます。',
           },
         }),
-      } as Response);
+      } as Response;
+    });
 
     render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
 
@@ -402,6 +413,10 @@ describe('Self-Repair and Scaffolding Hint UI Tests', () => {
     await waitFor(() => {
       expect(screen.getByText('Тема тренировки')).toBeInTheDocument();
     });
+
+    // Wait for startConversation to finish
+    await screen.findByText(/こんにちは/);
+    await new Promise(resolve => setTimeout(resolve, 50));
 
     const textarea = screen.getByPlaceholderText('Напишите на японском...');
     fireEvent.change(textarea, { target: { value: '公園に遊びます。' } });
@@ -456,6 +471,10 @@ describe('Self-Repair and Scaffolding Hint UI Tests', () => {
     await waitFor(() => {
       expect(screen.getByText('Тема тренировки')).toBeInTheDocument();
     });
+
+    // Wait for startConversation to finish
+    await screen.findByText(/こんにちは/);
+    await new Promise(resolve => setTimeout(resolve, 50));
 
     const textarea = screen.getByPlaceholderText('Напишите на японском...');
     fireEvent.change(textarea, { target: { value: '公園に遊びます。' } });
@@ -620,6 +639,83 @@ describe('Self-Repair and Scaffolding Hint UI Tests', () => {
     expect(textarea.innerHTML).toBe('');
     fireEvent.click(textElem);
     expect(textarea.innerHTML).toBe('');
+  });
+
+  it('reply и correction проходят через applyGradualFurigana перед рендером', async () => {
+    setupActiveSession();
+
+    // 1. Положим слово "猫" с интервалом 30 в IndexedDB
+    await db.words.clear();
+    await db.words.put({
+      profileId: 'default',
+      id: 9988,
+      word: '猫',
+      reading: 'ねこ',
+      translation: 'кошка',
+      category: 'Japanese',
+      source: 'anki',
+      passive: { status: 'mature', stability: 30, difficulty: 5, interval: 30, due: Date.now() - 1000, reps: 5, lapses: 0 },
+      active: { status: 'mature', stability: 30, difficulty: 5, interval: 30, due: Date.now() - 1000, reps: 5, lapses: 0 },
+    });
+
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          reply: 'こんにちは！',
+          translation: 'Привет!',
+          wordsDetected: [],
+          grammarFeedback: { isCorrect: true },
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          reply: 'これは<ruby>猫<rt>ねこ</rt></ruby>です。',
+          translation: 'Это кошка.',
+          wordsDetected: ['猫'],
+          grammarFeedback: {
+            isCorrect: false,
+            shortNote: 'ошибка',
+            explanation: 'ошибка',
+            correction: '私は<ruby>猫<rt>ねこ</rt></ruby>が好きです。',
+          },
+        }),
+      } as Response);
+
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    // Ожидаем загрузку сессии
+    await waitFor(() => {
+      expect(screen.getByText('Тема тренировки')).toBeInTheDocument();
+    });
+
+    // Wait for startConversation to finish and load intervals
+    await screen.findByText(/こんにちは/);
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Отправляем сообщение, чтобы получить ответ от Сэнсея с "猫"
+    const textareaInput = screen.getByPlaceholderText('Напишите на японском...');
+    fireEvent.change(textareaInput, { target: { value: '猫が好き。' } });
+    fireEvent.click(screen.getByRole('button', { name: /Отправить/i }));
+
+    // Ожидаем появление ответа Сэнсея и кнопки "Показать правку"
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Показать правку' })).toBeInTheDocument();
+    });
+
+    // Проверяем, что в реплике Сэнсея rt получил класс rtHidden (так как interval = 30 >= 21)
+    const replyRuby = document.querySelector('span ruby rt');
+    expect(replyRuby).toBeInTheDocument();
+    expect(replyRuby).toHaveClass('rtHidden');
+
+    // Кликаем по "Показать правку"
+    fireEvent.click(screen.getByRole('button', { name: 'Показать правку' }));
+
+    // Проверяем, что в исправлении rt также получил класс rtHidden
+    const correctionRuby = document.querySelector('span[class*="grammarCorrection"] ruby rt');
+    expect(correctionRuby).toBeInTheDocument();
+    expect(correctionRuby).toHaveClass('rtHidden');
   });
 });
 

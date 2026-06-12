@@ -268,3 +268,16 @@ rt {
   user-select: none; /* Предотвращает выделение и копирование фуриганы при копировании текста */
   padding-bottom: 0.1em;
 }
+
+.rtFade {
+  opacity: 0.6;
+}
+
+.rtHidden {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+ruby:hover .rtHidden {
+  opacity: 1;
+}

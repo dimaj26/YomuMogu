@@ -12,6 +12,7 @@ import { calculateNextFsrsState, alignPassiveToActiveState, createDefaultFsrsSta
 import { sanitizeHtml } from '@/lib/sanitize';
 import { PhonosemanticHint, PhonosemanticData } from '@/components/PhonosemanticHint';
 import phonosemanticsData from '@/resources/phonosemantics.json';
+import { isAnswerAcceptable } from '@/lib/quiz/compare';
 import styles from './quiz.module.css';
 
 // Типизация phonosemantics.json
@@ -212,12 +213,8 @@ function QuizComponent() {
   const handleCheckAnswer = () => {
     if (!currentWord || isAnswered || !userInput.trim()) return;
 
-    // Нечеткое сравнение: удаляем пробелы
-    const normalizedInput = userInput.trim().replace(/[\s\u3000]+/g, '');
-    const normalizedWord = currentWord.word.trim().replace(/[\s\u3000]+/g, '');
-    const normalizedReading = currentWord.reading ? currentWord.reading.trim().replace(/[\s\u3000]+/g, '') : '';
-
-    const correct = normalizedInput === normalizedWord || (!!normalizedReading && normalizedInput === normalizedReading);
+    const correct = isAnswerAcceptable(userInput, currentWord.word) || 
+      (!!currentWord.reading && isAnswerAcceptable(userInput, currentWord.reading));
     setIsCorrect(correct);
     setIsAnswered(true);
     setSelectedGrade(correct ? 3 : 1);

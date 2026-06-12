@@ -11,6 +11,7 @@ import { sanitizeHtml } from '@/lib/sanitize';
 import Link from 'next/link';
 import { calculateNextFsrsState, createDefaultFsrsState, alignPassiveToActiveState, isGoodContextExample } from '@/core/scheduler';
 import { incrementDailyNewWordsCount } from '@/core/localDeckService';
+import { applyGradualFurigana } from '@/lib/chat/furigana';
 import { getAllowedScope } from '@/lib/grammar/promptScope';
 import grammarRules from '@/resources/grammar_rules.json';
 import { buildCompetencyProfile, getPresetAdvice } from '@/lib/competency/profile';
@@ -138,6 +139,7 @@ export default function ChatPage() {
   const [isStateLoaded, setIsStateLoaded] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [selectedGrammarGrade, setSelectedGrammarGrade] = useState<'forgot' | 'hard' | 'good'>('good');
+  const [wordIntervalMap, setWordIntervalMap] = useState<Record<string, number>>({});
 
   // Состояния советника по уровню сложности
   const [competencyProfile, setCompetencyProfile] = useState<CompetencyProfile | null>(null);
@@ -215,6 +217,28 @@ export default function ChatPage() {
     // Если сохраненного состояния нет или оно пустое, запускаем новый диалог
     startConversation();
   }, [session]);
+
+  // Загружаем интервалы повторений слов для постепенной фуриганы
+  useEffect(() => {
+    const loadIntervals = async () => {
+      const profileId = getActiveProfileId();
+      if (!profileId) return;
+      try {
+        const allWords = await db.words.where('profileId').equals(profileId).toArray();
+        const map: Record<string, number> = {};
+        allWords.forEach(w => {
+          const clean = stripRuby(w.word).replace(/\[.*?\]/g, '').replace(/[\s\u3000]+/g, '');
+          map[clean] = w.active?.interval ?? 0;
+        });
+        setWordIntervalMap(map);
+      } catch (err) {
+        console.error('Ошибка загрузки интервалов слов для чата:', err);
+      }
+    };
+    if (isStateLoaded) {
+      loadIntervals();
+    }
+  }, [isStateLoaded]);
 
   // Скролл вниз при новых сообщениях
   useEffect(() => {
@@ -452,8 +476,8 @@ export default function ChatPage() {
           aiMsg
         ]);
       }
-    } catch {
-      // Ошибка отправки
+    } catch (err) {
+      console.error('Ошибка отправки сообщения:', err);
     } finally {
       setIsLoading(false);
       inputRef.current?.focus();
@@ -1836,7 +1860,7 @@ export default function ChatPage() {
               <div className={styles.messageContent}>
                 <div className={`${styles.messageBubble} ${msg.role === 'user' ? styles.user : styles.ai}`}>
                   {msg.role === 'model' ? (
-                    <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.text) }} />
+                    <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(applyGradualFurigana(msg.text, wordIntervalMap)) }} />
                   ) : (
                     msg.text
                   )}
@@ -1896,7 +1920,7 @@ export default function ChatPage() {
                         <div style={{ marginTop: '8px' }}>
                           {showCorrectionFor.has(msg.id) ? (
                             <span className={styles.grammarCorrection}>
-                              → <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.grammarFeedback.correction) }} />
+                              → <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(applyGradualFurigana(msg.grammarFeedback.correction, wordIntervalMap)) }} />
                             </span>
                           ) : (
                             <button

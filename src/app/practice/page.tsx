@@ -34,6 +34,7 @@ import grammarRules from '@/resources/grammar_rules.json';
 import type { LocalWord } from '@/core/types';
 import { AnkiWord } from '@/plugins/anki/filter';
 import phonosemanticsData from '@/resources/phonosemantics.json';
+import { isAnswerAcceptable } from '@/lib/quiz/compare';
 import styles from './practice.module.css';
 
 // Типизация phonosemantics.json
@@ -147,6 +148,7 @@ export default function PracticePage() {
   // Warm-up состояние
   const [warmup, setWarmup] = useState<WarmupState | null>(null);
   const [warmupOptions, setWarmupOptions] = useState<string[]>([]);
+  const [warmupTypedInput, setWarmupTypedInput] = useState<string>('');
 
   // Грамматические состояния
   const [activeTab, setActiveTab] = useState<'words' | 'grammar' | 'media'>('words');
@@ -467,6 +469,7 @@ export default function PracticePage() {
     };
     setWarmup(state);
     setWarmupOptions([]);
+    setWarmupTypedInput('');
   }, [localWords, dailyNewWordsLimit, dailyNewWordsCount]);
 
   const advanceWarmup = useCallback(() => {
@@ -479,6 +482,7 @@ export default function PracticePage() {
       const options = generateOptions(currentWord.reading, currentWord, wWords, 'reading');
       setWarmupOptions(options);
       setWarmup({ ...warmup, step: 'kana', selectedAnswer: null, isCorrect: null });
+      setWarmupTypedInput('');
     } else if (step === 'kana') {
       // Переход к translation check
       const options = generateOptions(currentWord.translation, currentWord, wWords, 'translation');
@@ -505,6 +509,20 @@ export default function PracticePage() {
         });
       }
     }
+  }, [warmup]);
+
+  const handleWarmupSubmit = useCallback(() => {
+    if (!warmup || warmup.selectedAnswer !== null || !warmupTypedInput.trim()) return;
+    const currentWord = warmup.words[warmup.currentIndex];
+    const correct = isAnswerAcceptable(warmupTypedInput, currentWord.reading);
+    setWarmup({ ...warmup, selectedAnswer: warmupTypedInput, isCorrect: correct });
+  }, [warmup, warmupTypedInput]);
+
+  const handleWarmupShowAnswer = useCallback(() => {
+    if (!warmup || warmup.selectedAnswer !== null) return;
+    const currentWord = warmup.words[warmup.currentIndex];
+    setWarmup({ ...warmup, selectedAnswer: currentWord.reading, isCorrect: false });
+    setWarmupTypedInput(currentWord.reading);
   }, [warmup]);
 
   const handleWarmupAnswer = useCallback((answer: string) => {
@@ -646,28 +664,50 @@ export default function PracticePage() {
             <>
               <span className={styles.warmupStep}>Проверка чтения</span>
               <div className={styles.warmupKanji}>{currentWord.word}</div>
-              <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)', margin: 0 }}>
-                Выберите правильное чтение:
+              <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)', margin: '0 0 8px 0' }}>
+                Введите чтение:
               </p>
-              <div className={styles.warmupAnswerGrid}>
-                {warmupOptions.map((opt, i) => {
-                  let cls = styles.warmupAnswerBtn;
-                  if (warmup.selectedAnswer !== null) {
-                     if (opt === currentWord.reading) cls += ` ${styles.warmupCorrect}`;
-                     else if (opt === warmup.selectedAnswer && !warmup.isCorrect) cls += ` ${styles.warmupWrong}`;
+              <input
+                type="text"
+                className={
+                  styles.warmupInput + 
+                  (warmup.selectedAnswer !== null 
+                    ? warmup.isCorrect 
+                      ? ` ${styles.warmupInputCorrect}` 
+                      : ` ${styles.warmupInputWrong}`
+                    : '')
+                }
+                value={warmupTypedInput}
+                onChange={e => setWarmupTypedInput(e.target.value)}
+                disabled={warmup.selectedAnswer !== null}
+                placeholder="Введите чтение..."
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && warmupTypedInput.trim()) {
+                    handleWarmupSubmit();
                   }
-                  return (
-                    <button
-                      key={i}
-                      className={cls}
-                      onClick={() => handleWarmupAnswer(opt)}
-                      disabled={warmup.selectedAnswer !== null}
-                    >
-                      {opt}
-                    </button>
-                  );
-                })}
-              </div>
+                }}
+                autoFocus
+              />
+              {warmup.selectedAnswer === null && (
+                <button
+                  type="button"
+                  className="btn-3d btn-gray"
+                  onClick={handleWarmupShowAnswer}
+                  style={{ marginTop: 8 }}
+                >
+                  Показать ответ
+                </button>
+              )}
+              {warmup.selectedAnswer !== null && !warmup.isCorrect && (
+                <div style={{ color: 'var(--color-red)', fontWeight: 700, marginTop: '8px' }}>
+                  Правильное чтение: {currentWord.reading}
+                </div>
+              )}
+              {warmup.selectedAnswer !== null && warmup.isCorrect && (
+                <div style={{ color: 'var(--color-green-shadow)', fontWeight: 700, marginTop: '8px' }}>
+                  Верно!
+                </div>
+              )}
               {warmup.selectedAnswer !== null && (
                 <button className="btn-3d btn-blue" onClick={advanceWarmup} style={{ marginTop: 8 }}>
                   Далее →

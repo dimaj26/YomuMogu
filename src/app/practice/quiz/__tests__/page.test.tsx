@@ -200,8 +200,10 @@ describe('QuizPage Component', () => {
     fireEvent.click(hintButton);
 
     // Check if hint is displayed
-    expect(screen.getByText(/Подсказка \(Первый символ\):/)).toBeInTheDocument();
-    expect(screen.getByText('林')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/Подсказка \(Первый символ\):/)).toBeInTheDocument();
+      expect(screen.getByText('林')).toBeInTheDocument();
+    });
   });
 
   it('calls dictionary API and shows definition on request', async () => {

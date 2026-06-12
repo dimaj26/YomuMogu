@@ -297,6 +297,10 @@ src/
 | `app/api/words/route.ts` | GET endpoint resolving words via active `WordSource` plugin or local IndexedDB fallback |
 | `lib/jlpt/levels.ts` | `getJlptLevel(word, reading)` — level detection, `toJlptTag` tag format helper, and idempotent `mergeJlptTag` utility |
 | `lib/jlpt/__tests__/levels.test.ts` | Unit tests for JLPT levels detection and tagging logic |
+| `lib/quiz/compare.ts` | Extracted typo-forgiving answer comparison utility |
+| `lib/quiz/__tests__/compare.test.ts` | Unit tests for answer comparison utility |
+| `lib/chat/furigana.ts` | Client-side gradual furigana processor based on FSRS intervals |
+| `lib/chat/__tests__/furigana.test.ts` | Unit tests for gradual furigana processor |
 | `resources/jlpt_levels.json` | Generated versioned JLPT levels resource containing N5 and N4 vocabulary lists |
 | `services/tokenizer/server.py` | FastAPI MeCab microservice providing morphological analysis on port 8000; `GET /health` returns `{status:'ok'\|'error'}` |
 | `services/tokenizer/Dockerfile` | Docker container definition for the MeCab tokenizer service |
@@ -621,14 +625,11 @@ Forbidden words in system instructions (content policy):
 Required alternatives:
 - `практический диалог`, `персонаж`, `кем является ИИ в этом диалоге`
 
-### [PL-5.5] Furigana Levels
-| Chat Level | Furigana Rule |
-|---|---|
-| 1 (Child) | ALL kanji wrapped in `<ruby>kanji<rt>reading</rt></ruby>`. Ultra-short phrases. |
-| 2 (Elementary) | ALL kanji with furigana. Short sentences. |
-| 3 (Conversational) | Only N3+ kanji get furigana. |
-| 4 (Advanced) | No furigana. Extended sentences. |
-| 5 (Fluent) | No furigana. Natural native-level Japanese. |
+### [PL-5.5] Gradual Furigana System
+Furigana (ruby tags) is wrapped around EVERY kanji word in Gemini replies and corrections at all difficulty levels. Client-side, the furigana visibility (rt class) is dynamically controlled based on the user's FSRS active interval:
+- **`interval < 3` days** (unknown or newly learned words): Full visibility.
+- **`3 <= interval < 21` days** (learning/review words): Faded furigana (`.rtFade` class, opacity: 0.6).
+- **`interval >= 21` days** (mature words): Hidden furigana (`.rtHidden` class, opacity: 0 by default, fully visible on hover).
 
 ### [PL-5.6] Target Word Concealment
 To prevent "leakage" of target words and encourage user recall:
@@ -638,7 +639,7 @@ To prevent "leakage" of target words and encourage user recall:
 ### [PL-5.7] Enforced Japanese Input and Placeholders
 - **Hybrid Input (Cyrillic Placeholders)**: If the user uses a Cyrillic/Russian word placeholder in a Japanese sentence (e.g., 'Стулの座って'), `grammarFeedback.isCorrect` is set to `false`, and `grammarFeedback.correction` is populated with the fully corrected Japanese sentence containing the translated placeholder (e.g., '椅子に座って').
 - **Entirely Russian Input**: If the user's input is entirely in Russian, `grammarFeedback.isCorrect` is set to `false`, `correction` is populated with the complete Japanese translation of their message, and `explanation` explains the error in Russian.
-- **Furigana in Correction**: The corrected sentence in `grammarFeedback.correction` must strictly follow the level's Furigana/Ruby rules (levels 1-2: all kanji wrapped; level 3: N3+ kanji wrapped; levels 4-5: no furigana). On levels 1 and 2, Furigana is strictly kept at 100% of kanji in both reply and correction, completely independent of Japanification level or progress.
+- **Furigana in Correction**: The corrected sentence in `grammarFeedback.correction` must strictly follow the gradual furigana FSRS active-interval-based rules (all kanji words wrapped in ruby tags, visibility classes added on the client).
 - Detection of target words (`wordsDetected`) must base strictly on Japanese text; Russian translations do not trigger detection.
 
 ### [PL-5.8] Response and Question Constraints

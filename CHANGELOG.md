@@ -2,6 +2,14 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.52.0] - 2026-06-13
+
+### Added
+- **Typed Reading in Warm-up ([TYPE-ANSWER])**: Replaced the 3-option multiple-choice buttons on the `kana` step of the Warm-up practice trainer with a text input. Users must type the exact reading in hiragana, utilizing the typo-forgiveness comparison logic. Added a "Показать ответ" 3D button to reveal the answer and mark the step incorrect.
+- **FSRS-Interval Fading Furigana ([WORD-FURIGANA])**: Shifted furigana visibility control in chat from difficulty levels to a client-side per-word fading mechanism. Gemini models now output 100% full HTML `<ruby>` annotations at all levels. Client-side, words are styled with `.rtFade` (opacity: 0.6) for intervals between 3 and 21 days, and `.rtHidden` (opacity: 0 by default, visible on hover) for intervals ≥ 21 days.
+- **Answer Comparison Utility**: Extracted pure typo-forgiving answer comparison utility `isAnswerAcceptable` from `/practice/quiz` page to a separate module `src/lib/quiz/compare.ts` with comprehensive unit tests in `compare.test.ts`.
+- **Client-Side Furigana Processor**: Created pure function `applyGradualFurigana` in `src/lib/chat/furigana.ts` with exhaustive unit tests covering FSRS intervals and edge cases.
+
 ## [1.51.0] - 2026-06-13
 
 ### Added

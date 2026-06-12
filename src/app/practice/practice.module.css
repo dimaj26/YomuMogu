@@ -632,3 +632,35 @@
   flex-grow: 1;
 }
 
+.warmupInput {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: 2px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+
+.warmupInput:focus:not(:disabled) {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+}
+
+.warmupInputCorrect {
+  border-color: var(--color-green) !important;
+  background: rgba(88, 204, 2, 0.1) !important;
+  color: var(--color-green-shadow) !important;
+}
+
+.warmupInputWrong {
+  border-color: var(--color-red) !important;
+  background: rgba(255, 75, 75, 0.1) !important;
+  color: var(--color-red) !important;
+}
+
+
