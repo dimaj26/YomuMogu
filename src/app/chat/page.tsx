@@ -16,6 +16,13 @@ import { getAllowedScope } from '@/lib/grammar/promptScope';
 import grammarRules from '@/resources/grammar_rules.json';
 import { buildCompetencyProfile, getPresetAdvice } from '@/lib/competency/profile';
 import type { SessionStat, CompetencyProfile, PresetAdvice } from '@/lib/competency/profile';
+import {
+  getTurnLimit,
+  buildFluencyReplaySession,
+  filterScopeForFluency,
+  computeFluencyStats,
+  type FluencyTurn
+} from '@/lib/chat/fluency';
 import styles from './chat.module.css';
 
 interface TargetWord {
@@ -62,6 +69,8 @@ interface SessionData {
     topic: string;
     explanation: string;
   };
+  fluencyMode?: boolean;
+  fluencyRound?: 1 | 2 | 3;
 }
 
 interface SavedChatState {
@@ -80,6 +89,7 @@ interface SavedChatState {
   selectedAddWords: string[];
   syncCardGrades?: Record<number, number>;
   showExitConfirm?: boolean;
+  fluencyTurns?: FluencyTurn[];
 }
 
 interface AnalyzedWord {
@@ -140,6 +150,9 @@ export default function ChatPage() {
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [selectedGrammarGrade, setSelectedGrammarGrade] = useState<'forgot' | 'hard' | 'good'>('good');
   const [wordIntervalMap, setWordIntervalMap] = useState<Record<string, number>>({});
+  const [fluencyTurns, setFluencyTurns] = useState<FluencyTurn[]>([]);
+  const [timeLeftMs, setTimeLeftMs] = useState<number>(0);
+  const turnStartTimeRef = useRef<number | null>(null);
 
   // Состояния советника по уровню сложности
   const [competencyProfile, setCompetencyProfile] = useState<CompetencyProfile | null>(null);
@@ -206,6 +219,7 @@ export default function ChatPage() {
           setSyncCardGrades(savedState.syncCardGrades || {});
           setSelectedAddWords(new Set(savedState.selectedAddWords || []));
           setShowExitConfirm(savedState.showExitConfirm || false);
+          setFluencyTurns(savedState.fluencyTurns || []);
           setIsStateLoaded(true);
           return;
         }
@@ -261,6 +275,7 @@ export default function ChatPage() {
         selectedAddWords: Array.from(selectedAddWords),
         syncCardGrades,
         showExitConfirm,
+        fluencyTurns,
       };
       setProfileItem(`chat_state_${session.id}`, JSON.stringify(stateToSave));
     } catch (e) {
@@ -316,7 +331,22 @@ export default function ChatPage() {
               due: prog.due
             };
           }
-          grammarScope = getAllowedScope(grammarRules, progressMap);
+          const normalScope = getAllowedScope(grammarRules, progressMap);
+          if (session.fluencyMode) {
+            const filtered = filterScopeForFluency(normalScope.allowedConstructions, progressMap);
+            if (filtered.length > 0) {
+              grammarScope = {
+                allowedConstructions: filtered
+              };
+            } else {
+              const fallbackNode = normalScope.allowedConstructions.find(n => n.id === 'g_n5_s1_1');
+              grammarScope = {
+                allowedConstructions: fallbackNode ? [fallbackNode] : [{ id: 'g_n5_s1_1', construction: 'АはБです' }]
+              };
+            }
+          } else {
+            grammarScope = normalScope;
+          }
         } catch (dbErr) {
           console.error('Error loading grammar progress for startConversation:', dbErr);
         }
@@ -332,7 +362,7 @@ export default function ChatPage() {
           message: '__START__',
           level: state.chatLevel,
           grammarInJapanese: shouldGrammarBeJapanese(),
-          grammarFocus: session.grammarFocus,
+          grammarFocus: session.fluencyMode ? undefined : session.grammarFocus,
           grammarScope
         })
       });
@@ -362,6 +392,12 @@ export default function ChatPage() {
   const sendMessage = async () => {
     if (!session || !inputText.trim() || isLoading) return;
 
+    // Измеряем время ответа пользователя в режиме беглости
+    let turnDurationMs = 0;
+    if (session.fluencyMode && turnStartTimeRef.current) {
+      turnDurationMs = Date.now() - turnStartTimeRef.current;
+    }
+
     const userText = inputText.trim();
     setInputText('');
     setShowHints(false);
@@ -390,7 +426,22 @@ export default function ChatPage() {
               due: prog.due
             };
           }
-          grammarScope = getAllowedScope(grammarRules, progressMap);
+          const normalScope = getAllowedScope(grammarRules, progressMap);
+          if (session.fluencyMode) {
+            const filtered = filterScopeForFluency(normalScope.allowedConstructions, progressMap);
+            if (filtered.length > 0) {
+              grammarScope = {
+                allowedConstructions: filtered
+              };
+            } else {
+              const fallbackNode = normalScope.allowedConstructions.find(n => n.id === 'g_n5_s1_1');
+              grammarScope = {
+                allowedConstructions: fallbackNode ? [fallbackNode] : [{ id: 'g_n5_s1_1', construction: 'АはБです' }]
+              };
+            }
+          } else {
+            grammarScope = normalScope;
+          }
         } catch (dbErr) {
           console.error('Error loading grammar progress for sendMessage:', dbErr);
         }
@@ -408,7 +459,7 @@ export default function ChatPage() {
           level: state.chatLevel,
           grammarInJapanese: shouldGrammarBeJapanese(),
           collectedWords: Array.from(collectedWords),
-          grammarFocus: session.grammarFocus,
+          grammarFocus: session.fluencyMode ? undefined : session.grammarFocus,
           grammarScope
         })
       });
@@ -428,6 +479,12 @@ export default function ChatPage() {
           }
         });
         setCollectedWords(newCollected);
+
+        // Сохраняем время хода в режиме беглости
+        if (session.fluencyMode && turnDurationMs > 0) {
+          const limitSec = getTurnLimit(session.fluencyRound!, state.chatLevel);
+          setFluencyTurns(prev => [...prev, { ms: turnDurationMs, limitMs: limitSec * 1000 }]);
+        }
 
         // Начисляем очки
         if (newWordsCount > 0) {
@@ -484,9 +541,85 @@ export default function ChatPage() {
     }
   };
 
+  // Таймер обратного отсчета для режима беглости
+  useEffect(() => {
+    if (!session?.fluencyMode || showSummaryScreen) {
+      return;
+    }
+
+    const lastMessage = messages[messages.length - 1];
+    const isLastModel = lastMessage && lastMessage.role === 'model';
+
+    if (isLastModel && !isLoading) {
+      const limitSeconds = getTurnLimit(session.fluencyRound!, state.chatLevel);
+      const limitMs = limitSeconds * 1000;
+      
+      turnStartTimeRef.current = Date.now();
+      setTimeLeftMs(limitMs);
+
+      const interval = setInterval(() => {
+        const elapsed = Date.now() - turnStartTimeRef.current!;
+        const remaining = Math.max(0, limitMs - elapsed);
+        setTimeLeftMs(remaining);
+      }, 100);
+
+      return () => {
+        clearInterval(interval);
+      };
+    } else {
+      turnStartTimeRef.current = null;
+      setTimeLeftMs(0);
+    }
+  }, [messages, isLoading, session?.fluencyMode, session?.fluencyRound, state.chatLevel, showSummaryScreen]);
+
+  const handleStartFluencyReplay = () => {
+    if (!session) return;
+    const isFluency = session.fluencyMode === true;
+    const currentRound = session.fluencyRound || 0;
+    const nextRound = isFluency ? (currentRound + 1) as 1 | 2 | 3 : 1;
+
+    const newSession = buildFluencyReplaySession(session, nextRound);
+    
+    // Сохраняем в localStorage
+    setProfileItem('active_session', JSON.stringify(newSession));
+    
+    // Сбрасываем состояния
+    setSession(newSession);
+    setMessages([]);
+    setInputText('');
+    setIsLoading(false);
+    setCollectedWords(new Set());
+    setShowTranslationFor(new Set());
+    setShowCorrectionFor(new Set());
+    setExpandedGrammar(new Set());
+    setHints([]);
+    setIsLoadingHints(false);
+    setShowHints(false);
+    setIsComplete(false);
+    setUnusedTargetWords([]);
+    setSessionExamples([]);
+    setShowSummaryScreen(false);
+    setAnalyzedWords([]);
+    setSelectedSyncCards(new Set());
+    setSyncCardGrades({});
+    setSelectedAddWords(new Set());
+    setExpandedDefinitions(new Set());
+    setIsSubmittingSync(false);
+    setSyncStatus(null);
+    setSyncCardStatus({});
+    setAddWordStatus({});
+    setIndividualErrors({});
+    setShowExitConfirm(false);
+    setSelectedGrammarGrade('good');
+    setMascotState('idle');
+    setMascotBubble(null);
+    setFluencyTurns([]);
+  };
+
   const requestHints = async () => {
     if (!session || isLoadingHints) return;
 
+    // В режиме беглости таймер не останавливается — это сделано намеренно для поддержания темпа (Four Strands / Fluency-First).
     if (showHints && hints.length > 0) {
       setShowHints(false);
       return;
@@ -1374,6 +1507,33 @@ export default function ChatPage() {
                 </div>
               )}
 
+              {/* STATS FOR FLUENCY MODE */}
+              {session.fluencyMode && (
+                <div
+                  className={styles.summarySection}
+                  style={{
+                    border: '2.5px solid var(--color-blue)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.04)',
+                    padding: '16px',
+                    borderRadius: '16px',
+                    marginBottom: '24px'
+                  }}
+                >
+                  <h3 className={styles.sectionTitle} style={{ color: 'var(--color-blue)', margin: '0 0 8px 0' }}>
+                    ⚡ Результаты раунда {session.fluencyRound}
+                  </h3>
+                  {(() => {
+                    const stats = computeFluencyStats(fluencyTurns);
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontWeight: 600 }}>
+                        <div>В лимите: {stats.within} из {stats.total} ходов ({stats.withinPct}%)</div>
+                        <div>Среднее время ответа: {stats.avgSeconds} сек</div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
               {/* ADVISOR CARD — совет по уровню сложности */}
               {advisorAdvice && !advisorDismissed && competencyProfile && advisorAdvice.suggestion !== 'stay' && (
                 <div
@@ -1744,6 +1904,28 @@ export default function ChatPage() {
 
               {/* ACTION BUTTONS */}
               <div className={styles.summaryActions}>
+                {(() => {
+                  const turnCount = messages.filter(m => m.role === 'user').length;
+                  const isFluency = session.fluencyMode === true;
+                  const currentRound = session.fluencyRound || 0;
+                  const nextRound = isFluency ? (currentRound + 1) as 1 | 2 | 3 : 1;
+                  const showReplayButton = turnCount >= 3 && (!isFluency || currentRound < 3);
+                  
+                  if (!showReplayButton) return null;
+                  
+                  return (
+                    <button
+                      onClick={handleStartFluencyReplay}
+                      className="btn-3d btn-blue"
+                      style={{ marginRight: 8 }}
+                      disabled={isSubmittingSync}
+                    >
+                      {isFluency
+                        ? `🔁 Раунд ${nextRound}: ещё быстрее`
+                        : '🔁 Беглость: пройти сценарий быстрее'}
+                    </button>
+                  );
+                })()}
                 <button
                   onClick={endSession}
                   className="btn-3d"
@@ -2080,6 +2262,33 @@ export default function ChatPage() {
               </div>
             ))
           )}
+        </div>
+      )}
+
+      {/* TIMER COUNTDOWN BAR */}
+      {session.fluencyMode && !showSummaryScreen && (
+        <div className={`${styles.timerBarContainer} ${timeLeftMs === 0 ? styles.expired : ''}`} data-testid="fluency-timer-bar">
+          <div 
+            className={`${styles.timerBarFill} ${
+              (() => {
+                const limitSec = getTurnLimit(session.fluencyRound!, state.chatLevel);
+                const limitMs = limitSec * 1000;
+                const timerPercent = limitMs > 0 ? (timeLeftMs / limitMs) * 100 : 0;
+                return timerPercent > 50 
+                  ? styles.timerGreen 
+                  : timerPercent >= 20 
+                  ? styles.timerOrange 
+                  : styles.timerRed;
+              })()
+            }`}
+            style={{
+              width: `${(() => {
+                const limitSec = getTurnLimit(session.fluencyRound!, state.chatLevel);
+                const limitMs = limitSec * 1000;
+                return limitMs > 0 ? (timeLeftMs / limitMs) * 100 : 0;
+              })()}%`
+            }}
+          />
         </div>
       )}
 

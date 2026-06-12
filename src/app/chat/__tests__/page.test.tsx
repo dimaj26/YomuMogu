@@ -2,7 +2,7 @@ import React from 'react';
 import fakeIndexedDB, { IDBKeyRange } from 'fake-indexeddb';
 globalThis.indexedDB = fakeIndexedDB;
 globalThis.IDBKeyRange = IDBKeyRange;
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ChatPage from '../page';
 import { db } from '@/core/db';
@@ -716,6 +716,394 @@ describe('Self-Repair and Scaffolding Hint UI Tests', () => {
     const correctionRuby = document.querySelector('span[class*="grammarCorrection"] ruby rt');
     expect(correctionRuby).toBeInTheDocument();
     expect(correctionRuby).toHaveClass('rtHidden');
+  });
+});
+
+describe('Fluency Mode Tests', () => {
+  beforeEach(() => {
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
+    vi.restoreAllMocks();
+    localStorage.clear();
+    mockPush.mockReset();
+    vi.useRealTimers();
+  });
+
+  it('кнопка повтора: видна при >=3 ходах, после раунда 1-2 ведёт в следующий раунд, после раунда 3 скрыта', async () => {
+    // Настраиваем сессию
+    const session = {
+      id: 'test-session-fluency',
+      title: 'Тема тренировки',
+      description: 'Описание сценария',
+      scenario: 'Сценарий разговора',
+      targetWords: [{ word: '猫', translation: 'кошка' }],
+    };
+    localStorage.setItem('yomumogu_profile_default_active_session', JSON.stringify(session));
+
+    // Мокаем fetch для диалога и анализа
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/chat/analyze')) {
+        return {
+          ok: true,
+          json: async () => ({ words: [] }),
+        } as Response;
+      }
+      if (urlStr.includes('/api/chat')) {
+        return {
+          ok: true,
+          json: async () => ({
+            reply: 'こんにちは！',
+            translation: 'Привет!',
+            wordsDetected: [],
+          }),
+        } as Response;
+      }
+      return { ok: true, json: async () => ({}) } as Response;
+    });
+
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    await screen.findByText('Тема тренировки');
+
+    // Делаем 3 хода пользователя
+    const textarea = screen.getByPlaceholderText('Напишите на японском...');
+    const sendBtn = screen.getByRole('button', { name: /Отправить/i });
+
+    for (let i = 0; i < 3; i++) {
+      fireEvent.change(textarea, { target: { value: `Ответ ${i}` } });
+      fireEvent.click(sendBtn);
+      await waitFor(() => expect(screen.queryByText(`Ответ ${i}`)).toBeInTheDocument());
+    }
+
+    // Завершаем диалог
+    const completeBtn = screen.getAllByRole('button', { name: 'Завершить' })[0];
+    fireEvent.click(completeBtn);
+    const confirmBtn = screen.getAllByRole('button', { name: 'Завершить' })[1];
+    fireEvent.click(confirmBtn);
+
+    // Дожидаемся результатов и исчезновения загрузчика
+    await screen.findByText('Итоги практики');
+    await waitFor(() => expect(screen.queryByText('Анализируем диалог...')).not.toBeInTheDocument());
+
+    // Кнопка повтора должна быть видна
+    const replayBtn = await screen.findByRole('button', { name: '🔁 Беглость: пройти сценарий быстрее' });
+    expect(replayBtn).toBeInTheDocument();
+
+    // Кликаем по кнопке повтора -> переводит в раунд 1
+    fireEvent.click(replayBtn);
+
+    // Проверяем, что в localStorage записана сессия с fluencyRound: 1
+    const savedSession = JSON.parse(localStorage.getItem('yomumogu_profile_default_active_session') || '{}');
+    expect(savedSession.fluencyMode).toBe(true);
+    expect(savedSession.fluencyRound).toBe(1);
+
+    // Теперь проверим round 2 и 3
+    // Для этого напрямую положим сессию с fluencyRound: 1
+    localStorage.clear();
+    const fluencySession1 = {
+      ...session,
+      id: 'test-session-fluency-1',
+      fluencyMode: true,
+      fluencyRound: 1 as const,
+    };
+    localStorage.setItem('yomumogu_profile_default_active_session', JSON.stringify(fluencySession1));
+
+    // Рендерим заново для раунда 1
+    vi.restoreAllMocks();
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/chat/analyze')) {
+        return {
+          ok: true,
+          json: async () => ({ words: [] }),
+        } as Response;
+      }
+      if (urlStr.includes('/api/chat')) {
+        return {
+          ok: true,
+          json: async () => ({
+            reply: 'こんにちは！',
+            translation: 'Привет!',
+            wordsDetected: [],
+          }),
+        } as Response;
+      }
+      return { ok: true, json: async () => ({}) } as Response;
+    });
+
+    cleanup();
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+    await screen.findByText('Тема тренировки');
+
+    // Снова 3 хода
+    const textarea2 = screen.getByPlaceholderText('Напишите на японском...');
+    const sendBtn2 = screen.getByRole('button', { name: /Отправить/i });
+    for (let i = 0; i < 3; i++) {
+      fireEvent.change(textarea2, { target: { value: `Ответ ${i}` } });
+      fireEvent.click(sendBtn2);
+      await waitFor(() => expect(screen.queryByText(`Ответ ${i}`)).toBeInTheDocument());
+    }
+
+    // Завершаем
+    const completeBtn2 = screen.getAllByRole('button', { name: 'Завершить' })[0];
+    fireEvent.click(completeBtn2);
+    const confirmBtn2 = screen.getAllByRole('button', { name: 'Завершить' })[1];
+    fireEvent.click(confirmBtn2);
+
+    await screen.findByText('Итоги практики');
+    await waitFor(() => expect(screen.queryByText('Анализируем диалог...')).not.toBeInTheDocument());
+
+    // Кнопка должна предлагать Раунд 2
+    const replayBtnRound2 = await screen.findByRole('button', { name: '🔁 Раунд 2: ещё быстрее' });
+    expect(replayBtnRound2).toBeInTheDocument();
+
+    // Кликаем по кнопке повтора -> переводит в раунд 2
+    fireEvent.click(replayBtnRound2);
+    const savedSession2 = JSON.parse(localStorage.getItem('yomumogu_profile_default_active_session') || '{}');
+    expect(savedSession2.fluencyRound).toBe(2);
+
+    // Теперь напрямую положим сессию с fluencyRound: 3
+    localStorage.clear();
+    const fluencySession3 = {
+      ...session,
+      id: 'test-session-fluency-3',
+      fluencyMode: true,
+      fluencyRound: 3 as const,
+    };
+    localStorage.setItem('yomumogu_profile_default_active_session', JSON.stringify(fluencySession3));
+
+    // Рендерим заново для раунда 3
+    vi.restoreAllMocks();
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/chat/analyze')) {
+        return {
+          ok: true,
+          json: async () => ({ words: [] }),
+        } as Response;
+      }
+      if (urlStr.includes('/api/chat')) {
+        return {
+          ok: true,
+          json: async () => ({
+            reply: 'こんにちは！',
+            translation: 'Привет!',
+            wordsDetected: [],
+          }),
+        } as Response;
+      }
+      return { ok: true, json: async () => ({}) } as Response;
+    });
+
+    cleanup();
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+    await screen.findByText('Тема тренировки');
+
+    // 3 хода
+    const textarea3 = screen.getByPlaceholderText('Напишите на японском...');
+    const sendBtn3 = screen.getByRole('button', { name: /Отправить/i });
+    for (let i = 0; i < 3; i++) {
+      fireEvent.change(textarea3, { target: { value: `Ответ ${i}` } });
+      fireEvent.click(sendBtn3);
+      await waitFor(() => expect(screen.queryByText(`Ответ ${i}`)).toBeInTheDocument());
+    }
+
+    // Завершаем
+    const completeBtn3 = screen.getAllByRole('button', { name: 'Завершить' })[0];
+    fireEvent.click(completeBtn3);
+    const confirmBtn3 = screen.getAllByRole('button', { name: 'Завершить' })[1];
+    fireEvent.click(confirmBtn3);
+
+    await screen.findByText('Итоги практики');
+    await waitFor(() => expect(screen.queryByText('Анализируем диалог...')).not.toBeInTheDocument());
+
+    // После раунда 3 кнопка скрыта
+    const replayBtnRound4 = screen.queryByRole('button', { name: /Беглость|Раунд/ });
+    expect(replayBtnRound4).not.toBeInTheDocument();
+  });
+
+  it('в fluency-режиме grammarScope не содержит focus и не-mature ноды', async () => {
+    const originalEnv = process.env.NODE_ENV;
+    (process.env as any).NODE_ENV = 'development';
+
+    try {
+      // Устанавливаем сессию с fluencyMode: true
+      const session = {
+        id: 'test-session-fluency-scope',
+        title: 'Тема тренировки',
+        description: 'Описание сценария',
+        scenario: 'Сценарий разговора',
+        targetWords: [],
+        fluencyMode: true,
+        fluencyRound: 1 as const,
+      };
+      localStorage.setItem('yomumogu_profile_default_active_session', JSON.stringify(session));
+
+      // Настраиваем IndexedDB с грамматикой (одна зрелая g_n5_s1_1, одна незрелая g_n5_s1_2)
+      await db.grammar_progress.clear();
+      await db.grammar_progress.put({
+        profileId: 'default',
+        ruleId: 'g_n5_s1_1',
+        status: 'mature',
+        due: Date.now() - 10000,
+        stepIndex: 0,
+      });
+      await db.grammar_progress.put({
+        profileId: 'default',
+        ruleId: 'g_n5_s1_2',
+        status: 'learning',
+        due: Date.now() - 10000,
+        stepIndex: 0,
+      });
+
+      let lastRequestJson: any = null;
+
+      vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
+        const urlStr = url.toString();
+        if (urlStr.includes('/api/chat')) {
+          lastRequestJson = JSON.parse(init?.body as string);
+          return {
+            ok: true,
+            json: async () => ({
+              reply: 'こんにちは！',
+              translation: 'Привет!',
+              wordsDetected: [],
+              grammarFeedback: { isCorrect: true },
+            }),
+          } as Response;
+        }
+        return { ok: true, json: async () => ({}) } as Response;
+      });
+
+      render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+      // Ожидаем завершения startConversation
+      await waitFor(() => {
+        expect(lastRequestJson).not.toBeNull();
+      });
+
+      // Проверяем тело запроса
+      expect(lastRequestJson.grammarFocus).toBeUndefined(); // focus OMITTED
+      expect(lastRequestJson.grammarScope).toBeDefined();
+      // Должна быть отфильтрована только mature
+      const allowed = lastRequestJson.grammarScope.allowedConstructions;
+      expect(allowed.some((a: any) => a.id === 'g_n5_s1_1')).toBe(true);
+      expect(allowed.some((a: any) => a.id === 'g_n5_s1_2')).toBe(false); // g_n5_s1_2 (learning) удалена из скоупа
+    } finally {
+      (process.env as any).NODE_ENV = originalEnv;
+    }
+  });
+
+  it('истечение таймера не блокирует ввод и отправку', async () => {
+    vi.useRealTimers();
+
+    const session = {
+      id: 'test-session-fluency-timer',
+      title: 'Тема тренировки',
+      description: 'Описание сценария',
+      scenario: 'Сценарий разговора',
+      targetWords: [],
+      fluencyMode: true,
+      fluencyRound: 1 as const,
+    };
+    localStorage.setItem('yomumogu_profile_default_active_session', JSON.stringify(session));
+
+    let fetchCalled = false;
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/chat')) {
+        const isSend = init?.body && typeof init.body === 'string' && init.body.includes('Привет!');
+        if (isSend) {
+          fetchCalled = true;
+        }
+        return {
+          ok: true,
+          json: async () => ({
+            reply: 'こんにちは！',
+            translation: 'Привет!',
+            wordsDetected: [],
+            grammarFeedback: { isCorrect: true },
+          }),
+        } as Response;
+      }
+      return { ok: true, json: async () => ({}) } as Response;
+    });
+
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    // Ждем старта
+    await screen.findByText('Тема тренировки');
+    await screen.findByText('こんにちは！');
+
+    // Переключаемся на фейковые таймеры
+    vi.useFakeTimers();
+
+    // Прокручиваем время вперед, превышая лимит хода
+    vi.advanceTimersByTime(45000);
+
+    // Таймер истек, но инпут должен быть доступен
+    const textarea = screen.getByPlaceholderText('Напишите на японском...');
+    expect(textarea).not.toBeDisabled();
+
+    // Возвращаем реальные таймеры для отправки
+    vi.useRealTimers();
+
+    fireEvent.change(textarea, { target: { value: 'Привет!' } });
+    const sendBtn = screen.getByRole('button', { name: /Отправить/i });
+    expect(sendBtn).not.toBeDisabled();
+
+    fireEvent.click(sendBtn);
+
+    await waitFor(() => expect(fetchCalled).toBe(true));
+  });
+
+  it('Summary после fluency-сессии показывает карточку статистики с процентом в лимите', async () => {
+    const session = {
+      id: 'test-session-fluency-stats',
+      title: 'Тема тренировки',
+      description: 'Описание сценария',
+      scenario: 'Сценарий разговора',
+      targetWords: [],
+      fluencyMode: true,
+      fluencyRound: 1 as const,
+    };
+    localStorage.setItem('yomumogu_profile_default_active_session', JSON.stringify(session));
+
+    // Установим предзагруженное состояние с fluencyTurns
+    const savedState = {
+      messages: [
+        { id: '1', role: 'model' as const, text: 'Привет!' },
+        { id: '2', role: 'user' as const, text: 'Привет!', grammarFeedback: { isCorrect: true } },
+        { id: '3', role: 'model' as const, text: 'Как дела?' },
+        { id: '4', role: 'user' as const, text: 'Хорошо', grammarFeedback: { isCorrect: true } },
+      ],
+      collectedWords: [],
+      isComplete: false,
+      unusedTargetWords: [],
+      showSummaryScreen: true,
+      analyzedWords: [],
+      selectedSyncCards: [],
+      selectedAddWords: [],
+      fluencyTurns: [
+        { ms: 10000, limitMs: 20000 }, // в лимите
+        { ms: 25000, limitMs: 20000 }, // превышен
+      ],
+    };
+    localStorage.setItem(`yomumogu_profile_default_chat_state_test-session-fluency-stats`, JSON.stringify(savedState));
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        words: [],
+      }),
+    } as Response);
+
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    // Summary screen должен показаться
+    await screen.findByText(/Результаты раунда\s*1/);
+    expect(screen.getByText(/В лимите:\s*1\s*из\s*2\s*ходов\s*\(50%\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Среднее время ответа:\s*17\.5\s*сек/)).toBeInTheDocument();
   });
 });
 

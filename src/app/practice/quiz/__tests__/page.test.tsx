@@ -35,6 +35,7 @@ vi.mock('next/navigation', () => ({
 
 describe('QuizPage Component', () => {
   beforeEach(async () => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
     localStorage.clear();
     mockPush.mockReset();

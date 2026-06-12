@@ -1332,4 +1332,37 @@
   }
 }
 
+.timerBarContainer {
+  width: 100%;
+  height: 6px;
+  background-color: var(--bg-tertiary);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border-color);
+  transition: background-color 0.2s ease;
+}
+
+.timerBarContainer.expired {
+  background-color: var(--color-red);
+}
+
+.timerBarFill {
+  height: 100%;
+  transition: width 0.1s linear, background-color 0.2s ease;
+}
+
+.timerGreen {
+  background-color: var(--color-green);
+}
+
+.timerOrange {
+  background-color: var(--color-orange);
+}
+
+.timerRed {
+  background-color: var(--color-red);
+}
+
+
 

@@ -158,6 +158,12 @@ src/
     profile.ts            # localStorage profile helpers + multi-profile management
     csrf.ts               # CSRF protection helpers (same-origin Origin/Referer verification)
     sanitize.ts           # DOMPurify HTML sanitization utility for dangerouslySetInnerHTML
+    chat/
+      fluency.ts          # Pure logic and calculations for fluency mode
+      furigana.ts         # FSRS interval-based faded furigana logic
+      __tests__/
+        fluency.test.ts   # Unit tests for fluency module
+        furigana.test.ts  # Unit tests for gradual furigana processor
     grammar/
       graph.ts            # Pure, side-effect-free graph operations (validation, unlocks, edges generation) for grammar DAG
       promptScope.ts      # Derived grammar scope calculator, validator, and prompt builder
@@ -301,6 +307,8 @@ src/
 | `lib/quiz/__tests__/compare.test.ts` | Unit tests for answer comparison utility |
 | `lib/chat/furigana.ts` | Client-side gradual furigana processor based on FSRS intervals |
 | `lib/chat/__tests__/furigana.test.ts` | Unit tests for gradual furigana processor |
+| `lib/chat/fluency.ts` | Pure timed scenario replay (Timed Scenario Replay, Phase 8) calculations and helper functions |
+| `lib/chat/__tests__/fluency.test.ts` | Unit tests for fluency mode module |
 | `resources/jlpt_levels.json` | Generated versioned JLPT levels resource containing N5 and N4 vocabulary lists |
 | `services/tokenizer/server.py` | FastAPI MeCab microservice providing morphological analysis on port 8000; `GET /health` returns `{status:'ok'\|'error'}` |
 | `services/tokenizer/Dockerfile` | Docker container definition for the MeCab tokenizer service |
@@ -780,4 +788,4 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-389 unit/integration tests across 59 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+430 unit/integration tests across 63 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.

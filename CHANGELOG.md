@@ -2,6 +2,18 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.54.0] - 2026-06-13
+
+### Added
+- **Fluency Mode (Phase 8)**: Implemented timed scenario replay to encourage fast, fluent production:
+  - Replay action buttons (`🔁 Беглость: пройти сценарий быстрее` and `🔁 Раунд {round+1}: ещё быстрее`) on the session summary screen for chats with >= 3 turns, supporting up to 3 rounds.
+  - Tightening flat response time limits per round (Round 1: 45s, Round 2: 30s, Round 3: 15s).
+  - Horizontal timer countdown bar styled in CSS with color transitions (green > 50%, orange 20%-50%, red < 20%, empty on expiry).
+  - Non-blocking timer: when time expires, the message input remains active without penalty.
+  - Fluency statistics panel showing average response time and percentage of replies made within the limit.
+  - Strict mature-only grammar scoping logic (no focused active rule) for fluency replays.
+  - TDD unit tests in `fluency.test.ts` and UI test integrations in `page.test.tsx` verifying timer behavior, state transitions, and stats calculation.
+
 ## [1.53.0] - 2026-06-13
 
 ### Changed

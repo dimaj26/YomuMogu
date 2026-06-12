@@ -67,6 +67,8 @@ You are an expert **TypeScript / Next.js 16** developer. Your specialty is App R
 - **Competency Engine & JLPT Macro Ladder**: Pure competency helpers (`lexCoverage`, `grammarCoverage`, `buildCompetencyProfile`), N5→N1 winding SVG path `LearningTrack` component with progress rings, rolling chat session statistics (cap 10) in localStorage, and Chat Summary advisor suggesting level adjustments based on vocabulary/grammar thresholds.
 - **Honest Chat Feedback**: short metalinguistic Russian note for grammar errors and collapsed correction drawer (self-repair).
 - **Honest Quizzes**: typed reading warm-up with typo-forgiveness (`[TYPE-ANSWER]`) and FSRS interval-based gradual fading furigana in chat (`[WORD-FURIGANA]`).
+- **Fluency Mode**: timed scenario replay (Phase 8) with a per-turn horizontal countdown bar, tightening limits across rounds 1–3, timer starting on sensei reply end, and mature-only grammar scope filters.
+
 
 ---
 
