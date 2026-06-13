@@ -6,7 +6,8 @@ import {
   calculateNextFsrsState,
   createDefaultFsrsState,
   alignPassiveToActiveState,
-  isGoodContextExample
+  isGoodContextExample,
+  canEnterChat
 } from '../scheduler';
 import type { LocalWord } from '../types';
 
@@ -380,6 +381,71 @@ describe('FSRS Scheduling logic', () => {
       expect(isGoodContextExample('猫です', '猫')).toBe(false);
       // 5. Короткое, но с частицей (длина >= 8)
       expect(isGoodContextExample('寿司を食べます', '寿司')).toBe(true);
+    });
+  });
+
+  describe('canEnterChat', () => {
+    it('возвращает false при менее CHAT_MIN_ENTRY_WORDS слов learning/review', () => {
+      const defaultState = { stability: 0, difficulty: 0, interval: 0, due: 0, reps: 0, lapses: 0, status: 'new' as const };
+      
+      // 1. Пустой массив
+      expect(canEnterChat([])).toBe(false);
+
+      // 2. 4 слова со статусом learning
+      const words4: LocalWord[] = Array.from({ length: 4 }, (_, i) => ({
+        profileId: 'test',
+        id: i,
+        word: `w${i}`,
+        reading: `r${i}`,
+        translation: `t${i}`,
+        category: 'test',
+        source: 'starter',
+        passive: { ...defaultState },
+        active: { ...defaultState, status: 'learning' }
+      }));
+      expect(canEnterChat(words4)).toBe(false);
+
+      // 3. Добавляем 5-е слово
+      const words5 = [...words4, {
+        profileId: 'test',
+        id: 4,
+        word: 'w4',
+        reading: 'r4',
+        translation: 't4',
+        category: 'test',
+        source: 'starter',
+        passive: { ...defaultState },
+        active: { ...defaultState, status: 'review' }
+      }];
+      expect(canEnterChat(words5)).toBe(true);
+
+      // 4. Слова со статусом mature или new не должны считаться в лимит для входа в чат
+      const mixWords: LocalWord[] = [
+        ...words4,
+        {
+          profileId: 'test',
+          id: 4,
+          word: 'w4',
+          reading: 'r4',
+          translation: 't4',
+          category: 'test',
+          source: 'starter',
+          passive: { ...defaultState },
+          active: { ...defaultState, status: 'mature' } // mature
+        },
+        {
+          profileId: 'test',
+          id: 5,
+          word: 'w5',
+          reading: 'r5',
+          translation: 't5',
+          category: 'test',
+          source: 'starter',
+          passive: { ...defaultState },
+          active: { ...defaultState, status: 'new' } // new
+        }
+      ];
+      expect(canEnterChat(mixWords)).toBe(false);
     });
   });
 });

@@ -2,7 +2,7 @@ import { db } from './db';
 import type { LocalWord, CardWord as AnkiWord } from './types';
 import { getProfileItem, setProfileItem } from '../lib/profile';
 import { QUEST_RESET_HOUR } from './intervals';
-import { alignToDayBoundary, createDefaultFsrsState } from './scheduler';
+import { alignToDayBoundary, createDefaultFsrsState, shouldRouteToChat } from './scheduler';
 import { getJlptLevel, mergeJlptTag } from '../lib/jlpt/levels';
 import { stripHtml } from '../plugins/anki/filter';
 
@@ -205,7 +205,8 @@ export function localWordToAnkiWord(word: LocalWord): AnkiWord {
     rawFront: word.word,
     rawBack: word.translation,
     cardIds: [word.id],
-    tags: word.tags
+    tags: word.tags,
+    isHard: shouldRouteToChat(word)
   };
 }
 
@@ -268,6 +269,15 @@ export async function getDailyActivePool(profileId: string, category: string): P
     const added = matureFallbackWords.slice(0, neededFallbackCount);
     pool.push(...added);
   }
+
+  // Стабильная сортировка: сначала трудные слова (isHard)
+  pool.sort((a, b) => {
+    const aHard = shouldRouteToChat(a);
+    const bHard = shouldRouteToChat(b);
+    if (aHard && !bHard) return -1;
+    if (!aHard && bHard) return 1;
+    return 0;
+  });
 
   // Лениво классифицируем слова в пуле, у которых нет тегов
   await classifyMissingWords(profileId, pool);

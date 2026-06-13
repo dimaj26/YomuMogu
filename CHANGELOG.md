@@ -2,6 +2,16 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.60.0] - 2026-06-13
+
+### Added
+- **Chat Entry Gating**: Gated chat theme generation and practice session entry; users must have at least 5 words in active study (learning or review status) to start a chat. Displays a helpful Russian notice in the practice launcher recommending Warm-ups or Quizzes when chat is locked.
+- **Hard Word Prioritization**: Propagated the FSRS-derived `isHard` status (`active.stability < 3 || active.lapses >= 2`) into the `AnkiWord` model, stable-sorting these words to the front of the active pool to guarantee their selection as conversation targets.
+
+### Changed
+- **Target Theme Sizing**: Scaled conversational target word sets per theme from 4–6 words up to 5–8 words. Theme clustering logic prioritizes hard words and completes the target set with universal verbs and adjectives up to the maximum limit.
+- **Test Suite Alignment**: Authored new tests and updated existing mock DB seeds and assertions to support the 5-word gating, priority sorting, and 5-8 word target counts.
+
 ## [1.59.0] - 2026-06-13
 
 ### Changed

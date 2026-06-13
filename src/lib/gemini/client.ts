@@ -23,6 +23,9 @@ export interface GroupedSessionInput {
   words: { word: string; translation: string }[];
 }
 
+export const CHAT_WORDS_PER_THEME_MIN = 5;
+export const CHAT_WORDS_PER_THEME_MAX = 8;
+
 export function groupWordsIntoThemes(words: AnkiWord[]): GroupedSessionInput[] {
   // Исключаем дубликаты слов по полю word
   const uniqueWords = Array.from(new Map(words.map(w => [w.word, w])).values());
@@ -63,42 +66,66 @@ export function groupWordsIntoThemes(words: AnkiWord[]): GroupedSessionInput[] {
     // 1. Сначала отбираем слова, которые содержат этот тег и еще не использованы
     const matchingNouns = situationalWords.filter(w => w.tags && w.tags.includes(theme) && !usedWords.has(w.word));
     
-    // Сортируем matchingNouns: сначала те, у которых статус не mature (приоритетные)
-    const priorityNouns = matchingNouns.filter(w => w.status !== 'mature');
-    const matureNouns = matchingNouns.filter(w => w.status === 'mature');
-    const sortedMatchingNouns = [...priorityNouns, ...matureNouns];
+    // Сортируем matchingNouns: сначала трудные (isHard), затем те, у которых статус не mature (приоритетные)
+    const sortedMatchingNouns = [...matchingNouns].sort((a, b) => {
+      const aHard = !!a.isHard;
+      const bHard = !!b.isHard;
+      if (aHard && !bHard) return -1;
+      if (!aHard && bHard) return 1;
+      
+      const aPriority = a.status !== 'mature';
+      const bPriority = b.status !== 'mature';
+      if (aPriority && !bPriority) return -1;
+      if (!aPriority && bPriority) return 1;
+      
+      return 0;
+    });
 
-    // Берем до 4 существительных для этой темы
-    const selectedNouns = sortedMatchingNouns.slice(0, 4);
+    // Берем до 6 существительных для этой темы (noun cap raised)
+    const selectedNouns = sortedMatchingNouns.slice(0, 6);
     selectedNouns.forEach(w => usedWords.add(w.word));
 
-    // 2. Добираем универсальные слова (глаголы/прилагательные) до общего числа 5 слов (или от 4 до 6)
-    const needed = 5 - selectedNouns.length;
+    // 2. Добираем универсальные слова (глаголы/прилагательные) до MAX (8)
+    const needed = CHAT_WORDS_PER_THEME_MAX - selectedNouns.length;
     const selectedUniversal: AnkiWord[] = [];
     if (needed > 0) {
       const availableUniversal = universalWords.filter(w => !usedWords.has(w.word));
-      // Сортируем универсальные: сначала приоритетные
-      const priorityUniv = availableUniversal.filter(w => w.status !== 'mature');
-      const matureUniv = availableUniversal.filter(w => w.status === 'mature');
-      const sortedUniv = [...priorityUniv, ...matureUniv];
+      // Сортируем универсальные: сначала трудные (isHard), затем приоритетные
+      const sortedUniv = [...availableUniversal].sort((a, b) => {
+        const aHard = !!a.isHard;
+        const bHard = !!b.isHard;
+        if (aHard && !bHard) return -1;
+        if (!aHard && bHard) return 1;
+        
+        const aPriority = a.status !== 'mature';
+        const bPriority = b.status !== 'mature';
+        if (aPriority && !bPriority) return -1;
+        if (!aPriority && bPriority) return 1;
+        
+        return 0;
+      });
 
       const chosenUniv = sortedUniv.slice(0, needed);
       chosenUniv.forEach(w => usedWords.add(w.word));
       selectedUniversal.push(...chosenUniv);
     }
 
-    const sessionWords = [...selectedNouns, ...selectedUniversal].map(w => ({
+    let sessionWords = [...selectedNouns, ...selectedUniversal].map(w => ({
       word: w.word,
       translation: w.translation
     }));
 
-    // Если слов всё ещё меньше 4 (например, в пуле совсем мало слов), то пытаемся добрать уже использованные универсальные
-    if (sessionWords.length < 4) {
-      const neededMore = 4 - sessionWords.length;
-      const extraUniv = universalWords.slice(0, neededMore).map(w => ({
-        word: w.word,
-        translation: w.translation
-      }));
+    // Если слов всё ещё меньше CHAT_WORDS_PER_THEME_MIN (5) (например, в пуле совсем мало слов),
+    // то пытаемся добрать уже использованные универсальные слова, чтобы набрать хотя бы MIN (5)
+    if (sessionWords.length < CHAT_WORDS_PER_THEME_MIN) {
+      const neededMore = CHAT_WORDS_PER_THEME_MIN - sessionWords.length;
+      const extraUniv = universalWords
+        .filter(w => !sessionWords.some(sw => sw.word === w.word))
+        .slice(0, neededMore)
+        .map(w => ({
+          word: w.word,
+          translation: w.translation
+        }));
       sessionWords.push(...extraUniv);
     }
 

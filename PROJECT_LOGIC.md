@@ -392,6 +392,7 @@ interface AnkiWord {
   rawFront: string;
   rawBack: string;
   tags?: string[];
+  isHard?: boolean;
 }
 
 // GeneratedSession (lib/gemini/client.ts)
@@ -692,7 +693,8 @@ To prevent "leakage" of target words and encourage user recall:
 
 ### [PL-5.9] Adaptive Reviews & Situational Routing
 - **FSRS Stability Gating**: Reviews are adaptively routed between rapid recognition checks (offline translation quiz) and conversation writing (Gemini chat) based on active FSRS stability. If `active.stability < 3` days or `lapses >= 2`, the word is routed to dialog practice; otherwise, it is scheduled for the offline quiz.
-- **Situational Clustering**: The system programmatically groups the daily active vocabulary pool using `groupWordsIntoThemes` by finding overlaps among the 10 situational themes (`shopping`, `restaurant`, `travel`, `home`, `work`, `hobbies`, `social`, `health`, `weather`, `education`). It matches nouns matching a specific theme and fills the remaining slots with `universal` verbs and adjectives to form coherent 4-6 word target sets for dialogue practice.
+- **Situational Clustering**: The system programmatically groups the daily active vocabulary pool using `groupWordsIntoThemes` by finding overlaps among the 10 situational themes (`shopping`, `restaurant`, `travel`, `home`, `work`, `hobbies`, `social`, `health`, `weather`, `education`). It matches nouns matching a specific theme and fills the remaining slots with `universal` verbs and adjectives to form coherent 5–8 word target sets for dialogue practice, prioritizing hard words (`isHard?: boolean` derived from FSRS check) first.
+- **Chat Entry Gating**: The user must have at least `CHAT_MIN_ENTRY_WORDS = 5` words currently in study (with active status `learning` or `review`) in order to generate themes and enter Gemini chat practice. This threshold is verified by the pure helper `canEnterChat`.
 - **Contextual Distractors**: The multiple-choice Warm-up selector queries words matching the target's situational tag to provide high-quality, contextually similar distractors.
 
 ### [PL-5.10] Derived Chat Grammar Scoping
@@ -820,7 +822,7 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-470 unit/integration tests across 71 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+474 unit/integration tests across 71 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
 
 ---
 

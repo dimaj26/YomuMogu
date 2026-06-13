@@ -35,6 +35,7 @@ import { GrammarTrack } from '@/components/GrammarTrack';
 import { GrammarTrainer } from '@/components/GrammarTrainer';
 import grammarRules from '@/resources/grammar_rules.json';
 import type { LocalWord } from '@/core/types';
+import { canEnterChat } from '@/core/scheduler';
 import { AnkiWord } from '@/plugins/anki/filter';
 import phonosemanticsData from '@/resources/phonosemantics.json';
 import { isAnswerAcceptable } from '@/lib/quiz/compare';
@@ -156,6 +157,11 @@ export default function PracticePage() {
   const [priorityWordsCount, setPriorityWordsCount] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [hasLoaded, setHasLoaded] = useState<boolean>(false);
+
+  const isChatAllowed = useMemo(() => {
+    if (deckMode !== 'local') return true;
+    return canEnterChat(localWords);
+  }, [deckMode, localWords]);
 
   // Warm-up состояние
   const [warmup, setWarmup] = useState<WarmupState | null>(null);
@@ -583,6 +589,7 @@ export default function PracticePage() {
 
   // Сгенерировать темы диалогов при помощи Gemini
   const generateSessions = async () => {
+    if (!isChatAllowed) return;
     setIsLoadingSessions(true);
     setError(null);
     try {
@@ -1288,7 +1295,7 @@ export default function PracticePage() {
                   </button>
                 </div>
                 
-                  {activeTab === 'words' && sessions.length === 0 && words.length > 0 && (
+                  {activeTab === 'words' && sessions.length === 0 && words.length > 0 && isChatAllowed && (
                     <button
                       onClick={generateSessions}
                       disabled={isLoadingSessions}
@@ -1322,6 +1329,26 @@ export default function PracticePage() {
                         Перейти в настройки
                       </Link>
                     </div>
+                  ) : !isChatAllowed ? (
+                    <div className={styles.emptyState}>
+                      <AlertCircle size={48} className={styles.emptyIcon} style={{ color: 'var(--color-orange)' }} />
+                      <p style={{ fontWeight: 800, fontSize: '18px', color: 'var(--text-primary)', marginBottom: '8px' }}>
+                        Разговорная практика заблокирована
+                      </p>
+                      <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                        Для доступа к чату с ИИ необходимо иметь хотя бы 5 слов в процессе изучения (в статусе «Изучение» или «Повторение»). Изучите новые слова в блоке разминки слева или пройдите тест повторения.
+                      </p>
+                      <button
+                        onClick={() => {
+                          const element = document.querySelector(`.${styles.leftColumn}`);
+                          if (element) element.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                        className="btn-3d btn-blue"
+                        style={{ padding: '10px 20px', fontSize: '14px' }}
+                      >
+                        Перейти к изучению
+                      </button>
+                    </div>
                   ) : (
                     !isLoadingSessions && sessions.length === 0 && (
                       <div className={styles.emptyState}>
@@ -1338,7 +1365,7 @@ export default function PracticePage() {
                     )
                   )}
 
-                  {!isLoadingSessions && sessions.length > 0 && (
+                  {!isLoadingSessions && isChatAllowed && sessions.length > 0 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
                       <LearningTrack profile={macroLadderProfile} />
 

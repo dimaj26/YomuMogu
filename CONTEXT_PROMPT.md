@@ -57,7 +57,7 @@ You are an expert **TypeScript / Next.js 16** developer. Your specialty is App R
 - **Daily Quests**: Sidebar widget tracking Reviews/Chats/Mnemonics; 4AM reset without claimable XP rewards.
 - **Grammar Trainer**: 7-step N5 curriculum roadmap (Morphology-Before-Syntax), interactive Sandbox modal, Leitner scheduling, Gemini sentence verification.
 - **Situational Tags**: 10 themes + universal; static dict for N5, Gemini classifier for Anki imports.
-- **Adaptive Routing**: `active.stability < 3d` or `lapses ≥ 2` → chat; else → offline quiz. Sessions grouped by theme overlap.
+- **Adaptive Routing**: active.stability < 3d or lapses ≥ 2 → chat (with hard-priority & 5–8 word target sets); else → offline quiz. Chat practice gated at ≥5 active words.
 - **Contextual Distractors**: Warm-up multiple-choice uses same-theme words as distractors.
 - **Media Player**: YouTube/subtitle player, MeCab tokenizer status dot, real caption scraper script, live E2E/integration tests; quality-gated interpolated progress fill, sentence regrouping, conditional `cc_load_policy` + Chrome extension override; runs Next.js + MeCab tokenizer.
 - **Video Search**: Russian query expansion via Gemini (1 cached flash-lite call), zero-dependency YouTube scraping (query + continuation), caption check gate, local match + MeCab tokenize + CR/subQuality scoring & ranking, and PRNG-seeded history-aware selection (overlap <= 10%).

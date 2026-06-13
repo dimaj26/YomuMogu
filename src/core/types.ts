@@ -9,6 +9,7 @@ export interface CardWord {
   rawBack: string;
   cardIds?: number[];
   tags?: string[];
+  isHard?: boolean;
 }
 
 export interface FsrsState {

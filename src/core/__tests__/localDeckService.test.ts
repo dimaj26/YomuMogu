@@ -632,6 +632,54 @@ describe('LocalDeckService Unit Tests', () => {
     expect(pool.every(w => w.status === 'learning')).toBe(true);
   });
 
+  it('getDailyActivePool: помечает трудные слова isHard в выдаче и сортирует их первыми', async () => {
+    vi.setSystemTime(new Date('2026-05-22T10:00:00Z'));
+    const now = Date.now();
+
+    const wordsData: import('../db').LocalWord[] = [];
+    
+    // 1. Обычное learning слово (due, не hard: stability = 5, lapses = 0)
+    wordsData.push({
+      profileId,
+      id: 1,
+      word: '猫',
+      reading: 'ねこ',
+      translation: 'кошка',
+      category: LOCAL_DECK_NAME,
+      source: 'starter',
+      passive: { status: 'learning', stability: 5, difficulty: 5, interval: 5, due: now - 10000, reps: 2, lapses: 0 },
+      active: { status: 'learning', stability: 5, difficulty: 5, interval: 5, due: now - 10000, reps: 2, lapses: 0 },
+      contextExamples: []
+    });
+
+    // 2. Трудное learning слово (due, hard: lapses = 2)
+    wordsData.push({
+      profileId,
+      id: 2,
+      word: '犬',
+      reading: 'いぬ',
+      translation: 'собака',
+      category: LOCAL_DECK_NAME,
+      source: 'starter',
+      passive: { status: 'learning', stability: 5, difficulty: 5, interval: 5, due: now - 10000, reps: 2, lapses: 2 },
+      active: { status: 'learning', stability: 5, difficulty: 5, interval: 5, due: now - 10000, reps: 2, lapses: 2 },
+      contextExamples: []
+    });
+
+    await db.words.bulkPut(wordsData);
+
+    const pool = await getDailyActivePool(profileId, LOCAL_DECK_NAME);
+    expect(pool.length).toBe(2);
+    
+    // Проверяем, что '犬' (id: 2) помечен как isHard и идет первым в выдаче пула
+    expect(pool[0].word).toBe('犬');
+    expect(pool[0].isHard).toBe(true);
+
+    // Проверяем, что '猫' (id: 1) не является hard и идет вторым в выдаче пула
+    expect(pool[1].word).toBe('猫');
+    expect(pool[1].isHard).toBe(false);
+  });
+
   it('getPriorityWordsCount: не считает new-слова как due даже если due <= now', async () => {
     vi.setSystemTime(new Date('2026-05-22T10:00:00Z'));
     const now = Date.now();

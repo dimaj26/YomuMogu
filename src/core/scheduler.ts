@@ -376,4 +376,17 @@ export function shouldRouteToChat(word: LocalWord): boolean {
   return word.active.stability < 3 || word.active.lapses >= 2;
 }
 
+export const CHAT_MIN_ENTRY_WORDS = 5;
+
+/**
+ * Проверяет, готов ли пользователь к входу в чат (есть ли как минимум CHAT_MIN_ENTRY_WORDS слов в процессе изучения: learning или review).
+ */
+export function canEnterChat(words: LocalWord[]): boolean {
+  if (!words) return false;
+  const activeCount = words.filter(
+    w => w.active && (w.active.status === 'learning' || w.active.status === 'review')
+  ).length;
+  return activeCount >= CHAT_MIN_ENTRY_WORDS;
+}
+
 

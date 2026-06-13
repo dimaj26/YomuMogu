@@ -497,8 +497,23 @@ describe('PracticePage Component', () => {
     const dString = new Date().toISOString().split('T')[0];
     localStorage.removeItem(`yomumogu_profile_default_daily_new_words_${dString}`);
 
-    // Добавим одно новое слово в БД
+    // Добавим 5 слов в статусе learning, чтобы пройти гейт чата, и одно новое слово
     const now = Date.now();
+    for (let i = 1; i <= 5; i++) {
+      await db.words.put({
+        profileId: 'default',
+        id: i,
+        word: `w${i}`,
+        reading: `r${i}`,
+        translation: `t${i}`,
+        category: '__local_starter__',
+        source: 'starter',
+        passive: { status: 'learning', stability: 1, difficulty: 1, interval: 1, due: now, reps: 1, lapses: 0 },
+        active: { status: 'learning', stability: 1, difficulty: 1, interval: 1, due: now, reps: 1, lapses: 0 },
+        contextExamples: []
+      });
+    }
+
     await db.words.put({
       profileId: 'default',
       id: 8888,
