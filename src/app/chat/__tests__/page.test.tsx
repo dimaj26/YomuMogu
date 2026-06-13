@@ -35,6 +35,7 @@ describe('ChatPage Component', () => {
   beforeEach(() => {
     window.HTMLElement.prototype.scrollIntoView = vi.fn();
     vi.restoreAllMocks();
+    vi.useRealTimers();
     localStorage.clear();
     mockPush.mockReset();
   });
@@ -1106,4 +1107,264 @@ describe('Fluency Mode Tests', () => {
     expect(screen.getByText(/Среднее время ответа:\s*17\.5\s*сек/)).toBeInTheDocument();
   });
 });
+
+describe('Soft Closing and Passive Timing Tests', () => {
+  beforeEach(() => {
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+    localStorage.clear();
+    mockPush.mockReset();
+  });
+
+  const setupActiveSession = (extra = {}) => {
+    const session = {
+      id: 'test-session-soft-closing',
+      title: 'Тема тренировки',
+      description: 'Описание сценария',
+      scenario: 'Сценарий разговора',
+      targetWords: [
+        { word: '猫', translation: 'кошка' },
+      ],
+      ...extra
+    };
+    localStorage.setItem('yomumogu_profile_default_active_session', JSON.stringify(session));
+    return session;
+  };
+
+  it('сбор последнего target-слова отправляет ровно один запрос с closingTurn', async () => {
+    setupActiveSession();
+    let apiCalls: any[] = [];
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/chat')) {
+        const body = init?.body ? JSON.parse(init.body as string) : {};
+        apiCalls.push(body);
+        if (body.message === '__START__') {
+          return {
+            ok: true,
+            json: async () => ({
+              reply: 'こんにちは！',
+              translation: 'Привет!',
+              wordsDetected: [],
+              grammarFeedback: { isCorrect: true },
+            }),
+          } as Response;
+        } else if (body.closingTurn) {
+          return {
+            ok: true,
+            json: async () => ({
+              reply: 'お疲れ様でした！またね！',
+              translation: 'Спасибо за работу! Пока!',
+              wordsDetected: [],
+              grammarFeedback: { isCorrect: true },
+            }),
+          } as Response;
+        } else {
+          return {
+            ok: true,
+            json: async () => ({
+              reply: '猫だね！',
+              translation: 'Кошка!',
+              wordsDetected: ['猫'],
+              grammarFeedback: { isCorrect: true },
+            }),
+          } as Response;
+        }
+      }
+      return { ok: true, json: async () => ({}) } as Response;
+    });
+
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    // Ждем старта
+    await screen.findByText('こんにちは！');
+
+    // Отправляем "猫"
+    const textarea = screen.getByPlaceholderText('Напишите на японском...');
+    fireEvent.change(textarea, { target: { value: '猫' } });
+    const sendBtn = screen.getByRole('button', { name: /Отправить/i });
+    fireEvent.click(sendBtn);
+
+    // Должен показаться ответ про кошку
+    await screen.findByText('猫だね！');
+
+    // И должен автоматически улететь запрос с closingTurn
+    await waitFor(() => {
+      expect(apiCalls.some(call => call.closingTurn === true)).toBe(true);
+    });
+
+    // closingTurn должен уйти ровно один раз
+    const closingCalls = apiCalls.filter(call => call.closingTurn === true);
+    expect(closingCalls.length).toBe(1);
+  });
+
+  it('после закругления виден баннер и кнопка К итогам, ввод активен', async () => {
+    setupActiveSession();
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/chat')) {
+        const body = init?.body ? JSON.parse(init.body as string) : {};
+        if (body.message === '__START__') {
+          return {
+            ok: true,
+            json: async () => ({ reply: 'こんにちは！', wordsDetected: [], grammarFeedback: { isCorrect: true } }),
+          } as Response;
+        } else if (body.closingTurn) {
+          return {
+            ok: true,
+            json: async () => ({ reply: 'またね！', wordsDetected: [], grammarFeedback: { isCorrect: true } }),
+          } as Response;
+        } else {
+          return {
+            ok: true,
+            json: async () => ({ reply: '猫だね！', wordsDetected: ['猫'], grammarFeedback: { isCorrect: true } }),
+          } as Response;
+        }
+      }
+      return { ok: true, json: async () => ({}) } as Response;
+    });
+
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    await screen.findByText('こんにちは！');
+    const textarea = screen.getByPlaceholderText('Напишите на японском...');
+    fireEvent.change(textarea, { target: { value: '猫' } });
+    const sendBtn = screen.getByRole('button', { name: /Отправить/i });
+    fireEvent.click(sendBtn);
+
+    await screen.findByText('またね！');
+
+    // Проверяем баннер и кнопку
+    expect(screen.getByText('Все слова собраны! 🎉')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'К итогам' })).toBeInTheDocument();
+
+    // Ввод НЕ заблокирован
+    expect(textarea).not.toBeDisabled();
+  });
+
+  it('восстановление сессии с closingDone не шлёт повторный closingTurn', async () => {
+    setupActiveSession();
+    let apiCalls: any[] = [];
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/chat')) {
+        const body = init?.body ? JSON.parse(init.body as string) : {};
+        apiCalls.push(body);
+        return {
+          ok: true,
+          json: async () => ({ reply: 'Привет', wordsDetected: [], grammarFeedback: { isCorrect: true } }),
+        } as Response;
+      }
+      return { ok: true, json: async () => ({}) } as Response;
+    });
+
+    // Кладём состояние сессии с closingDone: true и всеми собранными словами
+    const savedState = {
+      messages: [
+        { id: '1', role: 'model' as const, text: 'Привет' },
+        { id: '2', role: 'user' as const, text: '猫', wordsDetected: ['猫'] }
+      ],
+      collectedWords: ['猫'],
+      isComplete: false,
+      unusedTargetWords: [],
+      closingDone: true,
+    };
+    localStorage.setItem(`yomumogu_profile_default_chat_state_test-session-soft-closing`, JSON.stringify(savedState));
+
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    await screen.findByText('Привет');
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Запрос closingTurn НЕ должен быть отправлен, так как closingDone: true
+    expect(apiCalls.some(call => call.closingTurn === true)).toBe(false);
+  });
+
+  it('fluency: при сборе всех слов таймер очищается и полоса скрыта', async () => {
+    setupActiveSession({ fluencyMode: true, fluencyRound: 1 });
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('/api/chat')) {
+        const body = init?.body ? JSON.parse(init.body as string) : {};
+        if (body.message === '__START__') {
+          return {
+            ok: true,
+            json: async () => ({ reply: 'Привет', wordsDetected: [], grammarFeedback: { isCorrect: true } }),
+          } as Response;
+        } else if (body.closingTurn) {
+          return {
+            ok: true,
+            json: async () => ({ reply: 'Пока', wordsDetected: [], grammarFeedback: { isCorrect: true } }),
+          } as Response;
+        } else {
+          return {
+            ok: true,
+            json: async () => ({ reply: 'Кошка', wordsDetected: ['猫'], grammarFeedback: { isCorrect: true } }),
+          } as Response;
+        }
+      }
+      return { ok: true, json: async () => ({}) } as Response;
+    });
+
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    // Ждем стартового сообщения
+    await screen.findByText('Привет');
+
+    // Проверяем, что таймер-бар изначально есть на экране
+    expect(document.querySelector('[class*="timerBar"]')).toBeInTheDocument();
+
+    const textarea = screen.getByPlaceholderText('Напишите на японском...');
+    fireEvent.change(textarea, { target: { value: '猫' } });
+    const sendBtn = screen.getByRole('button', { name: /Отправить/i });
+    fireEvent.click(sendBtn);
+
+    // Дожидаемся завершения закругления
+    await screen.findByText('Пока');
+
+    // Проверяем, что таймер-бар скрыт
+    const timerBar = document.querySelector('[class*="timerBar"]');
+    expect(timerBar).toBeNull();
+  });
+
+  it('Summary показывает среднее время реплики, в диалоге индикации времени нет', async () => {
+    setupActiveSession();
+    
+    const savedState = {
+      messages: [
+        { id: '1', role: 'model' as const, text: 'Привет' },
+        { id: '2', role: 'user' as const, text: 'Ответ 1' },
+      ],
+      collectedWords: ['猫'],
+      isComplete: false,
+      unusedTargetWords: [],
+      showSummaryScreen: true,
+      analyzedWords: [],
+      selectedSyncCards: [],
+      selectedAddWords: [],
+      passiveTurns: [
+        { ms: 12000 },
+        { ms: 8000 }
+      ]
+    };
+    localStorage.setItem(`yomumogu_profile_default_chat_state_test-session-soft-closing`, JSON.stringify(savedState));
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({ words: [] }),
+    } as Response);
+
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    await screen.findByText('Итоги практики');
+
+    // Проверяем отображение среднего времени (12 + 8) / 2 = 10 сек
+    expect(screen.getByText(/Среднее время реплики:\s*10\.0\s*сек/)).toBeInTheDocument();
+  });
+});
+
 

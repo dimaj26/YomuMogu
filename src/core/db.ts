@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie';
 import { calculateNextFsrsState, createDefaultFsrsState, alignPassiveToActiveState } from './scheduler';
+import { GRAMMAR_LEITNER_INTERVALS_DAYS } from './intervals';
 import { getProfileItem } from '../lib/profile';
 import { logger } from '../lib/logger';
 import { LocalWord, LocalReview, UiWord, GrammarProgress } from './types';
@@ -529,7 +530,7 @@ export async function updateGrammarProgress(
     return;
   }
 
-  const intervals = [1, 3, 7, 14, 30];
+  const intervals = GRAMMAR_LEITNER_INTERVALS_DAYS;
   const now = Date.now();
 
   let progress = await db.grammar_progress.get([profileId, ruleId]);

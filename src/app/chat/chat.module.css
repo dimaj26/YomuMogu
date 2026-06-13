@@ -1364,5 +1364,20 @@
   background-color: var(--color-red);
 }
 
+.completedBanner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background-color: #e8f5e9;
+  border-top: 2px solid var(--color-green);
+  border-bottom: 2px solid var(--color-green);
+  color: #1b5e20;
+  font-weight: 700;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+
 
 

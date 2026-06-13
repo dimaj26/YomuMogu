@@ -176,7 +176,8 @@ describe('API Route POST /api/chat', () => {
       expect.any(Boolean),
       undefined,
       undefined,
-      expect.stringContaining('CRITICAL GRAMMAR CONSTRAINT')
+      expect.stringContaining('CRITICAL GRAMMAR CONSTRAINT'),
+      undefined
     );
   });
 

@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { scenario, targetWords, history, message, level, grammarInJapanese, collectedWords, grammarFocus, grammarScope } = body;
+    const { scenario, targetWords, history, message, level, grammarInJapanese, collectedWords, grammarFocus, grammarScope, closingTurn } = body;
 
     // 2. Валидация обязательных полей
     if (!scenario || typeof scenario !== 'string') {
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!message || typeof message !== 'string') {
+    if (message === undefined || typeof message !== 'string' || (message === '' && !closingTurn)) {
       logger.warn('Запрос к /api/chat с отсутствующим или некорректным полем message');
       return NextResponse.json(
         { error: 'Необходимо передать текст сообщения в поле "message"' },
@@ -79,7 +79,8 @@ export async function POST(request: NextRequest) {
       grammarInJa,
       collectedWords,
       grammarFocus,
-      grammarScopeInstruction
+      grammarScopeInstruction,
+      closingTurn
     );
 
     // Валидируем конструкции, использованные моделью

@@ -1,5 +1,6 @@
 import { fsrs, Card, State, Rating } from 'ts-fsrs';
 import type { LocalWord, FsrsState } from './types';
+import { QUEST_RESET_HOUR } from './intervals';
 
 // Инициализируем стандартный FSRS-планировщик с отключенными краткосрочными шагами обучения
 const scheduler = fsrs({
@@ -14,7 +15,7 @@ const scheduler = fsrs({
  */
 export function alignToDayBoundary(date: Date): Date {
   const aligned = new Date(date);
-  aligned.setHours(4, 0, 0, 0);
+  aligned.setHours(QUEST_RESET_HOUR, 0, 0, 0);
   return aligned;
 }
 

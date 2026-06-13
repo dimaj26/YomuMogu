@@ -12,6 +12,7 @@ import {
 } from '@/lib/profile';
 import { LOCAL_DECK_NAME, retagAllWords } from '@/core/localDeckService';
 import styles from './DebugDrawer.module.css';
+import { QUEST_RESET_HOUR } from '@/core/intervals';
 
 interface LocalStorageKeyValue {
   key: string;
@@ -52,11 +53,11 @@ export function DebugDrawer() {
     setProfileId(activePid);
     setProfiles(getProfilesList());
 
-    // 1. Загрузка изученных сегодня слов (с 4:00 утра текущего дня)
+    // 1. Загрузка изученных сегодня слов (с QUEST_RESET_HOUR:00 утра текущего дня)
     const now = new Date();
     const boundary = new Date(now);
-    boundary.setHours(4, 0, 0, 0);
-    if (now.getHours() < 4) {
+    boundary.setHours(QUEST_RESET_HOUR, 0, 0, 0);
+    if (now.getHours() < QUEST_RESET_HOUR) {
       boundary.setDate(boundary.getDate() - 1);
     }
     const startTimestamp = boundary.getTime();

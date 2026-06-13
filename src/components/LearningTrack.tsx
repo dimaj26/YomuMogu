@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Lock, Check, X } from 'lucide-react';
 import styles from './LearningTrack.module.css';
+import { LADDER_COMPLETE_LEX_COVERAGE, LADDER_COMPLETE_GRAMMAR_COVERAGE } from '../core/intervals';
 
 export type JlptLevelId = 'N5' | 'N4' | 'N3' | 'N2' | 'N1';
 
@@ -41,10 +42,10 @@ const COORDINATES = [
   { x: 250, y: 620 }, // N1
 ];
 
-// Уровень считается завершённым если lex >= 0.8 AND grammar = 1.0
+// Уровень считается завершённым если lex >= LADDER_COMPLETE_LEX_COVERAGE AND grammar = LADDER_COMPLETE_GRAMMAR_COVERAGE
 function isLevelCompleted(coverage?: LevelCoverage): boolean {
   if (!coverage) return false;
-  return coverage.lexCoverage >= 0.8 && coverage.grammarCoverage >= 1.0;
+  return coverage.lexCoverage >= LADDER_COMPLETE_LEX_COVERAGE && coverage.grammarCoverage >= LADDER_COMPLETE_GRAMMAR_COVERAGE;
 }
 
 export function LearningTrack({ profile }: LearningTrackProps) {

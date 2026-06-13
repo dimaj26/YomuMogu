@@ -1,6 +1,13 @@
 import type { LocalWord } from '../../core/types';
 import jlptLevels from '../../resources/jlpt_levels.json';
 import grammarRules from '../../resources/grammar_rules.json';
+import {
+  COMPETENCY_MIN_SESSIONS,
+  COMPETENCY_MIN_TURNS,
+  ADVICE_UP_GRAMMAR_COVERAGE,
+  ADVICE_UP_CORRECTION_RATE,
+  ADVICE_DOWN_CORRECTION_RATE
+} from '../../core/intervals';
 
 export type JlptLevelId = 'N5' | 'N4' | 'N3' | 'N2' | 'N1';
 
@@ -76,11 +83,11 @@ export function computeGrammarCoverage(
  * Возвращает null, если сессий меньше 3 или общее кол-во ходов за последние 3 сессии меньше 15.
  */
 export function computeRecentCorrectionRate(sessions: SessionStat[]): number | null {
-  if (sessions.length < 3) {
+  if (sessions.length < COMPETENCY_MIN_SESSIONS) {
     return null;
   }
 
-  const lastThree = sessions.slice(-3);
+  const lastThree = sessions.slice(-COMPETENCY_MIN_SESSIONS);
   let totalUserTurns = 0;
   let totalCorrectTurns = 0;
 
@@ -89,7 +96,7 @@ export function computeRecentCorrectionRate(sessions: SessionStat[]): number | n
     totalCorrectTurns += s.correctTurns;
   }
 
-  if (totalUserTurns < 15) {
+  if (totalUserTurns < COMPETENCY_MIN_TURNS) {
     return null;
   }
 
@@ -128,9 +135,9 @@ export function getPresetAdvice(profile: CompetencyProfile, currentChatLevel: nu
   const { grammarCoverage, recentCorrectionRate } = profile;
 
   if (
-    grammarCoverage >= 0.7 &&
+    grammarCoverage >= ADVICE_UP_GRAMMAR_COVERAGE &&
     recentCorrectionRate !== null &&
-    recentCorrectionRate >= 0.8 &&
+    recentCorrectionRate >= ADVICE_UP_CORRECTION_RATE &&
     currentChatLevel < 5
   ) {
     const nextLevel = currentChatLevel + 1;
@@ -142,7 +149,7 @@ export function getPresetAdvice(profile: CompetencyProfile, currentChatLevel: nu
     };
   }
 
-  if (recentCorrectionRate !== null && recentCorrectionRate < 0.4 && currentChatLevel > 1) {
+  if (recentCorrectionRate !== null && recentCorrectionRate < ADVICE_DOWN_CORRECTION_RATE && currentChatLevel > 1) {
     const prevLevel = currentChatLevel - 1;
     const ratePct = Math.round(recentCorrectionRate * 100);
     return {

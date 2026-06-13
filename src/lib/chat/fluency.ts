@@ -1,5 +1,11 @@
 // Модуль для поддержки режима беглости (Timed Scenario Replay)
 // Все расчеты времени и фильтрации производятся в чистых функциях.
+import {
+  FLUENCY_FLOOR_SECONDS,
+  FLUENCY_BASE_OFFSET_SECONDS,
+  FLUENCY_BASE_PER_LEVEL_SECONDS,
+  FLUENCY_ROUND_FACTORS
+} from '../../core/intervals';
 
 export interface FluencyTurn {
   ms: number;      // Фактическое время ответа пользователя в миллисекундах
@@ -12,9 +18,9 @@ export interface FluencyTurn {
  * k = 1.0 для раунда 1, 0.75 для раунда 2, 0.5 для раунда 3.
  */
 export function getTurnLimit(round: 1 | 2 | 3, chatLevel: number): number {
-  const k = round === 1 ? 1.0 : round === 2 ? 0.75 : 0.5;
-  const base = 30 + 10 * chatLevel;
-  return Math.max(20, Math.round(base * k));
+  const k = FLUENCY_ROUND_FACTORS[round] ?? 1.0;
+  const base = FLUENCY_BASE_OFFSET_SECONDS + FLUENCY_BASE_PER_LEVEL_SECONDS * chatLevel;
+  return Math.max(FLUENCY_FLOOR_SECONDS, Math.round(base * k));
 }
 
 /**

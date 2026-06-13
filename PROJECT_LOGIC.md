@@ -196,6 +196,8 @@ src/
 | `core/localDeckService.ts` | Offline local starter deck service and local db operations |
 | `core/types.ts` | Central TypeScript interface definitions for db schemas, reviews, and FSRS states |
 | `core/pluginRegistry.ts` | Interfaces for custom learning plugins and active `WordSource` providers |
+| `core/intervals.ts` | Single source of truth registry for all timing and interval systems |
+| `core/__tests__/intervals.test.ts` | Unit tests for intervals registry |
 | `core/__tests__/localDeckService.test.ts` | Unit tests for localDeckService |
 | `core/__tests__/db.test.ts` | Unit tests for Dexie.js database functions |
 | `core/__tests__/scheduler.test.ts` | Unit tests for FSRS scheduler calculations |
@@ -788,4 +790,19 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-430 unit/integration tests across 63 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+438 unit/integration tests across 64 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+
+---
+
+## [PL-10] INTERVAL SYSTEMS REGISTRY
+
+Все временные ограничения, шаги планирования и интервалы сгруппированы в едином изолированном файле `src/core/intervals.ts`. Любые изменения значений должны производиться исключительно после проведения архитектурного аудита (Route B).
+
+| Система | Описание / Назначение | Константы в `src/core/intervals.ts` | Владелец | Потребители |
+|---|---|---|---|---|
+| **[СИСТЕМА 1]** Dual-curve FSRS | Динамический расчет интервалов слов в IndexedDB | *Констант нет (НЕ дублировать ts-fsrs)* | `core/scheduler.ts` | `core/scheduler.ts`, `/api/anki/sync-db` |
+| **[СИСТЕМА 2]** Leitner грамматика | Дни между повторениями ступеней грамматики | `GRAMMAR_LEITNER_INTERVALS_DAYS` | `grammar_progress` DB | `GrammarTrack.tsx`, `GrammarTrainer.tsx` |
+| **[СИСТЕМА 3]** Угасающая фуригана | Дни active.interval для уровней видимости | `FURIGANA_FADE_FROM_DAYS`, `FURIGANA_HIDE_FROM_DAYS`, `FURIGANA_FADE_OPACITY` | `lib/chat/furigana.ts` | `lib/chat/furigana.ts`, `JpUI.tsx` |
+| **[СИСТЕМА 4]** Режим беглости | Ограничение хода = max(FLOOR, (OFFSET + PER_LEVEL * lvl) * round_factor) | `FLUENCY_FLOOR_SECONDS`, `FLUENCY_BASE_OFFSET_SECONDS`, `FLUENCY_BASE_PER_LEVEL_SECONDS`, `FLUENCY_ROUND_FACTORS` | `lib/chat/fluency.ts` | `lib/chat/fluency.ts`, `app/chat/page.tsx` |
+| **[СИСТЕМА 5]** Daily-квесты | Час сброса прогресса квестов (локальное время) | `QUEST_RESET_HOUR` | `hooks/useQuests.ts` | `hooks/useQuests.ts` |
+| **[СИСТЕМА 6]** Профиль компетентности | Лимиты сессий/ходов, пороги закрытия JLPT уровней и рекомендации уровня чата | `COMPETENCY_MIN_SESSIONS`, `COMPETENCY_MIN_TURNS`, `COMPETENCY_SESSION_CAP`, `ADVICE_UP_GRAMMAR_COVERAGE`, `ADVICE_UP_CORRECTION_RATE`, `ADVICE_DOWN_CORRECTION_RATE`, `LADDER_COMPLETE_LEX_COVERAGE`, `LADDER_COMPLETE_GRAMMAR_COVERAGE` | `lib/competency/profile.ts` | `lib/competency/profile.ts`, `app/chat/page.tsx`, `LearningTrack.tsx` |

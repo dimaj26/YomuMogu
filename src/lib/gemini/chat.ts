@@ -81,7 +81,8 @@ export class ChatService {
       topic: string;
       explanation: string;
     },
-    grammarScopeInstruction?: string
+    grammarScopeInstruction?: string,
+    closingTurn?: boolean
   ): Promise<ChatResponse> {
     if (!this.ai) {
       const apiKey = process.env.GEMINI_API_KEY;
@@ -140,7 +141,8 @@ export class ChatService {
       isStart,
       modelTurnCount,
       grammarFocus,
-      grammarScopeInstruction
+      grammarScopeInstruction,
+      closingTurn
     });
 
     // Ограничиваем историю диалога для Gemini до последних 20 сообщений для экономии токенов и сохранения контекста

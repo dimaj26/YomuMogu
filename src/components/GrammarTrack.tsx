@@ -7,6 +7,7 @@ import { useJapanification } from '@/hooks/useJapanification';
 import type { GrammarProgress } from '@/core/db';
 import { isNodeUnlocked, getEdges, GrammarGraphNode } from '@/lib/grammar/graph';
 import styles from './GrammarTrack.module.css';
+import { GRAMMAR_LEITNER_INTERVALS_DAYS } from '@/core/intervals';
 
 interface GrammarTrackProps {
   grammarProgress: Record<string, GrammarProgress>;
@@ -36,7 +37,7 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
   const { t } = useJapanification();
   const [activePopover, setActivePopover] = useState<number | null>(null);
 
-  const intervals = [1, 3, 7, 14, 30];
+  const intervals = GRAMMAR_LEITNER_INTERVALS_DAYS;
 
   const allRules = grammarRules as ExtendedGrammarNode[];
 

@@ -1,3 +1,5 @@
+import { FURIGANA_FADE_FROM_DAYS, FURIGANA_HIDE_FROM_DAYS } from '../../core/intervals';
+
 export interface WordIntervalMap {
   [word: string]: number;
 }
@@ -14,13 +16,13 @@ export function applyGradualFurigana(html: string, map: WordIntervalMap): string
 
   return html.replace(/<ruby>([^<]+)<rt>([^<]+)<\/rt><\/ruby>/g, (match, base, reading) => {
     const interval = map[base];
-    if (interval === undefined || interval < 3) {
+    if (interval === undefined || interval < FURIGANA_FADE_FROM_DAYS) {
       return match;
     }
-    if (interval >= 3 && interval < 21) {
+    if (interval >= FURIGANA_FADE_FROM_DAYS && interval < FURIGANA_HIDE_FROM_DAYS) {
       return `<ruby>${base}<rt class="rtFade">${reading}</rt></ruby>`;
     }
-    // interval >= 21
+    // interval >= FURIGANA_HIDE_FROM_DAYS
     return `<ruby>${base}<rt class="rtHidden">${reading}</rt></ruby>`;
   });
 }

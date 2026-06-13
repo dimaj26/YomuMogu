@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getProfileItem, setProfileItem, getActiveProfileId } from '../lib/profile';
+import { QUEST_RESET_HOUR } from '../core/intervals';
 
 export interface DailyQuest {
   id: string;
@@ -19,7 +20,7 @@ export interface DailyQuest {
 const getTodayKey = (): string => {
   if (typeof window === 'undefined') return '';
   const now = new Date();
-  const adjusted = new Date(now.getTime() - 4 * 60 * 60 * 1000);
+  const adjusted = new Date(now.getTime() - QUEST_RESET_HOUR * 60 * 60 * 1000);
   const year = adjusted.getFullYear();
   const month = String(adjusted.getMonth() + 1).padStart(2, '0');
   const day = String(adjusted.getDate()).padStart(2, '0');

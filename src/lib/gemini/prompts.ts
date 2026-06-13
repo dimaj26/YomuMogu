@@ -13,6 +13,7 @@ export interface SystemPromptOptions {
     explanation: string;
   };
   grammarScopeInstruction?: string;
+  closingTurn?: boolean;
 }
 
 export interface HintPromptOptions {
@@ -26,7 +27,7 @@ export interface HintPromptOptions {
  * Генерирует системную инструкцию для чат-собеседника ИИ.
  */
 export const getChatSystemInstruction = (options: SystemPromptOptions): string => {
-  const { scenario, targetWordsList, unusedWordsList, usedWordsList, levelInstruction, grammarLang, isStart, modelTurnCount, grammarFocus, grammarScopeInstruction } = options;
+  const { scenario, targetWordsList, unusedWordsList, usedWordsList, levelInstruction, grammarLang, isStart, modelTurnCount, grammarFocus, grammarScopeInstruction, closingTurn } = options;
 
   const grammarFocusSection = grammarFocus
     ? `
@@ -53,6 +54,12 @@ Target words already used by the user in previous turns: ${usedWordsList}
 Target words not yet used by the user: ${unusedWordsList}
 ${grammarFocusSection}
 ${grammarScopeInstruction ? `\n${grammarScopeInstruction}\n` : ''}
+${closingTurn ? `
+CRITICAL: THIS IS THE CLOSING TURN (closingTurn is true).
+1. WARMLY WRAP UP THE SCENE: Respond to the user's last message in character, warmly wrap up the dialogue, and say goodbye.
+2. NO question: Do NOT ask any question in your reply (this is an exception to the one-question rule).
+3. EMPTY USER MESSAGE HANDLING: Since the user sent an empty message for this closing turn, check their grammar as correct: set 'grammarFeedback.isCorrect' to true, and leave 'grammarFeedback.correction', 'grammarFeedback.explanation', and 'grammarFeedback.shortNote' as empty strings ("").
+` : ''}
 
 CURRENT TURN NUMBER: ${modelTurnCount}
 

@@ -24,6 +24,7 @@ import {
   type FluencyTurn
 } from '@/lib/chat/fluency';
 import styles from './chat.module.css';
+import { COMPETENCY_SESSION_CAP } from '@/core/intervals';
 
 interface TargetWord {
   word: string;
@@ -90,6 +91,8 @@ interface SavedChatState {
   syncCardGrades?: Record<number, number>;
   showExitConfirm?: boolean;
   fluencyTurns?: FluencyTurn[];
+  passiveTurns?: Array<{ ms: number }>;
+  closingDone?: boolean;
 }
 
 interface AnalyzedWord {
@@ -151,6 +154,8 @@ export default function ChatPage() {
   const [selectedGrammarGrade, setSelectedGrammarGrade] = useState<'forgot' | 'hard' | 'good'>('good');
   const [wordIntervalMap, setWordIntervalMap] = useState<Record<string, number>>({});
   const [fluencyTurns, setFluencyTurns] = useState<FluencyTurn[]>([]);
+  const [passiveTurns, setPassiveTurns] = useState<Array<{ ms: number }>>([]);
+  const [closingDone, setClosingDone] = useState<boolean>(false);
   const [timeLeftMs, setTimeLeftMs] = useState<number>(0);
   const turnStartTimeRef = useRef<number | null>(null);
 
@@ -220,6 +225,8 @@ export default function ChatPage() {
           setSelectedAddWords(new Set(savedState.selectedAddWords || []));
           setShowExitConfirm(savedState.showExitConfirm || false);
           setFluencyTurns(savedState.fluencyTurns || []);
+          setPassiveTurns(savedState.passiveTurns || []);
+          setClosingDone(savedState.closingDone || false);
           setIsStateLoaded(true);
           return;
         }
@@ -276,6 +283,8 @@ export default function ChatPage() {
         syncCardGrades,
         showExitConfirm,
         fluencyTurns,
+        passiveTurns,
+        closingDone,
       };
       setProfileItem(`chat_state_${session.id}`, JSON.stringify(stateToSave));
     } catch (e) {
@@ -293,7 +302,9 @@ export default function ChatPage() {
     selectedSyncCards,
     selectedAddWords,
     syncCardGrades,
-    showExitConfirm
+    showExitConfirm,
+    passiveTurns,
+    closingDone
   ]);
 
   // Проверка завершения (80% слов собрано)
@@ -392,9 +403,9 @@ export default function ChatPage() {
   const sendMessage = async () => {
     if (!session || !inputText.trim() || isLoading) return;
 
-    // Измеряем время ответа пользователя в режиме беглости
+    // Измеряем время ответа пользователя
     let turnDurationMs = 0;
-    if (session.fluencyMode && turnStartTimeRef.current) {
+    if (turnStartTimeRef.current) {
       turnDurationMs = Date.now() - turnStartTimeRef.current;
     }
 
@@ -480,10 +491,17 @@ export default function ChatPage() {
         });
         setCollectedWords(newCollected);
 
-        // Сохраняем время хода в режиме беглости
-        if (session.fluencyMode && turnDurationMs > 0) {
-          const limitSec = getTurnLimit(session.fluencyRound!, state.chatLevel);
-          setFluencyTurns(prev => [...prev, { ms: turnDurationMs, limitMs: limitSec * 1000 }]);
+        // Сохраняем время хода
+        const wasAllCollectedAlready = session.targetWords.length > 0 && session.targetWords.every(w => collectedWords.has(w.word));
+        if (turnDurationMs > 0) {
+          if (session.fluencyMode) {
+            if (!wasAllCollectedAlready) {
+              const limitSec = getTurnLimit(session.fluencyRound!, state.chatLevel);
+              setFluencyTurns(prev => [...prev, { ms: turnDurationMs, limitMs: limitSec * 1000 }]);
+            }
+          } else {
+            setPassiveTurns(prev => [...prev, { ms: turnDurationMs }]);
+          }
         }
 
         // Начисляем очки
@@ -532,6 +550,51 @@ export default function ChatPage() {
           updatedUserMsg,
           aiMsg
         ]);
+
+        const allCollected = session.targetWords.length > 0 && session.targetWords.every(w => newCollected.has(w.word));
+        if (allCollected && !closingDone) {
+          setClosingDone(true);
+          
+          const closingHistory = [...updatedMessages, aiMsg].map(m => ({ role: m.role, text: m.text }));
+          
+          setIsLoading(true);
+          try {
+            const closingRes = await fetch('/api/chat', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                scenario: session.scenario,
+                targetWords: session.targetWords,
+                history: closingHistory,
+                message: '',
+                level: state.chatLevel,
+                grammarInJapanese: shouldGrammarBeJapanese(),
+                collectedWords: Array.from(newCollected),
+                grammarFocus: session.fluencyMode ? undefined : session.grammarFocus,
+                grammarScope,
+                closingTurn: true
+              })
+            });
+            const closingData = await closingRes.json();
+            if (closingRes.ok) {
+              const closingAiMsg: ChatMessageData = {
+                id: `msg-${Date.now() + 2}`,
+                role: 'model',
+                text: closingData.reply,
+                translation: closingData.translation,
+                grammarFeedback: closingData.grammarFeedback,
+                wordsDetected: closingData.wordsDetected || []
+              };
+              setMessages(prev => [...prev, closingAiMsg]);
+            } else {
+              console.warn('Closing turn request failed:', closingRes.statusText);
+            }
+          } catch (closingErr) {
+            console.warn('Closing turn request failed with error:', closingErr);
+          } finally {
+            setIsLoading(false);
+          }
+        }
       }
     } catch (err) {
       console.error('Ошибка отправки сообщения:', err);
@@ -541,9 +604,9 @@ export default function ChatPage() {
     }
   };
 
-  // Таймер обратного отсчета для режима беглости
+  // Таймер обратного отсчета для режима беглости и пассивный замер времени хода
   useEffect(() => {
-    if (!session?.fluencyMode || showSummaryScreen) {
+    if (!session || showSummaryScreen) {
       return;
     }
 
@@ -551,26 +614,30 @@ export default function ChatPage() {
     const isLastModel = lastMessage && lastMessage.role === 'model';
 
     if (isLastModel && !isLoading) {
-      const limitSeconds = getTurnLimit(session.fluencyRound!, state.chatLevel);
-      const limitMs = limitSeconds * 1000;
-      
       turnStartTimeRef.current = Date.now();
-      setTimeLeftMs(limitMs);
+      
+      const allCollected = session.targetWords.length > 0 && session.targetWords.every(w => collectedWords.has(w.word));
+      if (session.fluencyMode && !allCollected) {
+        const limitSeconds = getTurnLimit(session.fluencyRound!, state.chatLevel);
+        const limitMs = limitSeconds * 1000;
+        
+        setTimeLeftMs(limitMs);
 
-      const interval = setInterval(() => {
-        const elapsed = Date.now() - turnStartTimeRef.current!;
-        const remaining = Math.max(0, limitMs - elapsed);
-        setTimeLeftMs(remaining);
-      }, 100);
+        const interval = setInterval(() => {
+          const elapsed = Date.now() - turnStartTimeRef.current!;
+          const remaining = Math.max(0, limitMs - elapsed);
+          setTimeLeftMs(remaining);
+        }, 100);
 
-      return () => {
-        clearInterval(interval);
-      };
+        return () => {
+          clearInterval(interval);
+        };
+      }
     } else {
       turnStartTimeRef.current = null;
       setTimeLeftMs(0);
     }
-  }, [messages, isLoading, session?.fluencyMode, session?.fluencyRound, state.chatLevel, showSummaryScreen]);
+  }, [messages, isLoading, session, state.chatLevel, showSummaryScreen, collectedWords]);
 
   const handleStartFluencyReplay = () => {
     if (!session) return;
@@ -614,6 +681,8 @@ export default function ChatPage() {
     setMascotState('idle');
     setMascotBubble(null);
     setFluencyTurns([]);
+    setPassiveTurns([]);
+    setClosingDone(false);
   };
 
   const requestHints = async () => {
@@ -803,7 +872,7 @@ export default function ChatPage() {
         };
         const rawSaved = getProfileItem('competency_sessions');
         const prevSessions: SessionStat[] = rawSaved ? JSON.parse(rawSaved) : [];
-        const updatedSessions = [...prevSessions, newStat].slice(-10);
+        const updatedSessions = [...prevSessions, newStat].slice(-COMPETENCY_SESSION_CAP);
         setProfileItem('competency_sessions', JSON.stringify(updatedSessions));
 
         // Вычисляем профиль компетентности и советника
@@ -1528,6 +1597,33 @@ export default function ChatPage() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontWeight: 600 }}>
                         <div>В лимите: {stats.within} из {stats.total} ходов ({stats.withinPct}%)</div>
                         <div>Среднее время ответа: {stats.avgSeconds} сек</div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* STATS FOR PASSIVE REPLY TIMING */}
+              {!session.fluencyMode && passiveTurns && passiveTurns.length > 0 && (
+                <div
+                  className={styles.summarySection}
+                  style={{
+                    border: '2.5px solid var(--color-blue)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.04)',
+                    padding: '16px',
+                    borderRadius: '16px',
+                    marginBottom: '24px'
+                  }}
+                >
+                  <h3 className={styles.sectionTitle} style={{ color: 'var(--color-blue)', margin: '0 0 8px 0' }}>
+                    ⏱️ Статистика времени
+                  </h3>
+                  {(() => {
+                    const totalMs = passiveTurns.reduce((acc, t) => acc + t.ms, 0);
+                    const avgSec = (totalMs / (passiveTurns.length * 1000)).toFixed(1);
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontWeight: 600 }}>
+                        <div>Среднее время реплики: {avgSec} сек</div>
                       </div>
                     );
                   })()}
@@ -2266,7 +2362,7 @@ export default function ChatPage() {
       )}
 
       {/* TIMER COUNTDOWN BAR */}
-      {session.fluencyMode && !showSummaryScreen && (
+      {session.fluencyMode && !showSummaryScreen && !(session.targetWords.length > 0 && session.targetWords.every(w => collectedWords.has(w.word))) && (
         <div className={`${styles.timerBarContainer} ${timeLeftMs === 0 ? styles.expired : ''}`} data-testid="fluency-timer-bar">
           <div 
             className={`${styles.timerBarFill} ${
@@ -2290,6 +2386,21 @@ export default function ChatPage() {
             }}
           />
         </div>
+      )}
+
+      {/* BANNER FOR COMPLETED WORDS */}
+      {session && session.targetWords && session.targetWords.length > 0 && 
+        session.targetWords.every(w => collectedWords.has(w.word)) && !showSummaryScreen && (
+          <div className={styles.completedBanner}>
+            <span>{t('Все слова собраны! 🎉', 'すべての単語が集まりました！ 🎉')}</span>
+            <button 
+              className="btn-3d btn-green"
+              onClick={handleStartCompletion}
+              style={{ textTransform: 'none' }}
+            >
+              {t('К итогам', '結果へ')}
+            </button>
+          </div>
       )}
 
       {/* INPUT AREA */}

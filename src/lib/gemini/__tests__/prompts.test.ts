@@ -43,6 +43,15 @@ describe('getChatSystemInstruction', () => {
     expect(prompt).toContain('shortNote');
     expect(prompt).toContain('«категория: неверное → верное»');
   });
+
+  it('closingTurn-блок промпта требует финальную реплику без вопроса', () => {
+    const prompt = getChatSystemInstruction({
+      ...options,
+      closingTurn: true,
+    });
+    expect(prompt).toContain('closingTurn');
+    expect(prompt).toContain('NO question');
+  });
 });
 
 describe('getHintSystemInstruction', () => {

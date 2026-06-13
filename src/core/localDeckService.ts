@@ -1,6 +1,7 @@
 import { db } from './db';
 import type { LocalWord, CardWord as AnkiWord } from './types';
 import { getProfileItem, setProfileItem } from '../lib/profile';
+import { QUEST_RESET_HOUR } from './intervals';
 import { alignToDayBoundary, createDefaultFsrsState } from './scheduler';
 import { getJlptLevel, mergeJlptTag } from '../lib/jlpt/levels';
 import { stripHtml } from '../plugins/anki/filter';
@@ -555,11 +556,11 @@ export async function getPriorityWordsCount(profileId: string, category: string)
 export async function syncDailyNewWordsCountWithDb(profileId: string): Promise<number> {
   if (typeof window === 'undefined') return 0;
 
-  // Вычисляем границу дня (с 4:00 утра текущего дня)
+  // Вычисляем границу дня (с QUEST_RESET_HOUR:00 утра текущего дня)
   const now = new Date();
   const boundary = new Date(now);
-  boundary.setHours(4, 0, 0, 0);
-  if (now.getHours() < 4) {
+  boundary.setHours(QUEST_RESET_HOUR, 0, 0, 0);
+  if (now.getHours() < QUEST_RESET_HOUR) {
     boundary.setDate(boundary.getDate() - 1);
   }
   const startTimestamp = boundary.getTime();

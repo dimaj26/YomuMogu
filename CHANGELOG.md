@@ -2,6 +2,24 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.55.0] - 2026-06-13
+
+### Added
+- **Intervals Registry**: Centralized all timing and interval constants into `src/core/intervals.ts` (zero-dependency file). Unified systems:
+  - System 2: Grammar Leitner intervals (`GRAMMAR_LEITNER_INTERVALS_DAYS`).
+  - System 3: Fading Furigana days and opacities (`FURIGANA_FADE_FROM_DAYS`, `FURIGANA_HIDE_FROM_DAYS`, `FURIGANA_FADE_OPACITY`).
+  - System 4: Fluency Mode seconds limits and round multipliers.
+  - System 5: Daily Quest reset hour (`QUEST_RESET_HOUR`).
+  - System 6: Competency profile limits, thresholds, and target levels.
+- **Soft Chat Closing**: Implemented automatic closing turn when all target words are collected.
+  - Automatically triggers a closing request to `/api/chat` with `closingTurn: true` and empty message.
+  - Sensei wraps up the chat in character with no trailing question (exception to the one-question rule).
+  - Displays a gorgeous banner "Все слова собраны! 🎉" with a "К итогам" 3D button that skips the exit confirmation dialog.
+  - State persistence tracks `closingDone` per session to prevent duplicate calls on resume.
+- **Fluency Timer Auto-Stop**: The moment all words are collected, the active countdown timer is cleared and the timer bar is hidden immediately.
+- **Passive Replica Duration Logging**: Silently tracks user turn response times in normal chat sessions. Displays the average replica duration on the practice Summary screen.
+- **TDD Test coverage**: Added comprehensive unit test suites in `intervals.test.ts` and page test integrations in `page.test.tsx` verifying timers, soft closing banner, session resumption, and average turn timing.
+
 ## [1.54.0] - 2026-06-13
 
 ### Added

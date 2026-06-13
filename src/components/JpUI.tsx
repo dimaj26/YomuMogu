@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useJapanification } from '../hooks/useJapanification';
 import { useJpUI } from './JpUIProvider';
 import styles from './JpUI.module.css';
+import { FURIGANA_FADE_FROM_DAYS, FURIGANA_HIDE_FROM_DAYS } from '../core/intervals';
 
 interface JpUIProps {
   id: string; // Уникальный строковый ID элемента
@@ -93,9 +94,9 @@ export function JpUI({ id, ru, ja, reading, className = '', interactive = true }
   let furiganaClass = styles.furiganaFull;
   if (wordState) {
     const ivl = wordState.interval || 0;
-    if (ivl < 3) {
+    if (ivl < FURIGANA_FADE_FROM_DAYS) {
       furiganaClass = styles.furiganaFull;
-    } else if (ivl < 21) {
+    } else if (ivl < FURIGANA_HIDE_FROM_DAYS) {
       furiganaClass = styles.furiganaReview;
     } else {
       furiganaClass = styles.furiganaMature;
