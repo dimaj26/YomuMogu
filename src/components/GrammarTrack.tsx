@@ -44,7 +44,7 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
   const allRules = grammarRules as ExtendedGrammarNode[];
   const filteredRules = allRules.filter(r => r.level === level);
 
-  const height = level === 'N4' ? 560 : 940;
+  const height = level === 'N4' ? 480 : 840;
 
   // Генерируем пути рёбер программно на основе пререквизитов и координат из JSON
   const edges = getEdges(filteredRules).filter(edge =>
@@ -144,7 +144,7 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
 
           // Определяем метку узла: для активных ступеней — номер ступени, иначе порядковый индекс
           const stepLabel = level === 'N4'
-            ? (node.id === 'g_n4_exam' ? '🏁' : String(idx + 1))
+            ? String(idx + 1)
             : (STEP_LABELS[node.id] || String(idx + 1));
 
           return (

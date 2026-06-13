@@ -190,7 +190,7 @@ describe('GrammarTrack Component', () => {
       />
     );
 
-    // В DAG-таблице ровно 14 рёбер:
+    // В DAG-таблице ровно 9 рёбер:
     // s1_1 -> s1_2
     // s1_1 -> s2
     // s2 -> s3
@@ -200,22 +200,15 @@ describe('GrammarTrack Component', () => {
     // s5 -> s7
     // s7 -> s8
     // s3 -> s9
-    // s1_2 -> exam
-    // s4 -> exam
-    // s6 -> exam
-    // s8 -> exam
-    // s9 -> exam
     // Каждое ребро отображается в виде dashed-линии в SVG
     const paths = container.querySelectorAll('svg path');
-    expect(paths.length).toBe(14);
+    expect(paths.length).toBe(9);
   });
 
-  it('после авторинга контента плейсхолдерами остаются g_n5_exam и g_n4_exam', () => {
+  it('после авторинга контента плейсхолдеры отсутствуют', () => {
     const grammarRules = require('../../resources/grammar_rules.json');
     const placeholders = grammarRules.filter((r: any) => r.isPlaceholder);
-    expect(placeholders.length).toBe(2);
-    expect(placeholders.map((p: any) => p.id)).toContain('g_n5_exam');
-    expect(placeholders.map((p: any) => p.id)).toContain('g_n4_exam');
+    expect(placeholders.length).toBe(0);
   });
 
   it('level=N5 (по умолчанию) рендерит только N5-ноды, N4 скрыты', () => {
@@ -229,7 +222,7 @@ describe('GrammarTrack Component', () => {
     expect(screen.queryByTitle('Модификация существительных (относительные придаточные)')).not.toBeInTheDocument();
   });
 
-  it('level=N4 рендерит 6 N4-нод и рисует рёбра только внутри N4-набора', () => {
+  it('level=N4 рендерит 5 N4-нод и не имеет рёбер внутри N4-набора', () => {
     const { container } = renderWithProvider(
       <GrammarTrack
         grammarProgress={{}}
@@ -240,15 +233,9 @@ describe('GrammarTrack Component', () => {
     expect(screen.getByTitle('Модификация существительных (относительные придаточные)')).toBeInTheDocument();
     expect(screen.queryByTitle('Именной предикат и частицы')).not.toBeInTheDocument();
 
-    // N4 рёбра:
-    // s1 -> exam
-    // s2 -> exam
-    // s3 -> exam
-    // s4 -> exam
-    // s5 -> exam
-    // Итого 5 рёбер
+    // N4 рёбра отсутствуют (все пререквизиты ведут на N5)
     const paths = container.querySelectorAll('svg path');
-    expect(paths.length).toBe(5);
+    expect(paths.length).toBe(0);
   });
 
   it('N4-нода заблокирована пока её N5-пререквизит не mature, и разблокируется когда mature', () => {

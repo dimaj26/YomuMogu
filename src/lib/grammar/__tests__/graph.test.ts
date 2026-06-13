@@ -125,10 +125,11 @@ describe('Grammar DAG Graph Engine', () => {
     expect(errors).toEqual([]);
   });
 
-  it('grammar_rules.json содержит уровень N4: 5 авторских нод + g_n4_exam плейсхолдер', () => {
+  it('grammar_rules.json содержит уровень N4: 5 авторских нод, плейсхолдеры отсутствуют', () => {
     const n4Nodes = (realRules as any).filter((n: any) => n.level === 'N4');
     expect(n4Nodes.filter((n: any) => !n.isPlaceholder).length).toBe(5);
-    expect(n4Nodes.find((n: any) => n.id === 'g_n4_exam')?.isPlaceholder).toBe(true);
+    expect(n4Nodes.find((n: any) => n.id === 'g_n4_exam')).toBeUndefined();
+    expect(n4Nodes.some((n: any) => n.isPlaceholder)).toBe(false);
   });
 
   it('все пререквизиты N4-нод указывают на реальные (не placeholder) ноды N5', () => {

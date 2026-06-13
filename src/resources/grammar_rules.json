@@ -2,6 +2,7 @@
   {
     "id": "g_n5_s1_1",
     "level": "N5",
+    "isPlaceholder": false,
     "prerequisites": [],
     "coords": {
       "x": 250,
@@ -1204,26 +1205,7 @@
       }
     ]
   },
-  {
-    "id": "g_n5_exam",
-    "construction": "JLPT N5 Финал",
-    "topic": "Аттестация",
-    "translation": "Итоговый экзамен",
-    "explanation": "Комплексный экзамен на знание всей грамматики и лексики уровня N5.",
-    "isPlaceholder": true,
-    "level": "N5",
-    "prerequisites": [
-      "g_n5_s1_2",
-      "g_n5_s4",
-      "g_n5_s6",
-      "g_n5_s8",
-      "g_n5_s9"
-    ],
-    "coords": {
-      "x": 250,
-      "y": 880
-    }
-  },
+
   {
     "id": "g_n4_s1",
     "level": "N4",
@@ -1779,25 +1761,5 @@
         ]
       }
     ]
-  },
-  {
-    "id": "g_n4_exam",
-    "level": "N4",
-    "isPlaceholder": true,
-    "construction": "JLPT N4 Финал",
-    "topic": "Аттестация",
-    "translation": "Итоговый экзамен",
-    "explanation": "Комплексный экзамен на знание всей грамматики и лексики уровня N4.",
-    "prerequisites": [
-      "g_n4_s1",
-      "g_n4_s2",
-      "g_n4_s3",
-      "g_n4_s4",
-      "g_n4_s5"
-    ],
-    "coords": {
-      "x": 250,
-      "y": 500
-    }
   }
 ]

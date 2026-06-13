@@ -145,7 +145,7 @@ src/
     phonosemantics.json   # 50 phonosemantic keys and relative kanji data
     situational_dictionary.json # Static situational tags mapping for 500 N5 words
     starter_deck.json     # 500-word offline starter vocabulary deck
-    grammar_rules.json    # JLPT N5 and N4 grammar curriculum JSON with placeholders, coordinates, and prerequisite mapping
+    grammar_rules.json    # JLPT N5 and N4 grammar curriculum JSON with coordinates and prerequisite mapping
     media_feed.json       # Static metadata for recommended video/podcast channels
     media_transcripts.json # Pre-generated timed transcripts for recommended YouTube videos
     jlpt_levels.json      # Generated versioned JLPT levels resource containing N5 and N4 vocabulary lists
@@ -304,7 +304,7 @@ src/
 | `components/GrammarTrack.tsx` | Winding SVG path component for grammar rules curriculum showing forks and connections dynamically generated from prerequisite DAG |
 | `components/GrammarTrainer.tsx` | Interactive overlays explaining grammar theory and prompting user custom sentences checked by AI |
 | `components/__tests__/GrammarTrainer.test.tsx` | Unit tests verifying GrammarTrainer component rendering and interactive sandbox |
-| `src/resources/grammar_rules.json` | Grammar curriculum JSON with placeholders and coordinates, aligned with prerequisite DAG |
+| `src/resources/grammar_rules.json` | Grammar curriculum JSON with coordinates, aligned with prerequisite DAG |
 | `app/api/gemini/grammar-verify/route.ts` | POST endpoint using Gemini client to verify user Japanese sentences against grammar rules |
 | `app/api/gemini/__tests__/grammar-verify.test.ts` | Unit tests verifying the grammar verification API route behavior under standard inputs |
 | `app/api/anki/sync-db/route.ts` | POST endpoint for bilateral FSRS sync between IndexedDB and Anki; handles deduplication, bulk queries, FSRS approximation |
@@ -820,7 +820,7 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-469 unit/integration tests across 71 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+470 unit/integration tests across 71 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
 
 ---
 

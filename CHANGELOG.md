@@ -2,6 +2,14 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.59.0] - 2026-06-13
+
+### Changed
+- **Removed Exam Nodes**: Deleted `g_n5_exam` and `g_n4_exam` placeholder nodes from `grammar_rules.json` and adjusted visual height bounds in `GrammarTrack` (N4 ends at 480px, N5 ends at 840px). Competency completion tracking is now fully delegated to the Competency Engine.
+
+### Fixed
+- **Immersion Activity Double-Logging**: Added `immersionLogged` boolean state and persistence logic to `SavedChatState` in `/chat`. Prevents double-logging of immersion activities on chat summary screen re-entry or page reload.
+
 ## [1.58.0] - 2026-06-13
 
 ### Added

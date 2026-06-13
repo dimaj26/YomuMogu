@@ -97,6 +97,7 @@ interface SavedChatState {
   fluencyTurns?: FluencyTurn[];
   passiveTurns?: Array<{ ms: number }>;
   closingDone?: boolean;
+  immersionLogged?: boolean;
 }
 
 interface AnalyzedWord {
@@ -161,6 +162,7 @@ export default function ChatPage() {
   const [fluencyTurns, setFluencyTurns] = useState<FluencyTurn[]>([]);
   const [passiveTurns, setPassiveTurns] = useState<Array<{ ms: number }>>([]);
   const [closingDone, setClosingDone] = useState<boolean>(false);
+  const [immersionLogged, setImmersionLogged] = useState<boolean>(false);
   const [timeLeftMs, setTimeLeftMs] = useState<number>(0);
   const turnStartTimeRef = useRef<number | null>(null);
 
@@ -232,6 +234,7 @@ export default function ChatPage() {
           setFluencyTurns(savedState.fluencyTurns || []);
           setPassiveTurns(savedState.passiveTurns || []);
           setClosingDone(savedState.closingDone || false);
+          setImmersionLogged(savedState.immersionLogged || false);
           setIsStateLoaded(true);
           return;
         }
@@ -306,6 +309,7 @@ export default function ChatPage() {
         fluencyTurns,
         passiveTurns,
         closingDone,
+        immersionLogged,
       };
       setProfileItem(`chat_state_${session.id}`, JSON.stringify(stateToSave));
     } catch (e) {
@@ -325,7 +329,8 @@ export default function ChatPage() {
     syncCardGrades,
     showExitConfirm,
     passiveTurns,
-    closingDone
+    closingDone,
+    immersionLogged
   ]);
 
   // Проверка завершения (80% слов собрано)
@@ -825,7 +830,7 @@ export default function ChatPage() {
   const startAnalysis = async () => {
     if (!session) return;
 
-    if (!showSummaryScreen) {
+    if (!showSummaryScreen && !immersionLogged) {
       const pId = getActiveProfileId();
       if (pId) {
         const savedLogStr = getProfileItem('activity_log', pId);
@@ -837,6 +842,7 @@ export default function ChatPage() {
         }
         const updatedLog = recordActivity('immersion', currentLog);
         setProfileItem('activity_log', JSON.stringify(updatedLog), pId);
+        setImmersionLogged(true);
       }
     }
 

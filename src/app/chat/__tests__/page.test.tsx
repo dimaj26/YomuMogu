@@ -1409,6 +1409,67 @@ describe('Soft Closing and Passive Timing Tests', () => {
     await screen.findByText('Часто встречались');
     expect(screen.getByText(/Часто встречались:\s*言葉\s*—\s*добавить в изучение\?/)).toBeInTheDocument();
   });
+
+  it('immersion в лог пишется один раз за сессию даже при повторном входе на экран итогов (immersionLogged персистится)', async () => {
+    setupActiveSession();
+    localStorage.removeItem('yomumogu_profile_default_activity_log');
+
+    // Симулируем первое вхождение на экран итогов: showSummaryScreen: false в сохраненном состоянии
+    const savedState1 = {
+      messages: [
+        { id: '1', role: 'model' as const, text: 'Привет' },
+        { id: '2', role: 'user' as const, text: 'Ответ 1' },
+      ],
+      collectedWords: ['猫'],
+      isComplete: false,
+      unusedTargetWords: [],
+      showSummaryScreen: false,
+      analyzedWords: [],
+      selectedSyncCards: [],
+      selectedAddWords: [],
+      passiveTurns: []
+    };
+    localStorage.setItem(`yomumogu_profile_default_chat_state_test-session-soft-closing`, JSON.stringify(savedState1));
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({ words: [] }),
+    } as Response);
+
+    const { unmount } = render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    // Ожидаем завершения диалога/загрузки: кликаем "Завершить", чтобы запустить startAnalysis
+    await screen.findByText('Привет');
+    const completeBtn = screen.getAllByRole('button', { name: 'Завершить' })[0];
+    fireEvent.click(completeBtn);
+    const confirmBtn = screen.getAllByRole('button', { name: 'Завершить' })[1];
+    fireEvent.click(confirmBtn);
+
+    // Дожидаемся результатов и исчезновения загрузчика
+    await screen.findByText('Итоги практики');
+    await waitFor(() => expect(screen.queryByText('Анализируем диалог...')).not.toBeInTheDocument());
+
+    // Проверяем лог активности в localStorage
+    const logStr1 = localStorage.getItem('yomumogu_profile_default_activity_log') || '[]';
+    const log1 = JSON.parse(logStr1);
+    expect(log1).toEqual(['immersion']);
+
+    // Проверяем, что в сохраненном состоянии теперь записано immersionLogged: true
+    const savedStateAfter = JSON.parse(localStorage.getItem(`yomumogu_profile_default_chat_state_test-session-soft-closing`) || '{}');
+    expect(savedStateAfter.immersionLogged).toBe(true);
+
+    unmount();
+
+    // 2. Симулируем повторный вход на экран итогов
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    await screen.findByText('Итоги практики');
+
+    // Лог активности не должен увеличиться (все еще 1 запись)
+    const logStr2 = localStorage.getItem('yomumogu_profile_default_activity_log') || '[]';
+    const log2 = JSON.parse(logStr2);
+    expect(log2).toEqual(['immersion']);
+  });
 });
 
 
