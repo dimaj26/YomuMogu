@@ -88,7 +88,7 @@ export function parseSearchResults(data: any): SearchResult {
  * Поддерживает пагинацию через continuation.
  */
 export async function fetchYoutubeSearch(query: string, continuation?: string): Promise<SearchResult> {
-  const apiKey = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8'; // Стандартный ключ InnerTube
+  const apiKey = process.env.YOUTUBE_INNERTUBE_KEY || ''; // InnerTube ключ из .env.local
   const url = `https://www.youtube.com/youtubei/v1/search?key=${apiKey}`;
   const headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',

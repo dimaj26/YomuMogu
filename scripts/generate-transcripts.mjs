@@ -56,7 +56,8 @@ async function scrapeVideo(videoId) {
     .join('; ');
 
   // 2. Запрос к player API
-  const playerUrl = 'https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
+  const innerTubeKey = process.env.YOUTUBE_INNERTUBE_KEY || '';
+  const playerUrl = `https://www.youtube.com/youtubei/v1/player?key=${innerTubeKey}`;
   const playerRes = await fetch(playerUrl, {
     method: 'POST',
     headers: {

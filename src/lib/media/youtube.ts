@@ -87,7 +87,8 @@ async function getTracksAndCookies(videoId: string): Promise<{ tracks: any[]; co
   const cookieString = setCookies.map(c => c.split(';')[0]).join('; ');
 
   logger.info(`[YouTube Scraper] Запрос к InnerTube Player API для видео ${videoId}`);
-  const playerUrl = 'https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
+  const innerTubeKey = process.env.YOUTUBE_INNERTUBE_KEY || '';
+  const playerUrl = `https://www.youtube.com/youtubei/v1/player?key=${innerTubeKey}`;
   
   checkRateLimit();
   const playerRes = await fetch(playerUrl, {
