@@ -1961,9 +1961,9 @@ export default function ChatPage() {
                 </div>
               )}
 
-              {analyzedWords.length === 0 && (
+               {analyzedWords.length === 0 && (
                 <div className={styles.noWordsCard}>
-                  <p>{t('В диалоге не найдено новых слов уровня N4+.', '対話の中にN4以上の新しい単語は見つかりませんでした。')}</p>
+                  <p>{t('В диалоге не найдено новых слов для изучения.', '対話の中に新しい単語は見つかりませんでした。')}</p>
                 </div>
               )}
 

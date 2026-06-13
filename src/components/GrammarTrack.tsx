@@ -12,6 +12,7 @@ import { GRAMMAR_LEITNER_INTERVALS_DAYS } from '@/core/intervals';
 interface GrammarTrackProps {
   grammarProgress: Record<string, GrammarProgress>;
   onSelectRule: (ruleId: string) => void;
+  level?: 'N5' | 'N4';
 }
 
 // Метки для нумерации ступеней (1.1, 1.2, 2, 3, 4, 5, 6)
@@ -26,6 +27,7 @@ const STEP_LABELS: Record<string, string> = {
 };
 
 interface ExtendedGrammarNode extends GrammarGraphNode {
+  level: 'N5' | 'N4';
   construction: string;
   topic: string;
   translation: string;
@@ -33,19 +35,25 @@ interface ExtendedGrammarNode extends GrammarGraphNode {
   coords: { x: number; y: number };
 }
 
-export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onSelectRule }) => {
+export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onSelectRule, level = 'N5' }) => {
   const { t } = useJapanification();
   const [activePopover, setActivePopover] = useState<number | null>(null);
 
   const intervals = GRAMMAR_LEITNER_INTERVALS_DAYS;
 
   const allRules = grammarRules as ExtendedGrammarNode[];
+  const filteredRules = allRules.filter(r => r.level === level);
+
+  const height = level === 'N4' ? 560 : 940;
 
   // Генерируем пути рёбер программно на основе пререквизитов и координат из JSON
-  const edges = getEdges(allRules);
+  const edges = getEdges(filteredRules).filter(edge =>
+    filteredRules.some(n => n.id === edge.from) &&
+    filteredRules.some(n => n.id === edge.to)
+  );
   const connections = edges.map(edge => {
-    const fromNode = allRules.find(n => n.id === edge.from);
-    const toNode = allRules.find(n => n.id === edge.to);
+    const fromNode = filteredRules.find(n => n.id === edge.from);
+    const toNode = filteredRules.find(n => n.id === edge.to);
     const fromCoords = fromNode?.coords || { x: 250, y: 80 };
     const toCoords = toNode?.coords || { x: 250, y: 80 };
 
@@ -58,7 +66,7 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
     };
   });
 
-  const nodes = allRules.map((rule) => {
+  const nodes = filteredRules.map((rule) => {
     const progress = grammarProgress[rule.id];
     const isLocked = !isNodeUnlocked(rule.id, allRules, grammarProgress);
 
@@ -100,9 +108,9 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
 
   return (
     <div className={styles.trackContainer}>
-      <div className={styles.nodeList} style={{ width: '500px', height: '940px' }}>
+      <div className={styles.nodeList} style={{ width: '500px', height: `${height}px` }}>
         {/* SVG Соединительные линии на фоне */}
-        <svg className={styles.svgConnector} viewBox="0 0 500 940">
+        <svg className={styles.svgConnector} viewBox={`0 0 500 ${height}`}>
           {connections.map((conn, cIdx) => {
             const active = isConnectionActive(conn.to);
             return (
@@ -135,7 +143,9 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
             : `${styles.popoverCard} ${styles.popoverRight}`;
 
           // Определяем метку узла: для активных ступеней — номер ступени, иначе порядковый индекс
-          const stepLabel = STEP_LABELS[node.id];
+          const stepLabel = level === 'N4'
+            ? (node.id === 'g_n4_exam' ? '🏁' : String(idx + 1))
+            : (STEP_LABELS[node.id] || String(idx + 1));
 
           return (
             <div
@@ -156,7 +166,7 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
                   ) : isCompleted ? (
                     <Check size={22} className={styles.checkIcon} />
                   ) : (
-                    <span className={styles.nodeNumber}>{stepLabel || (idx + 1)}</span>
+                    <span className={styles.nodeNumber}>{stepLabel}</span>
                   )}
                 </div>
               </button>

@@ -210,11 +210,74 @@ describe('GrammarTrack Component', () => {
     expect(paths.length).toBe(14);
   });
 
-  it('после авторинга контента плейсхолдером остаётся только g_n5_exam', () => {
+  it('после авторинга контента плейсхолдерами остаются g_n5_exam и g_n4_exam', () => {
     const grammarRules = require('../../resources/grammar_rules.json');
     const placeholders = grammarRules.filter((r: any) => r.isPlaceholder);
-    expect(placeholders.length).toBe(1);
-    expect(placeholders[0].id).toBe('g_n5_exam');
+    expect(placeholders.length).toBe(2);
+    expect(placeholders.map((p: any) => p.id)).toContain('g_n5_exam');
+    expect(placeholders.map((p: any) => p.id)).toContain('g_n4_exam');
+  });
+
+  it('level=N5 (по умолчанию) рендерит только N5-ноды, N4 скрыты', () => {
+    renderWithProvider(
+      <GrammarTrack
+        grammarProgress={mockProgress}
+        onSelectRule={vi.fn()}
+      />
+    );
+    expect(screen.getByTitle('Именной предикат и частицы')).toBeInTheDocument();
+    expect(screen.queryByTitle('Модификация существительных (относительные придаточные)')).not.toBeInTheDocument();
+  });
+
+  it('level=N4 рендерит 6 N4-нод и рисует рёбра только внутри N4-набора', () => {
+    const { container } = renderWithProvider(
+      <GrammarTrack
+        grammarProgress={{}}
+        onSelectRule={vi.fn()}
+        level="N4"
+      />
+    );
+    expect(screen.getByTitle('Модификация существительных (относительные придаточные)')).toBeInTheDocument();
+    expect(screen.queryByTitle('Именной предикат и частицы')).not.toBeInTheDocument();
+
+    // N4 рёбра:
+    // s1 -> exam
+    // s2 -> exam
+    // s3 -> exam
+    // s4 -> exam
+    // s5 -> exam
+    // Итого 5 рёбер
+    const paths = container.querySelectorAll('svg path');
+    expect(paths.length).toBe(5);
+  });
+
+  it('N4-нода заблокирована пока её N5-пререквизит не mature, и разблокируется когда mature', () => {
+    // 1. Провайдим пустой прогресс (N5 пререквизит g_n5_s7 не пройден/новый)
+    const { rerender } = renderWithProvider(
+      <GrammarTrack
+        grammarProgress={{}}
+        onSelectRule={vi.fn()}
+        level="N4"
+      />
+    );
+    const node = screen.getByTitle('Модификация существительных (относительные придаточные)');
+    expect(node).toBeDisabled();
+
+    // 2. g_n5_s7 начат (learning)
+    const learningProgress = {
+      g_n5_s7: { ruleId: 'g_n5_s7', profileId: 'default', status: 'learning' as const, due: 0, stepIndex: 1 }
+    };
+    rerender(
+      <JapanificationProvider>
+        <GrammarTrack
+          grammarProgress={learningProgress}
+          onSelectRule={vi.fn()}
+          level="N4"
+        />
+      </JapanificationProvider>
+    );
+    const nodeUnlocked = screen.getByTitle('Модификация существительных (относительные придаточные)');
+    expect(nodeUnlocked).not.toBeDisabled();
   });
 });
 

@@ -2,6 +2,15 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.57.0] - 2026-06-13
+
+### Added
+- **N4 Grammar Curriculum**: Added 6 JLPT N4 grammar nodes (5 rules: V-te-iru/V-te-oku/V-te-miru/V-te-shimau/V-te-hoshii, plus 1 exam placeholder node) to `grammar_rules.json` with coordinate layouts.
+- **Practice Page Level Switcher**: Implemented dynamic N5/N4 curriculum switcher in `/practice` Grammar tab, allowing users to toggle between levels.
+- **Component Filtering**: Filtered `<GrammarTrack>` nodes and edges by the selected JLPT level, rendering coordinates and heights dynamically (560px for N4, 940px for N5) and drawing only level-scoped connection lines.
+- **Level-Agnostic Chat Empty State**: Updated empty state analyze text in `/chat` from a hardcoded "N4+" string to a level-agnostic notice, resolving Phase 10 tail cleanups.
+- **TDD Test Coverage**: Created new unit tests verifying the level switcher rendering, active tab class styling, and toggle interaction.
+
 ## [1.56.0] - 2026-06-13
 
 ### Added

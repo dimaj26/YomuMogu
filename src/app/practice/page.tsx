@@ -161,6 +161,7 @@ export default function PracticePage() {
 
   // Грамматические состояния
   const [activeTab, setActiveTab] = useState<'words' | 'grammar' | 'media'>('words');
+  const [selectedGrammarLevel, setSelectedGrammarLevel] = useState<'N5' | 'N4'>('N5');
   const [grammarProgress, setGrammarProgress] = useState<Record<string, GrammarProgress>>({});
   const [activeGrammarRuleId, setActiveGrammarRuleId] = useState<string | null>(null);
 
@@ -1370,10 +1371,29 @@ export default function PracticePage() {
               )}
 
               {activeTab === 'grammar' && (
-                <GrammarTrack
-                  grammarProgress={grammarProgress}
-                  onSelectRule={(ruleId) => setActiveGrammarRuleId(ruleId)}
-                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={() => setSelectedGrammarLevel('N5')}
+                      className={`btn-3d ${selectedGrammarLevel === 'N5' ? 'btn-blue' : ''}`}
+                      style={{ padding: '6px 14px', fontSize: '13px' }}
+                    >
+                      N5
+                    </button>
+                    <button
+                      onClick={() => setSelectedGrammarLevel('N4')}
+                      className={`btn-3d ${selectedGrammarLevel === 'N4' ? 'btn-blue' : ''}`}
+                      style={{ padding: '6px 14px', fontSize: '13px' }}
+                    >
+                      N4
+                    </button>
+                  </div>
+                  <GrammarTrack
+                    level={selectedGrammarLevel}
+                    grammarProgress={grammarProgress}
+                    onSelectRule={(ruleId) => setActiveGrammarRuleId(ruleId)}
+                  />
+                </div>
               )}
 
               {activeTab === 'media' && renderMediaTab()}

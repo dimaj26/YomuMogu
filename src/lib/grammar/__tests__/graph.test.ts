@@ -125,6 +125,25 @@ describe('Grammar DAG Graph Engine', () => {
     expect(errors).toEqual([]);
   });
 
+  it('grammar_rules.json содержит уровень N4: 5 авторских нод + g_n4_exam плейсхолдер', () => {
+    const n4Nodes = (realRules as any).filter((n: any) => n.level === 'N4');
+    expect(n4Nodes.filter((n: any) => !n.isPlaceholder).length).toBe(5);
+    expect(n4Nodes.find((n: any) => n.id === 'g_n4_exam')?.isPlaceholder).toBe(true);
+  });
+
+  it('все пререквизиты N4-нод указывают на реальные (не placeholder) ноды N5', () => {
+    const n4Nodes = (realRules as any).filter((n: any) => n.level === 'N4');
+    for (const node of n4Nodes) {
+      for (const prereqId of node.prerequisites) {
+        const prereq = (realRules as any).find((n: any) => n.id === prereqId);
+        expect(prereq).toBeDefined();
+        if (prereq.level === 'N5') {
+          expect(prereq.isPlaceholder).not.toBe(true);
+        }
+      }
+    }
+  });
+
   it('isNodeClosed истинно только для mature', () => {
     expect(isNodeClosed()).toBe(false);
     expect(isNodeClosed({

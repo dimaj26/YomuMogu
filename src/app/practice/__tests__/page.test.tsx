@@ -792,6 +792,33 @@ describe('PracticePage Component', () => {
     });
   });
 
+  describe('Grammar Tab Level Switcher', () => {
+    it('показывает кнопки переключения уровней N5/N4 на вкладке грамматики', async () => {
+      render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+      
+      const grammarTabBtn = await screen.findByRole('button', { name: 'Карта грамматики' });
+      expect(grammarTabBtn).toBeInTheDocument();
+      
+      // Переходим на вкладку грамматики
+      fireEvent.click(grammarTabBtn);
+      
+      // Должны появиться кнопки N5 и N4
+      const n5Btn = await screen.findByRole('button', { name: 'N5' });
+      const n4Btn = await screen.findByRole('button', { name: 'N4' });
+      expect(n5Btn).toBeInTheDocument();
+      expect(n4Btn).toBeInTheDocument();
+      
+      // N5 кнопка должна быть активна (с классом btn-blue)
+      expect(n5Btn.className).toContain('btn-blue');
+      expect(n4Btn.className).not.toContain('btn-blue');
+      
+      // Переключаемся на N4
+      fireEvent.click(n4Btn);
+      expect(n4Btn.className).toContain('btn-blue');
+      expect(n5Btn.className).not.toContain('btn-blue');
+    });
+  });
+
   describe('Квесты', () => {
     it('завершённый квест показывает бейдж Выполнено ✓ и не содержит кнопки', async () => {
       mockQuestsData = [
