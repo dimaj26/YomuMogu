@@ -81,3 +81,12 @@ export interface GrammarProgress {
   status: 'new' | 'learning' | 'review' | 'mature';
 }
 
+export interface ExposureEntry {
+  profileId: string;
+  word: string;
+  count: number;
+  firstSeen: number;
+  lastSeen: number;
+  source: string;
+}
+

@@ -3,11 +3,11 @@ import { calculateNextFsrsState, createDefaultFsrsState, alignPassiveToActiveSta
 import { GRAMMAR_LEITNER_INTERVALS_DAYS } from './intervals';
 import { getProfileItem } from '../lib/profile';
 import { logger } from '../lib/logger';
-import { LocalWord, LocalReview, UiWord, GrammarProgress } from './types';
+import { LocalWord, LocalReview, UiWord, GrammarProgress, ExposureEntry } from './types';
 import { getJlptLevel, mergeJlptTag } from '../lib/jlpt/levels';
 import { stripHtml } from '../plugins/anki/filter';
 
-export type { LocalWord, LocalReview, UiWord, GrammarProgress };
+export type { LocalWord, LocalReview, UiWord, GrammarProgress, ExposureEntry };
 
 
 class YomuMoguDatabase extends Dexie {
@@ -15,6 +15,7 @@ class YomuMoguDatabase extends Dexie {
   reviews!: Table<LocalReview>;
   ui_words!: Table<UiWord>;
   grammar_progress!: Table<GrammarProgress>;
+  exposure_log!: Table<ExposureEntry>;
 
   constructor() {
     super('YomuMoguDatabase');
@@ -79,6 +80,14 @@ class YomuMoguDatabase extends Dexie {
       reviews: '++id, [profileId+cardId], cardId, timestamp, synced, profileId',
       ui_words: '[profileId+id], id, status, due, profileId',
       grammar_progress: '[profileId+ruleId], ruleId, status, due, profileId',
+    });
+
+    this.version(6).stores({
+      words: '[profileId+id], id, word, category, [profileId+category], passive.due, active.due, *tags, profileId',
+      reviews: '++id, [profileId+cardId], cardId, timestamp, synced, profileId',
+      ui_words: '[profileId+id], id, status, due, profileId',
+      grammar_progress: '[profileId+ruleId], ruleId, status, due, profileId',
+      exposure_log: '[profileId+word], profileId, word, count, lastSeen',
     });
   }
 }

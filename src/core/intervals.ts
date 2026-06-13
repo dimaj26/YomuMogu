@@ -34,3 +34,6 @@ export const ADVICE_DOWN_CORRECTION_RATE = 0.4;
 /** Порог «уровень лестницы закрыт» (LearningTrack): лексика и грамматика. */
 export const LADDER_COMPLETE_LEX_COVERAGE = 0.8;
 export const LADDER_COMPLETE_GRAMMAR_COVERAGE = 1.0;
+
+/** [СИСТЕМА 7] Exposure Log и Mining (Phase 9b). Порог встреч слова вне колоды для предложения к добавлению. */
+export const EXPOSURE_MINING_THRESHOLD = 5;

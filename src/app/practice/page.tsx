@@ -35,6 +35,8 @@ import type { LocalWord } from '@/core/types';
 import { AnkiWord } from '@/plugins/anki/filter';
 import phonosemanticsData from '@/resources/phonosemantics.json';
 import { isAnswerAcceptable } from '@/lib/quiz/compare';
+import { sortNewWordsByPriority, pickNonInterferingBatch } from '@/lib/words/priority';
+import { pickDiscriminationDistractors } from '@/lib/words/similarity';
 import styles from './practice.module.css';
 
 // Типизация phonosemantics.json
@@ -89,22 +91,29 @@ function generateOptions(
   allWords: LocalWord[],
   field: 'reading' | 'translation'
 ): string[] {
-  const targetTags = currentWord.tags || [];
+  // 1. Сначала ищем дистракторы среди зрелых слов с общими кандзи (интерференция)
+  const discriminationDistractors = pickDiscriminationDistractors(currentWord, allWords, field)
+    .filter(val => val !== correct);
   
-  // Отбираем слова с пересекающимися ситуационными тегами (исключая universal)
-  const sameTagWords = allWords.filter(w => 
-    w.word !== currentWord.word && 
-    w[field] !== correct &&
-    w.tags && 
-    w.tags.some(t => t !== 'universal' && targetTags.includes(t))
-  );
+  let distractors = Array.from(new Set(discriminationDistractors));
 
-  let distractors = sameTagWords.map(w => w[field]);
+  // 2. Если не набрали 2 дистрактора, добираем по ситуационным тегам
+  if (distractors.length < 2) {
+    const targetTags = currentWord.tags || [];
+    const sameTagWords = allWords.filter(w => 
+      w.word !== currentWord.word && 
+      w[field] !== correct &&
+      w.tags && 
+      w.tags.some(t => t !== 'universal' && targetTags.includes(t)) &&
+      !distractors.includes(w[field])
+    );
 
-  // Убираем дубликаты среди дистракторов
-  distractors = Array.from(new Set(distractors));
+    const sameTagVals = Array.from(new Set(sameTagWords.map(w => w[field])));
+    const needed = 2 - distractors.length;
+    distractors = [...distractors, ...sameTagVals.sort(() => Math.random() - 0.5).slice(0, needed)];
+  }
 
-  // Если слов с тем же тегом не хватает, добираем из всех остальных слов
+  // 3. Если все еще меньше 2, добираем из оставшихся слов
   if (distractors.length < 2) {
     const others = allWords
       .filter(w => w.word !== currentWord.word && w[field] !== correct && !distractors.includes(w[field]))
@@ -113,7 +122,7 @@ function generateOptions(
     const needed = 2 - distractors.length;
     distractors = [...distractors, ...uniqueOthers.sort(() => Math.random() - 0.5).slice(0, needed)];
   } else {
-    distractors = distractors.sort(() => Math.random() - 0.5).slice(0, 2);
+    distractors = distractors.slice(0, 2);
   }
 
   const options = [...distractors, correct].sort(() => Math.random() - 0.5);
@@ -458,7 +467,10 @@ export default function PracticePage() {
       10
     );
     if (limit === 0) return;
-    const wordsForWarmup = newWords.slice(0, limit);
+    
+    // Сортируем новые слова по приоритету JLPT и собираем непересекающийся по кандзи батч
+    const sortedNewWords = sortNewWordsByPriority(newWords);
+    const wordsForWarmup = pickNonInterferingBatch(sortedNewWords, limit);
 
     const state: WarmupState = {
       words: wordsForWarmup,

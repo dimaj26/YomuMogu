@@ -2,6 +2,16 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.56.0] - 2026-06-13
+
+### Added
+- **Word Queue Science**: Frequency-ordered new-word intake using JLPT levels as frequency proxy (lower level = higher priority).
+- **Interference Guard**: Added kanji-sharing similarity checks to prevent introducing visually similar kanji characters in the same warm-up batch.
+- **Discrimination Distractors**: Prioritized mature kanji-sharing words as high-quality distractors during the translation/reading warm-up, improving orthographic discrimination.
+- **Exposure Log & Mining**: Introduced Dexie database schema version 6 with a local-first `exposure_log` table tracking words encountered in chat dialogues outside the study pool. Renders a mining candidates card on the Summary screen suggesting additions when a word count exceeds the threshold.
+- **Passive N5 Autozачет**: Dropped the N4 level filter restriction in `/api/chat/analyze` route prompt, enabling N5 vocabulary to also receive passive/active study credit on dialog practice completion.
+- **Comprehensive TDD Coverage**: Created full test suites in `priority.test.ts`, `similarity.test.ts`, and `exposureService.test.ts`, verifying sorting, similarity checks, exposure log counting, and Summary card rendering.
+
 ## [1.55.0] - 2026-06-13
 
 ### Added

@@ -1365,6 +1365,50 @@ describe('Soft Closing and Passive Timing Tests', () => {
     // Проверяем отображение среднего времени (12 + 8) / 2 = 10 сек
     expect(screen.getByText(/Среднее время реплики:\s*10\.0\s*сек/)).toBeInTheDocument();
   });
+
+  it('Summary показывает карточку кандидатов на майнинг при наличии', async () => {
+    setupActiveSession();
+    
+    // Добавим кандидата в exposure_log БД (должен быть >= EXPOSURE_MINING_THRESHOLD, то есть >= 5)
+    await db.exposure_log.clear();
+    await db.exposure_log.add({
+      profileId: 'default',
+      word: '言葉',
+      count: 6,
+      firstSeen: Date.now(),
+      lastSeen: Date.now(),
+      source: 'chat'
+    });
+
+    const savedState = {
+      messages: [
+        { id: '1', role: 'model' as const, text: 'Привет' },
+        { id: '2', role: 'user' as const, text: 'Ответ 1' },
+      ],
+      collectedWords: ['猫'],
+      isComplete: false,
+      unusedTargetWords: [],
+      showSummaryScreen: true,
+      analyzedWords: [],
+      selectedSyncCards: [],
+      selectedAddWords: [],
+      passiveTurns: []
+    };
+    localStorage.setItem(`yomumogu_profile_default_chat_state_test-session-soft-closing`, JSON.stringify(savedState));
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({ words: [] }),
+    } as Response);
+
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    await screen.findByText('Итоги практики');
+
+    // Проверяем наличие текста карточки кандидатов
+    await screen.findByText('Часто встречались');
+    expect(screen.getByText(/Часто встречались:\s*言葉\s*—\s*добавить в изучение\?/)).toBeInTheDocument();
+  });
 });
 
 
