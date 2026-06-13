@@ -37,3 +37,10 @@ export const LADDER_COMPLETE_GRAMMAR_COVERAGE = 1.0;
 
 /** [СИСТЕМА 7] Exposure Log и Mining (Phase 9b). Порог встреч слова вне колоды для предложения к добавлению. */
 export const EXPOSURE_MINING_THRESHOLD = 5;
+
+/** [СИСТЕМА 8] Баланс структура-иммерсия (Phase 11).
+ *  Рекомендуемая доля СТРУКТУРНОЙ работы (грамматика+квизы) по уровню; остаток — иммерсия (чат+медиа). */
+export const BALANCE_STRUCTURE_TARGET = { N5: 0.5, N4: 0.4, N3: 0.3, N2: 0.2, N1: 0.2 } as const;
+// Окно учёта активности (последние N действий) и минимум для показа фактической доли.
+export const BALANCE_ACTIVITY_WINDOW = 30;
+export const BALANCE_MIN_ACTIVITIES = 6;

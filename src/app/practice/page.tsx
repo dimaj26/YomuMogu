@@ -15,6 +15,9 @@ import { getProfileItem, setProfileItem, removeProfileItem, getActiveProfileId }
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { JpUI } from '@/components/JpUI';
 import { PhonosemanticHint, PhonosemanticData } from '@/components/PhonosemanticHint';
+import { ScienceTip } from '@/components/ScienceTip';
+import { BalanceWidget } from '@/components/BalanceWidget';
+import { recordActivity, type Strand } from '@/lib/balance/balance';
 import { 
   LOCAL_DECK_NAME,
   isLocalDeckInitialized,
@@ -161,6 +164,7 @@ export default function PracticePage() {
 
   // Грамматические состояния
   const [activeTab, setActiveTab] = useState<'words' | 'grammar' | 'media'>('words');
+  const [activityLog, setActivityLog] = useState<Strand[]>([]);
   const [selectedGrammarLevel, setSelectedGrammarLevel] = useState<'N5' | 'N4'>('N5');
   const [grammarProgress, setGrammarProgress] = useState<Record<string, GrammarProgress>>({});
   const [activeGrammarRuleId, setActiveGrammarRuleId] = useState<string | null>(null);
@@ -389,6 +393,17 @@ export default function PracticePage() {
       } else {
         setShownVideoIds([]);
       }
+
+      const savedLog = getProfileItem('activity_log', profileId);
+      if (savedLog) {
+        try {
+          setActivityLog(JSON.parse(savedLog));
+        } catch {
+          setActivityLog([]);
+        }
+      } else {
+        setActivityLog([]);
+      }
     } catch (e) {
       console.error('Ошибка загрузки данных профиля для практики', e);
     } finally {
@@ -520,6 +535,20 @@ export default function PracticePage() {
           selectedAnswer: null,
           isCorrect: null
         });
+
+        const pId = getActiveProfileId();
+        if (pId) {
+          const savedLogStr = getProfileItem('activity_log', pId);
+          let currentLog: Strand[] = [];
+          if (savedLogStr) {
+            try {
+              currentLog = JSON.parse(savedLogStr);
+            } catch {}
+          }
+          const updatedLog = recordActivity('structure', currentLog);
+          setProfileItem('activity_log', JSON.stringify(updatedLog), pId);
+          setActivityLog(updatedLog);
+        }
       }
     }
   }, [warmup]);
@@ -625,6 +654,24 @@ export default function PracticePage() {
     }
   };
 
+  const launchMedia = useCallback((item: MediaItem) => {
+    setActiveMedia(item);
+    
+    const pId = getActiveProfileId();
+    if (pId) {
+      const savedLogStr = getProfileItem('activity_log', pId);
+      let currentLog: Strand[] = [];
+      if (savedLogStr) {
+        try {
+          currentLog = JSON.parse(savedLogStr);
+        } catch {}
+      }
+      const updatedLog = recordActivity('immersion', currentLog);
+      setProfileItem('activity_log', JSON.stringify(updatedLog), pId);
+      setActivityLog(updatedLog);
+    }
+  }, []);
+
   if (!hasLoaded) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-secondary)', alignItems: 'center', justifyContent: 'center' }}>
@@ -677,8 +724,9 @@ export default function PracticePage() {
             <>
               <span className={styles.warmupStep}>Проверка чтения</span>
               <div className={styles.warmupKanji}>{currentWord.word}</div>
-              <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)', margin: '0 0 8px 0' }}>
-                Введите чтение:
+              <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>Введите чтение:</span>
+                <ScienceTip tipId="typed_answer" />
               </p>
               <input
                 type="text"
@@ -807,7 +855,7 @@ export default function PracticePage() {
       if (item) {
         setCustomUrlInput('');
         // Автоматически запускаем воспроизведение импортированного видео
-        setActiveMedia(item);
+        launchMedia(item);
       } else {
         setImportError(mediaError || 'Не удалось импортировать видео по ссылке. Проверьте правильность URL.');
       }
@@ -981,7 +1029,7 @@ export default function PracticePage() {
                         </div>
 
                         <button
-                          onClick={() => setActiveMedia(item)}
+                          onClick={() => launchMedia(item)}
                           className="btn-3d btn-blue"
                           style={{ marginTop: '16px', width: '100%', padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '13px' }}
                         >
@@ -1072,7 +1120,7 @@ export default function PracticePage() {
                       </div>
 
                       <button
-                        onClick={() => setActiveMedia(item)}
+                        onClick={() => launchMedia(item)}
                         className="btn-3d btn-blue"
                         style={{ marginTop: '16px', width: '100%', padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '13px' }}
                       >
@@ -1372,21 +1420,24 @@ export default function PracticePage() {
 
               {activeTab === 'grammar' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      onClick={() => setSelectedGrammarLevel('N5')}
-                      className={`btn-3d ${selectedGrammarLevel === 'N5' ? 'btn-blue' : ''}`}
-                      style={{ padding: '6px 14px', fontSize: '13px' }}
-                    >
-                      N5
-                    </button>
-                    <button
-                      onClick={() => setSelectedGrammarLevel('N4')}
-                      className={`btn-3d ${selectedGrammarLevel === 'N4' ? 'btn-blue' : ''}`}
-                      style={{ padding: '6px 14px', fontSize: '13px' }}
-                    >
-                      N4
-                    </button>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => setSelectedGrammarLevel('N5')}
+                        className={`btn-3d ${selectedGrammarLevel === 'N5' ? 'btn-blue' : ''}`}
+                        style={{ padding: '6px 14px', fontSize: '13px' }}
+                      >
+                        N5
+                      </button>
+                      <button
+                        onClick={() => setSelectedGrammarLevel('N4')}
+                        className={`btn-3d ${selectedGrammarLevel === 'N4' ? 'btn-blue' : ''}`}
+                        style={{ padding: '6px 14px', fontSize: '13px' }}
+                      >
+                        N4
+                      </button>
+                    </div>
+                    <ScienceTip tipId="grammar_explicit" />
                   </div>
                   <GrammarTrack
                     level={selectedGrammarLevel}
@@ -1426,11 +1477,20 @@ export default function PracticePage() {
               </Link>
             </div>
 
+            {/* Виджет баланса структура-иммерсия */}
+            <BalanceWidget
+              level={macroLadderProfile.activeLevelId}
+              log={activityLog}
+            />
+
             {/* Ежедневные квесты */}
             <div className={styles.questsCard}>
-              <h3 className={styles.questsTitle}>
-                <Trophy size={20} style={{ color: 'var(--color-yellow-shadow)' }} />
-                <span>{t('Ежедневные квесты', 'デイリークエスト')}</span>
+              <h3 className={styles.questsTitle} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Trophy size={20} style={{ color: 'var(--color-yellow-shadow)' }} />
+                  <span>{t('Ежедневные квесты', 'デイリークエスト')}</span>
+                </div>
+                <ScienceTip tipId="no_streaks" />
               </h3>
               <div className={styles.questList}>
                 {quests.map((quest) => {
@@ -1472,9 +1532,12 @@ export default function PracticePage() {
 
             {/* Виджет советов по FSRS */}
             <div className="card-friendly" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Sparkles size={18} style={{ color: 'var(--color-yellow-shadow)' }} />
-                Интервальные повторения
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Sparkles size={18} style={{ color: 'var(--color-yellow-shadow)' }} />
+                  <span>Интервальные повторения</span>
+                </div>
+                <ScienceTip tipId="spacing" />
               </h3>
               <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.5', color: 'var(--text-secondary)', fontWeight: 600 }}>
                 YomuMogu использует двухкритериальный алгоритм FSRS для раздельного отслеживания навыков чтения (пассивный) и письма (активный).
@@ -1518,6 +1581,17 @@ export default function PracticePage() {
               // Записываем начальный статус в IndexedDB
               const pId = getActiveProfileId();
               if (pId) {
+                const savedLogStr = getProfileItem('activity_log', pId);
+                let currentLog: Strand[] = [];
+                if (savedLogStr) {
+                  try {
+                    currentLog = JSON.parse(savedLogStr);
+                  } catch {}
+                }
+                const updatedLog = recordActivity('structure', currentLog);
+                setProfileItem('activity_log', JSON.stringify(updatedLog), pId);
+                setActivityLog(updatedLog);
+
                 const progress = await db.grammar_progress.get([pId, rule.id]);
                 if (!progress) {
                   await db.grammar_progress.put({

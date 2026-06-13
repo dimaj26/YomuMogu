@@ -2,6 +2,16 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.58.0] - 2026-06-13
+
+### Added
+- **Science Tips Registry**: Created `science_tips.json` with fixed scientific explanations and research citations in Russian for pedagogical choices (spacing, furigana fading, self-repair prompts, active keyboard input, etc.).
+- **Interactive ScienceTip Component**: Implemented a reusable React client component displaying a neat `ⓘ` icon with a popover showing the scientific explanation and its associated study/author citation. Includes a safety fallback rendering standard text inside test mock environments.
+- **Practice Balance Engine**: Added `balance.ts` calculation library for tracking structure (grammar/quizzes) vs immersion (chat/media) balance. Generates friendly, non-coercive Russian recommendations based on the user's active JLPT level.
+- **Balance Indicator Widget**: Created the `<BalanceWidget>` component displaying recommended vs actual practice share bars, placed prominently in the `/practice` page sidebar.
+- **Activity Log Persistence**: Captured user actions in namespaced localStorage under `activity_log` across warm-up completions, quiz checks, grammar validation, and media/chat summaries, capped to a rolling window of 30 entries.
+- **Full TDD Coverage**: Authored unit test suites in `tips.test.ts`, `balance.test.ts`, `ScienceTip.test.tsx`, and `BalanceWidget.test.tsx` verifying all API contracts and component interactions.
+
 ## [1.57.0] - 2026-06-13
 
 ### Added

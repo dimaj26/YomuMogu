@@ -71,6 +71,7 @@ You are an expert **TypeScript / Next.js 16** developer. Your specialty is App R
 - **Intervals Registry & Soft Closing**: centralized single source of truth timings, soft closing turn on scenario completion without questions, fluency timer auto-stop, and passive turn duration metrics.
 - **Word Queue Science & Exposure Mining**: frequency priority intake, kanji interference guard batching, visual-similarity distractors for mature words, and exposure log counter with mining candidates widget on chat summary screen.
 - **N4 Grammar Curriculum**: Added 6 N4 rules, N5/N4 switcher in practice Grammar track, filtered SVG levels rendering, and level-agnostic chat empty state.
+- **Transparency Showcase & Practice Balance**: Versioned static registry of pedagogy research and citations (`science_tips.json`), interactive ScienceTip information icons, and structure-vs-immersion practice balance widget tracking rolling activity logs.
 
 ---
 

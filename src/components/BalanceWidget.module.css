@@ -1,0 +1,89 @@
+.widget {
+  margin-bottom: 24px;
+  background-color: var(--bg-primary);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.barsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.barRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.barLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.barTrack {
+  height: 12px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}
+
+.fillRecommended {
+  background-color: var(--color-blue);
+}
+
+.fillActual {
+  background-color: var(--color-green);
+}
+
+.barEmptyText {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-light);
+  white-space: nowrap;
+}
+
+.message {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  padding: 10px 12px;
+  background-color: var(--bg-secondary);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border-color);
+  text-align: center;
+}

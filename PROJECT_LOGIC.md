@@ -149,6 +149,7 @@ src/
     media_feed.json       # Static metadata for recommended video/podcast channels
     media_transcripts.json # Pre-generated timed transcripts for recommended YouTube videos
     jlpt_levels.json      # Generated versioned JLPT levels resource containing N5 and N4 vocabulary lists
+    science_tips.json     # Versioned static registry of pedagogy research and citations (science tips)
   services/
     tokenizer/
       server.py           # MeCab FastAPI microservice (port 8000)
@@ -178,6 +179,14 @@ src/
       profile.ts          # Competency engine: lexCoverage, grammarCoverage, recentCorrectionRate, buildCompetencyProfile, getPresetAdvice
       __tests__/
         profile.test.ts   # Unit tests for competency profile logic
+    science/
+      tips.ts             # Pedagogy tips retrieval library
+      __tests__/
+        tips.test.ts      # Unit tests for science tips
+    balance/
+      balance.ts          # Structure-vs-immersion activity balance calculations
+      __tests__/
+        balance.test.ts    # Unit tests for balance tracking logic
     media/
       youtube.ts          # Zero-dependency Japanese YouTube caption extractor
       parser.ts           # SRT/VTT subtitle parser and duration rounding utility
@@ -318,6 +327,17 @@ src/
 | `core/exposureService.ts` | Client-side exposure logger and mining candidate detector utilizing IndexedDB |
 | `core/__tests__/exposureService.test.ts` | Unit tests for exposure logging and mining candidate detection |
 | `resources/jlpt_levels.json` | Generated versioned JLPT levels resource containing N5 and N4 vocabulary lists |
+| `resources/science_tips.json` | Versioned static registry of pedagogy research and citations (science tips) |
+| `lib/science/tips.ts` | Pure module for retrieving scientific tips and citations from the registry |
+| `lib/science/__tests__/tips.test.ts` | Unit tests for getTip and TIP_IDS |
+| `lib/balance/balance.ts` | Pure module for structure-vs-immersion activity share calculation and recommendations |
+| `lib/balance/__tests__/balance.test.ts` | Unit tests for recommended share, actual share, and hint generation |
+| `components/ScienceTip.tsx` | Informational tooltip icon component showing scientific rationale for features |
+| `components/ScienceTip.module.css` | CSS module for ScienceTip tooltip and popover alignment |
+| `components/__tests__/ScienceTip.test.tsx` | Unit tests for ScienceTip open/close behavior and missing fallback checks |
+| `components/BalanceWidget.tsx` | Sidebar widget showing target vs actual structure-immersion balance with spacing advice |
+| `components/BalanceWidget.module.css` | CSS module for recommended and actual balance bar visual progress indicators |
+| `components/__tests__/BalanceWidget.test.tsx` | Unit tests for BalanceWidget rendering under empty and complete activity logs |
 | `services/tokenizer/server.py` | FastAPI MeCab microservice providing morphological analysis on port 8000; `GET /health` returns `{status:'ok'\|'error'}` |
 | `services/tokenizer/Dockerfile` | Docker container definition for the MeCab tokenizer service |
 | `scripts/generate-transcripts.mjs` | Node script to scrape real `ja` captions for all feed videos and output `media_transcripts.json` |
@@ -349,6 +369,7 @@ Default profile ID: `default`
 | `daily_new_words_${YYYY-MM-DD}` | string | Number of new words studied on a specific date |
 | `daily_new_words_limit_offset_${YYYY-MM-DD}` | string | Daily limit offset for new words on a specific date |
 | `deck_mappings` | JSON `Record<string, { frontField: string; backField: string; audioField?: string; imageField?: string }>` | Per-deck field mapping configurations |
+| `activity_log` | JSON `Strand[]` | Rolling log of recent user actions classified into 'structure' or 'immersion' strands |
 
 Profile metadata (not namespaced):
 - `yomumogu_active_profile_id` — active profile ID string
@@ -799,7 +820,7 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-451 unit/integration tests across 67 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+469 unit/integration tests across 71 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
 
 ---
 
@@ -816,3 +837,4 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 | **[СИСТЕМА 5]** Daily-квесты | Час сброса прогресса квестов (локальное время) | `QUEST_RESET_HOUR` | `hooks/useQuests.ts` | `hooks/useQuests.ts` |
 | **[СИСТЕМА 6]** Профиль компетентности | Лимиты сессий/ходов, пороги закрытия JLPT уровней и рекомендации уровня чата | `COMPETENCY_MIN_SESSIONS`, `COMPETENCY_MIN_TURNS`, `COMPETENCY_SESSION_CAP`, `ADVICE_UP_GRAMMAR_COVERAGE`, `ADVICE_UP_CORRECTION_RATE`, `ADVICE_DOWN_CORRECTION_RATE`, `LADDER_COMPLETE_LEX_COVERAGE`, `LADDER_COMPLETE_GRAMMAR_COVERAGE` | `lib/competency/profile.ts` | `lib/competency/profile.ts`, `app/chat/page.tsx`, `LearningTrack.tsx` |
 | **[СИСТЕМА 7]** Exposure & Mining | Порог встреч слова вне колоды для предложения к добавлению | `EXPOSURE_MINING_THRESHOLD` | `core/exposureService.ts` | `core/exposureService.ts`, `app/chat/page.tsx` |
+| **[СИСТЕМА 8]** Баланс структура-иммерсия | Рекомендуемая доля структуры по JLPT уровню, размер скользящего окна, минимальное число действий | `BALANCE_STRUCTURE_TARGET`, `BALANCE_ACTIVITY_WINDOW`, `BALANCE_MIN_ACTIVITIES` | `lib/balance/balance.ts` | `components/BalanceWidget.tsx`, `app/practice/page.tsx`, `app/chat/page.tsx`, `app/practice/quiz/page.tsx` |

@@ -27,6 +27,8 @@ import {
 } from '@/lib/chat/fluency';
 import styles from './chat.module.css';
 import { COMPETENCY_SESSION_CAP } from '@/core/intervals';
+import { ScienceTip } from '@/components/ScienceTip';
+import { recordActivity, type Strand } from '@/lib/balance/balance';
 
 interface TargetWord {
   word: string;
@@ -822,6 +824,22 @@ export default function ChatPage() {
 
   const startAnalysis = async () => {
     if (!session) return;
+
+    if (!showSummaryScreen) {
+      const pId = getActiveProfileId();
+      if (pId) {
+        const savedLogStr = getProfileItem('activity_log', pId);
+        let currentLog: Strand[] = [];
+        if (savedLogStr) {
+          try {
+            currentLog = JSON.parse(savedLogStr);
+          } catch {}
+        }
+        const updatedLog = recordActivity('immersion', currentLog);
+        setProfileItem('activity_log', JSON.stringify(updatedLog), pId);
+      }
+    }
+
     setShowSummaryScreen(true);
     setIsAnalyzing(true);
     setSyncStatus(null);
@@ -2126,7 +2144,10 @@ export default function ChatPage() {
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className={styles.scenarioTitle}>{session.title}</h1>
+            <h1 className={styles.scenarioTitle} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {session.title}
+              <ScienceTip tipId="furigana" />
+            </h1>
             <p className={styles.scenarioSubtitle}>{session.description}</p>
           </div>
         </div>
@@ -2254,8 +2275,9 @@ export default function ChatPage() {
                         />
                       )}
 
-                      <div className={styles.grammarSelfRepairHint}>
+                      <div className={styles.grammarSelfRepairHint} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         Попробуй исправить предложение сам и отправь снова — или открой правку.
+                        <ScienceTip tipId="self_repair" />
                       </div>
 
                       {msg.grammarFeedback.correction && (

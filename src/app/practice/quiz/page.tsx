@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Check, X, ArrowLeft, AlertCircle, Loader2, Lightbulb, BookOpen, Award, Sparkles, RefreshCw } from 'lucide-react';
 import { useJapanification } from '@/hooks/useJapanification';
 import { useQuests } from '@/hooks/useQuests';
-import { getActiveProfileId } from '@/lib/profile';
+import { getActiveProfileId, getProfileItem, setProfileItem } from '@/lib/profile';
+import { recordActivity } from '@/lib/balance/balance';
 import { db, addLocalReview } from '@/core/db';
 import { getDailyNewWordsCount, getDailyNewWordsLimit, incrementDailyNewWordsCount, syncExistingLocalWordsWithStarterDeck } from '@/core/localDeckService';
 import { calculateNextFsrsState, alignPassiveToActiveState, createDefaultFsrsState } from '@/core/scheduler';
@@ -218,6 +219,19 @@ function QuizComponent() {
     setIsCorrect(correct);
     setIsAnswered(true);
     setSelectedGrade(correct ? 3 : 1);
+
+    const pId = getActiveProfileId();
+    if (pId) {
+      const savedLogStr = getProfileItem('activity_log', pId);
+      let currentLog = [];
+      if (savedLogStr) {
+        try {
+          currentLog = JSON.parse(savedLogStr);
+        } catch {}
+      }
+      const updatedLog = recordActivity('structure', currentLog);
+      setProfileItem('activity_log', JSON.stringify(updatedLog), pId);
+    }
   };
 
   const handleIgnoreTypo = () => {
