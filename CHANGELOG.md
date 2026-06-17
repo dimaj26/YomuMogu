@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.62.1] - 2026-06-17
+
+### Fixed
+- **Hydration error in warm-up reading step**: the "Введите чтение:" label container in `renderWarmup` was a `<p>` wrapping `ScienceTip` (which renders a `<div>`) — invalid HTML (`<div>` cannot descend from `<p>`), causing a React hydration error. Changed the wrapper to a `<div>` (styling unchanged, already `display:flex`). Found during the Day-1 newbie UX walkthrough.
+
 ## [1.62.0] - 2026-06-17
 
 ### Added

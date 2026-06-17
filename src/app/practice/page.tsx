@@ -736,10 +736,10 @@ export default function PracticePage() {
             <>
               <span className={styles.warmupStep}>Проверка чтения</span>
               <div className={styles.warmupKanji}>{currentWord.word}</div>
-              <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span>Введите чтение:</span>
                 <ScienceTip tipId="typed_answer" />
-              </p>
+              </div>
               <input
                 type="text"
                 className={
