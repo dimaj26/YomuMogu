@@ -7,8 +7,6 @@ import { useJapanification } from '@/hooks/useJapanification';
 import { useQuests } from '@/hooks/useQuests';
 import { getProfileItem, setProfileItem, removeProfileItem, getActiveProfileId } from '@/lib/profile';
 import { db, addLocalReview, syncLocalDatabaseWithAnki, updateGrammarProgress } from '@/core/db';
-import { recordExposure, getMiningCandidates } from '@/core/exposureService';
-import type { ExposureEntry } from '@/core/types';
 import { sanitizeHtml } from '@/lib/sanitize';
 import Link from 'next/link';
 import { calculateNextFsrsState, createDefaultFsrsState, alignPassiveToActiveState, isGoodContextExample } from '@/core/scheduler';
@@ -148,7 +146,6 @@ export default function ChatPage() {
   const [expandedDefinitions, setExpandedDefinitions] = useState<Set<string>>(new Set());
   const [isSubmittingSync, setIsSubmittingSync] = useState(false);
   const [syncStatus, setSyncStatus] = useState<{ success: boolean; message: string } | null>(null);
-  const [miningCandidates, setMiningCandidates] = useState<ExposureEntry[]>([]);
 
   // States for individual word sync/add progress
   const [syncCardStatus, setSyncCardStatus] = useState<Record<number, 'idle' | 'loading' | 'success' | 'error'>>({});
@@ -268,22 +265,6 @@ export default function ChatPage() {
       loadIntervals();
     }
   }, [isStateLoaded]);
-
-  // Загружаем кандидатов для майнинга, когда открывается экран результатов
-  useEffect(() => {
-    if (showSummaryScreen) {
-      const loadMiningCandidates = async () => {
-        const profileId = getActiveProfileId();
-        try {
-          const candidates = await getMiningCandidates(profileId);
-          setMiningCandidates(candidates);
-        } catch (err) {
-          console.error('Ошибка загрузки кандидатов для майнинга:', err);
-        }
-      };
-      loadMiningCandidates();
-    }
-  }, [showSummaryScreen]);
 
   // Скролл вниз при новых сообщениях
   useEffect(() => {
@@ -881,23 +862,6 @@ export default function ChatPage() {
       const data = await res.json();
       const words: AnalyzedWord[] = data.words || [];
       setAnalyzedWords(words);
-
-      const profileId = getActiveProfileId();
-      const extractedWordStrings = words.map(w => w.word);
-      if (extractedWordStrings.length > 0) {
-        try {
-          await recordExposure(profileId, extractedWordStrings, 'chat');
-        } catch (err) {
-          console.error('Ошибка записи exposure log:', err);
-        }
-      }
-
-      try {
-        const candidates = await getMiningCandidates(profileId);
-        setMiningCandidates(candidates);
-      } catch (err) {
-        console.error('Ошибка получения кандидатов для майнинга:', err);
-      }
 
       // Инициализируем примеры предложений из сессии чата, подходящие под эвристики
       const examplesList: Array<{ word: string; sentence: string; translation?: string; enabled: boolean }> = [];
@@ -2030,34 +1994,6 @@ export default function ChatPage() {
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {/* EXPOSURE MINING CANDIDATES CARD */}
-              {miningCandidates.length > 0 && (
-                <div className="card-friendly" style={{ border: '2px dashed var(--color-green-shadow)', backgroundColor: 'rgba(74, 222, 128, 0.05)', marginBottom: '24px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', textAlign: 'center' }}>
-                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--color-green)' }}>
-                    {t('Часто встречались', 'よく使われた単語')}
-                  </h3>
-                  <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                    {t(
-                      `Часто встречались: ${miningCandidates.map(c => c.word).join(', ')} — добавить в изучение?`,
-                      `よく使われた単語: ${miningCandidates.map(c => c.word).join(', ')} — 学習に追加しますか？`
-                    )}
-                  </p>
-                  <button
-                    onClick={() => {
-                      console.log('Пользователь выразил намерение добавить слова из exposure log:', miningCandidates.map(c => c.word));
-                      alert(t(
-                        'Намерение зафиксировано в логах. Автоматический импорт в колоду находится в разработке.',
-                        '追加の意図がログに記録されました。自動インポート機能は開発中です。'
-                      ));
-                    }}
-                    className="btn-3d btn-green"
-                    style={{ padding: '10px 20px', fontSize: '15px' }}
-                  >
-                    {t('Добавить в изучение', '学習に追加')}
-                  </button>
                 </div>
               )}
 

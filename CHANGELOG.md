@@ -2,6 +2,14 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.61.0] - 2026-06-17
+
+### Removed
+- **Exposure Log & Mining counter**: Removed the dead `exposure_log` IndexedDB table, `exposureService.ts` (`recordExposure`/`getMiningCandidates`), the `EXPOSURE_MINING_THRESHOLD` constant (interval registry System 7), and the non-functional "часто встречались" mining candidates card on the chat summary screen (its "add to study" button was a stub). The counter fed no live feature; passive learning is treated as an uninstrumented ambient phenomenon. The working per-word tap-to-add (`handleAddSingleWord`) on the summary screen is unaffected.
+
+### Changed
+- **Dexie schema version(7)**: Added migration dropping the `exposure_log` table for existing users (`exposure_log: null`).
+
 ## [1.60.0] - 2026-06-13
 
 ### Added

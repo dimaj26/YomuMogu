@@ -3,11 +3,11 @@ import { calculateNextFsrsState, createDefaultFsrsState, alignPassiveToActiveSta
 import { GRAMMAR_LEITNER_INTERVALS_DAYS } from './intervals';
 import { getProfileItem } from '../lib/profile';
 import { logger } from '../lib/logger';
-import { LocalWord, LocalReview, UiWord, GrammarProgress, ExposureEntry } from './types';
+import { LocalWord, LocalReview, UiWord, GrammarProgress } from './types';
 import { getJlptLevel, mergeJlptTag } from '../lib/jlpt/levels';
 import { stripHtml } from '../plugins/anki/filter';
 
-export type { LocalWord, LocalReview, UiWord, GrammarProgress, ExposureEntry };
+export type { LocalWord, LocalReview, UiWord, GrammarProgress };
 
 
 class YomuMoguDatabase extends Dexie {
@@ -15,7 +15,6 @@ class YomuMoguDatabase extends Dexie {
   reviews!: Table<LocalReview>;
   ui_words!: Table<UiWord>;
   grammar_progress!: Table<GrammarProgress>;
-  exposure_log!: Table<ExposureEntry>;
 
   constructor() {
     super('YomuMoguDatabase');
@@ -88,6 +87,11 @@ class YomuMoguDatabase extends Dexie {
       ui_words: '[profileId+id], id, status, due, profileId',
       grammar_progress: '[profileId+ruleId], ruleId, status, due, profileId',
       exposure_log: '[profileId+word], profileId, word, count, lastSeen',
+    });
+
+    // version(7): удаляем неиспользуемую таблицу exposure_log (мёртвая система майнинга по счётчику встреч).
+    this.version(7).stores({
+      exposure_log: null,
     });
   }
 }

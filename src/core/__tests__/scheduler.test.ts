@@ -406,7 +406,7 @@ describe('FSRS Scheduling logic', () => {
       expect(canEnterChat(words4)).toBe(false);
 
       // 3. Добавляем 5-е слово
-      const words5 = [...words4, {
+      const words5: LocalWord[] = [...words4, {
         profileId: 'test',
         id: 4,
         word: 'w4',

@@ -324,8 +324,6 @@ src/
 | `lib/words/__tests__/priority.test.ts` | Unit tests for priority sorting and non-interfering batch selection |
 | `lib/words/similarity.ts` | Kanji sharing similarity checker and mature word distractors generator |
 | `lib/words/__tests__/similarity.test.ts` | Unit tests for kanji sharing and discrimination distractors |
-| `core/exposureService.ts` | Client-side exposure logger and mining candidate detector utilizing IndexedDB |
-| `core/__tests__/exposureService.test.ts` | Unit tests for exposure logging and mining candidate detection |
 | `resources/jlpt_levels.json` | Generated versioned JLPT levels resource containing N5 and N4 vocabulary lists |
 | `resources/science_tips.json` | Versioned static registry of pedagogy research and citations (science tips) |
 | `lib/science/tips.ts` | Pure module for retrieving scientific tips and citations from the registry |
@@ -555,9 +553,6 @@ For local-first operation and off-session scheduling, YomuMogu maintains client-
 - **`grammar_progress` Table** (`[profileId+ruleId]` compound key):
   - Stores user grammar Leitner progress step intervals.
   - Indexes: `ruleId`, `status`, `due`, `profileId`.
-- **`exposure_log` Table** (`[profileId+word]` compound key):
-  - Stores local frequency counters of encountered words outside the active learning pool.
-  - Indexes: `[profileId+word]`, profileId, word, count, lastSeen.
 
 ### [PL-3.5] Persistent YouTube Cache Schema
 
@@ -822,7 +817,7 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-474 unit/integration tests across 71 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+469 unit/integration tests across 70 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
 
 ---
 
@@ -838,5 +833,4 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 | **[СИСТЕМА 4]** Режим беглости | Ограничение хода = max(FLOOR, (OFFSET + PER_LEVEL * lvl) * round_factor) | `FLUENCY_FLOOR_SECONDS`, `FLUENCY_BASE_OFFSET_SECONDS`, `FLUENCY_BASE_PER_LEVEL_SECONDS`, `FLUENCY_ROUND_FACTORS` | `lib/chat/fluency.ts` | `lib/chat/fluency.ts`, `app/chat/page.tsx` |
 | **[СИСТЕМА 5]** Daily-квесты | Час сброса прогресса квестов (локальное время) | `QUEST_RESET_HOUR` | `hooks/useQuests.ts` | `hooks/useQuests.ts` |
 | **[СИСТЕМА 6]** Профиль компетентности | Лимиты сессий/ходов, пороги закрытия JLPT уровней и рекомендации уровня чата | `COMPETENCY_MIN_SESSIONS`, `COMPETENCY_MIN_TURNS`, `COMPETENCY_SESSION_CAP`, `ADVICE_UP_GRAMMAR_COVERAGE`, `ADVICE_UP_CORRECTION_RATE`, `ADVICE_DOWN_CORRECTION_RATE`, `LADDER_COMPLETE_LEX_COVERAGE`, `LADDER_COMPLETE_GRAMMAR_COVERAGE` | `lib/competency/profile.ts` | `lib/competency/profile.ts`, `app/chat/page.tsx`, `LearningTrack.tsx` |
-| **[СИСТЕМА 7]** Exposure & Mining | Порог встреч слова вне колоды для предложения к добавлению | `EXPOSURE_MINING_THRESHOLD` | `core/exposureService.ts` | `core/exposureService.ts`, `app/chat/page.tsx` |
 | **[СИСТЕМА 8]** Баланс структура-иммерсия | Рекомендуемая доля структуры по JLPT уровню, размер скользящего окна, минимальное число действий | `BALANCE_STRUCTURE_TARGET`, `BALANCE_ACTIVITY_WINDOW`, `BALANCE_MIN_ACTIVITIES` | `lib/balance/balance.ts` | `components/BalanceWidget.tsx`, `app/practice/page.tsx`, `app/chat/page.tsx`, `app/practice/quiz/page.tsx` |
