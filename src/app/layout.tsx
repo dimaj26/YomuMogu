@@ -12,8 +12,8 @@ const nunito = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: "YomuMogu - Разговорная практика японского с Anki",
-  description: "Практикуйте свои слова из Anki с помощью искусственного интеллекта Gemini",
+  title: "YomuMogu — Разговорная практика японского с ИИ",
+  description: "Учите японские слова из встроенной колоды и практикуйте их в диалоге с ИИ-тьютором. Опционально — синхронизация с Anki.",
 };
 
 export default function RootLayout({

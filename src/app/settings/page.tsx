@@ -32,7 +32,7 @@ export default function SettingsPage() {
   const [backField, setBackField] = useState<string>('Back');
   const [audioField, setAudioField] = useState<string>('');
   const [imageField, setImageField] = useState<string>('');
-  const [deckMode, setDeckMode] = useState<'standard' | 'custom' | 'local'>('standard');
+  const [deckMode, setDeckMode] = useState<'standard' | 'custom' | 'local'>('local');
   const [words, setWords] = useState<AnkiWord[]>([]);
   const [deckMappings, setDeckMappings] = useState<Record<string, { frontField: string; backField: string; audioField?: string; imageField?: string }>>({});
 
@@ -183,7 +183,7 @@ export default function SettingsPage() {
       }
     } catch (err) {
       setIsConnected(false);
-      setError('Anki не запущен. Пожалуйста, запустите Anki с установленным плагином AnkiConnect.');
+      setError('Anki не обнаружен. Запустите Anki с плагином AnkiConnect — либо используйте Локальный список (включён по умолчанию).');
     } finally {
       setIsLoadingConnection(false);
     }
@@ -270,10 +270,14 @@ export default function SettingsPage() {
     }
   };
 
-  // Проверяем подключение при первой загрузке страницы
+  // Пингуем AnkiConnect ЛЕНИВО: только когда выбран Anki-режим.
+  // Свежий пользователь в локальном режиме (дефолт) не должен видеть ошибку Anki.
   useEffect(() => {
-    checkConnection();
-  }, []);
+    if (!hasLoaded) return;
+    if (deckMode !== 'local') {
+      checkConnection();
+    }
+  }, [deckMode, hasLoaded]);
 
   // Загружаем данные профиля из localStorage при монтировании
   useEffect(() => {

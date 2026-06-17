@@ -1,109 +1,90 @@
-# RNA-Blueprint — Chunk B1: level-aware (beginner-friendly) media ranking
+# RNA-Blueprint — Фаза 1 / п.1: Anki как opt-in (дефолт «Локальный список»)
 
-> Route A (RNA-1). Executor: **Claude (this agent)**.
-> Scope: make the media search ranking funnel serve beginners (N5/N4), not just advanced learners. Today the funnel uses a single hardcoded comprehension window `[0.85, 0.98]` that structurally excludes beginners (no real content reaches it) and ignores video length. Introduce level tiers + a duration fit, threaded from a pragmatic level signal (`chatLevel`).
-> Roadmap: `_nogit_roadmap.md` §2.7.B. **Deferred to a later B2 blueprint:** genre-biased query expansion, media subtitle tap-to-add, `addWord` dedup guard.
+> Route A (RNA-1). Исполнитель: **Claude (этот агент)**.
+> Источник: `_nogit_ux_fix_plan.md` (P0 «Anki навязан по умолчанию»), агент-аналитик A2. UX-находки F2 (дефолт = Anki → красная ошибка «запустите Anki»; локальный — 3-я кнопка) и F4 (Anki в title вкладки и подзаголовке дашборда при наличии встроенной колоды 500 слов).
+> Цель: свежий пользователь-без-Anki НИКОГДА не видит ошибку Anki и не упирается в Anki-рамку; Anki остаётся полнофункциональным opt-in.
 
 ---
 
-## 1. Base DNA (environment / runtime constraints)
+## 1. Base DNA
+- ОС: Windows 10 / PowerShell. Next.js 16 App Router, TypeScript strict, React 19, Vitest. Без новых зависимостей.
+- Источник истины режима — профильный localStorage-ключ `deck_mode` (через `getProfileItem`/`setProfileItem`); проблема только в НАЧАЛЬНОМ значении при отсутствии ключа.
+- Env-флаг `NEXT_PUBLIC_ANKI_ENABLED` — build-time, про видимость Anki-кнопок; на дефолт режима ортогонален, НЕ трогаем.
+- Верификация: `npm run test` + `npx tsc --noEmit` (vitest типы не проверяет) + ручная проверка в превью (порт 3000).
 
-- OS: Windows 10 / PowerShell. Stack: Next.js 16 App Router, TypeScript strict, React 19, Vitest. No new dependencies.
-- `src/lib/media/ranking.ts` is pure (no I/O) — the bulk of the change and all the risk live here, fully unit-testable offline.
-- Verification: `npm run test` **and** `npx tsc --noEmit` (vitest does not typecheck).
-- Backward compatibility constraint: the advanced/default path must reproduce today's behaviour exactly (window `[0.85,0.98]`, weights `0.6/0.4`, no duration factor) so existing `ranking` and `media/search` route tests stay green. New tier behaviour is additive.
+## 2. Task RNA (логика, риски, краевые случаи)
+**Логика.** (а) Новый профиль стартует в `deckMode='local'` вместо `'standard'`. (б) Проверка AnkiConnect становится ЛЕНИВОЙ — пингуем только когда режим уже Anki (`!== 'local'`), а не безусловно при монтировании; значит свежий пользователь не получает красную ошибку. (в) Идентичность продукта (title вкладки, meta-description, подзаголовок дашборда) перестаёт навязывать Anki — опирается на встроенную колоду, Anki упоминается как опция. (г) Текст ошибки Anki смягчается, давая выход на локальный режим.
 
-## 2. Task RNA (logic, risks, edge cases)
+**Что НЕ меняем:** поток импорта Anki, плагин `src/plugins/anki/*`, env-гард, эффект `setupStandardDeck`. Существующие Anki-пользователи не затронуты — их `deck_mode` уже в localStorage (читается на `settings:296-297`), дефолт `:35` на них не влияет.
 
-**Logic.** Replace the single `RANKING_CONSTANTS.CR_WINDOW` with a per-tier ranking profile. Three tiers:
-- `beginner` (N5–N4): comprehension window low and wide, short videos strongly favored, music-note (♪) segments NOT treated as junk, comprehension contributes little (familiarization, not acquisition).
-- `bridge` (N4–N3): middle ground.
-- `acquisition` (N3+): **exactly today's values** (incidental acquisition needs ~85–98% coverage).
-
-Add `computeDurationFit(durationSec, tier)` (short clips fit beginners; no length cap for acquisition). Thread a `tier` through `computeLevelFit` / `assessSubtitleQuality` / `rankCandidates` and the route. The client derives `tier` from `chatLevel` (1–2→beginner, 3→bridge, 4–5→acquisition).
-
-**Why `chatLevel` (honest note).** The principled source would be the user's JLPT level, but `buildCompetencyProfile` (`lib/competency/profile.ts:108,115`) is still hardcoded to `'N5'` — it carries no real per-user level yet. `chatLevel` (1–5, `JapanificationState`) is the available, user-controlled difficulty signal. Using it is a pragmatic proxy; a future improvement (separate item) is a real JLPT-level derivation, after which only the client mapping changes.
-
-**Risks & mitigations:**
-- Breaking existing ranking/route tests → default `tier='acquisition'` reproduces current math exactly; `RANKING_CONSTANTS` retained as the acquisition profile's values.
-- `durationSec` is optional on `Candidate` (`search.ts:9`) and may be `undefined`/0 → treat missing duration as "unknown": `durationFit = 1` (do not penalize when length is unknown), so the funnel never drops a candidate purely for missing metadata.
-- Empty-text default `cr = 0.90` (`route.ts:158`) currently auto-marks unknown content as near-ideal — harmful for beginners (would inflate levelFit). → make the empty-text default tier-aware (neutral, not ideal).
-- Music filter change (`assessSubtitleQuality`, ♪ at `ranking.ts:59`) must only relax for `beginner`; bridge/acquisition keep current junk penalty.
-
-**Edge cases:** unknown/zero duration (→ fit 1); empty lemmas (tier-aware default cr); all candidates filtered by sub-quality floor (existing fallback in `rankCandidates` preserved); `chatLevel` missing on client (→ default `acquisition`).
+**Риски/краевые:**
+- 🔴 **Тесты настроек завязаны на Anki-дефолт.** `page.test.tsx:108-122` ждёт красную ошибку «Anki не запущен» при загрузке — после фикса (default local + ленивый пинг) ошибка НЕ появится → тест упадёт ожидаемо. Тесты, проверяющие Anki-поведение (загрузка колод, выбор колоды), должны сперва переключиться в Anki-режим. Это основная сопутствующая работа; правка смысла теста — решение проектное (не делегируется test-runner-субагенту).
+- Эффект `[deckMode,hasLoaded,isConnected]` (`:390-405`) при `standard && isConnected` зовёт `setupStandardDeck` — при ленивом пинге `isConnected` станет `true` после клика на Anki → цепочка отработает корректно.
+- SSR/гидратация: дефолт `'local'` статичен (безопаснее текущего, не зависит от результата сетевого пинга на первом кадре).
+- Подзаголовок дашборда обёрнут в `t(ru, ja, 2)` — сохранить обёртку и уровневый аргумент, менять только строки.
 
 ## 3. Contextual Constraints (CC)
+- **[CC-1] Профильное хранилище [PL-8.1/CP-3.4]** — режим только через `get/setProfileItem('deck_mode')`, не сырой localStorage.
+- **[CC-2] Anki-опциональность [философия «честные границы»/CP-2]** — ни одна функция не блокируется отсутствием Anki; Anki = opt-in.
+- **[CC-3] Русский UI [CP-3.2]** — строки идентичности на русском (ja-вариант подзаголовка обновить тоже).
+- **[CC-4] Тесты [CP-3.6]** — обновить сломанные ассерты осознанно; suite зелёный; `tsc` 0.
+- **[CC-5] Env-гард не трогаем** — `NEXT_PUBLIC_ANKI_ENABLED` остаётся как есть (видимость кнопок).
+- **[CC-6] Без новых зависимостей [CP-3.1].**
 
-- **[CC-1] Pure ranking module [PL-2.2]** — keep `ranking.ts` side-effect-free and fully unit-tested.
-- **[CC-2] Prime Directive: Subtitle Truth [PL-8.8]** — unaffected; we only score/rank real scraped candidates, never fabricate segments.
-- **[CC-3] Russian comments/logs [CP-3.2]** — touched code keeps Russian comments; this doc stays English.
-- **[CC-4] Test coverage [CP-3.6 / PL-8.6]** — pure ranking changes get unit tests; the route test mocks scraping/tokenizer.
-- **[CC-5] No new dependencies [CP-3.1].**
-- **[CC-6] Tuning constants placement [PL-10 / CP-3.7]** — tier CR windows / duration caps are media-ranking tuning values (not the time-interval registry); they live in `ranking.ts` alongside the existing `RANKING_CONSTANTS` (precedent), NOT in `intervals.ts`.
-- **[CC-7] Backward compatibility** — `tier` defaults to `acquisition`; no behavioural change for existing callers/tests.
+## 4. Proposed Changes
+**Логика источника**
+- `src/app/settings/page.tsx` `[MODIFY]`:
+  - `:35` `useState<...>('standard')` → `'local'`.
+  - `:273-276` убрать безусловный `useEffect(()=>{checkConnection()},[])`; добавить гейт-эффект: пинговать `checkConnection()` только при `hasLoaded && deckMode !== 'local'` (зависимости `[deckMode, hasLoaded]`). Так пинг идёт для сохранённого Anki-режима и по клику на Anki, но не для свежего local-пользователя.
+  - `:186` смягчить текст ошибки → дать выход: «Anki не обнаружен. Запустите Anki с плагином AnkiConnect — либо используйте Локальный список (по умолчанию).»
 
-## 4. Proposed Changes (by component)
+**Идентичность**
+- `src/app/layout.tsx` `[MODIFY]` `:15-16`:
+  - title → `"YomuMogu — Разговорная практика японского с ИИ"`
+  - description → `"Учите японские слова из встроенной колоды и практикуйте их в диалоге с ИИ-тьютором. Опционально — синхронизация с Anki."`
+- `src/app/page.tsx` `[MODIFY]` `:340-344` (сохранить `t(ru, ja, 2)`):
+  - ru → `"YomuMogu даёт встроенную колоду японских слов и помогает практиковать их в диалоге с ИИ-тьютором. Любите Anki — подключите свою колоду в настройках."`
+  - ja → соответствующий перевод (встроенная колода + ИИ; Anki опционально).
 
-**Ranking engine**
-- `src/lib/media/ranking.ts` `[MODIFY]`:
-  - Add `export type MediaTier = 'beginner' | 'bridge' | 'acquisition'`.
-  - Add `RANKING_PROFILES: Record<MediaTier, {...}>` with `crWindow`, `levelFitFloor`, `maxDurationSec`, `weights{levelFit,subQuality,durationFit}`, `penalizeMusicJunk`. `acquisition` mirrors current `RANKING_CONSTANTS` (`[0.85,0.98]`, floor 0, no duration cap, weights 0.6/0.4/0, penalize true).
-  - `computeLevelFit(cr, tier='acquisition')` — window+floor from profile.
-  - Add `computeDurationFit(durationSec, tier)` — 1 if `≤ maxDurationSec` or duration unknown; decays above.
-  - `assessSubtitleQuality(trackKind, segments, tier='acquisition')` — gate the ♪/short-junk rule by `penalizeMusicJunk`.
-  - `rankCandidates(candidates, tier='acquisition')` — weighted sum incl. `durationFit`; keep sub-quality floor + empty fallback.
-  - `ScoredCandidate` gains `durationFit: number`.
+**Тесты**
+- `src/app/settings/__tests__/page.test.tsx` `[MODIFY]`: добавить reproducer (свежий профиль → local, нет ошибки); обновить `:108-122` (переключить в Anki-режим до ожидания ошибки) и тесты Anki-колод (выбрать Anki-режим перед проверкой deck-UI).
 
-**Search route**
-- `src/app/api/media/search/route.ts` `[MODIFY]` — read `tier` from body (default `'acquisition'`); compute `durationFit` from `c.durationSec`; pass `tier` into `computeLevelFit`/`assessSubtitleQuality`/`rankCandidates`; make the empty-lemma default `cr` tier-aware; include `durationFit` in `ScoredCandidate` and response.
+**(Опционально, НЕ в этом куске)** переставить «Локальный список» первой кнопкой (`:821-846`) — косметика порядка, отложить.
 
-**Practice launcher (client)**
-- `src/app/practice/page.tsx` `[MODIFY]` — derive `tier` from `chatLevel` (read via the existing japanification source) and add it to the `/api/media/search` request body (next to `knownWords`, ~`:237`).
+## 5. Execution Steps (чанки 3–5; отчёт после каждого)
 
-**Tests**
-- `src/lib/media/__tests__/ranking.test.ts` `[MODIFY/NEW]` — tier profiles, `computeLevelFit`/`computeDurationFit` per tier, `rankCandidates` beginner-vs-acquisition ordering, backward-compat default.
-- `src/app/api/media/search/__tests__/route.test.ts` `[MODIFY]` — pass/῾default `tier`; assert default reproduces current ranking + `durationFit` present.
+**Чанк 1 — логика + тесты (шаги 1–5):**
+1. `[TEST]` Reproducer в `page.test.tsx`: «свежий профиль → режим Локальный список, при загрузке НЕТ ошибки "Anki не запущен"». Убедиться, что ПАДАЕТ на текущем коде (default standard + безусловный пинг). [CC-4]
+2. `[CP-3.4]` `settings:35` дефолт `'local'`. [CC-1]
+3. `settings:273-276` убрать безусловный пинг; добавить гейт-эффект `deckMode!=='local'`. [CC-2][CC-5]
+4. `[TEST]` Обновить `:108-122` (Anki-режим перед ошибкой) и Anki-зависимые тесты (выбор Anki-режима); reproducer из шага 1 зеленеет.
+5. `npx tsc --noEmit` (0) + `npm run test` (settings зелёные).
 
-## 5. Execution Steps (chunked 3–5; report after each chunk)
+→ **ОТЧЁТ.**
 
-**Chunk 1 — pure ranking engine + TDD reproducer (steps 1–4):**
-1. `[TEST]` Add failing reproducer `rankCandidates > для beginner короткое видео с низким cr ранжируется выше длинного с высоким cr` in `ranking.test.ts`; verify it FAILS. [CC-4]
-2. `[PL-2.2]` `ranking.ts`: add `MediaTier`, `RANKING_PROFILES` (acquisition = current values), `computeDurationFit`, make `computeLevelFit`/`assessSubtitleQuality`/`rankCandidates` tier-aware (default `acquisition`), add `durationFit` to `ScoredCandidate`. [CC-1][CC-6][CC-7]
-3. `[TEST]` Add tier/duration/level-fit unit cases; make step-1 reproducer pass; assert acquisition default == old behaviour.
-4. `npx tsc --noEmit` + `npm run test` (ranking + existing suite) green.
+**Чанк 2 — идентичность + текст ошибки (шаги 6–8):**
+6. `layout.tsx:15-16` title/description (убрать «с Anki»/«из Anki»).
+7. `page.tsx:340-344` подзаголовок (обе локали; обёртку `t(...,2)` сохранить).
+8. `settings:186` смягчить текст ошибки; `tsc` + полный `npm run test`.
 
-→ **REPORT.**
+→ **ОТЧЁТ + проверка в превью** (свежий профиль: Источник=Локальный список выбран, красной ошибки нет; клик «Стандартная Anki» → пинг/статус появляется).
 
-**Chunk 2 — route + client wiring (steps 5–8):**
-5. `[PL-4]` `route.ts`: accept `tier` (default `acquisition`), thread into ranking calls, compute `durationFit`, tier-aware empty-lemma cr default, add `durationFit` to response.
-6. `[CP-3.8]` `practice/page.tsx`: derive `tier` from `chatLevel`, add to search body.
-7. `[TEST]` Update `media/search` route test: default-tier backward-compat + `durationFit` field.
-8. `npx tsc --noEmit` (0) + `npm run test` (green) + grep sanity for `tier`/`durationFit` wiring.
+**Чанк 3 — доки + коммит (шаги 9–10):**
+9. `[CMD-4/CMD-2]` CHANGELOG (Anki opt-in + идентичность); CONTEXT_PROMPT — строка про Anki-интеграцию, если требует (Anki теперь явно опционален). Route C, без git внутри.
+10. `[GW-1]` локальный коммит. Без push.
 
-→ **REPORT.**
-
-**Chunk 3 — docs + commit (steps 9–10):**
-9. `[CMD-1/CMD-4]` Sync `PROJECT_LOGIC.md` ([PL-4.2] media/search input gains `tier`; ranking responsibilities; [PL-9.4] test count) + `CHANGELOG.md`. `CONTEXT_PROMPT.md` Media feature line if needed. (Route C: no git mid-route.)
-10. `[GW-1]` Local commit. No push.
-
-→ **REPORT.**
+→ **ОТЧЁТ.**
 
 ## 6. Verification & TDD reproducer
+**Основной reproducer (инверсия бага «свежий пользователь видит ошибку Anki»):**
+- Файл: `src/app/settings/__tests__/page.test.tsx`
+- Кейс: `«свежий профиль: источник по умолчанию — Локальный список, ошибки Anki при загрузке нет»`
+- Setup: рендер без сохранённого `deck_mode`, fetch к AnkiConnect замокать на отказ (как `:108`).
+- Ожидание: **до фикса ПАДАЕТ** (default standard → безусловный пинг → «Anki не запущен» появляется); **после — проходит** (нет пинга, нет ошибки, локальный режим активен).
 
-**Primary reproducer (feature change — red-first applies here):**
-- File: `src/lib/media/__tests__/ranking.test.ts`
-- Case: `rankCandidates > для beginner короткое видео с низким cr ранжируется выше длинного с высоким cr`
-- Setup: two `ScoredCandidate`s — A: short (`durationSec` 60), low `cr` (0.25); B: long (`durationSec` 1800), high `cr` (0.95). Rank with `tier='beginner'`.
-- Expected: **FAILS before step 2** (single profile, no durationFit → B wins on levelFit), **PASSES after** (beginner weights durationFit 0.5 + soft floor → A wins).
+**Команды:** `npm run test`; `npx tsc --noEmit`.
 
-**Secondary:**
-- `computeLevelFit(0.3, 'beginner')` ≥ floor (not ~0.35 linear); `computeLevelFit(0.3,'acquisition')` unchanged.
-- `computeDurationFit(1800,'beginner')` < `computeDurationFit(60,'beginner')`; both `=1` for `'acquisition'`; unknown duration → `1`.
-- `assessSubtitleQuality('manual', [♪-heavy], 'beginner')` not penalized; `'acquisition'` penalized (current).
-- Route default (`tier` omitted) reproduces pre-change `score`/ordering.
-
-**Commands:** `npm run test`; `npx tsc --noEmit`.
-
-**Manual:**
-1. Practice launcher at `chatLevel` 1 → media search returns short, supported clips even at low comprehension (feed not empty).
-2. `chatLevel` 5 → ranking identical to today (advanced acquisition window).
+**Ручная проверка (превью, порт 3000):**
+1. Свежий профиль → `/settings` → «Источник обучения»: выбран **Локальный список**, красной ошибки Anki НЕТ.
+2. Клик «Стандартная Anki» → запускается проверка соединения, статус/ошибка появляются только теперь (осознанный выбор).
+3. Заголовок вкладки браузера и подзаголовок дашборда — без навязывания Anki.

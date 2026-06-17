@@ -72,13 +72,15 @@ describe('SettingsPage Component', () => {
   });
 
   it('renders title and loading state initially', async () => {
+    // Anki-режим выбран явно (статус проверки соединения показывается только в Anki-режиме)
+    localStorage.setItem('yomumogu_profile_default_deck_mode', 'custom');
     // Мокаем fetch для бесконечного ожидания
     vi.spyOn(globalThis, 'fetch').mockImplementation(() => new Promise(() => {}));
 
     render(<JapanificationProvider><SettingsPage /></JapanificationProvider>);
 
     expect(screen.getByRole('heading', { name: 'Настройки', level: 1 })).toBeInTheDocument();
-    expect(screen.getByText('Проверка...')).toBeInTheDocument();
+    expect(await screen.findByText('Проверка...')).toBeInTheDocument();
   });
 
   it('switches tabs correctly', async () => {
@@ -106,6 +108,8 @@ describe('SettingsPage Component', () => {
   });
 
   it('displays connection error if Anki is not running', async () => {
+    // Anki-режим выбран явно (ленивый пинг срабатывает только в Anki-режиме)
+    localStorage.setItem('yomumogu_profile_default_deck_mode', 'custom');
     // Мокаем ошибку соединения
     vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: false,
@@ -119,6 +123,24 @@ describe('SettingsPage Component', () => {
       expect(screen.getByText('Нет связи')).toBeInTheDocument();
       expect(screen.getByText('Anki не запущен')).toBeInTheDocument();
     });
+  });
+
+  it('свежий профиль: источник по умолчанию — Локальный список, ошибки Anki при загрузке нет', async () => {
+    // Никакого deck_mode в localStorage (свежий профиль). Если бы Anki пинговался — была бы ошибка.
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 503,
+      json: async () => ({ connected: false, error: 'Anki не запущен' }),
+    } as Response);
+
+    render(<JapanificationProvider><SettingsPage /></JapanificationProvider>);
+
+    // Локальный режим активен по умолчанию
+    await screen.findByText(/Локальный автономный режим/);
+    // Свежий пользователь НЕ должен видеть ошибку Anki, и AnkiConnect не пингуется
+    expect(screen.queryByText('Anki не запущен')).not.toBeInTheDocument();
+    const ankiPinged = fetchSpy.mock.calls.some(c => String(c[0]).includes('/api/anki/connect'));
+    expect(ankiPinged).toBe(false);
   });
 
   it('loads decks and allows choosing a deck when connected successfully', async () => {

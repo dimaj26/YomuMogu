@@ -338,8 +338,8 @@ export default function HomePage() {
 
         <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '32px', maxWidth: '600px', lineHeight: '1.6' }}>
           {t(
-            "YomuMogu импортирует ваши японские карточки и помогает вам практиковать их в диалоге с ИИ-тьютором Gemini.",
-            "YomuMoguは単語カードをインポートし、GeminiAI家庭教師との対話で練習するのを助けます。",
+            "YomuMogu даёт встроенную колоду японских слов и помогает практиковать их в диалоге с ИИ-тьютором. Любите Anki — подключите свою колоду в настройках.",
+            "YomuMoguには日本語の単語帳が内蔵されており、AI先生との対話で練習できます。Ankiをお使いの方は設定から連携できます。",
             2
           )}
         </p>

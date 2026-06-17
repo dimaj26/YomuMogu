@@ -2,6 +2,12 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.62.2] - 2026-06-17
+
+### Changed
+- **Anki is now opt-in (Local List is the default learning source)**: a fresh profile starts in Local List mode instead of Standard Anki, and the AnkiConnect connection check is now lazy (runs only when an Anki mode is selected) — a new user without Anki no longer meets a red "запустите Anki" error on the settings page. Anki remains fully available as an explicit choice; existing users are unaffected (their saved `deck_mode` persists). Found during the Day-1 / no-Anki UX walkthrough.
+- **Removed Anki from default product identity**: browser tab title and meta description no longer say "с Anki" / "из Anki" (now "…с ИИ"); the dashboard subtitle frames the built-in starter deck with Anki as optional. The Anki-not-found message now points to Local List as a way out.
+
 ## [1.62.1] - 2026-06-17
 
 ### Fixed
