@@ -126,6 +126,30 @@ describe('API Route POST /api/media/search', () => {
     expect(data.results[0].comprehensionRate).toBe(100); // Так как все леммы ('日本語', '勉強') есть в knownWords
     expect(data.continuation).toBe('token123');
     expect(data.theme).toBe('education');
+    // Дефолтный тир (acquisition) сохраняет прежнее поведение и возвращает durationFit
+    expect(typeof data.results[0].durationFit).toBe('number');
+  });
+
+  it('принимает tier=beginner и возвращает durationFit в выдаче', async () => {
+    vi.mocked(queryExpansionService.expandQuery).mockResolvedValue({ jaQueries: ['q'], theme: null });
+    vi.mocked(fetchYoutubeSearch).mockResolvedValue({
+      candidates: [{ videoId: 'b1', title: 'q', channel: 'C', description: 'D', durationSec: 60 }],
+      continuation: null
+    });
+    vi.mocked(hasJapaneseCaptions).mockResolvedValue(true);
+    vi.mocked(getYoutubeTranscriptSegments).mockResolvedValue([{ start: 0, duration: 5, text: 'こんにちは' }]);
+
+    const request = new NextRequest('http://localhost/api/media/search', {
+      method: 'POST',
+      body: JSON.stringify({ query: 'японский', tier: 'beginner' })
+    });
+
+    const response = await searchPost(request);
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(data.results.length).toBe(1);
+    expect(typeof data.results[0].durationFit).toBe('number');
   });
 
   it('недоступный Gemini не валит поиск', async () => {

@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
   RANKING_CONSTANTS,
+  RANKING_PROFILES,
   assessSubtitleQuality,
   computeLevelFit,
+  computeDurationFit,
   rankCandidates,
   ScoredCandidate
 } from '../ranking';
@@ -173,5 +175,82 @@ describe('Video Ranking Engine', () => {
     const ranked = rankCandidates(scored);
     expect(ranked.length).toBe(2);
     expect(ranked[0].candidate.videoId).toBe('v1'); // v1 лучше по subQuality (0.2 > 0.1)
+  });
+});
+
+describe('Level-aware ranking (tiers)', () => {
+  it('для beginner короткое видео с низким cr ранжируется выше длинного с высоким cr', () => {
+    // Одинаковые levelFit и subQuality; различает только длина (durationFit) при тире beginner.
+    const longHigh: ScoredCandidate = {
+      candidate: { videoId: 'long', title: 'Long', channel: 'C', durationSec: 1800 },
+      trackKind: 'manual',
+      segments: [{ start: 0, duration: 5, text: 'テスト' }],
+      cr: 0.95,
+      subQuality: 0.8,
+      levelFit: 1.0,
+      score: 0.0
+    };
+    const shortLow: ScoredCandidate = {
+      candidate: { videoId: 'short', title: 'Short', channel: 'C', durationSec: 60 },
+      trackKind: 'manual',
+      segments: [{ start: 0, duration: 5, text: 'テスト' }],
+      cr: 0.25,
+      subQuality: 0.8,
+      levelFit: 1.0,
+      score: 0.0
+    };
+
+    // Длинное в начале: при отсутствии учёта длины стабильная сортировка оставит его первым.
+    const ranked = rankCandidates([longHigh, shortLow], 'beginner');
+    expect(ranked[0].candidate.videoId).toBe('short');
+  });
+
+  it('профили тиров имеют различающиеся окна понятности', () => {
+    expect(RANKING_PROFILES.beginner.crWindow).toEqual([0.20, 0.70]);
+    expect(RANKING_PROFILES.bridge.crWindow).toEqual([0.40, 0.85]);
+    expect(RANKING_PROFILES.acquisition.crWindow).toEqual([0.85, 0.98]);
+  });
+
+  it('computeLevelFit: beginner держит пол для низкого cr, acquisition не меняется', () => {
+    // Очень низкий cr=0.05 (линейная часть 0.05/0.20=0.25 < пол) → держим пол 0.4
+    expect(computeLevelFit(0.05, 'beginner')).toBeCloseTo(0.4, 5);
+    // cr внутри окна beginner → 1.0
+    expect(computeLevelFit(0.30, 'beginner')).toBe(1.0);
+    // acquisition (дефолт) сохраняет прежнее поведение: 0.425/0.85 = 0.5
+    expect(computeLevelFit(0.425)).toBeCloseTo(0.5, 5);
+    expect(computeLevelFit(0.0)).toBe(0.0);
+  });
+
+  it('computeDurationFit: короткое подходит новичку, длинное штрафуется, неизвестное и acquisition = 1', () => {
+    expect(computeDurationFit(60, 'beginner')).toBe(1);
+    expect(computeDurationFit(1800, 'beginner')).toBeLessThan(0.2);
+    expect(computeDurationFit(undefined, 'beginner')).toBe(1); // неизвестная длина не штрафуется
+    expect(computeDurationFit(1800, 'acquisition')).toBe(1);  // без лимита
+  });
+
+  it('assessSubtitleQuality: для beginner ♪-сегменты не считаются мусором, для acquisition — считаются', () => {
+    const musicSegments: SubtitleSegment[] = [
+      { start: 0, duration: 2, text: '♪♪♪' },
+      { start: 2, duration: 2, text: 'こんにちは' },
+      { start: 4, duration: 2, text: '♪ララララ♪' }
+    ];
+    const beginnerQ = assessSubtitleQuality('manual', musicSegments, 'beginner');
+    const acquisitionQ = assessSubtitleQuality('manual', musicSegments, 'acquisition');
+    expect(beginnerQ).toBeGreaterThan(acquisitionQ);
+  });
+
+  it('acquisition по умолчанию воспроизводит прежний ранг 0.6·levelFit + 0.4·subQuality (durationFit вес 0)', () => {
+    const c: ScoredCandidate = {
+      candidate: { videoId: 'v1', title: 'V1', channel: 'C1', durationSec: 99999 },
+      trackKind: 'manual',
+      segments: [{ start: 0, duration: 5, text: 'テスト' }],
+      cr: 0.9,
+      subQuality: 0.8,
+      levelFit: 1.0,
+      score: 0.0
+    };
+    const ranked = rankCandidates([c]); // дефолт acquisition
+    // 0.6*1.0 + 0.4*0.8 + 0*durationFit = 0.92
+    expect(ranked[0].score).toBeCloseTo(0.92, 5);
   });
 });

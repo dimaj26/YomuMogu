@@ -2,6 +2,14 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.62.0] - 2026-06-17
+
+### Added
+- **Level-aware media ranking (beginner-friendly)**: The media search funnel now ranks candidates by a per-level tier (`beginner` / `bridge` / `acquisition`) instead of a single hardcoded comprehension window. Beginner tier uses a low, wide comprehension window with a level-fit floor, strongly favors short clips via a new `computeDurationFit`, and stops treating ♪ music segments as junk. `acquisition` (default) reproduces the prior 0.85–0.98 window and 0.6/0.4 weighting exactly. The client derives the tier from `chatLevel` (1–2 → beginner, 3 → bridge, 4–5 → acquisition) and passes it to `/api/media/search`; the route returns the new `durationFit` field.
+
+### Changed
+- **`/api/media/search` contract**: Added optional `tier` request field and `durationFit` response field.
+
 ## [1.61.0] - 2026-06-17
 
 ### Removed

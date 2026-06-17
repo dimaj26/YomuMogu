@@ -227,6 +227,10 @@ export default function PracticePage() {
       // Генерируем новый seed для случайной перетасовки при нажатии «Обновить»
       const seed = isRefresh ? Math.floor(Math.random() * 100000) : 42;
 
+      // Тир подбора под уровень: chatLevel как прагматичный прокси уровня пользователя
+      // (1-2 → beginner, 3 → bridge, 4-5 → acquisition)
+      const mediaTier = jState.chatLevel <= 2 ? 'beginner' : jState.chatLevel === 3 ? 'bridge' : 'acquisition';
+
       const res = await fetch('/api/media/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -236,7 +240,8 @@ export default function PracticePage() {
           seed,
           knownWords,
           continuation: nextToken,
-          pageSize: 6
+          pageSize: 6,
+          tier: mediaTier
         })
       });
 
@@ -273,7 +278,7 @@ export default function PracticePage() {
     } finally {
       setIsSearching(false);
     }
-  }, [searchQuery, activeSearchQuery, shownVideoIds]);
+  }, [searchQuery, activeSearchQuery, shownVideoIds, jState.chatLevel]);
 
   const handleResetSearch = () => {
     setSearchQuery('');

@@ -4,7 +4,7 @@ import { verifyCsrf } from '@/lib/csrf';
 import { fetchYoutubeSearch, parseSearchResults, Candidate } from '@/lib/media/search';
 import { queryExpansionService } from '@/lib/gemini/queryExpansion';
 import { hasJapaneseCaptions, getYoutubeTranscriptSegments } from '@/lib/media/youtube';
-import { assessSubtitleQuality, computeLevelFit, rankCandidates, ScoredCandidate } from '@/lib/media/ranking';
+import { assessSubtitleQuality, computeLevelFit, computeDurationFit, rankCandidates, ScoredCandidate, MediaTier, RANKING_PROFILES } from '@/lib/media/ranking';
 import { selectPage } from '@/lib/media/selection';
 
 export async function POST(request: NextRequest) {
@@ -17,6 +17,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { query, excludeIds = [], seed = 42, continuation, knownWords = [], pageSize = 5 } = body;
+    // Тир ранжирования под уровень пользователя (по умолчанию acquisition — прежнее поведение)
+    const tier: MediaTier = (['beginner', 'bridge', 'acquisition'].includes(body.tier) ? body.tier : 'acquisition');
 
     // В случае продолжения пагинации поисковый запрос может быть пустым, но токен должен присутствовать
     if (!query && !continuation) {
@@ -155,11 +157,16 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        const cr = lemmas.length > 0 ? knownCount / lemmas.length : 0.90; // Дефолт 0.90 если пустой текст или нет лемм
+        // Дефолт для пустого текста: для acquisition — прежние 0.90, для остальных тиров — середина окна (нейтрально)
+        const defaultCr = tier === 'acquisition'
+          ? 0.90
+          : (RANKING_PROFILES[tier].crWindow[0] + RANKING_PROFILES[tier].crWindow[1]) / 2;
+        const cr = lemmas.length > 0 ? knownCount / lemmas.length : defaultCr;
 
-        // Оцениваем качество субтитров и попадание в уровень пользователя
-        const subQuality = assessSubtitleQuality(trackKind, segments);
-        const levelFit = computeLevelFit(cr);
+        // Оцениваем качество субтитров, попадание в уровень и пригодность длины под тир
+        const subQuality = assessSubtitleQuality(trackKind, segments, tier);
+        const levelFit = computeLevelFit(cr, tier);
+        const durationFit = computeDurationFit(c.durationSec, tier);
 
         scoredCandidates.push({
           candidate: c,
@@ -168,6 +175,7 @@ export async function POST(request: NextRequest) {
           cr,
           subQuality,
           levelFit,
+          durationFit,
           score: 0 // Заполняется в rankCandidates
         });
       } catch (err: any) {
@@ -177,8 +185,8 @@ export async function POST(request: NextRequest) {
 
     logger.info(`[API] Успешно оценено кандидатов: ${scoredCandidates.length}/${matchedCandidates.length}`);
 
-    // 7. Скорректированное ранжирование кандидатов
-    const rankedCandidates = rankCandidates(scoredCandidates);
+    // 7. Скорректированное ранжирование кандидатов под тир уровня
+    const rankedCandidates = rankCandidates(scoredCandidates, tier);
 
     // 8. Разнообразие выдачи (selection)
     const { page: selectedPage } = selectPage(
@@ -205,6 +213,7 @@ export async function POST(request: NextRequest) {
         comprehensionRate: Math.round(rc.cr * 100),
         subQuality: rc.subQuality,
         levelFit: rc.levelFit,
+        durationFit: rc.durationFit,
         score: rc.score,
         trackKind: rc.trackKind
       })),

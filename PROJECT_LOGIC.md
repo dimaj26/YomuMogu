@@ -254,7 +254,7 @@ src/
 | `lib/media/karaokeQuality.ts` | Pure function `assessKaraokeQuality(segment)` that evaluates if subtitle segments pass quality criteria for karaoke rendering |
 | `lib/media/karaokeProgress.ts` | Pure function `computeFillFraction` for piecewise-linear progress interpolation, and `interpolatePlayerTime` for display clock estimation |
 | `lib/media/search.ts` | Zero-dependency Japanese YouTube search page scraper and continuation tracker |
-| `lib/media/ranking.ts` | Pure candidate ranking engine based on FSRS levelFit (0.6) and subtitle track kind quality score (0.4) |
+| `lib/media/ranking.ts` | Pure candidate ranking engine with per-tier profiles (`beginner`/`bridge`/`acquisition`); weights levelFit, subtitle quality, and `durationFit` per the user's level tier (default `acquisition` reproduces the legacy 0.6/0.4 levelFit/subQuality behaviour) |
 | `lib/media/selection.ts` | Pure seeded selection helper maintaining profile shown history (overlap <= 10%) |
 | `lib/media/cache.ts` | Persistent file-backed YouTube search and transcript cache |
 | `lib/gemini/queryExpansion.ts` | Singleton query expansion service running a single gemini-2.5-flash-lite call with caching and error degradation |
@@ -596,7 +596,7 @@ All Anki routes proxy requests to AnkiConnect at `http://localhost:8765`.
 | `/api/dict/lookup` | GET | `?word=WORD` | `{ definition: string }` |
 | `/api/media/parse` | POST | `{ url }` or `{ srtText }` | `{ success: boolean, lemmas: string[], segments: SubtitleSegment[] }` — segments tagged with `source: 'pregenerated' | 'scraped' | 'upload'` |
 | `/api/media/tokenize` | POST | `{ text, mode? }` | `{ tokens: MeCabToken[] }` or `{ lemmas: string[] }` or `{ tokenizationSkipped: true, tokens: [], lemmas: [] }` |
-| `/api/media/search` | POST | `{ query, excludeIds?, seed?, continuation?, knownWords?, pageSize? }` | `{ success: boolean, results: Array<{ id, title, description, url, platform, lemmas, comprehensionRate, subQuality, levelFit, score, trackKind }>, continuation: string \| null, theme: string \| null }` |
+| `/api/media/search` | POST | `{ query, excludeIds?, seed?, continuation?, knownWords?, pageSize?, tier? }` (`tier`: `'beginner' \| 'bridge' \| 'acquisition'`, default `acquisition`) | `{ success: boolean, results: Array<{ id, title, description, url, platform, lemmas, comprehensionRate, subQuality, levelFit, durationFit, score, trackKind }>, continuation: string \| null, theme: string \| null }` |
 
 ### [PL-4.3] ChatResponse & HintResponse
 ```typescript
@@ -817,7 +817,7 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-469 unit/integration tests across 70 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+476 unit/integration tests across 70 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
 
 ---
 
