@@ -48,6 +48,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to start pra
   ```powershell
   npm run test
   ```
+  > Also includes lightweight journey (golden-path) tests under `src/__tests__/journeys/` that exercise full cross-system flows (deck → gating → session/chat routes → FSRS) with Gemini mocked — no external services needed.
 - **Local Integration Tests (Anki)** (free, local; requires local Anki Desktop running with AnkiConnect active):
   ```powershell
   npm run test:integration

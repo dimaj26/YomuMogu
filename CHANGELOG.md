@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.62.12] - 2026-06-18
+
+### Added
+- **Journey (golden-path) test layer** (`src/__tests__/journeys/`): a new deterministic, integration-level test category that exercises a full cross-system user flow end-to-end in one test — local deck seed → chat entry gating ([PL-5.9]) → daily active pool ([PL-6]) → `/api/gemini/sessions` and `/api/chat` route handlers → FSRS review recording. The Gemini boundary is fully mocked ([CP-3.6]) and storage uses `fake-indexeddb`, so journeys are fast, hermetic, and run in the default `npm run test` suite (no live Gemini/Anki/MeCab). First journey: `local-onboarding.journey.test.ts` (golden path + negative gating with fewer than 5 active words). Test suite is now 521 tests across 77 files.
+
 ## [1.62.11] - 2026-06-18
 
 ### Changed

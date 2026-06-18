@@ -828,10 +828,11 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 | Integration (Anki) | `plugins/anki/__tests__/sync.integration.test.ts` | Real local AnkiConnect |
 | Integration (Gemini) | `lib/gemini/__tests__/*.integration.test.ts` | Real Gemini API call |
 | Integration (MeCab) | `app/api/media/parse/__tests__/parse.integration.test.ts` | Real local MeCab microservice |
+| Journey (golden path) | `__tests__/journeys/*.journey.test.ts` | Mock Gemini singletons, `fake-indexeddb`; deterministic cross-system stitch, runs in default suite |
 
 ### [PL-9.4] Current Test Count
 
-519 unit/integration tests across 76 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+521 unit/integration tests across 77 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
 
 ---
 

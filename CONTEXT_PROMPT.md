@@ -36,7 +36,7 @@ You are an expert **TypeScript / Next.js 16** developer. Your specialty is App R
 - **Chat Exit Flow**: Orange Завершить button, confirmation modal, routes to Bonus Test on confirm.
 - **Gemini Retry**: `withRetry()` + exponential backoff + model fallback chain (flash→pro→flash-lite).
 - **Logging**: Structured logger (debug/info/warn/error) → `logs/`.
-- **Testing**: Vitest unit (mocked) + integration configs for Anki/Gemini/MeCab; Playwright e2e.
+- **Testing**: Vitest unit (mocked) + integration configs for Anki/Gemini/MeCab; journey golden-path tests (mocked, default suite); Playwright e2e.
 - **Session Audit**: Bonus Test, Gemini vocab extraction, JitenDex lookup, Anki sync (manual FSRS grading, AI note creation with TTS/images).
 - **Bilateral Sync**: IndexedDB (Dexie.js) ↔ Anki via `/api/anki/sync-db`; review deduplication, FSRS approximation, 4AM boundary, dual-state (passive/active).
 - **Context Examples**: Correct user sentences saved as `contextExamples` in IndexedDB per word.
@@ -125,6 +125,7 @@ You are an expert **TypeScript / Next.js 16** developer. Your specialty is App R
 - Integration tests (real API) live in `*.integration.test.ts`. Run local Anki integration tests with `npm run test:integration`, local MeCab integration tests with `npm run test:integration:media`, and live LLM tests with `npm run test:integration:gemini`.
 - Integration tests require Anki Desktop to be running with AnkiConnect active on port 8765; if Anki is offline, sync-related integration tests will be silently skipped. The AI must explicitly instruct the user to open Anki Desktop before running integration tests.
 - When adding a new module, add corresponding test file in `__tests__/` sibling directory.
+- Journey (golden-path) tests live in `src/__tests__/journeys/*.journey.test.ts`: deterministic cross-system flows (e.g. gating → daily pool → API routes → FSRS) with Gemini singletons mocked and `fake-indexeddb`. They run in the default `npm run test` suite, so keep them few and lightweight — seed a small deck directly, do **not** import the full 500-word starter deck (it bloats suite time and causes load-induced timeouts elsewhere).
 - Mock all `lucide-react` icons in UI component tests to avoid SVG rendering issues in jsdom.
 - For database-dependent unit tests (e.g. settings or practice pages querying Dexie IndexedDB), import and initialize the global polyfill `fake-indexeddb` at the top of the test file: `import fakeIndexedDB, { IDBKeyRange } from 'fake-indexeddb'; globalThis.indexedDB = fakeIndexedDB; globalThis.IDBKeyRange = IDBKeyRange;` to run offline DB queries and statistics aggregation safely in JSDOM.
 - Playwright E2E tests must be configured to run sequentially (`workers: 1`, `fullyParallel: false`) to avoid Next.js dev server compilation overload and IndexedDB database transaction locks. If running HTTPS fetch/scraping tests (like live YouTube transcript tests) in environments with certificate issues, set `process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'` at the top of the spec file to bypass SSL validation. Live tests fetching YouTube search or transcripts must dynamically skip execution (using `test.skip` or `this.skip`) upon encountering YouTube IP rate-limiting (HTTP 429) rather than failing, as rate limits are an environmental condition.
