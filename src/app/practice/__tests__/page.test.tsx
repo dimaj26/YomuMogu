@@ -457,7 +457,7 @@ describe('PracticePage Component', () => {
     expect(await screen.findByText('Проверка чтения')).toBeInTheDocument();
 
     // Отвечаем (вводим правильное чтение "ёми0")
-    const input0 = screen.getByPlaceholderText('Введите чтение...');
+    const input0 = screen.getByPlaceholderText('Введите чтение (можно ромадзи)...');
     fireEvent.change(input0, { target: { value: 'ёми0' } });
     fireEvent.keyDown(input0, { key: 'Enter', code: 'Enter' });
     fireEvent.click(screen.getByRole('button', { name: 'Далее →' }));
@@ -474,7 +474,7 @@ describe('PracticePage Component', () => {
 
     // Проверка чтения
     expect(await screen.findByText('Проверка чтения')).toBeInTheDocument();
-    const input1 = screen.getByPlaceholderText('Введите чтение...');
+    const input1 = screen.getByPlaceholderText('Введите чтение (можно ромадзи)...');
     fireEvent.change(input1, { target: { value: 'ёми1' } });
     fireEvent.keyDown(input1, { key: 'Enter', code: 'Enter' });
     fireEvent.click(screen.getByRole('button', { name: 'Далее →' }));
@@ -729,7 +729,7 @@ describe('PracticePage Component', () => {
       expect(screen.queryByRole('button', { name: 'ねこ' })).not.toBeInTheDocument();
 
       // Находим текстовый ввод
-      const input = screen.getByPlaceholderText('Введите чтение...');
+      const input = screen.getByPlaceholderText('Введите чтение (можно ромадзи)...');
       expect(input).toBeInTheDocument();
 
       // Вводим правильный ответ и жмем Enter
@@ -749,7 +749,7 @@ describe('PracticePage Component', () => {
       // Знакомство -> Далее
       fireEvent.click(await screen.findByRole('button', { name: 'Далее →' }));
 
-      const input = screen.getByPlaceholderText('Введите чтение...');
+      const input = screen.getByPlaceholderText('Введите чтение (можно ромадзи)...');
       // Вводим чтение с пробелом (опечатка, которую наш compare-сервис должен простить)
       fireEvent.change(input, { target: { value: 'ね  こ' } });
       fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
@@ -784,7 +784,7 @@ describe('PracticePage Component', () => {
       fireEvent.click(await screen.findByRole('button', { name: 'Далее →' }));
 
       // Проверка чтения (вводим правильный ответ)
-      const input = screen.getByPlaceholderText('Введите чтение...');
+      const input = screen.getByPlaceholderText('Введите чтение (можно ромадзи)...');
       fireEvent.change(input, { target: { value: 'ねこ' } });
       fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
       fireEvent.click(screen.getByRole('button', { name: 'Далее →' }));

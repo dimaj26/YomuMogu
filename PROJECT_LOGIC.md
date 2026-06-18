@@ -324,8 +324,10 @@ src/
 | `app/api/words/route.ts` | GET endpoint resolving words via active `WordSource` plugin or local IndexedDB fallback |
 | `lib/jlpt/levels.ts` | `getJlptLevel(word, reading)` — level detection, `toJlptTag` tag format helper, and idempotent `mergeJlptTag` utility |
 | `lib/jlpt/__tests__/levels.test.ts` | Unit tests for JLPT levels detection and tagging logic |
-| `lib/quiz/compare.ts` | Extracted typo-forgiving answer comparison utility |
+| `lib/quiz/compare.ts` | Typo-forgiving answer comparison; also accepts romaji input (`romajiToHiragana`) so quiz/warm-up work without a Japanese keyboard |
 | `lib/quiz/__tests__/compare.test.ts` | Unit tests for answer comparison utility |
+| `lib/quiz/romaji.ts` | Pure `romajiToHiragana(input)` converter (digraphs, っ, ん, passes kana/kanji through) |
+| `lib/quiz/__tests__/romaji.test.ts` | Unit tests for the romaji→hiragana converter |
 | `lib/chat/furigana.ts` | Client-side gradual furigana processor based on FSRS intervals |
 | `lib/chat/__tests__/furigana.test.ts` | Unit tests for gradual furigana processor |
 | `lib/chat/fluency.ts` | Pure timed scenario replay (Timed Scenario Replay, Phase 8) calculations and helper functions |
@@ -827,7 +829,7 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-505 unit/integration tests across 74 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+515 unit/integration tests across 75 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
 
 ---
 

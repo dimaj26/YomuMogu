@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.62.9] - 2026-06-18
+
+### Added
+- **Romaji input in warm-up and quiz** (UX Phase 3 #8 / F10): typing a reading required a Japanese keyboard/IME — a blocker for a no-IME user. New pure `lib/quiz/romaji.ts` (`romajiToHiragana`) converts romaji to hiragana (digraphs きゃ/しゃ/ちゃ, っ doubling, ん handling; kana/kanji pass through). `isAnswerAcceptable` now accepts an answer if it matches directly OR after romaji→kana conversion, so both the quiz (`/practice/quiz`) and the warm-up reading step are fixed by one change. A non-destructive kana preview ("→ かな") shows under the field while typing latin letters; "Показать ответ" remains as a fallback. No new dependencies.
+
 ## [1.62.8] - 2026-06-18
 
 ### Added

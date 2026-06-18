@@ -92,11 +92,11 @@ describe('QuizPage Component', () => {
     // Wait for the word to load
     await waitFor(() => {
       expect(screen.getByText('Я люблю кошек.')).toBeInTheDocument();
-      expect(screen.getByPlaceholderText('Введите ответ на японском...')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Введите ответ (можно ромадзи)...')).toBeInTheDocument();
     });
 
     // Enter correct answer
-    const input = screen.getByPlaceholderText('Введите ответ на японском...');
+    const input = screen.getByPlaceholderText('Введите ответ (можно ромадзи)...');
     await waitFor(() => {
       expect(input).toHaveFocus();
     });
@@ -154,7 +154,7 @@ describe('QuizPage Component', () => {
     });
 
     // Enter incorrect answer
-    const input = screen.getByPlaceholderText('Введите ответ на японском...');
+    const input = screen.getByPlaceholderText('Введите ответ (можно ромадзи)...');
     await waitFor(() => {
       expect(input).toHaveFocus();
     });
@@ -321,7 +321,7 @@ describe('QuizPage Component', () => {
     expect(localStorage.getItem(key)).toBeNull();
 
     // Enter answer and check
-    const input = screen.getByPlaceholderText('Введите ответ на японском...');
+    const input = screen.getByPlaceholderText('Введите ответ (можно ромадзи)...');
     await waitFor(() => {
       expect(input).toHaveFocus();
     });
@@ -370,11 +370,11 @@ describe('QuizPage Component', () => {
 
     // Wait for the word to load
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('Введите ответ на японском...')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Введите ответ (можно ромадзи)...')).toBeInTheDocument();
     });
 
     // Enter incorrect answer
-    const input = screen.getByPlaceholderText('Введите ответ на японском...');
+    const input = screen.getByPlaceholderText('Введите ответ (можно ромадзи)...');
     fireEvent.change(input, { target: { value: 'ねко_ошибка' } });
 
     // Click check
@@ -435,11 +435,11 @@ describe('QuizPage Component', () => {
 
     // Wait for the word
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('Введите ответ на японском...')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Введите ответ (можно ромадзи)...')).toBeInTheDocument();
     });
 
     // Enter correct answer and check
-    const input = screen.getByPlaceholderText('Введите ответ на японском...');
+    const input = screen.getByPlaceholderText('Введите ответ (можно ромадзи)...');
     fireEvent.change(input, { target: { value: 'ねко' } });
     fireEvent.click(screen.getByRole('button', { name: 'Проверить' }));
 

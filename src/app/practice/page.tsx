@@ -40,6 +40,7 @@ import { canEnterChat } from '@/core/scheduler';
 import { AnkiWord } from '@/plugins/anki/filter';
 import phonosemanticsData from '@/resources/phonosemantics.json';
 import { isAnswerAcceptable } from '@/lib/quiz/compare';
+import { romajiToHiragana } from '@/lib/quiz/romaji';
 import { sortNewWordsByPriority, pickNonInterferingBatch } from '@/lib/words/priority';
 import { pickDiscriminationDistractors } from '@/lib/words/similarity';
 import styles from './practice.module.css';
@@ -765,7 +766,7 @@ export default function PracticePage() {
                 value={warmupTypedInput}
                 onChange={e => setWarmupTypedInput(e.target.value)}
                 disabled={warmup.selectedAnswer !== null}
-                placeholder="Введите чтение..."
+                placeholder="Введите чтение (можно ромадзи)..."
                 onKeyDown={e => {
                   if (e.key === 'Enter' && warmupTypedInput.trim()) {
                     handleWarmupSubmit();
@@ -773,6 +774,12 @@ export default function PracticePage() {
                 }}
                 autoFocus
               />
+              {/* Предпросмотр каны при вводе ромадзи (не мутирует поле) */}
+              {warmup.selectedAnswer === null && /[a-zA-Z]/.test(warmupTypedInput) && (
+                <div style={{ marginTop: 6, fontSize: 18, fontWeight: 700, color: 'var(--text-secondary)' }}>
+                  → {romajiToHiragana(warmupTypedInput)}
+                </div>
+              )}
               {warmup.selectedAnswer === null && (
                 <button
                   type="button"

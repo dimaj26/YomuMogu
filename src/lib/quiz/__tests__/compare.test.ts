@@ -20,4 +20,15 @@ describe('isAnswerAcceptable', () => {
     expect(isAnswerAcceptable('', 'ねこ')).toBe(false);
     expect(isAnswerAcceptable('ねこ', '')).toBe(false);
   });
+
+  it('ромадзи принимается (ввод без японской раскладки)', () => {
+    expect(isAnswerAcceptable('neko', 'ねこ')).toBe(true);
+    expect(isAnswerAcceptable('nihon', 'にほん')).toBe(true);
+    expect(isAnswerAcceptable('gakkou', 'がっこう')).toBe(true);
+    expect(isAnswerAcceptable('Sensei', 'せんせい')).toBe(true); // регистр игнорируется
+  });
+
+  it('неверный ромадзи отклоняется', () => {
+    expect(isAnswerAcceptable('inu', 'ねこ')).toBe(false);
+  });
 });

@@ -14,6 +14,7 @@ import { sanitizeHtml } from '@/lib/sanitize';
 import { PhonosemanticHint, PhonosemanticData } from '@/components/PhonosemanticHint';
 import phonosemanticsData from '@/resources/phonosemantics.json';
 import { isAnswerAcceptable } from '@/lib/quiz/compare';
+import { romajiToHiragana } from '@/lib/quiz/romaji';
 import styles from './quiz.module.css';
 
 // Типизация phonosemantics.json
@@ -649,7 +650,7 @@ function QuizComponent() {
               className={styles.quizInput}
               value={userInput}
               onChange={e => setUserInput(e.target.value)}
-              placeholder={t('Введите ответ на японском...', '日本語で入力...')}
+              placeholder={t('Введите ответ (можно ромадзи)...', '日本語で入力...')}
               disabled={isAnswered}
               onKeyDown={e => {
                 if (e.key === 'Enter') {
@@ -662,6 +663,12 @@ function QuizComponent() {
               }}
               autoFocus
             />
+            {/* Предпросмотр каны при вводе ромадзи (не мутирует поле) */}
+            {!isAnswered && /[a-zA-Z]/.test(userInput) && (
+              <div style={{ marginTop: 6, fontSize: 18, fontWeight: 700, color: 'var(--text-secondary)' }}>
+                → {romajiToHiragana(userInput)}
+              </div>
+            )}
           </div>
 
           {/* FEEDBACK STATUS BANNERS */}

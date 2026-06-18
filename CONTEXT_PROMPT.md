@@ -69,6 +69,7 @@ You are an expert **TypeScript / Next.js 16** developer. Your specialty is App R
 - **Competency Engine & JLPT Macro Ladder**: Pure competency helpers (`lexCoverage`, `grammarCoverage`, `buildCompetencyProfile`), N5→N1 winding SVG path `LearningTrack` component with progress rings, rolling chat session statistics (cap 10) in localStorage, and Chat Summary advisor suggesting level adjustments based on vocabulary/grammar thresholds.
 - **Honest Chat Feedback**: short metalinguistic Russian note for grammar errors and collapsed correction drawer (self-repair).
 - **Honest Quizzes**: typed reading warm-up with typo-forgiveness (`[TYPE-ANSWER]`) and FSRS interval-based gradual fading furigana in chat (`[WORD-FURIGANA]`).
+- **Romaji Input**: quiz/warm-up accept romaji (no Japanese keyboard needed) via pure `lib/quiz/romaji.ts` converter, surfaced through `isAnswerAcceptable`; a non-destructive kana preview shows under the field as you type.
 - **Fluency Mode**: timed scenario replay (Phase 8) with a per-turn horizontal countdown bar, tightening limits across rounds 1–3, timer starting on sensei reply end, and mature-only grammar scope filters.
 - **Intervals Registry & Soft Closing**: centralized single source of truth timings, soft closing turn on scenario completion without questions, fluency timer auto-stop, and passive turn duration metrics.
 - **Word Queue Science**: frequency priority intake, kanji interference guard batching, and visual-similarity distractors for mature words.
