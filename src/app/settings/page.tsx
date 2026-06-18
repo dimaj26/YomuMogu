@@ -495,6 +495,8 @@ export default function SettingsPage() {
       setIsAssessmentOpen(false);
       await loadWords();
       setDailyNewWordsCount(getDailyNewWordsCount(activeProfileId));
+      // После диагностики ведём пользователя сразу в обучение, а не оставляем в настройках
+      router.push('/practice');
     } catch (err) {
       setError('Не удалось сохранить результаты диагностики');
     } finally {
@@ -852,7 +854,7 @@ export default function SettingsPage() {
                   {deckMode === 'local' ? (
                     <div className={styles.form}>
                       <div className={styles.infoCard}>
-                        <strong>Локальный автономный режим.</strong> Изучение встроенного стартового списка из 500 японских слов офлайн через IndexedDB.
+                        <strong>Локальный автономный режим.</strong> Изучение встроенного стартового списка из 500 японских слов офлайн, прямо в браузере.
                         <br />• Диагностика начальных знаний
                         <br />• Интервальное повторение (FSRS)
                         <br />• Дневной лимит новых слов: {getDailyNewWordsLimit(activeProfileId)}
@@ -1181,7 +1183,7 @@ export default function SettingsPage() {
                         </table>
                         {words.length > 100 && (
                           <div className={styles.limitText}>
-                            Показано первых 100 слов из {words.length}. Все слова будут доступны в сессиях Gemini.
+                            Показано первых 100 слов из {words.length}. Все слова будут доступны в разговорных сессиях с ИИ.
                           </div>
                         )}
                       </div>
@@ -1260,7 +1262,7 @@ export default function SettingsPage() {
 
             <div className={styles.modalBody}>
               <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                Отметьте слова, которые вы уже хорошо знаете. Они получат статус «Изучено» (mature) и будут отложены. 
+                Отметьте слова, которые вы уже хорошо знаете. Они получат статус «Изучено» и будут отложены.
                 Остальные слова будут появляться как новые карточки.
               </p>
 

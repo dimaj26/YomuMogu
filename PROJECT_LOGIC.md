@@ -817,7 +817,7 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-478 unit/integration tests across 70 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+479 unit/integration tests across 70 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
 
 ---
 

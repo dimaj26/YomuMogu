@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.62.4] - 2026-06-18
+
+### Changed
+- **Humanized newbie-facing copy and signals (Phase 1 #3 of the UX fix plan)**: removed developer jargon and softened alarming states a first-day user meets. Media recommendation cards no longer paint a low/0% comprehension rate in red (0% is normal for a beginner, not an error) — low values render neutrally while the 50/70/85% tiers keep their colors. The "few priority words" practice banner is reworded as encouragement instead of a warning. The daily-new-words sub-label "Осталось изучить по лимиту" was harmonized with the "N из M" counter ("Можно изучить ещё сегодня"). Dropped jargon leaks: "через IndexedDB" → "прямо в браузере", "в сессиях Gemini" / "в чате с Gemini" → "…с ИИ", "статус «Изучено» (mature)" → "статус «Изучено»", "по системе FSRS" → "по расписанию" (the Transparency science widget keeps its deliberate FSRS explanation). After the knowledge-diagnostics modal, "Сохранить и начать" now routes the user into `/practice` instead of leaving them in settings (F5). Found during the multi-persona UX walkthrough.
+
 ## [1.62.3] - 2026-06-17
 
 ### Fixed

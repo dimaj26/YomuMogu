@@ -996,8 +996,9 @@ export default function PracticePage() {
                 <div className={styles.mediaGrid}>
                   {searchResults.map((item) => {
                     const cr = item.comprehensionRate || 0;
-                    let barColor = 'var(--color-red)';
-                    let textColor = 'var(--color-red)';
+                    // Низкий процент знакомых слов — нейтрально (для новичка 0% это норма, не ошибка)
+                    let barColor = 'var(--text-secondary)';
+                    let textColor = 'var(--text-secondary)';
                     if (cr >= 85) {
                       barColor = 'var(--color-green)';
                       textColor = 'var(--color-green)';
@@ -1087,8 +1088,9 @@ export default function PracticePage() {
               <div className={styles.mediaGrid}>
                 {mediaRecommendations.map((item) => {
                   const cr = item.comprehensionRate || 0;
-                  let barColor = 'var(--color-red)';
-                  let textColor = 'var(--color-red)';
+                  // Низкий процент знакомых слов — нейтрально (для новичка 0% это норма, не ошибка)
+                  let barColor = 'var(--text-secondary)';
+                  let textColor = 'var(--text-secondary)';
                   if (cr >= 85) {
                     barColor = 'var(--color-green)';
                     textColor = 'var(--color-green)';
@@ -1174,7 +1176,7 @@ export default function PracticePage() {
         {deckMode === 'local' && isLocalInitialized && priorityWordsCount > 0 && priorityWordsCount < 12 && (
           <div className={styles.warningBanner}>
             <AlertCircle size={18} />
-            <p>Доступно только {priorityWordsCount} слов(а) для генерации сессий. При нехватке слов сессии могут содержать повторяющиеся слова.</p>
+            <p>Пока в работе {priorityWordsCount} слов(а) — для диалога это немного, поэтому они могут повторяться. Чем больше слов вы добавите в изучение, тем разнообразнее станут темы.</p>
           </div>
         )}
 
@@ -1205,7 +1207,7 @@ export default function PracticePage() {
                       {dailyNewWordsCount >= dailyNewWordsLimit ? (
                         <span style={{ color: 'var(--color-orange)' }}>Дневной лимит новых слов исчерпан.</span>
                       ) : (
-                        `Осталось изучить по лимиту: ${Math.max(0, dailyNewWordsLimit - dailyNewWordsCount)}`
+                        `Можно изучить ещё сегодня: ${Math.max(0, dailyNewWordsLimit - dailyNewWordsCount)}`
                       )}
                     </p>
                     <p style={{ margin: '8px 0', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
@@ -1245,7 +1247,7 @@ export default function PracticePage() {
                   <div style={{ marginTop: '16px', flexGrow: 1 }}>
                     <p style={{ margin: '8px 0', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
                       {dueActiveWordsCount > 0 ? (
-                        t(`У вас есть ${dueActiveWordsCount} слов(а), готовых к повторению по системе FSRS.`, `FSRSによる復習対象の単語が${dueActiveWordsCount}個あります。`)
+                        t(`У вас есть ${dueActiveWordsCount} слов(а), готовых к повторению по расписанию.`, `復習の予定になっている単語が${dueActiveWordsCount}個あります。`)
                       ) : (
                         t('Все активные слова повторены! Отличная работа.', 'すべての単語の復習が完了しています！')
                       )}
@@ -1575,7 +1577,7 @@ export default function PracticePage() {
                 YomuMogu использует двухкритериальный алгоритм FSRS для раздельного отслеживания навыков чтения (пассивный) и письма (активный).
               </p>
               <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.5', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                Старайтесь регулярно проходить разминки и общаться в чате с Gemini, чтобы поддерживать стабильность вашей памяти на высоком уровне.
+                Старайтесь регулярно проходить разминки и общаться в чате с ИИ, чтобы поддерживать стабильность вашей памяти на высоком уровне.
               </p>
             </div>
           </div>

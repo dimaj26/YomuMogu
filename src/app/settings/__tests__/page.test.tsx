@@ -40,10 +40,11 @@ vi.mock('next/link', () => {
   };
 });
 
+const pushMock = vi.hoisted(() => vi.fn());
 vi.mock('next/navigation', () => {
   return {
     useRouter: () => ({
-      push: vi.fn(),
+      push: pushMock,
     }),
   };
 });
@@ -66,9 +67,30 @@ vi.mock('@/components/JpUIProvider', () => ({
 describe('SettingsPage Component', () => {
   beforeEach(async () => {
     vi.restoreAllMocks();
+    pushMock.mockClear();
     localStorage.clear();
     await db.words.clear();
     await db.reviews.clear();
+  });
+
+  it('F5: после сохранения диагностики ведёт в обучение (/practice), а не остаётся в настройках', async () => {
+    // Свежий локальный профиль (по умолчанию), Anki не нужен
+    render(<JapanificationProvider><SettingsPage /></JapanificationProvider>);
+
+    // Открываем диагностику знаний (на странице две кнопки-входа — берём первую)
+    const openBtns = await screen.findAllByRole('button', { name: /Пройти диагностику/ });
+    fireEvent.click(openBtns[0]);
+
+    // Дожидаемся загрузки стартовой колоды → кнопка сохранения активна
+    const saveBtn = await screen.findByRole('button', { name: 'Сохранить и начать' });
+    await waitFor(() => expect(saveBtn).not.toBeDisabled());
+
+    // Сохраняем без отметки слов (все остаются новыми)
+    fireEvent.click(saveBtn);
+
+    // После сохранения пользователь должен попасть в обучение
+    // (importStarterDeck пишет 500 слов в fake-indexeddb — даём запас по времени)
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/practice'), { timeout: 8000 });
   });
 
   it('renders title and loading state initially', async () => {
