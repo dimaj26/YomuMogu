@@ -1,13 +1,13 @@
 # YomuMogu (よむもぐ)
 
-YomuMogu is an interactive Japanese language learning web application that integrates with local Anki flashcards and utilizes the Google Gemini API to generate contextual conversation practice sessions.
+YomuMogu is an interactive Japanese language learning web application. It ships with a built-in 500-word starter deck (fully usable offline) and uses the Google Gemini API to generate contextual conversation practice sessions. Local Anki flashcard integration is fully supported as an optional learning source.
 
 ---
 
 ## Prerequisites
 - **Node.js**: 20+
 - **Python**: 3.11+ (for fast offline dictionary querying of the SQLite database)
-- **Anki**: Local application running with the [AnkiConnect](https://ankiweb.net/shared/info/2055492159) plugin enabled on port `8765`.
+- **Anki** *(optional)*: Only needed if you choose Anki as your learning source — a local Anki application running with the [AnkiConnect](https://ankiweb.net/shared/info/2055492159) plugin enabled on port `8765`. The built-in local starter deck works without Anki.
 - **JitenDex Database**: Local SQLite dictionary database file `jitendex.db` placed inside the `jitendex/` directory.
 
 ---
@@ -98,14 +98,18 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to start pra
 - **2D SVG Kumiko Memory Decay Heatmap**: A geometric grid of 10x5 (50 cells) that aggregates the stability status of 500 deck words. Dynamic colors reflect memory decay status, and cells аnimatedly pulsate when items are due.
 - **Interactive Chat Mascot**: Floating vector SVG mascot in `/chat` that reacts with custom animations (floating, nodding, shaking, gold pulses) to target words detection (`happy`), correct inputs (`cheering`), and grammar mistakes (`worried`, tilting to point at feedback cards).
 - **Refined Chat Exit & Confirmation Flow**: Supports non-destructive back navigation from the active chat directly to the dashboard, and features a dedicated "Завершить" button with a custom 3D confirmation modal to transition into the Bonus Test.
-- **Anki Deck Integration**: Automatically imports cards from selected Anki decks, prioritizing new/learning status words. Supports configuring distinct Front, Back, Audio, and Image field mappings per deck to handle custom note templates.
+- **Local-First Onboarding (Anki opt-in)**: A fresh profile starts on the built-in local starter deck — no Anki required — and the AnkiConnect check is lazy (it never shows a red "start Anki" error to a no-Anki user). Knowledge diagnostics live in a reusable `AssessmentModal` that opens directly on the dashboard (no redirect to settings) and routes you straight into practice after saving.
+- **Adaptive Daily Hub**: The dashboard reads your local-deck state and shows a single state-appropriate primary action — first-run diagnostics, resume an unfinished chat, "continue learning" with an "N due for review" hint, start a warm-up, or a calm "all done for today" state — instead of one static button. Marketing copy appears only on the very first run.
+- **Romaji Input**: Warm-up and quiz reading inputs accept romaji (no Japanese keyboard/IME needed) via a pure `romajiToHiragana` converter, with a live non-destructive kana preview under the field. "Show answer" remains as a fallback.
+- **Anki Deck Integration**: Optionally imports cards from selected Anki decks, prioritizing new/learning status words. Supports configuring distinct Front, Back, Audio, and Image field mappings per deck to handle custom note templates.
+- **Unified Service-Unavailable Pattern**: AI failures are classified on the server (`config` / `transient` / `unavailable`) into a `{error, reason, retryable}` contract with a human Russian message — the raw exception ("fetch failed") stays in the logs, never the UI. A reusable `ServiceUnavailable` component shows a friendly message, what still works offline, and a Retry button only when the failure is retryable; network errors are retried inside `withRetry`.
 - **CSRF Protection**: All mutating API endpoints proxying requests to local Anki are protected by strict Origin/Referer verification checks.
 - **Smart Video/Podcast Recommendations & Interactive Player**: Adds a "Media" tab to the practice launcher page. Displays video streams and podcast recommendations calculated by matching the user's active recall and passive vocabulary to transcripts, outputting Comprehension Rates ($CR$) and due word overlaps. Features an interactive overlay player utilizing the YouTube Iframe API and HTML5 Audio, displaying clickable Japanese word tokens parsed by MeCab. Clicking words queries definitions in the offline JitenDex dictionary and allows adding same-session Anki cards with Katakana-to-Hiragana reading conversion. Includes client-side parsing fallback supporting Drag & Drop of `.vtt` and `.srt` subtitle files directly into the player. Incorporates robust subtitle timing (sticky timing to prevent gaps, overlap clamping), karaoke word-level highlighting using per-word timing from json3 formats, automatic subtitle sentence regrouping with Japanese punctuation detection and safety caps, conditional YouTube captions deduplication (`cc_load_policy` integration and extension priority guard), and a manual CC toggle button. Handles tokenizer microservice downtime gracefully by falling back to raw segments with a friendly warning banner. Running the app via `run-server.bat` automatically starts the Next.js dev server and the background MeCab tokenizer microservice on port 8000.
 - **Automatic YouTube Video Search**: Supports searching Japanese video content directly using Russian/mixed queries. Uses a single cached Gemini API query expansion call to generate Japanese keywords, scrapes search results and continuation tokens, ranks candidates based on vocabulary Comprehension Rate ($CR$) and subtitle quality metrics, and uses a seeded PRNG for page diversity (ensuring ≤10% overlap between refreshes). Optimized to avoid YouTube rate-limiting by utilizing sequential evaluations and a persistent file-backed JSON cache (`_nogit_youtube_cache.json`).
 - **YouTube Subtitle Interceptor Extension**: A Manifest V3 Chrome Extension helper that intercepts YouTube subtitle network requests in the user's browser context (bypassing server-side scraping caps) and relays timing segments securely into the active YomuMogu page using `content_scripts` and `window.postMessage` handlers, using a modularized JSON3Timing parser.
 - **Unified Error Handling Boundaries & API Hook**: Reusable React `ErrorBoundary` and companion `ErrorFallback` UI wrap rendering exceptions, and a custom `useApiCall` hook handles loading, error, and retry state management on client fetches.
 - **Language Switcher Dropdown (a11y)**: Compact 3D Duolingo-styled global language switcher dropdown in the header, fully keyboard navigable (Arrows, Space, Enter, Escape) with active focus synchronization.
-- **Granular UI FSRS Japanification**: Under-the-hood smart localization wrapper component (`<JpUI>`) and provider (`JpUIProvider`) driven by the `ts-fsrs` mathematical scheduler. In Smart mode, it dynamically translates UI elements (up to 1 new word per session), plays gold pulse animations on new translations, provides hover translation tooltips, and supports interactive FSRS assessments ("Забыл" / "Знаю") directly in the UI. Furigana utilizes gradual opacity fade-outs (<3d: 1.0; <21d: 0.6; >=21d: 0.0, appearing on hover) to preserve line height constraints and eliminate Cumulative Layout Shift (CLS).
+- **Granular UI FSRS Japanification**: Under-the-hood smart localization wrapper component (`<JpUI>`) and provider (`JpUIProvider`) driven by the `ts-fsrs` mathematical scheduler. In Smart mode, it dynamically translates UI elements (up to 1 new word per session), plays gold pulse animations on new translations, provides hover translation tooltips, and supports interactive FSRS assessments ("Забыл" / "Знаю") directly in the UI. Furigana utilizes gradual opacity fade-outs (<3d: 1.0; <21d: 0.6; >=21d: 0.0, appearing on hover) to preserve line height constraints and eliminate Cumulative Layout Shift (CLS). Service UI (navigation) marked `kind='chrome'` stays in Russian in Smart mode so a brand-new user never sees auto-japanized chrome.
 - **Practice Launcher View (`/practice`)**: A dedicated view to launch practice sessions, manage generated conversational scenarios, resume or discard active sessions, and display learning progress stats, completely decoupled from configuration settings. Features a clean split between "New Words" (with progress tracking and daily limits) and "Active Reviews" (FSRS-due items), reactive offset modification ("➕ Добавить +10"), and redirects finished warmup runs directly to a Quiz page with the studied cards list in `mode=new`. Organizes widgets as clean card blocks floating over the Kumiko pattern, structured as a two-column layout on desktop (main column for learning activities, right column sidebar for learning source details and FSRS tips).
 - **Chat Session Persistence**: Automatically serializes and restores complete chat history, targets, and progress states across page reloads and navigation. In-progress sessions can be resumed via homepage or settings CTA buttons.
 - **Multi-Profile Isolation**: Isolates learning progress, XP statistics, imported words, and active chat states under unique profile namespaces to support multiple local users.
@@ -146,6 +150,8 @@ src/
         search/           # YouTube search query expansion & ranking endpoint
     error.tsx             # Global layout error fallback page
   components/             # UI Components (LanguageSwitcher, JpUI, ErrorBoundary, MediaInteractivePlayer)
+    AssessmentModal.tsx   # Reusable knowledge-diagnostics modal (settings + dashboard onboarding)
+    ServiceUnavailable.tsx # Reusable "AI service unavailable" block with conditional Retry
   hooks/                  # Custom state hooks (JapanificationState, useApiCall)
   core/                   # Core local-first services & DB
     db.ts                 # IndexedDB database definition (Dexie.js)
@@ -158,10 +164,11 @@ src/
     jlpt_levels.json      # Generated versioned JLPT levels resource containing N5 and N4 vocabulary lists
   lib/
     dict/                 # SQLite dictionary lookup script and helper
-    gemini/               # Gemini content generation, fallbacks, & withRetry wrapper
-    media/                # YouTube subtitle scrapers, VTT/SRT parsers, and availability probes
+    gemini/               # Gemini content generation, fallbacks, withRetry wrapper, & error classifier (errors.ts)
+    media/                # YouTube subtitle scrapers, VTT/SRT parsers, availability probes, & caption-annotation stripping
     jlpt/                 # JLPT level detection and tag merging logic
     grammar/              # Pure prerequisite DAG graph and chat scoping helpers
+    quiz/                 # Typo-forgiving answer comparison & romaji→hiragana converter
     chat/                 # Pure timed scenario replay calculations and faded furigana processor
     logger.ts             # Structured log writer
     profile.ts            # Namespaced profile storage helpers
@@ -195,3 +202,7 @@ To prevent clutter, avoid residual resource pollution, and ensure full traceabil
 ### SQLite / Native Node Module Error
 - **Symptom**: Node throws errors when trying to read SQLite database on Windows.
 - **Fix**: YomuMogu uses a Python helper script (`lookup.py`) running in a subprocess via `execFile` to eliminate native binary compile issues. Ensure Python 3.11+ is in your system path.
+
+### "AI service unavailable" when generating chat themes or checking grammar
+- **Symptom**: A friendly "ИИ-сервис временно недоступен" block appears instead of generated content.
+- **Fix**: This is the unified service-unavailable pattern, not a crash. If a Retry button is shown, the failure is transient (rate limit / network) — retry it; words and reviews keep working offline meanwhile. If no Retry button is shown, it is a configuration problem — check that `GEMINI_API_KEY` is set in `.env.local` and restart the dev server. The raw error is recorded in `logs/` only.
