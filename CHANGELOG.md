@@ -2,6 +2,14 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.62.7] - 2026-06-18
+
+### Changed
+- **Dashboard is now an adaptive daily hub** (UX Phase 2 #5 / P0): `page.tsx` used a single static `→/practice` CTA for everyone (only "resume chat" adapted), and the marketing H1 showed to returning users. It now reads existing `localDeckService` signals (`isLocalDeckInitialized`, `getPriorityWordsCount`, due-review count) and renders one state-appropriate primary action: first-run → «Пройти диагностику (5 мин)» (modal opens on `/`, no redirect to settings); unfinished chat → «Продолжить: {тема}»; returning (due reviews) → «Продолжить обучение» + «N к повторению»; newbie (new words, no due) → «Начать разминку»; all done → neutral «На сегодня всё» with a media link; Anki mode → generic «Начать практику». The marketing H1 now appears only on first run; other states get a compact greeting. No forced "day wizard" — one CTA plus a soft hint.
+
+### Refactored
+- **Extracted `AssessmentModal` component** (`components/AssessmentModal.tsx` + module CSS) from the settings page so the knowledge-diagnostics flow can be reused on both `/settings` and the dashboard. Behavior-preserving: settings still routes to `/practice` after save (via `onSaved`); the F5 reproducer stays green.
+
 ## [1.62.6] - 2026-06-18
 
 ### Fixed

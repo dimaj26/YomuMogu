@@ -10,6 +10,21 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import HomePage, { MASCOT_PHRASES } from '../page';
 import { JapanificationProvider } from '@/hooks/useJapanification';
 import { db } from '@/core/db';
+import { LOCAL_DECK_NAME } from '@/core/localDeckService';
+
+// Хелпер: слово локальной стартовой колоды с заданными статусами/сроками
+const localWord = (id: number, status: 'new' | 'learning' | 'review' | 'mature', dueOffsetMs: number) => ({
+  profileId: 'default',
+  id,
+  word: `語${id}`,
+  reading: 'よみ',
+  translation: 'перевод',
+  category: LOCAL_DECK_NAME,
+  source: 'starter' as const,
+  passive: { stability: 1, difficulty: 5, interval: 1, due: Date.now() + dueOffsetMs, reps: status === 'new' ? 0 : 1, lapses: 0, status },
+  active: { stability: 1, difficulty: 5, interval: 1, due: Date.now() + dueOffsetMs, reps: status === 'new' ? 0 : 1, lapses: 0, status },
+  contextExamples: []
+});
 
 // Mock Lucide icons
 vi.mock('lucide-react', () => ({
@@ -46,22 +61,65 @@ vi.mock('@/components/JpUI', () => ({
 }));
 
 describe('HomePage Component', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.restoreAllMocks();
     localStorage.clear();
     mockPush.mockReset();
+    await db.words.clear();
   });
 
-  it('renders landing page with Start Practice button when no active session', async () => {
+  it('первый запуск (local, колода не инициализирована): CTA — пройти диагностику + маркетинговый H1', async () => {
     render(<JapanificationProvider><HomePage /></JapanificationProvider>);
 
-    // Wait for the loading state to complete
+    // Свежий локальный профиль → состояние «первый запуск»
     await waitFor(() => {
-      expect(screen.getByText('Начать практику')).toBeInTheDocument();
+      expect(screen.getByText('Пройти диагностику (5 мин)')).toBeInTheDocument();
     });
 
+    // Маркетинговый заголовок показывается только в первом запуске
     expect(screen.getByText('Превратите ваши слова в живую речь!')).toBeInTheDocument();
-    expect(screen.getByText('Привет! Давай попрактикуемся сегодня? Перейди в раздел практики и выбери тему!').textContent).toBe('Привет! Давай попрактикуемся сегодня? Перейди в раздел практики и выбери тему!');
+  });
+
+  it('вернувшийся (есть due-повторения): CTA «Продолжить обучение» + счётчик к повторению', async () => {
+    await db.words.bulkPut([
+      localWord(1, 'review', -1000), // просрочено → due
+      localWord(2, 'review', -2000),
+    ]);
+
+    render(<JapanificationProvider><HomePage /></JapanificationProvider>);
+
+    await waitFor(() => {
+      expect(screen.getByText('Продолжить обучение')).toBeInTheDocument();
+    });
+    expect(screen.getByText(/2 .*к повторению/)).toBeInTheDocument();
+    // Маркетинговый H1 для вернувшегося убран
+    expect(screen.queryByText('Превратите ваши слова в живую речь!')).not.toBeInTheDocument();
+  });
+
+  it('новичок (есть новые, нет due): CTA «Начать разминку»', async () => {
+    await db.words.bulkPut([
+      localWord(1, 'new', 0),
+      localWord(2, 'new', 0),
+      localWord(3, 'new', 0),
+    ]);
+
+    render(<JapanificationProvider><HomePage /></JapanificationProvider>);
+
+    await waitFor(() => {
+      expect(screen.getByText('Начать разминку')).toBeInTheDocument();
+    });
+  });
+
+  it('всё сделано (нет due и нет новых в квоте): нейтральное состояние без давления', async () => {
+    await db.words.bulkPut([
+      localWord(1, 'mature', 5 * 24 * 60 * 60 * 1000), // не due
+    ]);
+
+    render(<JapanificationProvider><HomePage /></JapanificationProvider>);
+
+    await waitFor(() => {
+      expect(screen.getByText(/На сегодня всё/)).toBeInTheDocument();
+    });
   });
 
   it('renders landing page with Resume Practice button when there is an active session', async () => {
@@ -94,7 +152,7 @@ describe('HomePage Component', () => {
     render(<JapanificationProvider><HomePage /></JapanificationProvider>);
 
     await waitFor(() => {
-      expect(screen.getByText('Начать практику')).toBeInTheDocument();
+      expect(screen.getByText('Пройти диагностику (5 мин)')).toBeInTheDocument();
     });
 
     // Click Profile button
@@ -115,7 +173,7 @@ describe('HomePage Component', () => {
     render(<JapanificationProvider><HomePage /></JapanificationProvider>);
 
     await waitFor(() => {
-      expect(screen.getByText('Начать практику')).toBeInTheDocument();
+      expect(screen.getByText('Пройти диагностику (5 мин)')).toBeInTheDocument();
     });
 
     // Click Help button
@@ -148,7 +206,7 @@ describe('HomePage Component', () => {
     render(<JapanificationProvider><HomePage /></JapanificationProvider>);
 
     await waitFor(() => {
-      expect(screen.getByText('Начать практику')).toBeInTheDocument();
+      expect(screen.getByText('Пройти диагностику (5 мин)')).toBeInTheDocument();
     });
 
     vi.useFakeTimers();

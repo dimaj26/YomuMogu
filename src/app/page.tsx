@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { BookOpen, Settings, User, HelpCircle, X, Check, Award, BarChart2, BookOpen as BookIcon } from 'lucide-react';
 import { db } from '@/core/db';
 import { useJapanification } from '@/hooks/useJapanification';
 import { getProfileItem, removeProfileItem, getProfilesList, getActiveProfileId, setActiveProfileId, ProfileInfo } from '@/lib/profile';
+import { isLocalDeckInitialized, getPriorityWordsCount, LOCAL_DECK_NAME } from '@/core/localDeckService';
 import { JpUI } from '@/components/JpUI';
+import { AssessmentModal } from '@/components/AssessmentModal';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import styles from './page.module.css';
 import { sanitizeHtml } from '@/lib/sanitize';
@@ -46,6 +48,43 @@ export default function HomePage() {
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [customBubbleText, setCustomBubbleText] = useState<string | null>(null);
   const [heatmapCells, setHeatmapCells] = useState<Array<{ status: string; isDue: boolean; avgStability: number }>>([]);
+
+  // Сигналы состояния локальной колоды для адаптивного CTA (читаются из localDeckService)
+  const [deckMode, setDeckMode] = useState<string>('local');
+  const [isLocalInit, setIsLocalInit] = useState<boolean>(false);
+  const [dueReviewCount, setDueReviewCount] = useState<number>(0);
+  const [priorityCount, setPriorityCount] = useState<number>(0);
+  const [deckLoaded, setDeckLoaded] = useState<boolean>(false);
+  const [showAssessment, setShowAssessment] = useState<boolean>(false);
+
+  // Загрузка сигналов колоды: режим, инициализация, число due-повторений и приоритетных слов
+  const loadDeckSignals = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+    const mode = getProfileItem('deck_mode') || 'local';
+    const initialized = await isLocalDeckInitialized(activeProfileId);
+    const priority = await getPriorityWordsCount(activeProfileId, LOCAL_DECK_NAME);
+
+    // Число due-повторений считаем отдельно, чтобы отличить «вернувшегося» от «новичка»
+    const words = await db.words
+      .where('profileId')
+      .equals(activeProfileId)
+      .filter(w => w.category === LOCAL_DECK_NAME)
+      .toArray();
+    const now = Date.now();
+    const due = words.filter(w =>
+      w.active.status !== 'new' && (w.passive.due <= now || w.active.due <= now)
+    ).length;
+
+    setDeckMode(mode);
+    setIsLocalInit(initialized);
+    setPriorityCount(priority);
+    setDueReviewCount(due);
+    setDeckLoaded(true);
+  }, [activeProfileId]);
+
+  useEffect(() => {
+    loadDeckSignals().catch(err => console.error('Ошибка загрузки сигналов колоды', err));
+  }, [loadDeckSignals]);
 
   // Загружаем слова из базы данных для тепловой карты памяти при изменении активного профиля
   useEffect(() => {
@@ -251,6 +290,21 @@ export default function HomePage() {
 
   const xpStats = getLevelXpRange();
 
+  // Определяем состояние дневного хаба для адаптивного CTA.
+  // Приоритет: незавершённый чат → (local) первый запуск / повторения / новые / всё сделано → Anki-режим.
+  type DashState = 'resume' | 'first-run' | 'returning' | 'newbie' | 'all-done' | 'anki';
+  let dashState: DashState;
+  if (hasActiveChat && activeSession) {
+    dashState = 'resume';
+  } else if (deckMode === 'local') {
+    if (!isLocalInit) dashState = 'first-run';
+    else if (dueReviewCount > 0) dashState = 'returning';
+    else if (priorityCount > 0) dashState = 'newbie';
+    else dashState = 'all-done';
+  } else {
+    dashState = 'anki';
+  }
+
   if (!hasLoaded) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-secondary)', alignItems: 'center', justifyContent: 'center' }}>
@@ -332,21 +386,33 @@ export default function HomePage() {
           </div>
         </div>
 
-        <h1 style={{ fontSize: '32px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '16px', lineHeight: '1.2' }}>
-          {t("Превратите ваши слова в живую речь!", "あなたの単語を生きた言葉に！", 2)}
-        </h1>
+        {/* АДАПТИВНЫЙ ЗАГОЛОВОК: маркетинговый — только в первом запуске, иначе компактный по состоянию */}
+        {dashState === 'first-run' ? (
+          <>
+            <h1 style={{ fontSize: '32px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '16px', lineHeight: '1.2' }}>
+              {t("Превратите ваши слова в живую речь!", "あなたの単語を生きた言葉に！", 2)}
+            </h1>
+            <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '32px', maxWidth: '600px', lineHeight: '1.6' }}>
+              {t(
+                "YomuMogu даёт встроенную колоду японских слов и помогает практиковать их в диалоге с ИИ-тьютором. Любите Anki — подключите свою колоду в настройках.",
+                "YomuMoguには日本語の単語帳が内蔵されており、AI先生との対話で練習できます。Ankiをお使いの方は設定から連携できます。",
+                2
+              )}
+            </p>
+          </>
+        ) : (
+          <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '24px', lineHeight: '1.2' }}>
+            {dashState === 'newbie'
+              ? t("Начнём с разминки!", "ウォームアップから始めましょう！", 2)
+              : dashState === 'all-done'
+                ? t("Отличная работа!", "お疲れさまでした！", 2)
+                : t("С возвращением!", "おかえりなさい！", 2)}
+          </h1>
+        )}
 
-        <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '32px', maxWidth: '600px', lineHeight: '1.6' }}>
-          {t(
-            "YomuMogu даёт встроенную колоду японских слов и помогает практиковать их в диалоге с ИИ-тьютором. Любите Anki — подключите свою колоду в настройках.",
-            "YomuMoguには日本語の単語帳が内蔵されており、AI先生との対話で練習できます。Ankiをお使いの方は設定から連携できます。",
-            2
-          )}
-        </p>
-
-        {/* PRIMARY ACTION BUTTON */}
+        {/* PRIMARY ACTION: адаптивный CTA по состоянию дня */}
         <div className={styles.primaryActionContainer}>
-          {hasActiveChat && activeSession ? (
+          {!(dashState === 'resume' || deckLoaded) ? null : dashState === 'resume' && activeSession ? (
             <>
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <Link href="/chat" className="btn-3d btn-blue" style={{ fontSize: '20px', padding: '16px 32px' }}>
@@ -368,6 +434,34 @@ export default function HomePage() {
                 )}
               </span>
             </>
+          ) : dashState === 'first-run' ? (
+            <button
+              onClick={() => setShowAssessment(true)}
+              className="btn-3d btn-green"
+              style={{ fontSize: '20px', padding: '16px 32px' }}
+            >
+              {t("Пройти диагностику (5 мин)", "診断テスト（5分）", 2)}
+            </button>
+          ) : dashState === 'returning' ? (
+            <>
+              <Link href="/practice" className="btn-3d btn-green" style={{ fontSize: '20px', padding: '16px 32px' }}>
+                {t("Продолжить обучение", "学習を続ける", 2)}
+              </Link>
+              <span className={styles.resumeProgressText}>
+                {t(`${dueReviewCount} слов(а) к повторению`, `復習: ${dueReviewCount}語`, 2)}
+              </span>
+            </>
+          ) : dashState === 'newbie' ? (
+            <Link href="/practice" className="btn-3d btn-green" style={{ fontSize: '20px', padding: '16px 32px' }}>
+              {t("Начать разминку", "ウォームアップ開始", 2)}
+            </Link>
+          ) : dashState === 'all-done' ? (
+            <span className={styles.resumeProgressText} style={{ fontSize: '16px' }}>
+              {t("На сегодня всё — можно посмотреть медиа.", "今日はおしまい — メディアを見てみましょう。", 2)}{' '}
+              <Link href="/practice" style={{ color: 'var(--color-blue)', fontWeight: 800 }}>
+                {t("Открыть медиа", "メディアへ", 2)}
+              </Link>
+            </span>
           ) : (
             <Link href="/practice" className="btn-3d btn-green" style={{ fontSize: '20px', padding: '16px 32px' }}>
               {t("Начать практику", "練習を開始する", 2)}
@@ -613,6 +707,17 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      {/* МОДАЛ ДИАГНОСТИКИ (онбординг прямо на дашборде, без редиректа в настройки) */}
+      <AssessmentModal
+        isOpen={showAssessment}
+        profileId={activeProfileId}
+        onClose={() => setShowAssessment(false)}
+        onSaved={async () => {
+          setShowAssessment(false);
+          await loadDeckSignals();
+        }}
+      />
     </div>
   );
 }

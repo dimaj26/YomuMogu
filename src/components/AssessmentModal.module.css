@@ -1,0 +1,203 @@
+/* Стили модала диагностики знаний (извлечены из settings.module.css для переиспользования) */
+
+.loadingText {
+  padding: 12px;
+  background-color: var(--bg-secondary);
+  border-radius: var(--border-radius-sm);
+  color: var(--text-secondary);
+  text-align: center;
+  font-weight: 600;
+  border: 1px dashed var(--border-color);
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modalContent {
+  background-color: var(--bg-primary);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.modalHeader {
+  padding: 24px;
+  border-bottom: var(--border-width) solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modalHeader h2 {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.modalBody {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tabsContainer {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 12px;
+}
+
+.tabButton {
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 800;
+  border-radius: var(--border-radius-sm);
+  background: var(--bg-tertiary);
+  border: var(--border-width) solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tabButtonActive {
+  background: var(--color-blue);
+  color: #fff;
+  border-color: var(--color-blue-shadow);
+}
+
+.modalControls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.categorySection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.categoryTitle {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  border-left: 4px solid var(--color-blue);
+  padding-left: 8px;
+  margin: 8px 0;
+}
+
+.wordGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.wordCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background-color: var(--bg-secondary);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.wordCard:hover:not(.wordCardDisabled) {
+  border-color: var(--color-blue);
+  background-color: var(--bg-tertiary);
+}
+
+.wordCardSelected {
+  border-color: var(--color-green);
+  background-color: #f0fdf4;
+}
+
+.wordCardDisabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+  background-color: var(--bg-tertiary);
+}
+
+.wordCheckbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-green);
+}
+
+.wordInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.wordText {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wordReading {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.wordTranslation {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.progressBadge {
+  font-size: 10px;
+  padding: 2px 6px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-align: center;
+}
+
+.modalFooter {
+  padding: 20px 24px;
+  border-top: var(--border-width) solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background-color: var(--bg-tertiary);
+}

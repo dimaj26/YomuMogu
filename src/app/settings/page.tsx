@@ -10,10 +10,9 @@ import { useJapanification } from '@/hooks/useJapanification';
 import { useJpUI } from '@/components/JpUIProvider';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { getProfileItem, setProfileItem, removeProfileItem, getProfilesList, setActiveProfileId, getActiveProfileId, createProfile, deleteProfile, ProfileInfo } from '@/lib/profile';
-import { 
+import {
   LOCAL_DECK_NAME,
   isLocalDeckInitialized,
-  importStarterDeck,
   getDailyNewWordsCount,
   incrementDailyNewWordsCount,
   getDailyActivePool,
@@ -22,6 +21,7 @@ import {
   syncExistingLocalWordsWithStarterDeck
 } from '@/core/localDeckService';
 import { db } from '@/core/db';
+import { AssessmentModal } from '@/components/AssessmentModal';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -68,10 +68,6 @@ export default function SettingsPage() {
   const [quotaPreset, setQuotaPreset] = useState<'easy' | 'standard' | 'hard' | 'custom'>('standard');
   const [customQuotaLimit, setCustomQuotaLimit] = useState<number>(10);
   const [isAssessmentOpen, setIsAssessmentOpen] = useState<boolean>(false);
-  const [checkedNewWordIds, setCheckedNewWordIds] = useState<Set<number>>(new Set());
-  const [localWordStates, setLocalWordStates] = useState<Record<number, string>>({});
-  const [currentLevelTab, setCurrentLevelTab] = useState<'N5' | 'N4' | 'Conversational'>('N5');
-  const [starterDeckData, setStarterDeckData] = useState<any[]>([]);
 
   const [hasLoaded, setHasLoaded] = useState(false);
   const { state: jState, setUiMode, setChatLevel, resetProgress } = useJapanification();
@@ -408,100 +404,17 @@ export default function SettingsPage() {
     checkLocalDeckStatus();
   }, [deckMode, hasLoaded, isConnected]);
 
-  // Ленивая загрузка данных стартовой колоды для диагностического модального окна
-  useEffect(() => {
-    if (isAssessmentOpen && starterDeckData.length === 0) {
-      import('@/resources/starter_deck.json').then((module) => {
-        setStarterDeckData(module.default);
-      });
-    }
-  }, [isAssessmentOpen, starterDeckData.length]);
+  // Открытие модала диагностики (загрузка статусов и колоды — внутри AssessmentModal)
+  const openAssessmentModal = () => setIsAssessmentOpen(true);
 
-  // Функции для диагностического модального окна
-  const openAssessmentModal = async () => {
-    try {
-      const existingWords = await db.words
-        .where('profileId')
-        .equals(activeProfileId)
-        .filter(w => w.category === LOCAL_DECK_NAME)
-        .toArray();
-
-      const states: Record<number, string> = {};
-      const checkedIds = new Set<number>();
-
-      existingWords.forEach(w => {
-        states[w.id] = w.active.status;
-        if (w.active.status === 'mature') {
-          checkedIds.add(w.id);
-        }
-      });
-
-      setLocalWordStates(states);
-      setCheckedNewWordIds(checkedIds);
-      setIsAssessmentOpen(true);
-    } catch (err) {
-      setError('Не удалось загрузить статус слов для диагностики');
-    }
-  };
-
-  const handleToggleWord = (wordId: number) => {
-    const status = localWordStates[wordId];
-    if (status && status !== 'new') return; // защищаем прогресс (learning, review, mature в БД)
-
-    setCheckedNewWordIds(prev => {
-      const next = new Set(prev);
-      if (next.has(wordId)) {
-        next.delete(wordId);
-      } else {
-        next.add(wordId);
-      }
-      return next;
-    });
-  };
-
-  const handleSelectAllForTab = () => {
-    const tabWords = starterDeckData.filter(w => w.level === currentLevelTab);
-    setCheckedNewWordIds(prev => {
-      const next = new Set(prev);
-      tabWords.forEach(w => {
-        const status = localWordStates[w.id];
-        if (!status || status === 'new') {
-          next.add(w.id);
-        }
-      });
-      return next;
-    });
-  };
-
-  const handleDeselectAllForTab = () => {
-    const tabWords = starterDeckData.filter(w => w.level === currentLevelTab);
-    setCheckedNewWordIds(prev => {
-      const next = new Set(prev);
-      tabWords.forEach(w => {
-        const status = localWordStates[w.id];
-        if (!status || status === 'new') {
-          next.delete(w.id);
-        }
-      });
-      return next;
-    });
-  };
-
-  const handleSaveAssessment = async () => {
-    setIsLoadingWords(true);
-    try {
-      await importStarterDeck(activeProfileId, checkedNewWordIds);
-      setIsLocalInitialized(true);
-      setIsAssessmentOpen(false);
-      await loadWords();
-      setDailyNewWordsCount(getDailyNewWordsCount(activeProfileId));
-      // После диагностики ведём пользователя сразу в обучение, а не оставляем в настройках
-      router.push('/practice');
-    } catch (err) {
-      setError('Не удалось сохранить результаты диагностики');
-    } finally {
-      setIsLoadingWords(false);
-    }
+  // Вызывается AssessmentModal после успешного сохранения: обновляем список и ведём в обучение
+  const handleAssessmentSaved = async () => {
+    setIsAssessmentOpen(false);
+    setIsLocalInitialized(true);
+    await loadWords();
+    setDailyNewWordsCount(getDailyNewWordsCount(activeProfileId));
+    // После диагностики ведём пользователя сразу в обучение, а не оставляем в настройках
+    router.push('/practice');
   };
 
   useEffect(() => {
@@ -1245,143 +1158,13 @@ export default function SettingsPage() {
         </div>
       </main>
 
-      {isAssessmentOpen && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
-            <div className={styles.modalHeader}>
-              <h2>Диагностика знаний</h2>
-              <button
-                type="button"
-                onClick={() => setIsAssessmentOpen(false)}
-                className="btn-3d btn-red"
-                style={{ padding: '6px 12px', fontSize: '13px' }}
-              >
-                Закрыть
-              </button>
-            </div>
-
-            <div className={styles.modalBody}>
-              <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                Отметьте слова, которые вы уже хорошо знаете. Они получат статус «Изучено» и будут отложены.
-                Остальные слова будут появляться как новые карточки.
-              </p>
-
-              <div className={styles.tabsContainer}>
-                {(['N5', 'N4', 'Conversational'] as const).map((lvl) => (
-                  <button
-                    key={lvl}
-                    type="button"
-                    onClick={() => setCurrentLevelTab(lvl)}
-                    className={`${styles.tabButton} ${currentLevelTab === lvl ? styles.tabButtonActive : ''}`}
-                  >
-                    {lvl === 'Conversational' ? 'Разговорный слой' : lvl}
-                  </button>
-                ))}
-              </div>
-
-              {starterDeckData.length === 0 ? (
-                <div className={styles.loadingText}>Загрузка стартовой колоды...</div>
-              ) : (
-                <>
-                  <div className={styles.modalControls}>
-                    <button
-                      type="button"
-                      className="btn-3d btn-blue"
-                      onClick={handleSelectAllForTab}
-                      style={{ padding: '6px 12px', fontSize: '13px' }}
-                    >
-                      Выбрать все в {currentLevelTab === 'Conversational' ? 'разговорных' : currentLevelTab}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-3d"
-                      onClick={handleDeselectAllForTab}
-                      style={{ padding: '6px 12px', fontSize: '13px' }}
-                    >
-                      Снять все в {currentLevelTab === 'Conversational' ? 'разговорных' : currentLevelTab}
-                    </button>
-                  </div>
-
-                  {['Существительные', 'Глаголы', 'Прилагательные', 'Выражения'].map((cat) => {
-                    const catWords = starterDeckData.filter(
-                      w => w.level === currentLevelTab && w.category === cat
-                    );
-                    if (catWords.length === 0) return null;
-
-                    return (
-                      <div key={cat} className={styles.categorySection}>
-                        <div className={styles.categoryTitle}>{cat}</div>
-                        <div className={styles.wordGrid}>
-                          {catWords.map((w) => {
-                            const isChecked = checkedNewWordIds.has(w.id);
-                            const status = localWordStates[w.id];
-                            const isDisabled = !!(status && status !== 'new');
-
-                            return (
-                              <div
-                                key={w.id}
-                                onClick={() => !isDisabled && handleToggleWord(w.id)}
-                                className={`${styles.wordCard} ${
-                                  isChecked ? styles.wordCardSelected : ''
-                                } ${isDisabled ? styles.wordCardDisabled : ''}`}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  disabled={isDisabled}
-                                  onChange={() => handleToggleWord(w.id)}
-                                  className={styles.wordCheckbox}
-                                  onClick={(e) => e.stopPropagation()}
-                                />
-                                <div className={styles.wordInfo}>
-                                  <div className={styles.wordText} title={w.word}>
-                                    {w.word}
-                                  </div>
-                                  <div className={styles.wordReading} title={w.reading}>
-                                    {w.reading}
-                                  </div>
-                                  <div className={styles.wordTranslation} title={w.translation}>
-                                    {w.translation}
-                                  </div>
-                                </div>
-                                {status && status !== 'new' && (
-                                  <span className={styles.progressBadge}>
-                                    {status === 'mature' ? 'Изучено' : 'В работе'}
-                                  </span>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </>
-              )}
-            </div>
-
-            <div className={styles.modalFooter}>
-              <button
-                type="button"
-                onClick={() => setIsAssessmentOpen(false)}
-                className="btn-3d"
-                style={{ padding: '8px 16px', fontSize: '14px' }}
-              >
-                Отмена
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveAssessment}
-                disabled={starterDeckData.length === 0}
-                className="btn-3d btn-green"
-                style={{ padding: '8px 16px', fontSize: '14px' }}
-              >
-                Сохранить и начать
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AssessmentModal
+        isOpen={isAssessmentOpen}
+        profileId={activeProfileId}
+        onClose={() => setIsAssessmentOpen(false)}
+        onSaved={handleAssessmentSaved}
+        onError={setError}
+      />
     </div>
   );
 }

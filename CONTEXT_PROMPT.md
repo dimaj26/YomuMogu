@@ -29,6 +29,7 @@ You are an expert **TypeScript / Next.js 16** developer. Your specialty is App R
 - **XP & Progression**: Decorative levels 0–6 dashboard widget; XP from correct words, grammar, session completion.
 - **Profile System**: Multi-profile localStorage namespace `yomumogu_profile_${id}_${key}`; create/switch/delete.
 - **Gamified Dashboard**: Mascot 🍵, 3D buttons, Kumiko grid background, XP card widget, session resume/start.
+- **Adaptive Daily Hub**: dashboard reads local-deck signals and shows one state-based CTA (first-run diagnostics / resume chat / returning «N к повторению» / newbie warm-up / all-done neutral / Anki generic); marketing H1 only on first run; onboarding diagnostics open in a modal on `/` via reusable `AssessmentModal`.
 - **Practice Launcher (`/practice`)**: Session management, new-words/review split, daily limits, FSRS stats display.
 - **Chat Persistence**: Auto-serialize chat state to localStorage; resume/reset buttons on dashboard.
 - **Session Safeguard**: Corrupted state detection + fallback UI in `/chat`.

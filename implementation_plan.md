@@ -1,38 +1,49 @@
-# RNA-Blueprint — Фаза 2 #4: японизация служебного UI + метки грамматики (P0/F15)
+# RNA-Blueprint — Фаза 2 #5: адаптивный дашборд-хаб + извлечение AssessmentModal
 
 ## 1. Base DNA
-Windows / PowerShell · Next.js 16 · TS strict · React 19 · Vitest.
+Windows / PowerShell · Next.js 16 · TS strict · React 19 · CSS Modules · Vitest.
 
 ## 2. Task RNA
-P0 «японизация служебного интерфейса слишком рано» (часть): навигация (`設定/プロフィール/ヘルプ`) в режиме `smart` авто-японизируется через FSRS для нулевого новичка. + F15: 3 «категорийные» грамма-ноды держат в `construction` японское/смешанное название-категорию.
+Дашборд (`page.tsx`) не читает состояние колоды: статичный CTA `Link→/practice` для всех (адаптируется лишь «Продолжить чат»). Маркетинговый H1 показывается всем. Диагностика живёт в `settings` и редиректит туда.
 
-Скоуп (90%-фикс без участия пользователя):
-- **JpUI `kind`**: новый проп `kind: 'chrome' | 'content'` (default `content`). Для `chrome` в режиме `smart` — ранний возврат `ru` + НЕ регистрировать/апгрейдить (служебный UI никогда не «изучается»).
-- **Навигация** (`page.tsx`, 3 элемента) → `kind="chrome"`.
-- **F15** (`grammar_rules.json`): `construction` нод `g_n5_s2` (動詞の分類), `名詞修飾 / 〜の relative clauses`, `い / な-прилагательные` → русско-ориентированные метки, грамма-формы (〜の/い/な) в скобках.
+Цель: дашборд читает существующие сигналы `localDeckService` и показывает ОДИН адаптивный CTA + мягкую подсказку; первый запуск открывает диагностику МОДАЛОМ на `/`. Извлечь модал в переиспользуемый `components/AssessmentModal.tsx`.
 
-ВНЕ scope (Фаза 3 #7): порог японизации `content`, сброс/тултип в `LanguageSwitcher`.
+5 состояний CTA:
+| Состояние | Условие | CTA |
+|---|---|---|
+| Первый запуск | local && `!isLocalDeckInitialized` | «Пройти диагностику (5 мин)» → модал на `/` |
+| Незаверш. чат | `hasActiveChat` | «Продолжить: {тема}» (есть) |
+| Вернувшийся | due-повторения > 0 | «Продолжить обучение» → /practice + «N к повторению» |
+| Новичок | priority>0, due=0 (только новые) | «Начать разминку» → /practice |
+| Всё сделано | priority===0 | нейтрально «на сегодня всё; можно медиа» |
+Anki-режим: generic «Начать практику» (сигналы local не применимы).
+
+Маркетинговый H1/подзаголовок — только «первый запуск»; для остальных — состояние-зависимый заголовок без давления (§7.6).
 
 ## 3. Contextual Constraints
-- [CC-1] `construction` — двойного назначения: метка трека И описание в промпте Gemini. Валидация `validateUsedConstructions` ключится на **`id`** (`promptScope.ts:106`), НЕ на строку → менять текст безопасно для AI-скоупа.
-- [CC-2] `ja`-режим (полный японский) для chrome НЕ трогаем — это явный выбор пользователя; правило только для `smart`.
-- [CC-3] Метка `construction` не должна совпадать с `topic`/`translation` (иначе дубль текста в `GrammarTrack`/`GrammarTrainer`).
+- [CC-1] SSR: все чтения localStorage/IndexedDB в `useEffect` [PL-8.3].
+- [CC-2] Извлечение AssessmentModal — поведенчески-нейтрально: settings-тесты (вкл. F5-репродьюсер) остаются зелёными; «Сохранить и начать» по-прежнему ведёт в /practice через `onSaved`.
+- [CC-3] XP/уровни — декорация, не входной сигнал [PL-7.1]; CTA опирается ТОЛЬКО на колоду/сессию.
+- [CC-4] Не строить «мастер дня» — один CTA + подсказка [план P0].
+- [CC-5] `getPriorityWordsCount` уже = due + new-в-квоте; due-повторения считаю отдельно для разделения «вернувшийся/новичок».
 
 ## 4. Proposed Changes
-- `src/components/JpUI.tsx` [MODIFY] — проп `kind`, guard эффекта апгрейда, ранний возврат `ru` для chrome.
-- `src/app/page.tsx` [MODIFY] — 3 нав-элемента `kind="chrome"`.
-- `src/resources/grammar_rules.json` [MODIFY] — 3 `construction`.
-- `src/components/__tests__/JpUI.test.tsx` [MODIFY] — репродьюсер chrome.
-- `src/components/__tests__/GrammarTrainer.test.tsx` [MODIFY] — ассерт `動詞の分類` → новая метка.
+- `src/components/AssessmentModal.tsx` [NEW] — инкапсулирует загрузку колоды/статусов, выбор, сохранение (`importStarterDeck`); props `isOpen/profileId/onClose/onSaved/onError`.
+- `src/components/AssessmentModal.module.css` [NEW] — классы модала (копия из settings).
+- `src/app/settings/page.tsx` [MODIFY] — заменить инлайн-модал + хендлеры на `<AssessmentModal>`; `onSaved`→ навигация /practice (сохранить F5).
+- `src/app/page.tsx` [MODIFY] — адаптивный CTA (5 состояний), заголовки, `<AssessmentModal>` для первого запуска.
+- `src/components/__tests__/AssessmentModal.test.tsx` [NEW] — рендер/сохранение/onSaved.
+- `src/app/__tests__/page.test.tsx` [MODIFY] — репродьюсеры состояний дашборда.
 
 ## 5. Execution Steps
-1. [TEST] JpUI репродьюсер: chrome в smart + прогресс в БД → остаётся `ru`, `ja` нет. Падает. [CC-2]
-2. JpUI.tsx: `kind`, guard, ранний возврат. [CC-2]
-3. page.tsx нав → `kind="chrome"`.
-4. grammar_rules.json 3 метки [CC-1][CC-3]; обновить GrammarTrainer ассерт.
-5. [TEST] `npm run test` (JpUI, GrammarTrack, GrammarTrainer, chat, promptScope) + `tsc`.
-6. [CMD-2/CMD-4] CONTEXT_PROMPT строка фичи + CHANGELOG; счётчик тестов.
+1. [NEW] AssessmentModal.module.css + AssessmentModal.tsx (перенос логики 1:1). [CC-2]
+2. settings: подключить `<AssessmentModal>`, удалить инлайн; прогнать settings-тесты (F5 зелёный). [CC-2]
+3. [TEST] dashboard-репродьюсеры: first-run→диагностика, due→«Продолжить обучение»+N, new→«разминка», done→нейтрально, anki→generic. Падают.
+4. page.tsx: сигналы в `useEffect`, derive state, адаптивный CTA + заголовки + модал. [CC-1][CC-3]
+5. [TEST] `npm run test` весь + `tsc`.
+6. [CMD-1/2/4] PROJECT_LOGIC (реестр+счётчик), CONTEXT_PROMPT (строка фичи), CHANGELOG.
 
 ## 6. Verification & TDD reproducer
-- `src/components/__tests__/JpUI.test.tsx`, кейс: «kind="chrome": в smart не японизируется даже при прогрессе в БД».
+- `src/app/__tests__/page.test.tsx`: кейсы по 5 состояниям (сид IndexedDB local-words + active_session).
+- `AssessmentModal.test.tsx`: «save → importStarterDeck + onSaved».
 - Полный `npm run test` зелёный; `tsc --noEmit` чисто.

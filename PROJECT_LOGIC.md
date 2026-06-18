@@ -284,6 +284,9 @@ src/
 | `core/__tests__/tagger.test.ts` | Unit tests for tagger, FSRS routing, and session grouping helpers |
 | `components/PhonosemanticHint.tsx` | Accordion component displaying phonosemantic keys and relative kanji |
 | `components/DebugDrawer.tsx` | Client component implementing the sliding debug drawer HUD |
+| `components/AssessmentModal.tsx` | Reusable knowledge-diagnostics modal (load starter deck, mark known words, `importStarterDeck`); props `isOpen/profileId/onClose/onSaved/onError`; used on `/settings` and `/` (dashboard onboarding) |
+| `components/AssessmentModal.module.css` | Styles for the AssessmentModal (extracted from settings) |
+| `components/__tests__/AssessmentModal.test.tsx` | Unit tests for AssessmentModal render/save/onSaved |
 | `resources/phonosemantics.json` | 50 phonosemantic keys and relative kanji data |
 | `resources/situational_dictionary.json` | Static situational tags mapping for 500 N5 words |
 | `app/practice/quiz/page.tsx` | Gamified Active Recall quiz component supporting ad-hoc, FSRS modes, mnemonics, and phonosemantic hints |
@@ -819,7 +822,7 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-488 unit/integration tests across 71 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+493 unit/integration tests across 72 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
 
 ---
 
