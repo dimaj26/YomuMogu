@@ -850,6 +850,15 @@ describe('PracticePage Component', () => {
         }
       ];
 
+      // Активный пользователь (есть слово в изучении) → квесты видны
+      await db.words.put({
+        profileId: 'default', id: 901, word: '本', reading: 'ほん', translation: 'книга',
+        category: '__local_starter__', source: 'starter',
+        passive: { stability: 5, difficulty: 5, interval: 5, due: Date.now(), reps: 1, lapses: 0, status: 'review' },
+        active: { stability: 5, difficulty: 5, interval: 5, due: Date.now(), reps: 1, lapses: 0, status: 'review' },
+        contextExamples: []
+      });
+
       render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
 
       expect(await screen.findByText('Красноречие')).toBeInTheDocument();
@@ -873,12 +882,46 @@ describe('PracticePage Component', () => {
         }
       ];
 
+      // Активный пользователь (есть слово в изучении) → квесты видны
+      await db.words.put({
+        profileId: 'default', id: 902, word: '本', reading: 'ほん', translation: 'книга',
+        category: '__local_starter__', source: 'starter',
+        passive: { stability: 5, difficulty: 5, interval: 5, due: Date.now(), reps: 1, lapses: 0, status: 'review' },
+        active: { stability: 5, difficulty: 5, interval: 5, due: Date.now(), reps: 1, lapses: 0, status: 'review' },
+        contextExamples: []
+      });
+
       render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
 
       expect(await screen.findByText('Охота на долги')).toBeInTheDocument();
       expect(screen.getByText('4 / 10')).toBeInTheDocument();
       expect(screen.queryByText(/\+3 XP/)).not.toBeInTheDocument();
       expect(screen.queryByText(/XP/)).not.toBeInTheDocument();
+    });
+
+    it('новичок (только новые слова): квесты скрыты, показана мягкая подсказка', async () => {
+      mockQuestsData = [
+        {
+          id: 'reviews_quest', type: 'reviews', title: 'Охота на долги',
+          description: 'Пройти 10 FSRS-повторений в квизе',
+          target: 10, current: 0, rewardXp: 3, completed: false, claimed: false,
+        }
+      ];
+
+      // Только новые слова → нет контекста для квестов
+      await db.words.put({
+        profileId: 'default', id: 903, word: '水', reading: 'みず', translation: 'вода',
+        category: '__local_starter__', source: 'starter',
+        passive: { stability: 0, difficulty: 5, interval: 0, due: Date.now(), reps: 0, lapses: 0, status: 'new' },
+        active: { stability: 0, difficulty: 5, interval: 0, due: Date.now(), reps: 0, lapses: 0, status: 'new' },
+        contextExamples: []
+      });
+
+      render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+
+      // Заголовок виджета есть, но конкретные квесты скрыты — вместо них подсказка
+      expect(await screen.findByText(/появятся, когда вы начнёте заниматься/)).toBeInTheDocument();
+      expect(screen.queryByText('Охота на долги')).not.toBeInTheDocument();
     });
   });
 });

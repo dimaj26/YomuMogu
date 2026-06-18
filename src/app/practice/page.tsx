@@ -167,6 +167,14 @@ export default function PracticePage() {
     return canEnterChat(localWords);
   }, [deckMode, localWords]);
 
+  // Контекст для прогрессивного раскрытия: квесты (повторения/чаты/мнемоники)
+  // показываем, когда у пользователя уже есть слова в изучении. Нулевому новичку
+  // (только новые слова) — мягкая подсказка вместо непонятных целей.
+  const hasStudyContext = useMemo(
+    () => deckMode !== 'local' || localWords.some(w => w.active.status !== 'new'),
+    [deckMode, localWords]
+  );
+
   // Warm-up состояние
   const [warmup, setWarmup] = useState<WarmupState | null>(null);
   const [warmupOptions, setWarmupOptions] = useState<string[]>([]);
@@ -1557,7 +1565,11 @@ export default function PracticePage() {
                 <ScienceTip tipId="no_streaks" />
               </h3>
               <div className={styles.questList}>
-                {quests.map((quest) => {
+                {!hasStudyContext ? (
+                  <p className={styles.questDesc} style={{ padding: '8px 4px', lineHeight: 1.5 }}>
+                    Ежедневные задания появятся, когда вы начнёте заниматься — пройдите разминку и квиз слева.
+                  </p>
+                ) : quests.map((quest) => {
                   const percent = Math.min(100, (quest.current / quest.target) * 100);
                   return (
                     <div key={quest.id} className={styles.questItem}>

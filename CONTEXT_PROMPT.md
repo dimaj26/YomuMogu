@@ -56,7 +56,7 @@ You are an expert **TypeScript / Next.js 16** developer. Your specialty is App R
 - **Kumiko Heatmap**: 50-cell SVG dashboard grid coloring 500 words by FSRS stability + due pulse.
 - **Gradual Furigana (JpUI)**: `<ruby>` opacity by FSRS interval (<3d:1.0, <21d:0.6, ≥21d:0→hover); no CLS. `kind='chrome'` keeps service UI (navigation) Russian in `smart` mode (never auto-japanized/registered); content elements only start japanizing once immersion level ≥ `CONTENT_JP_MIN_LEVEL` (2). `LanguageSwitcher` modes carry short descriptions (Smart notes gradual japanization + reset in Settings).
 - **Learning Track**: Duolingo winding roadmap (5 nodes) with lock/active/complete state transitions.
-- **Daily Quests**: Sidebar widget tracking Reviews/Chats/Mnemonics; 4AM reset without claimable XP rewards.
+- **Daily Quests**: Sidebar widget tracking Reviews/Chats/Mnemonics; 4AM reset without claimable XP rewards. Progressive disclosure — quests are hidden behind a soft hint for a brand-new local user (only `new`-status words) until they have study context.
 - **Grammar Trainer**: 7-step N5 curriculum roadmap (Morphology-Before-Syntax), interactive Sandbox modal, Leitner scheduling, Gemini sentence verification.
 - **Situational Tags**: 10 themes + universal; static dict for N5, Gemini classifier for Anki imports.
 - **Adaptive Routing**: active.stability < 3d or lapses ≥ 2 → chat (with hard-priority & 5–8 word target sets); else → offline quiz. Chat practice gated at ≥5 active words.

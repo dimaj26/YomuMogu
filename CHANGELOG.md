@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.62.11] - 2026-06-18
+
+### Changed
+- **Daily quests are progressively disclosed for newbies** (UX Phase 3 #9 / F6, final plan item): the Reviews/Chats/Mnemonics quests reference concepts (FSRS reviews, mnemonics) a day-one user has no context for. The quest list on `/practice` is now hidden behind a soft hint ("Ежедневные задания появятся, когда вы начнёте заниматься…") for a brand-new local user whose every word is still `new`; it appears once they have any word in study (learning/review/mature), or immediately in Anki mode. Broader term/jargon de-cluttering for newbies was already handled in Phase 1 (#3) and the level-gated content japanization (#7).
+
 ## [1.62.10] - 2026-06-18
 
 ### Changed
