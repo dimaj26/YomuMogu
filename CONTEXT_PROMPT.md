@@ -54,7 +54,7 @@ You are an expert **TypeScript / Next.js 16** developer. Your specialty is App R
 - **Debug HUD**: Dev-only side drawer with FSRS trajectories, prompt inspector, DB reset utilities.
 - **Chat Mascot**: SVG 🍵 with animations reacting to target words, grammar corrections, correct input.
 - **Kumiko Heatmap**: 50-cell SVG dashboard grid coloring 500 words by FSRS stability + due pulse.
-- **Gradual Furigana (JpUI)**: `<ruby>` opacity by FSRS interval (<3d:1.0, <21d:0.6, ≥21d:0→hover); no CLS. `kind='chrome'` keeps service UI (navigation) Russian in `smart` mode (never auto-japanized/registered).
+- **Gradual Furigana (JpUI)**: `<ruby>` opacity by FSRS interval (<3d:1.0, <21d:0.6, ≥21d:0→hover); no CLS. `kind='chrome'` keeps service UI (navigation) Russian in `smart` mode (never auto-japanized/registered); content elements only start japanizing once immersion level ≥ `CONTENT_JP_MIN_LEVEL` (2). `LanguageSwitcher` modes carry short descriptions (Smart notes gradual japanization + reset in Settings).
 - **Learning Track**: Duolingo winding roadmap (5 nodes) with lock/active/complete state transitions.
 - **Daily Quests**: Sidebar widget tracking Reviews/Chats/Mnemonics; 4AM reset without claimable XP rewards.
 - **Grammar Trainer**: 7-step N5 curriculum roadmap (Morphology-Before-Syntax), interactive Sandbox modal, Leitner scheduling, Gemini sentence verification.

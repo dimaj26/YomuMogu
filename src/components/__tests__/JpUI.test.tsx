@@ -58,6 +58,52 @@ describe('JpUI Component FSRS Opacity', () => {
     expect(screen.queryByText('設定')).not.toBeInTheDocument();
   });
 
+  it('порог: контент НЕ японизируется, пока level < CONTENT_JP_MIN_LEVEL (нулевой новичок)', async () => {
+    // Уже-выученное слово для синхронизации загрузки провайдера
+    await db.ui_words.put({
+      profileId: 'default', id: 'seed', word: '本', reading: 'ほん', translation: 'книга',
+      status: 'review', stability: 10, difficulty: 4, interval: 1, due: Date.now(), reps: 3, lapses: 0
+    });
+
+    // По умолчанию level 0 (points 0) < 2
+    render(
+      <JapanificationProvider>
+        <JpUIProvider>
+          <JpUI id="seed" ru="книга" ja="本" reading="ほん" interactive={false} />
+          <JpUI id="fresh_content" ru="дом" ja="家" reading="いえ" interactive={false} />
+        </JpUIProvider>
+      </JapanificationProvider>
+    );
+
+    // Провайдер загрузился (seed отрендерил японский)
+    await waitFor(() => expect(screen.getByText('本')).toBeInTheDocument());
+    // Даём шанс эффекту авто-апгрейда сработать
+    await new Promise(r => setTimeout(r, 100));
+
+    // Свежий контент остаётся на русском — порог уровня не пройден
+    expect(screen.getByText('дом')).toBeInTheDocument();
+    expect(screen.queryByText('家')).not.toBeInTheDocument();
+  });
+
+  it('порог: при level >= CONTENT_JP_MIN_LEVEL контент японизируется', async () => {
+    // Поднимаем уровень: points 50 → level 2
+    localStorage.setItem(
+      'yomumogu_profile_default_japanification',
+      JSON.stringify({ uiMode: 'smart', points: 50 })
+    );
+
+    render(
+      <JapanificationProvider>
+        <JpUIProvider>
+          <JpUI id="fresh_high" ru="дом" ja="家" reading="いえ" interactive={false} />
+        </JpUIProvider>
+      </JapanificationProvider>
+    );
+
+    // Контент автоматически японизируется
+    await waitFor(() => expect(screen.getByText('家')).toBeInTheDocument(), { timeout: 4000 });
+  });
+
   it('renders furigana with full opacity class for learning words (interval < 3)', async () => {
     await db.ui_words.put({
       profileId: 'default',

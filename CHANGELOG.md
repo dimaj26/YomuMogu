@@ -2,6 +2,12 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.62.10] - 2026-06-18
+
+### Changed
+- **Content japanization is level-gated for newbies** (UX Phase 3 #7, completes P0 japanization): in Smart mode, content elements no longer auto-japanize from level 0 — `JpUIProvider.upgradeWord` is gated by a new `CONTENT_JP_MIN_LEVEL` (2), so a zero-day user keeps content in Russian and only sees japanized UI once they've grown into it (chrome/navigation already never japanizes). Already-learned words are unaffected (the immersion level never decreases).
+- **Language switcher explains its modes**: the `LanguageSwitcher` dropdown now shows a short description under each mode — Russian / Smart / 日本語 — with the Smart note explaining that the interface gradually becomes Japanese and that progress can be reset in Settings (where the existing "Сбросить FSRS интерфейса" control lives).
+
 ## [1.62.9] - 2026-06-18
 
 ### Added

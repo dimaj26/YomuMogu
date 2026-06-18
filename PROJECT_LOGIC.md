@@ -309,6 +309,8 @@ src/
 | `lib/gemini/__tests__/scenarios.integration.test.ts` | Integration tests verifying multi-turn conversational scenarios against live Gemini API |
 | `scratch/SCRATCH_LOG.md` | Permanent historical audit registry tracking sandbox scripts and side effects |
 | `hooks/useQuests.ts` | React custom hook managing namespaced daily quest progression and XP rewards |
+| `components/JpUIProvider.tsx` | UI-FSRS provider; `upgradeWord` gated by `CONTENT_JP_MIN_LEVEL` (content stays Russian until immersion level ≥ 2); chrome elements never upgrade |
+| `components/__tests__/LanguageSwitcher.test.tsx` | Unit test for LanguageSwitcher mode descriptions |
 | `components/LearningTrack.tsx` | N5→N1 macro JLPT competency ladder — shows lexCoverage and grammarCoverage progress bars per level; receives `MacroLadderProfile` prop |
 | `components/__tests__/LearningTrack.test.tsx` | Unit tests for macro ladder node states, coverage bars, and popover content |
 | `components/GrammarTrack.tsx` | Winding SVG path component for grammar rules curriculum showing forks and connections dynamically generated from prerequisite DAG |
@@ -829,7 +831,7 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-515 unit/integration tests across 75 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+518 unit/integration tests across 76 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
 
 ---
 

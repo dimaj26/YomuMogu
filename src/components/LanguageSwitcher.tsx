@@ -29,9 +29,9 @@ export function LanguageSwitcher() {
   }, []);
 
   const modes = [
-    { value: 'ru', label: 'Русский' },
-    { value: 'smart', label: 'Smart' },
-    { value: 'ja', label: '日本語' },
+    { value: 'ru', label: 'Русский', description: 'Весь интерфейс на русском.' },
+    { value: 'smart', label: 'Smart', description: 'Интерфейс постепенно становится японским по мере изучения. Сбросить прогресс можно в Настройках.' },
+    { value: 'ja', label: '日本語', description: 'Только японский — для продвинутых.' },
   ] as const;
 
   const currentLabel = modes.find(m => m.value === state.uiMode)?.label || 'Smart';
@@ -135,7 +135,10 @@ export function LanguageSwitcher() {
                 }}
                 onKeyDown={(e) => handleItemKeyDown(e, index)}
               >
-                <span>{mode.label}</span>
+                <span className={styles.itemTextBlock}>
+                  <span className={styles.itemLabel}>{mode.label}</span>
+                  <span className={styles.itemDescription}>{mode.description}</span>
+                </span>
                 {state.uiMode === mode.value && <Check size={16} className={styles.checkIcon} />}
               </button>
             </li>

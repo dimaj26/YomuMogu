@@ -20,6 +20,14 @@ interface JpUIContextType {
 
 const JpUIContext = createContext<JpUIContextType | undefined>(undefined);
 
+/**
+ * Минимальный уровень погружения, с которого контентные элементы начинают
+ * японизироваться в режиме Smart. Нулевому новичку (level 0–1) контент остаётся
+ * на русском — японизируется только то, к чему он уже подрос. (chrome-элементы
+ * не японизируются никогда, см. JpUI kind='chrome'.)
+ */
+export const CONTENT_JP_MIN_LEVEL = 2;
+
 export function JpUIProvider({ children }: { children: React.ReactNode }) {
   const [uiWords, setUiWords] = useState<Record<string, UiWord>>({});
   const [upgradedThisSession, setUpgradedThisSession] = useState<string | null>(null);
@@ -65,6 +73,8 @@ export function JpUIProvider({ children }: { children: React.ReactNode }) {
   // Функция для апгрейда нового слова в японский режим
   const upgradeWord = useCallback(async (id: string, ru: string, ja: string, reading: string = '') => {
     if (!isLoaded || uiMode !== 'smart' || upgradedThisSession) return;
+    // Порог уровня: нулевому новичку контент по-русски (chrome уже отфильтрован в JpUI)
+    if (jState.level < CONTENT_JP_MIN_LEVEL) return;
 
     const activeId = getActiveProfileId();
 
@@ -98,7 +108,7 @@ export function JpUIProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.error('Ошибка сохранения апгрейда слова в БД', err);
     }
-  }, [isLoaded, uiMode, upgradedThisSession]);
+  }, [isLoaded, uiMode, upgradedThisSession, jState.level]);
 
   // Функция для отката слова на русский (оценка Again)
   const revertWord = useCallback(async (id: string) => {
