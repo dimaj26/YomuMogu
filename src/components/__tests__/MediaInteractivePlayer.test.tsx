@@ -282,7 +282,7 @@ describe('MediaInteractivePlayer Component', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Разбор слов недоступен: токенизатор не запущен (run-server.bat)')).toBeInTheDocument();
+      expect(screen.getByText('Автоматический разбор слов сейчас недоступен. Субтитры показаны как есть; перевод по клику вернётся автоматически.')).toBeInTheDocument();
       expect(screen.getAllByText('今日').length).toBeGreaterThan(0);
     });
   });
@@ -977,7 +977,7 @@ describe('MediaInteractivePlayer Component', () => {
       await vi.advanceTimersByTimeAsync(0);
     });
 
-    expect(screen.getByText('Разбор слов недоступен: токенизатор не запущен (run-server.bat)')).toBeInTheDocument();
+    expect(screen.getByText('Автоматический разбор слов сейчас недоступен. Субтитры показаны как есть; перевод по клику вернётся автоматически.')).toBeInTheDocument();
 
     const statusDot = screen.getByTestId('tokenizer-status-dot');
     expect(statusDot.className).toContain('statusDotOffline');

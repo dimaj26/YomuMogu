@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.62.3] - 2026-06-17
+
+### Fixed
+- **User-facing error/empty states no longer speak developer language**: the media player's tokenizer-down banner no longer leaks "run-server.bat", and the empty sidebar no longer invites "click any word" while word analysis is unavailable — it states the analysis is temporarily down and that video/subtitles still work. The chat theme-generation route no longer passes a raw exception ("fetch failed") to the UI — it returns a human Russian message while the raw error stays in the server log. (Quick part of the unified unavailable-state work; full `ServiceUnavailable` pattern with cause classification is planned.) Found during the Day-2 UX walkthrough.
+
 ## [1.62.2] - 2026-06-17
 
 ### Changed

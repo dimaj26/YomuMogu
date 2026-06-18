@@ -700,7 +700,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
                     <div className={`${styles.activeLine} ${currentTime >= segments[activeSegmentIndex].start + segments[activeSegmentIndex].duration ? styles.dimmedLine : ''}`}>
                       {tokenizerDown && (
                         <div className={styles.tokenizerWarning} data-testid="tokenizer-warning">
-                          Разбор слов недоступен: токенизатор не запущен (run-server.bat)
+                          Автоматический разбор слов сейчас недоступен. Субтитры показаны как есть; перевод по клику вернётся автоматически.
                         </div>
                       )}
                       {isTokenizing ? (
@@ -900,7 +900,11 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
             ) : (
               <div className={styles.sidebarEmpty}>
                 <Sparkles size={32} className={styles.emptySparkle} />
-                <p>Кликните по любому японскому слову в субтитрах, чтобы увидеть его чтение, грамматический разбор и русский перевод из словаря JitenDex.</p>
+                {tokenizerDown ? (
+                  <p>Разбор слов сейчас недоступен. Видео и субтитры работают; перевод по клику вернётся автоматически.</p>
+                ) : (
+                  <p>Кликните по любому японскому слову в субтитрах, чтобы увидеть его чтение, грамматический разбор и русский перевод из словаря JitenDex.</p>
+                )}
               </div>
             )}
           </div>

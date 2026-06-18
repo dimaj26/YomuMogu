@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     logger.error('Исключение при обработке запроса в /api/gemini/sessions', error);
     return NextResponse.json(
-      { error: error.message || 'Произошла ошибка при генерации тем в Gemini' },
+      { error: 'ИИ-сервис временно недоступен. Попробуйте сгенерировать темы ещё раз позже — слова и повторение работают офлайн.' },
       { status: 500 }
     );
   }

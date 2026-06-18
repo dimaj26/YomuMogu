@@ -97,4 +97,23 @@ describe('API Route POST /api/gemini/sessions', () => {
 
     process.env = originalEnv;
   });
+
+  it('catch не отдаёт пользователю сырое исключение (например "fetch failed")', async () => {
+    process.env.GEMINI_API_KEY = 'test-key';
+    vi.mocked(geminiClient.generateSessions).mockRejectedValue(new Error('fetch failed'));
+
+    const request = new NextRequest('http://localhost/api/gemini/sessions', {
+      method: 'POST',
+      body: JSON.stringify({ words: [{ id: 1, word: '水', translation: 'вода', status: 'new' }] }),
+    });
+
+    const response = await sessionsPost(request);
+    expect(response.status).toBe(500);
+
+    const data = await response.json();
+    expect(data.error).not.toContain('fetch failed');
+    expect(data.error).toContain('временно недоступен');
+
+    process.env = originalEnv;
+  });
 });
