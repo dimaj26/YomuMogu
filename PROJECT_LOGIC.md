@@ -257,6 +257,8 @@ src/
 | `lib/media/ranking.ts` | Pure candidate ranking engine with per-tier profiles (`beginner`/`bridge`/`acquisition`); weights levelFit, subtitle quality, and `durationFit` per the user's level tier (default `acquisition` reproduces the legacy 0.6/0.4 levelFit/subQuality behaviour) |
 | `lib/media/selection.ts` | Pure seeded selection helper maintaining profile shown history (overlap <= 10%) |
 | `lib/media/cache.ts` | Persistent file-backed YouTube search and transcript cache |
+| `lib/media/captionDisplay.ts` | Display-time pure helpers `stripCaptionAnnotations(text)` / `stripAnnotationWords(words)` — strip bracketed sound tags (`[音楽]`, `【…】`) from subtitle display copies without mutating stored segments (Prime Directive [PL-8.8]); keeps `♪` and `（）` |
+| `lib/media/__tests__/captionDisplay.test.ts` | Unit tests for caption annotation stripping and karaoke word-sync |
 | `lib/gemini/queryExpansion.ts` | Singleton query expansion service running a single gemini-2.5-flash-lite call with caching and error degradation |
 | `lib/media/__tests__/availability.test.ts` | Unit tests for media availability helpers |
 | `lib/media/__tests__/json3.test.ts` | Unit tests for json3 subtitle parser |
@@ -817,7 +819,7 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-479 unit/integration tests across 70 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+487 unit/integration tests across 71 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
 
 ---
 

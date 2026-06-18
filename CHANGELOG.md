@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.62.5] - 2026-06-18
+
+### Fixed
+- **Raw sound-annotation tags no longer shown in subtitles** (`[音楽]`, `[拍手]`, `【…】` from YouTube auto-captions): new display-only pure helper `lib/media/captionDisplay.ts` (`stripCaptionAnnotations` / `stripAnnotationWords`) strips bracketed tags across all three player surfaces — the tokenized active line (cleaned before MeCab, with matching cache key in the health-poll invalidation), the raw-text fallback, and the transcript list. Music notes `♪` and parentheses `（）` are kept. Stored `segments` are never mutated (Prime Directive [PL-8.8]); to keep the karaoke fill front consistent, the `words[]` copy passed to `computeFillFraction` is stripped in sync so its char total matches the speech-only tokens. Approach audited via Route B (Variant A hybrid, Optimality 6). Closes the deferred tail of UX Phase 1 #3.
+
 ## [1.62.4] - 2026-06-18
 
 ### Changed

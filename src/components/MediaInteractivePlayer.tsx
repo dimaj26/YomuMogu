@@ -8,6 +8,7 @@ import { parseSubtitlesToSegments, normalizeSegments, type SubtitleSegment } fro
 import { regroupIntoSentences } from '@/lib/media/sentences';
 import { assessKaraokeQuality } from '@/lib/media/karaokeQuality';
 import { computeFillFraction, interpolatePlayerTime } from '@/lib/media/karaokeProgress';
+import { stripCaptionAnnotations, stripAnnotationWords } from '@/lib/media/captionDisplay';
 import styles from './MediaInteractivePlayer.module.css';
 
 // Типизация подробного токена MeCab
@@ -339,8 +340,9 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
       return;
     }
 
-    const text = segments[activeSegmentIndex].text;
-    
+    // Display-time срез скобочных аннотаций до токенизации (хранимый segment не трогаем)
+    const text = stripCaptionAnnotations(segments[activeSegmentIndex].text);
+
     // Проверяем кэш
     if (tokenizedCache[text]) {
       setActiveTokens(tokenizedCache[text]);
@@ -398,7 +400,8 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
           if (data.success && !data.tokenizerDown) {
             setTokenizerDown(false);
             if (activeSegmentIndex !== -1) {
-              const text = segments[activeSegmentIndex].text;
+              // Тот же стрипнутый ключ, что и при кэшировании токенов
+              const text = stripCaptionAnnotations(segments[activeSegmentIndex].text);
               setTokenizedCache(prev => {
                 const copy = { ...prev };
                 delete copy[text];
@@ -730,7 +733,8 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
                               const fillFraction = computeFillFraction(
                                 relativeTimeMs,
                                 activeSegment.duration * 1000,
-                                activeSegment.words
+                                // Стрипнутая копия слов: totalChars согласован с речевыми токенами
+                                stripAnnotationWords(activeSegment.words)
                               );
                               currentCharFront = fillFraction * charAccumulator;
                             }
@@ -779,7 +783,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
                           })()}
                         </div>
                       ) : (
-                        <p className={styles.rawText}>{segments[activeSegmentIndex].text}</p>
+                        <p className={styles.rawText}>{stripCaptionAnnotations(segments[activeSegmentIndex].text)}</p>
                       )}
                     </div>
                   ) : (
@@ -808,7 +812,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
                             {Math.floor(seg.start / 60)}:
                             {String(Math.floor(seg.start % 60)).padStart(2, '0')}
                           </span>
-                          <span className={styles.segmentText}>{seg.text}</span>
+                          <span className={styles.segmentText}>{stripCaptionAnnotations(seg.text)}</span>
                         </div>
                       ))}
                     </div>
