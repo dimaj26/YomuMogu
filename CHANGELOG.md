@@ -2,6 +2,12 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.62.6] - 2026-06-18
+
+### Fixed
+- **Service UI (navigation) no longer auto-japanizes for a zero-day newbie** (UX Phase 2 #4 / P0): the dashboard nav (設定 / プロフィール / ヘルプ) was wrapped in `<JpUI>`, which in the default `smart` mode auto-"learns" one element per session via FSRS regardless of the user's level — a brand-new user saw Japanese navigation they never asked for. Added a `kind: 'chrome' | 'content'` prop to `JpUI` (default `content`); `kind='chrome'` renders Russian in `smart` mode and is never registered/upgraded into the UI-FSRS store, so it can't drift to Japanese. The three nav items are marked `chrome`. Explicit full-Japanese (`ja`) mode is unchanged (it's a deliberate user choice). 90% of the fix with no user action required.
+- **Grammar node labels no longer leak raw Japanese/mixed category names** (F15): three "category" rules held a Japanese or mixed category name in `construction` (`動詞の分類`, `名詞修飾 / 〜の relative clauses`, `い / な-прилагательные`) — shown as the track node label and the popover title. Replaced with Russian-first labels keeping the grammar form as a hint (`3 группы глаголов`, `Определения к существительным (〜の)`, `Прилагательные (い / な)`). Node `id`s are unchanged, so AI grammar-scope validation (keyed by id) is unaffected.
+
 ## [1.62.5] - 2026-06-18
 
 ### Fixed

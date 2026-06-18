@@ -1,31 +1,38 @@
-# RNA-Blueprint — `[音楽]` срез скобочных аннотаций (хвост Фазы 1)
+# RNA-Blueprint — Фаза 2 #4: японизация служебного UI + метки грамматики (P0/F15)
 
 ## 1. Base DNA
 Windows / PowerShell · Next.js 16 · TS strict · React 19 · Vitest.
 
 ## 2. Task RNA
-Сырые скобочные звуковые аннотации (`[音楽]`, `[拍手]`) из авто-сабов YouTube видны пользователю на 3 поверхностях плеера. Закрыть display-time, без мутации хранимых `segments`.
+P0 «японизация служебного интерфейса слишком рано» (часть): навигация (`設定/プロフィール/ヘルプ`) в режиме `smart` авто-японизируется через FSRS для нулевого новичка. + F15: 3 «категорийные» грамма-ноды держат в `construction` японское/смешанное название-категорию.
 
-Аудит Route B (proposal-auditor, PA-1) → **Вариант A (гибрид), score 6**: pure-хелпер display-only на всех 3 поверхностях + синхронный стрип локальной копии `words[]` перед `computeFillFraction` (иначе latent-рассинхрон караоке на смешанных eligible-сегментах). Факт от аудитора: `computeFillFraction` строит анкоры по `words[].text.length`, НЕ по символам `segment.text` → риск у́же; чисто-музыкальные сегменты отсекает `assessKaraokeQuality` (≥3 слов) до расчёта фронта.
+Скоуп (90%-фикс без участия пользователя):
+- **JpUI `kind`**: новый проп `kind: 'chrome' | 'content'` (default `content`). Для `chrome` в режиме `smart` — ранний возврат `ru` + НЕ регистрировать/апгрейдить (служебный UI никогда не «изучается»).
+- **Навигация** (`page.tsx`, 3 элемента) → `kind="chrome"`.
+- **F15** (`grammar_rules.json`): `construction` нод `g_n5_s2` (動詞の分類), `名詞修飾 / 〜の relative clauses`, `い / な-прилагательные` → русско-ориентированные метки, грамма-формы (〜の/い/な) в скобках.
+
+ВНЕ scope (Фаза 3 #7): порог японизации `content`, сброс/тултип в `LanguageSwitcher`.
 
 ## 3. Contextual Constraints
-- [CC-3] Prime Directive [PL-8.8]: хранимые `segments` не мутировать — только display-копии.
-- [CC-5] `♪` — осмысленный медиа-контент (level-aware ranking, 1.62.0), НЕ стрипать. Скобки `（）/()` — обычный контент/чтения, НЕ стрипать. Стрип только `[…]` и `【…】`.
-- [CC-6] Кэш токенизации и health-poll-инвалидация должны использовать один и тот же (стрипнутый) ключ.
+- [CC-1] `construction` — двойного назначения: метка трека И описание в промпте Gemini. Валидация `validateUsedConstructions` ключится на **`id`** (`promptScope.ts:106`), НЕ на строку → менять текст безопасно для AI-скоупа.
+- [CC-2] `ja`-режим (полный японский) для chrome НЕ трогаем — это явный выбор пользователя; правило только для `smart`.
+- [CC-3] Метка `construction` не должна совпадать с `topic`/`translation` (иначе дубль текста в `GrammarTrack`/`GrammarTrainer`).
 
 ## 4. Proposed Changes
-- `src/lib/media/captionDisplay.ts` [NEW] — pure `stripCaptionAnnotations(text)` + `stripAnnotationWords(words)`.
-- `src/lib/media/__tests__/captionDisplay.test.ts` [NEW] — репродьюсеры.
-- `src/components/MediaInteractivePlayer.tsx` [MODIFY] — вход токенизатора (342 + poll 401), сырой путь (782), список (811), `words` перед `computeFillFraction` (733).
-- `PROJECT_LOGIC.md` [MODIFY] — реестр нового модуля + счётчик тестов.
+- `src/components/JpUI.tsx` [MODIFY] — проп `kind`, guard эффекта апгрейда, ранний возврат `ru` для chrome.
+- `src/app/page.tsx` [MODIFY] — 3 нав-элемента `kind="chrome"`.
+- `src/resources/grammar_rules.json` [MODIFY] — 3 `construction`.
+- `src/components/__tests__/JpUI.test.tsx` [MODIFY] — репродьюсер chrome.
+- `src/components/__tests__/GrammarTrainer.test.tsx` [MODIFY] — ассерт `動詞の分類` → новая метка.
 
 ## 5. Execution Steps
-1. [TEST] captionDisplay.test.ts: стрип `[…]/【…】`, сохранение `♪` и `（）`, смешанный `[音楽] こんにちは`, синхронный `stripAnnotationWords` → падает (нет модуля). [CC-4]
-2. captionDisplay.ts — реализовать обе чистые функции. [CC-5]
-3. Wire в MediaInteractivePlayer (5 точек), хранимые segments не трогать. [CC-3][CC-6]
-4. [TEST] `npm run test` (captionDisplay + MediaInteractivePlayer) зелёный; `tsc --noEmit`.
-5. [CMD-1] PROJECT_LOGIC реестр + счётчик; [CMD-4] CHANGELOG.
+1. [TEST] JpUI репродьюсер: chrome в smart + прогресс в БД → остаётся `ru`, `ja` нет. Падает. [CC-2]
+2. JpUI.tsx: `kind`, guard, ранний возврат. [CC-2]
+3. page.tsx нав → `kind="chrome"`.
+4. grammar_rules.json 3 метки [CC-1][CC-3]; обновить GrammarTrainer ассерт.
+5. [TEST] `npm run test` (JpUI, GrammarTrack, GrammarTrainer, chat, promptScope) + `tsc`.
+6. [CMD-2/CMD-4] CONTEXT_PROMPT строка фичи + CHANGELOG; счётчик тестов.
 
 ## 6. Verification & TDD reproducer
-- Файл `src/lib/media/__tests__/captionDisplay.test.ts`, кейсы: `strips [..]/【..】 sound tags`, `keeps ♪ and （）`, `mixed segment → speech only + words synced`, `pure-annotation words filtered out`.
-- Полный `npm run test` зелёный.
+- `src/components/__tests__/JpUI.test.tsx`, кейс: «kind="chrome": в smart не японизируется даже при прогрессе в БД».
+- Полный `npm run test` зелёный; `tsc --noEmit` чисто.

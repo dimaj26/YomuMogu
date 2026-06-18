@@ -13,9 +13,10 @@ interface JpUIProps {
   reading?: string; // Хирагана чтение (над кандзи)
   className?: string; // Внешний CSS класс
   interactive?: boolean; // Флаг интерактивности (по умолчанию true)
+  kind?: 'chrome' | 'content'; // 'chrome' — служебный интерфейс (навигация и пр.), не японизируется в smart
 }
 
-export function JpUI({ id, ru, ja, reading, className = '', interactive = true }: JpUIProps) {
+export function JpUI({ id, ru, ja, reading, className = '', interactive = true, kind = 'content' }: JpUIProps) {
   const { state: jState } = useJapanification();
   const { uiMode } = jState;
 
@@ -37,6 +38,7 @@ export function JpUI({ id, ru, ja, reading, className = '', interactive = true }
   useEffect(() => {
     if (
       uiMode === 'smart' &&
+      kind !== 'chrome' && // служебный интерфейс не «изучается» и не пишется в БД
       isLoaded &&
       !wordState &&
       !upgradedThisSession &&
@@ -45,7 +47,7 @@ export function JpUI({ id, ru, ja, reading, className = '', interactive = true }
       // Инициируем апгрейд этого слова в текущей сессии
       upgradeWord(id, ru, ja, reading);
     }
-  }, [id, ru, ja, reading, uiMode, isLoaded, wordState, upgradedThisSession, revertedIds, upgradeWord]);
+  }, [id, ru, ja, reading, uiMode, kind, isLoaded, wordState, upgradedThisSession, revertedIds, upgradeWord]);
 
   // Закрытие тултипа при клике вне элемента
   useEffect(() => {
@@ -71,6 +73,12 @@ export function JpUI({ id, ru, ja, reading, className = '', interactive = true }
   if (uiMode === 'ja') {
     // В режиме "Только японский" рендерим строго японский без фуриганы
     return <span className={className}>{ja}</span>;
+  }
+
+  // Служебный интерфейс (навигация и пр.) в режиме 'smart' никогда не японизируется:
+  // нулевой новичок не должен видеть 設定/プロフィール по-японски без своего выбора.
+  if (kind === 'chrome') {
+    return <span className={className}>{ru}</span>;
   }
 
   // Режим 'smart' (Умная японизация)

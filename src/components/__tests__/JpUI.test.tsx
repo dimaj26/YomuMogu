@@ -28,6 +28,36 @@ describe('JpUI Component FSRS Opacity', () => {
     );
   };
 
+  it('kind="chrome": в режиме smart не японизируется даже при наличии прогресса в БД (служебный UI)', async () => {
+    // Оба слова имеют прогресс — в content-режиме они были бы японизированы
+    await db.ui_words.bulkPut([
+      {
+        profileId: 'default', id: 'content_word', word: '本', reading: 'ほん', translation: 'книга',
+        status: 'review', stability: 10.0, difficulty: 4.0, interval: 1, due: Date.now(), reps: 3, lapses: 0
+      },
+      {
+        profileId: 'default', id: 'nav_settings', word: '設定', reading: 'せってい', translation: 'Настройки',
+        status: 'review', stability: 10.0, difficulty: 4.0, interval: 1, due: Date.now(), reps: 3, lapses: 0
+      }
+    ]);
+
+    render(
+      <JapanificationProvider>
+        <JpUIProvider>
+          <JpUI id="content_word" ru="книга" ja="本" reading="ほん" interactive={false} />
+          <JpUI id="nav_settings" ru="Настройки" ja="設定" reading="せってい" kind="chrome" interactive={false} />
+        </JpUIProvider>
+      </JapanificationProvider>
+    );
+
+    // Синхронизация: дожидаемся японизации content-элемента (провайдер загрузил БД, smart отработал)
+    await waitFor(() => expect(screen.getByText('本')).toBeInTheDocument());
+
+    // Навигация (chrome) при этом осталась на русском; японский не показан
+    expect(screen.getByText('Настройки')).toBeInTheDocument();
+    expect(screen.queryByText('設定')).not.toBeInTheDocument();
+  });
+
   it('renders furigana with full opacity class for learning words (interval < 3)', async () => {
     await db.ui_words.put({
       profileId: 'default',

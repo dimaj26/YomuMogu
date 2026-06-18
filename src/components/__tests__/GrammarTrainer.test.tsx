@@ -183,9 +183,9 @@ describe('GrammarTrainer Component', () => {
       />
     );
 
-    // Должен отобразить тему классификации глаголов
+    // Должен отобразить тему классификации глаголов (метка по-русски, без японской категории)
     expect(screen.getByText('Классификация глаголов')).toBeInTheDocument();
-    expect(screen.getByText('動詞の分類')).toBeInTheDocument();
+    expect(screen.getByText('3 группы глаголов')).toBeInTheDocument();
 
     // Должен отобразить новые ярлыки выбора глаголов
     expect(screen.getByText('Выбор глагола:')).toBeInTheDocument();
