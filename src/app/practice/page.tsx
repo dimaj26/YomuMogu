@@ -17,6 +17,7 @@ import { JpUI } from '@/components/JpUI';
 import { PhonosemanticHint, PhonosemanticData } from '@/components/PhonosemanticHint';
 import { ScienceTip } from '@/components/ScienceTip';
 import { BalanceWidget } from '@/components/BalanceWidget';
+import { ServiceUnavailable } from '@/components/ServiceUnavailable';
 import { recordActivity, type Strand } from '@/lib/balance/balance';
 import { 
   LOCAL_DECK_NAME,
@@ -156,6 +157,8 @@ export default function PracticePage() {
   const [newWordsCount, setNewWordsCount] = useState<number>(0);
   const [priorityWordsCount, setPriorityWordsCount] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
+  // Отдельное состояние для недоступности ИИ-сервиса (с возможностью повтора), не путать с валидационными ошибками
+  const [serviceError, setServiceError] = useState<{ message: string; retryable: boolean } | null>(null);
   const [hasLoaded, setHasLoaded] = useState<boolean>(false);
 
   const isChatAllowed = useMemo(() => {
@@ -597,6 +600,7 @@ export default function PracticePage() {
     if (!isChatAllowed) return;
     setIsLoadingSessions(true);
     setError(null);
+    setServiceError(null);
     try {
       let wordsToUse = words;
       if (deckMode === 'local') {
@@ -626,10 +630,18 @@ export default function PracticePage() {
         setSessions(newSessions);
         setProfileItem('sessions', JSON.stringify(newSessions));
       } else {
-        setError(data.error || 'Не удалось сгенерировать темы');
+        // Сервис вернул структурный контракт {error, reason, retryable}
+        setServiceError({
+          message: data.error || 'ИИ-сервис временно недоступен. Попробуйте ещё раз позже.',
+          retryable: data.retryable ?? true,
+        });
       }
     } catch (err) {
-      setError('Ошибка при обращении к ИИ для генерации тем.');
+      // Сетевой сбой (fetch failed) — человеческое сообщение, повтор доступен
+      setServiceError({
+        message: 'Не удалось связаться с ИИ-сервисом. Проверьте подключение и попробуйте ещё раз.',
+        retryable: true,
+      });
     } finally {
       setIsLoadingSessions(false);
     }
@@ -1272,6 +1284,17 @@ export default function PracticePage() {
               <div className={styles.errorAlert}>
                 <AlertCircle size={18} />
                 <p>{error}</p>
+              </div>
+            )}
+
+            {serviceError && (
+              <div style={{ marginTop: '12px' }}>
+                <ServiceUnavailable
+                  message={serviceError.message}
+                  retryable={serviceError.retryable}
+                  onRetry={serviceError.retryable ? generateSessions : undefined}
+                  whatWorks="Слова и повторение работают офлайн — можно продолжить разминку или квиз."
+                />
               </div>
             )}
 

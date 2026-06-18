@@ -30,7 +30,10 @@ describe('API Route POST /api/gemini/grammar-verify', () => {
     expect(response.status).toBe(500);
 
     const data = await response.json();
-    expect(data.error).toContain('GEMINI_API_KEY не настроен на сервере');
+    expect(data.error).toContain('не настроен');
+    expect(data.error).not.toContain('GEMINI_API_KEY');
+    expect(data.reason).toBe('config');
+    expect(data.retryable).toBe(false);
 
     process.env = originalEnv;
   });

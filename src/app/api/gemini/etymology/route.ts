@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { geminiClient } from '@/lib/gemini/client';
 import { logger } from '@/lib/logger';
+import { geminiErrorResponse } from '@/lib/gemini/errors';
 
 /**
  * POST /api/gemini/etymology
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
   if (!process.env.GEMINI_API_KEY) {
     logger.error('[API] GEMINI_API_KEY отсутствует в переменных окружения');
     return NextResponse.json(
-      { error: 'GEMINI_API_KEY не настроен на сервере' },
+      { error: 'ИИ-сервис не настроен на сервере (нет ключа доступа).', reason: 'config', retryable: false },
       { status: 500 }
     );
   }
@@ -37,9 +38,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error: any) {
     logger.error('[API] Ошибка генерации этимологии', error);
-    return NextResponse.json(
-      { error: error.message || 'Внутренняя ошибка сервера' },
-      { status: 500 }
-    );
+    return geminiErrorResponse(error);
   }
 }

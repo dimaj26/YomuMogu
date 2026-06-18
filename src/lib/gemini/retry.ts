@@ -1,4 +1,5 @@
 import { logger } from '../logger';
+import { isNetworkError } from './errors';
 
 /**
  * Список моделей для автоматического fallback.
@@ -44,8 +45,10 @@ export async function withRetry<T>(
         lastError = error;
         
         const statusCode = error?.status || error?.statusCode;
-        const isRetryable = opts.retryableStatusCodes.includes(statusCode);
-        
+        // Сетевые ошибки (undici «fetch failed», ECONNREFUSED и т.п.) тоже подлежат повтору
+        const networkError = isNetworkError(error);
+        const isRetryable = opts.retryableStatusCodes.includes(statusCode) || networkError;
+
         if (!isRetryable) {
           // Ошибка не подлежит повтору (400, 401 и т.д.) — бросаем сразу
           throw error;
@@ -53,7 +56,7 @@ export async function withRetry<T>(
 
         const delay = opts.baseDelayMs * Math.pow(2, attempt); // экспоненциальная задержка: 1s, 2s, 4s
         logger.warn(
-          `Gemini API вернул ошибку ${statusCode} (модель: ${model}, попытка: ${attempt + 1}/${opts.maxRetries}). ` +
+          `Gemini API вернул ошибку ${statusCode ?? '(сеть)'} (модель: ${model}, попытка: ${attempt + 1}/${opts.maxRetries}). ` +
           `Повтор через ${delay}мс...`
         );
 

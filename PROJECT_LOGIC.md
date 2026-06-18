@@ -295,7 +295,12 @@ src/
 | `lib/gemini/client.ts` | `GeminiClient.generateSessions(words)`, `generateEtymology(word)` — singleton `geminiClient` |
 | `lib/gemini/chat.ts` | `ChatService.sendMessage()`, `ChatService.generateHints()` — singleton `chatService` |
 | `lib/gemini/prompts.ts` | Centralized prompt templates for Gemini AI character persona and difficulty levels |
-| `lib/gemini/retry.ts` | Singleton wrapper implementing exponential backoffs and model fallback loops |
+| `lib/gemini/retry.ts` | Singleton wrapper implementing exponential backoffs and model fallback loops; network errors (undici `fetch failed`, ECONNREFUSED…) are retryable |
+| `lib/gemini/errors.ts` | `classifyGeminiError(err)→{reason:'config'\|'transient'\|'unavailable', message(ru), retryable}`, `isNetworkError(err)`, `geminiErrorResponse(err)` — structured route error contract; raw `error.message` stays in the logger only |
+| `lib/gemini/__tests__/errors.test.ts` | Unit tests for Gemini error classification |
+| `components/ServiceUnavailable.tsx` | Reusable "service unavailable" block (human message + optional "what still works" hint + optional Retry shown only when `retryable && onRetry`) |
+| `components/ServiceUnavailable.module.css` | Styles for ServiceUnavailable |
+| `components/__tests__/ServiceUnavailable.test.tsx` | Unit tests for ServiceUnavailable |
 | `lib/grammar/graph.ts` | Pure, side-effect-free graph operations (validation, unlocks, edges generation) for grammar DAG |
 | `lib/grammar/promptScope.ts` | Calculates allowed grammar scope, chooses focus nodes using Leitner intervals, validates responses, and generates prompt instructions |
 | `lib/grammar/__tests__/graph.test.ts` | Unit tests for grammar DAG graph validation, unlock calculations, and backward compatibility |
@@ -822,7 +827,7 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-493 unit/integration tests across 72 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+505 unit/integration tests across 74 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
 
 ---
 

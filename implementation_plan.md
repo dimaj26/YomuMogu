@@ -1,49 +1,43 @@
-# RNA-Blueprint — Фаза 2 #5: адаптивный дашборд-хаб + извлечение AssessmentModal
+# RNA-Blueprint — Фаза 2 #6: единый паттерн «недоступно» (errors.ts + ServiceUnavailable)
 
 ## 1. Base DNA
 Windows / PowerShell · Next.js 16 · TS strict · React 19 · CSS Modules · Vitest.
 
 ## 2. Task RNA
-Дашборд (`page.tsx`) не читает состояние колоды: статичный CTA `Link→/practice` для всех (адаптируется лишь «Продолжить чат»). Маркетинговый H1 показывается всем. Диагностика живёт в `settings` и редиректит туда.
+Слой представления показывает сырой `error.message` («fetch failed», «Internal error»). Роуты grammar-verify/classify/etymology/chat утекают `error.message` пользователю. Нужен серверный классификатор + переиспользуемый UI «недоступно» + retry сетевых ошибок.
 
-Цель: дашборд читает существующие сигналы `localDeckService` и показывает ОДИН адаптивный CTA + мягкую подсказку; первый запуск открывает диагностику МОДАЛОМ на `/`. Извлечь модал в переиспользуемый `components/AssessmentModal.tsx`.
-
-5 состояний CTA:
-| Состояние | Условие | CTA |
-|---|---|---|
-| Первый запуск | local && `!isLocalDeckInitialized` | «Пройти диагностику (5 мин)» → модал на `/` |
-| Незаверш. чат | `hasActiveChat` | «Продолжить: {тема}» (есть) |
-| Вернувшийся | due-повторения > 0 | «Продолжить обучение» → /practice + «N к повторению» |
-| Новичок | priority>0, due=0 (только новые) | «Начать разминку» → /practice |
-| Всё сделано | priority===0 | нейтрально «на сегодня всё; можно медиа» |
-Anki-режим: generic «Начать практику» (сигналы local не применимы).
-
-Маркетинговый H1/подзаголовок — только «первый запуск»; для остальных — состояние-зависимый заголовок без давления (§7.6).
+- **`lib/gemini/errors.ts`**: `classifyGeminiError(err) → { reason: 'config'|'transient'|'unavailable', message(рус), retryable }`; `isNetworkError(err)`; `geminiErrorResponse(err)` → структурный `NextResponse {error,reason,retryable}` (status 500). Сырой `error.message` — только в `logger`.
+- **Роуты Gemini** (sessions, grammar-verify, etymology, classify, chat): catch → `geminiErrorResponse`. Проверка нет-ключа → reason `config`, retryable false.
+- **`retry.ts`**: сетевые ошибки (`fetch failed`/ECONNREFUSED/...) теперь retryable.
+- **`components/ServiceUnavailable.tsx`** (+css): человеческий заголовок + сообщение + опц. «что пока работает» + опц. «Повторить» (только retryable && onRetry).
+- **Подключение**: practice (генерация тем) и GrammarTrainer (grammar-verify) — отдельный `serviceError` + `<ServiceUnavailable onRetry=...>`.
 
 ## 3. Contextual Constraints
-- [CC-1] SSR: все чтения localStorage/IndexedDB в `useEffect` [PL-8.3].
-- [CC-2] Извлечение AssessmentModal — поведенчески-нейтрально: settings-тесты (вкл. F5-репродьюсер) остаются зелёными; «Сохранить и начать» по-прежнему ведёт в /practice через `onSaved`.
-- [CC-3] XP/уровни — декорация, не входной сигнал [PL-7.1]; CTA опирается ТОЛЬКО на колоду/сессию.
-- [CC-4] Не строить «мастер дня» — один CTA + подсказка [план P0].
-- [CC-5] `getPriorityWordsCount` уже = due + new-в-квоте; due-повторения считаю отдельно для разделения «вернувшийся/новичок».
+- [CC-1] 3 reason: `config` (нет ключа/401/403 — НЕ retryable, без кнопки) / `transient` (429/500/503/сеть — retryable) / `unavailable` (прочее — retryable) [план P1].
+- [CC-2] Сообщение transient содержит «временно недоступен» (совместимость с sessions-тестом eac0cfd).
+- [CC-3] Сырой `error.message` НЕ уходит пользователю — только `logger` [CP-3.5].
+- [CC-4] MeCab-down уже эталон (tokenizationSkipped, eac0cfd) — не трогаем.
+- [CC-5] Валидационные ошибки (колода пуста и т.п.) — это user-actionable, НЕ ServiceUnavailable; оставить как есть.
 
 ## 4. Proposed Changes
-- `src/components/AssessmentModal.tsx` [NEW] — инкапсулирует загрузку колоды/статусов, выбор, сохранение (`importStarterDeck`); props `isOpen/profileId/onClose/onSaved/onError`.
-- `src/components/AssessmentModal.module.css` [NEW] — классы модала (копия из settings).
-- `src/app/settings/page.tsx` [MODIFY] — заменить инлайн-модал + хендлеры на `<AssessmentModal>`; `onSaved`→ навигация /practice (сохранить F5).
-- `src/app/page.tsx` [MODIFY] — адаптивный CTA (5 состояний), заголовки, `<AssessmentModal>` для первого запуска.
-- `src/components/__tests__/AssessmentModal.test.tsx` [NEW] — рендер/сохранение/onSaved.
-- `src/app/__tests__/page.test.tsx` [MODIFY] — репродьюсеры состояний дашборда.
+- `src/lib/gemini/errors.ts` [NEW] + `__tests__/errors.test.ts` [NEW].
+- `src/lib/gemini/retry.ts` [MODIFY] — сетевые retryable.
+- `src/lib/gemini/__tests__/retry.test.ts` [NEW или MODIFY] — сетевой ретрай.
+- `src/app/api/gemini/{sessions,grammar-verify,etymology,classify}/route.ts`, `src/app/api/chat/route.ts` [MODIFY] — geminiErrorResponse.
+- route-тесты [MODIFY] — контракт reason/retryable, нет утечки.
+- `src/components/ServiceUnavailable.tsx` + `.module.css` [NEW] + `__tests__/ServiceUnavailable.test.tsx` [NEW].
+- `src/app/practice/page.tsx`, `src/components/GrammarTrainer.tsx` [MODIFY] — подключить.
 
 ## 5. Execution Steps
-1. [NEW] AssessmentModal.module.css + AssessmentModal.tsx (перенос логики 1:1). [CC-2]
-2. settings: подключить `<AssessmentModal>`, удалить инлайн; прогнать settings-тесты (F5 зелёный). [CC-2]
-3. [TEST] dashboard-репродьюсеры: first-run→диагностика, due→«Продолжить обучение»+N, new→«разминка», done→нейтрально, anki→generic. Падают.
-4. page.tsx: сигналы в `useEffect`, derive state, адаптивный CTA + заголовки + модал. [CC-1][CC-3]
-5. [TEST] `npm run test` весь + `tsc`.
-6. [CMD-1/2/4] PROJECT_LOGIC (реестр+счётчик), CONTEXT_PROMPT (строка фичи), CHANGELOG.
+1. [TEST] errors.test.ts (config/transient/unavailable/network) → реализовать errors.ts.
+2. retry.ts сетевые retryable + тест.
+3. Роуты → geminiErrorResponse; обновить route-тесты (контракт).
+4. [TEST] ServiceUnavailable.test.tsx → компонент + css.
+5. Подключить practice (serviceError + onRetry=generateThemes) и GrammarTrainer.
+6. [TEST] весь `npm run test` + `tsc`; превью чата/грамматики при сбое.
+7. [CMD-1/2/4] доки.
 
 ## 6. Verification & TDD reproducer
-- `src/app/__tests__/page.test.tsx`: кейсы по 5 состояниям (сид IndexedDB local-words + active_session).
-- `AssessmentModal.test.tsx`: «save → importStarterDeck + onSaved».
-- Полный `npm run test` зелёный; `tsc --noEmit` чисто.
+- `errors.test.ts`: каждая ветка reason + retryable; `'fetch failed'`→transient+«временно недоступен».
+- `ServiceUnavailable.test.tsx`: рендер сообщения; «Повторить» только при retryable&&onRetry.
+- Полный `npm run test` зелёный; `tsc` чисто.

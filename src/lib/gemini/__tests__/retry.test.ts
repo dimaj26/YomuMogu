@@ -36,4 +36,21 @@ describe('Gemini withRetry fallback logic', () => {
 
     expect(calledModels).toEqual(['gemini-2.5-flash-lite', 'gemini-2.5-flash']);
   });
+
+  it('сетевая ошибка («fetch failed») подлежит повтору, а не мгновенному выбросу', async () => {
+    let attempts = 0;
+    const result = await withRetry(
+      async () => {
+        attempts++;
+        if (attempts < 2) {
+          throw new Error('fetch failed'); // сетевая ошибка undici, без status
+        }
+        return 'recovered';
+      },
+      { maxRetries: 3, baseDelayMs: 1 }
+    );
+
+    expect(result).toBe('recovered');
+    expect(attempts).toBe(2); // первая попытка упала по сети, вторая успешна
+  });
 });

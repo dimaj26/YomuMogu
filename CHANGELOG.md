@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.62.8] - 2026-06-18
+
+### Added
+- **Unified "service unavailable" pattern** (UX Phase 2 #6 / P1, completes the work started in 1.62.3): new server-side `lib/gemini/errors.ts` classifies AI failures into `config` (bad/missing key — not retryable), `transient` (429/500/503/network — retryable), or `unavailable`, and returns a `{error, reason, retryable}` contract with a human Russian message; the raw exception (e.g. "fetch failed") now stays in the logger only. All Gemini routes (`sessions`, `grammar-verify`, `etymology`, `classify`, `chat`) use it and no longer leak `error.message` or the literal `GEMINI_API_KEY` to the UI. New reusable `ServiceUnavailable` component (human title + optional "what still works" hint + a Retry button shown only when the failure is retryable) is wired into chat-theme generation (`/practice`) and grammar verification (`GrammarTrainer`). Network errors (undici "fetch failed", ECONNREFUSED, …) are now retryable inside `withRetry` instead of throwing immediately.
+
 ## [1.62.7] - 2026-06-18
 
 ### Changed

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { chatService } from '@/lib/gemini/chat';
 import { logger } from '@/lib/logger';
+import { geminiErrorResponse } from '@/lib/gemini/errors';
 import { getGrammarScopeInstruction, validateUsedConstructions } from '@/lib/grammar/promptScope';
 
 export async function POST(request: NextRequest) {
@@ -9,7 +10,9 @@ export async function POST(request: NextRequest) {
     logger.error('Запрос к /api/chat отклонен: GEMINI_API_KEY не задан в .env.local');
     return NextResponse.json(
       {
-        error: 'API-ключ Gemini не настроен. Пожалуйста, добавьте GEMINI_API_KEY в файл .env.local в корне проекта и перезапустите сервер.'
+        error: 'API-ключ Gemini не настроен. Пожалуйста, добавьте GEMINI_API_KEY в файл .env.local в корне проекта и перезапустите сервер.',
+        reason: 'config',
+        retryable: false,
       },
       { status: 500 }
     );
@@ -95,9 +98,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(chatResponse);
   } catch (error: any) {
     logger.error('Исключение при обработке запроса в /api/chat', error);
-    return NextResponse.json(
-      { error: error.message || 'Произошла ошибка при обработке сообщения в чате' },
-      { status: 500 }
-    );
+    return geminiErrorResponse(error);
   }
 }

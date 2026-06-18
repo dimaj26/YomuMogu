@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X, CheckCircle, AlertCircle, Loader2, Play, Volume2, HelpCircle } from 'lucide-react';
 import grammarRules from '@/resources/grammar_rules.json';
 import { sanitizeHtml } from '@/lib/sanitize';
+import { ServiceUnavailable } from './ServiceUnavailable';
 import styles from './GrammarTrainer.module.css';
 
 interface GrammarTrainerProps {
@@ -126,7 +127,8 @@ const Mascot: React.FC<{ state: 'idle' | 'happy' | 'worried' | 'cheering' }> = (
   const [userInput, setUserInput] = useState('');
   const [isChecking, setIsChecking] = useState(false);
   const [result, setResult] = useState<{ isCorrect: boolean; correction: string; explanation: string } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Недоступность ИИ-сервиса проверки (с возможностью повтора)
+  const [serviceError, setServiceError] = useState<{ message: string; retryable: boolean } | null>(null);
 
   // Состояние маскота
   const [mascotState, setMascotState] = useState<'idle' | 'happy' | 'worried' | 'cheering'>('idle');
@@ -152,12 +154,12 @@ const Mascot: React.FC<{ state: 'idle' | 'happy' | 'worried' | 'cheering' }> = (
     );
   }
 
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Ядро проверки (без события) — вызывается формой и кнопкой «Повторить»
+  const runVerify = async () => {
     if (!userInput.trim() || isChecking) return;
 
     setIsChecking(true);
-    setError(null);
+    setServiceError(null);
     setResult(null);
 
     try {
@@ -168,8 +170,14 @@ const Mascot: React.FC<{ state: 'idle' | 'happy' | 'worried' | 'cheering' }> = (
       });
 
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || 'Не удалось проверить предложение.');
+        // Структурный контракт роута {error, reason, retryable} — показываем человеческое сообщение
+        const errData = await res.json().catch(() => ({}));
+        setServiceError({
+          message: errData.error || 'ИИ-сервис проверки временно недоступен. Попробуйте ещё раз позже.',
+          retryable: errData.retryable ?? true,
+        });
+        setMascotState('worried');
+        return;
       }
 
       const data = await res.json();
@@ -180,17 +188,26 @@ const Mascot: React.FC<{ state: 'idle' | 'happy' | 'worried' | 'cheering' }> = (
         setMascotState('worried');
       }
     } catch (err: any) {
-      setError(err.message || 'Произошла непредвиденная ошибка.');
+      // Сетевой сбой — без сырого текста исключения
+      setServiceError({
+        message: 'Не удалось связаться с ИИ-сервисом. Проверьте подключение и попробуйте ещё раз.',
+        retryable: true,
+      });
       setMascotState('worried');
     } finally {
       setIsChecking(false);
     }
   };
 
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await runVerify();
+  };
+
   const handleSuggestionClick = (sampleAnswer: string) => {
     setUserInput(sampleAnswer);
     setResult(null);
-    setError(null);
+    setServiceError(null);
     setActiveTab('verify');
   };
 
@@ -486,10 +503,13 @@ const Mascot: React.FC<{ state: 'idle' | 'happy' | 'worried' | 'cheering' }> = (
                     </div>
                   </form>
 
-                  {error && (
-                    <div className={`${styles.resultBanner} ${styles.errorBanner}`} style={{ marginTop: '12px' }}>
-                      <AlertCircle size={20} className={styles.icon} />
-                      <span>{error}</span>
+                  {serviceError && (
+                    <div style={{ marginTop: '12px' }}>
+                      <ServiceUnavailable
+                        message={serviceError.message}
+                        retryable={serviceError.retryable}
+                        onRetry={serviceError.retryable ? runVerify : undefined}
+                      />
                     </div>
                   )}
 

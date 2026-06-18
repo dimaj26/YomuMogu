@@ -44,6 +44,7 @@ You are an expert **TypeScript / Next.js 16** developer. Your specialty is App R
 - **Per-Deck Mappings**: Per-Anki-deck front/back/audio/image field config stored in localStorage.
 - **CSRF Protection**: Same-origin Origin/Referer checks on all mutating Anki routes.
 - **Error Handling**: Global `ErrorBoundary` + `useApiCall` hook (loading/error/retry).
+- **Unified Unavailable Pattern**: `lib/gemini/errors.ts` classifies failures (config/transient/unavailable) into a `{error,reason,retryable}` route contract (raw exception stays in logs); reusable `ServiceUnavailable` UI with conditional Retry; wired into chat-theme generation and grammar verification; network errors are now retryable in `withRetry`.
 - **A11y**: `LanguageSwitcher` fully keyboard-navigable (Arrows, Escape, Space, Enter).
 - **Active Recall Quiz (`/practice/quiz`)**: Cloze/translation, dual hints (kana + JitenDex), FSRS grading bar, typo forgiveness, furigana.
 - **Warm-up Trainer**: 3-step in-place priming (Sight+Sound, Kana, Translation) for ≤10 new words; no FSRS writes.
