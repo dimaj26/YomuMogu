@@ -2,6 +2,19 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.66.0] - 2026-06-20
+
+### Changed
+- **Legacy lint baseline fully cleared** ([PL-9.5]): the ~144 frozen `@typescript-eslint/no-explicit-any` / `ban-ts-comment` / `no-require-imports` errors across ~46 files were typed away in 7 reviewed batches (lib, core, ~20 API routes, components/hooks/pages, plugins). `eslint .` now reports **0 errors** (94 non-blocking warnings remain). No behaviour change — only types, narrowing, and comments.
+- Established patterns: external/boundary values typed as `unknown` + `instanceof`/guard narrowing (Gemini/Anki/MeCab/YouTube payloads, `catch` blocks); minimal interfaces for untyped JSON (YouTube JSON3/InnerTube, caption tracks, starter deck); `Awaited<ReturnType<…>>` to reuse AnkiConnect return types; minimal `window.YT` IFrame API types (removing 7 `@ts-ignore`).
+- Genuinely-unavoidable `any` retained behind documented `eslint-disable` (with Russian rationale): isomorphic Node `require` in `logger.ts`, the polymorphic `calculateNextFsrsState`, and the undocumented YouTube InnerTube search JSON navigation.
+
+### Fixed
+- `eslint.config.mjs`: the `react-hooks/set-state-in-effect` override now registers the `react-hooks` plugin in its own flat-config object and is scoped to `*.{ts,tsx}`, so `eslint .` over non-TS files no longer config-errors.
+
+### Notes
+- Verified after every batch and at the end: `npx tsc --noEmit` clean, **527/527** tests green, `next build` OK. Tooling (`MediaItem.trackKind`, `LegacyWordRecord`, `GrammarScopeNode`) extended only where the data already carried the fields.
+
 ## [1.65.0] - 2026-06-19
 
 ### Added
