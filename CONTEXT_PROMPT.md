@@ -85,6 +85,7 @@ You are an expert **TypeScript / Next.js 16** developer. Your specialty is App R
 - **Next.js 15 App Router** only. No Pages Router patterns.
 - **Vanilla CSS Modules** (`*.module.css`). No Tailwind. No inline styles except layout one-liners.
 - **No new dependencies** without explicit user approval.
+- **Lint is enforced** (ESLint 9 flat config): a pre-commit hook (`lint-staged`) and CI lint only **changed** `*.{ts,tsx}` files; lint errors block, warnings do not. New code must be error-clean; do not add to the frozen legacy `any`-baseline (see `PROJECT_LOGIC.md [PL-9.5]`).
 
 ### [CP-3.2] Comments & Logs
 - All **code comments** must be in **Russian**.

@@ -1133,7 +1133,7 @@ describe('Soft Closing and Passive Timing Tests', () => {
 
   it('сбор последнего target-слова отправляет ровно один запрос с closingTurn', async () => {
     setupActiveSession();
-    let apiCalls: any[] = [];
+    const apiCalls: any[] = [];
 
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
       const urlStr = url.toString();
@@ -1245,7 +1245,7 @@ describe('Soft Closing and Passive Timing Tests', () => {
 
   it('восстановление сессии с closingDone не шлёт повторный closingTurn', async () => {
     setupActiveSession();
-    let apiCalls: any[] = [];
+    const apiCalls: any[] = [];
 
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
       const urlStr = url.toString();

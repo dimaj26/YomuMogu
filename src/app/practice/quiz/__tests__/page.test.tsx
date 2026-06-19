@@ -22,7 +22,7 @@ vi.mock('lucide-react', () => ({
 
 // Mock router and searchParams
 const mockPush = vi.fn();
-let mockSearchParamsGet = vi.fn().mockReturnValue(null);
+const mockSearchParamsGet = vi.fn().mockReturnValue(null);
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({

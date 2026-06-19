@@ -2,6 +2,21 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.64.0] - 2026-06-19
+
+### Added
+- **Lint enforcement (pre-commit + CI)** ([PL-9.5]): the already-present ESLint 9 setup was never enforced and the codebase had never passed it (469 problems). Now wired as a quality gate. `husky` + `lint-staged` (dev-only) run `eslint --no-warn-ignored` on **staged** `*.{ts,tsx}` via `.husky/pre-commit` — errors block the commit, warnings do not. A GitHub Actions workflow (`.github/workflows/lint.yml`) lints only files **changed vs the base commit**, so the frozen legacy baseline never reds CI while new code must be clean.
+
+### Changed
+- **`eslint.config.mjs`**: added a test-files override block (disables `no-explicit-any` / `no-unused-vars` / `ban-ts-comment` for `__tests__/`, `*.test|spec.{ts,tsx}`, `tests/`, Vitest setup — mocks legitimately use `any`); ignored `scratch/**` (temporary diagnostic scripts per CP-3.9); downgraded `react-hooks/set-state-in-effect` to `warn` (it conflicts with the project-mandated SSR/init pattern — deferred `localStorage` reads & DOM measurement in `useEffect`, CP-3.4). Net lint result: 469 problems → 144 accepted-baseline errors, **0 `react-hooks` errors**.
+
+### Fixed
+- **React-hooks correctness bugs** surfaced by the gate: `ScienceTip` called `useEffect` after an early `return` (`rules-of-hooks`) and created a fallback icon component during render (`static-components`) — hooks reordered, fallback hoisted to module scope (resilient to partial `lucide-react` mocks via `typeof Info` + try/catch). `PhonosemanticHint` read `bodyRef.current.scrollHeight` during render (returned 0 on first open) — moved to a `useLayoutEffect` measurement. `MediaInteractivePlayer` synced `segmentsRef` during render — moved to an effect. Remaining intentional patterns (write-through `mnemonic` cache, `Date.now()` in event handlers/display badges, TDZ-safe timer refs, E2E debug data-attr) documented with targeted `eslint-disable` + Russian rationale.
+- **`tokenSpans` implicit-`any[]`** in `MediaInteractivePlayer`: an earlier `let → const` autofix broke TypeScript's evolving-array inference; pinned with an explicit `{ start: number; end: number }[]` type (caught by `next build`, not the test suite).
+
+### Notes
+- Suite stays **527 tests / 77 files** green; `tsc --noEmit` clean; `next build` succeeds. A transient regression during the work (direct `<Info/>` crashed 43 page tests under partial `lucide-react` mocks) was caught and fixed before completion.
+
 ## [1.63.1] - 2026-06-19
 
 ### Fixed

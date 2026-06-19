@@ -147,6 +147,10 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
             ? String(idx + 1)
             : (STEP_LABELS[node.id] || String(idx + 1));
 
+          // Бейдж «Доступно!» — display-эвристика по текущему времени; точность не критична.
+          // eslint-disable-next-line react-hooks/purity
+          const isRuleDueNow = !!node.progress?.due && node.progress.due <= Date.now();
+
           return (
             <div
               key={node.id}
@@ -194,7 +198,7 @@ export const GrammarTrack: React.FC<GrammarTrackProps> = ({ grammarProgress, onS
                         <span className={styles.statusLabel}>{t('Повторение через:', '次回の復習:')}</span>
                         <span className={styles.statusVal}>
                           {intervals[node.progress.stepIndex]} {t('дн.', '日')}
-                          {node.progress.due <= Date.now() && ` (${t('Доступно!', '今すぐ!')})`}
+                          {isRuleDueNow && ` (${t('Доступно!', '今すぐ!')})`}
                         </span>
                       </div>
                     )}

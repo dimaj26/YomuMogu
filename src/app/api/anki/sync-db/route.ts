@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       const existingTimestamps = new Set<number>();
       
       // Получаем информацию о картах из Anki для определения правильного reviewType
-      let ankiCardsMap: Map<number, { interval: number; queue: number; type: number }> = new Map();
+      const ankiCardsMap: Map<number, { interval: number; queue: number; type: number }> = new Map();
       try {
         const existingReviews = await ankiClient.getReviewsOfCards(localCardIds);
         for (const cid of localCardIds) {
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
 
 
     // 2. Получаем актуальный список карт из Anki для этой колоды
-    let remoteCardsInfo: any[] = [];
+    const remoteCardsInfo: any[] = [];
     logger.info(`${logPrefix}[Step: QueryAnki] Получение актуального списка карт из Anki для колоды "${deckName}"`);
     try {
       const isAllDecks = deckName === '__all__';

@@ -110,7 +110,7 @@ export function groupWordsIntoThemes(words: AnkiWord[]): GroupedSessionInput[] {
       selectedUniversal.push(...chosenUniv);
     }
 
-    let sessionWords = [...selectedNouns, ...selectedUniversal].map(w => ({
+    const sessionWords = [...selectedNouns, ...selectedUniversal].map(w => ({
       word: w.word,
       translation: w.translation
     }));

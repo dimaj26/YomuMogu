@@ -834,6 +834,15 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 527 unit/integration tests across 77 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
 
+### [PL-9.5] Code Quality & Lint Enforcement
+- **Config**: `eslint.config.mjs` (ESLint 9 flat config) extends `eslint-config-next` `core-web-vitals` + `typescript`. All lint tooling is in `devDependencies` only (never shipped).
+- **Ignores**: `.next/`, `out/`, `build/`, `next-env.d.ts`, and `scratch/**` (temporary diagnostic scripts, see CP-3.9 — not part of the codebase).
+- **Test relaxation block**: `__tests__/`, `*.test.{ts,tsx}`, `*.spec.{ts,tsx}`, `tests/`, and Vitest setup files disable `no-explicit-any`, `no-unused-vars`, `ban-ts-comment` (mocks/fixtures legitimately use `any`).
+- **`react-hooks/set-state-in-effect` = `warn`** (not error): conflicts with the project-mandated SSR/init pattern (deferred `localStorage` reads and DOM measurement in `useEffect`, see [PL-8] / CP-3.4). Visible but non-blocking.
+- **Baseline**: the remaining `~144` prod errors are accepted legacy `any`-noise; enforcement freezes this baseline rather than forcing a full rewrite.
+- **Pre-commit** (`.husky/pre-commit` → `lint-staged`, config in `package.json`): runs `eslint --no-warn-ignored` on **staged** `*.{ts,tsx}` only. Errors block the commit; warnings do not.
+- **CI** (`.github/workflows/lint.yml`): on `pull_request` / `push` to `main`, lints only files **changed vs the base commit** (`git diff`), so the frozen baseline never reds CI while new code must be clean.
+
 ---
 
 ## [PL-10] INTERVAL SYSTEMS REGISTRY

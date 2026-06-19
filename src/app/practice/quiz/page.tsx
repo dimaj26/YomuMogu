@@ -112,6 +112,8 @@ function QuizComponent() {
     setIsSavingMnemonic(true);
     try {
       await db.words.update(currentWord.id, { mnemonic: cleanText || undefined });
+      // Write-through кэш: синхронизируем уже сохранённый в БД объект слова, чтобы не перезапрашивать.
+      // eslint-disable-next-line react-hooks/immutability
       currentWord.mnemonic = cleanText || undefined;
       if (cleanText) {
         incrementQuestProgress('mnemonics', 1);
@@ -143,6 +145,8 @@ function QuizComponent() {
         if (!mnemonicText.trim() && data.etymology) {
           setMnemonicText(data.etymology);
           await db.words.update(currentWord.id, { mnemonic: data.etymology });
+          // Write-through кэш: синхронизируем уже сохранённый в БД объект слова.
+          // eslint-disable-next-line react-hooks/immutability
           currentWord.mnemonic = data.etymology;
           incrementQuestProgress('mnemonics', 1);
         }
@@ -172,7 +176,7 @@ function QuizComponent() {
     if (!currentWord) return;
     try {
       const { updatedWord, newInterval, lastInterval } = calculateNextFsrsState(currentWord, grade, 'active');
-      let finalWord = updatedWord as LocalWord;
+      const finalWord = updatedWord as LocalWord;
       
       const correct = grade > 1;
       if (correct) {
@@ -188,6 +192,10 @@ function QuizComponent() {
       // Сохраняем прогресс в IndexedDB
       await db.words.put(finalWord);
 
+      // Момент ответа пользователя (обработчик клика, не рендер) — правило purity ориентировано на render-фазу.
+      // eslint-disable-next-line react-hooks/purity
+      const nowMs = Date.now();
+
       // Пишем отзыв для синхронизации
       await addLocalReview({
         profileId,
@@ -195,8 +203,8 @@ function QuizComponent() {
         ease: grade,
         interval: newInterval,
         lastInterval,
-        duration: Date.now() - startTime,
-        timestamp: Date.now(),
+        duration: nowMs - startTime,
+        timestamp: nowMs,
         synced: 0,
         reviewType: 'active'
       });
@@ -263,7 +271,7 @@ function QuizComponent() {
       const res = await fetch(`/api/dict/lookup?word=${encodeURIComponent(currentWord.word)}`);
       if (res.ok) {
         const data = await res.json();
-        let rawDef = data.definition || data.entry || 'Определение отсутствует в базе';
+        const rawDef = data.definition || data.entry || 'Определение отсутствует в базе';
         // Маскируем целевое слово в определении для исключения прямых подсказок
         const masked = rawDef.replaceAll(currentWord.word, '***');
         setDictDefinition(masked);

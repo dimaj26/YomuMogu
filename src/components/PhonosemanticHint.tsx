@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useLayoutEffect } from 'react';
 import styles from './PhonosemanticHint.module.css';
 
 // Типы данных из phonosemantics.json
@@ -27,7 +27,18 @@ interface PhonosemanticHintProps {
  */
 export function PhonosemanticHint({ data }: PhonosemanticHintProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [maxHeight, setMaxHeight] = useState(0);
   const bodyRef = useRef<HTMLDivElement>(null);
+
+  // Высоту контента измеряем после рендера: читать scrollHeight прямо в JSX нельзя
+  // (на первом открытии ref ещё не стабилен и вернёт 0). useLayoutEffect снимает мерцание.
+  useLayoutEffect(() => {
+    if (isOpen && bodyRef.current) {
+      setMaxHeight(bodyRef.current.scrollHeight);
+    } else {
+      setMaxHeight(0);
+    }
+  }, [isOpen]);
 
   const toggle = () => setIsOpen(prev => !prev);
 
@@ -48,7 +59,7 @@ export function PhonosemanticHint({ data }: PhonosemanticHintProps) {
       <div
         ref={bodyRef}
         className={styles.body}
-        style={{ maxHeight: isOpen ? (bodyRef.current?.scrollHeight ?? 0) : 0 }}
+        style={{ maxHeight: isOpen ? maxHeight : 0 }}
         aria-hidden={!isOpen}
       >
         <div className={styles.infoText}>

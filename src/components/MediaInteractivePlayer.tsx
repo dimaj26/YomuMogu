@@ -59,7 +59,11 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
   // Флаг: сервер уже вернул сегменты (для выбора cc_load_policy при инициализации плеера)
   const hasServerSegmentsRef = useRef<boolean>(false);
   const segmentsRef = useRef<SubtitleSegment[]>([]);
-  segmentsRef.current = segments;
+  // Держим ref в синхроне с segments для доступа из rAF/YT-колбэков.
+  // Синхронизируем в эффекте, а не в рендере (запись в ref во время рендера запрещена).
+  useEffect(() => {
+    segmentsRef.current = segments;
+  }, [segments]);
   // Состояние кнопки CC (YouTube субтитры): true = показаны
   const [ccEnabled, setCcEnabled] = useState<boolean>(false);
 
@@ -228,11 +232,14 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
           onStateChange: (event: any) => {
             // @ts-ignore
             if (event.data === window.YT.PlayerState.PLAYING) {
+              // Колбэк выполняется асинхронно (событие плеера), startYtTimer/stopYtTimer к этому моменту уже объявлены — TDZ не возникает.
+              // eslint-disable-next-line react-hooks/immutability
               startYtTimer();
               if (ytPlayerRef.current && typeof ytPlayerRef.current.getCurrentTime === 'function') {
                 resyncClock(ytPlayerRef.current.getCurrentTime(), true);
               }
             } else {
+              // eslint-disable-next-line react-hooks/immutability
               stopYtTimer();
               if (ytPlayerRef.current && typeof ytPlayerRef.current.getCurrentTime === 'function') {
                 resyncClock(ytPlayerRef.current.getCurrentTime(), false);
@@ -592,11 +599,15 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
     }
   };
 
+  // Диагностическое значение для E2E: допустимо приблизительное (без подписки на ref).
+  // eslint-disable-next-line react-hooks/refs
+  const ytStateAttr = ytPlayerRef.current ? "loaded" : "unloaded";
+
   return (
-    <div 
+    <div
       className={styles.modalOverlay}
       data-has-words={segments.some(s => s.words && s.words.length > 0) ? "true" : "false"}
-      data-yt-state={ytPlayerRef.current ? "loaded" : "unloaded"}
+      data-yt-state={ytStateAttr}
     >
       <div className={styles.modalContent}>
         {/* Шапка */}
@@ -752,7 +763,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
                         <div className={styles.tokensGrid} data-testid={karaokeAssessment.eligible ? "karaoke-fill" : undefined}>
                           {(() => {
                             // Рассчитываем символьные диапазоны для токенов активного сегмента
-                            let tokenSpans = [];
+                            const tokenSpans: { start: number; end: number }[] = [];
                             let charAccumulator = 0;
                             for (const t of activeTokens) {
                               tokenSpans.push({

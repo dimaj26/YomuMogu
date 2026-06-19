@@ -15,10 +15,12 @@
     "test:anki": "vitest run src/plugins/anki/__tests__/sync.integration.test.ts --config vitest.integration.config.ts",
     "test:e2e": "playwright test --project=chromium --project=live",
     "test:e2e:offline": "set E2E_TOKENIZER_DOWN=1&& playwright test --project=offline",
-    "transcripts:generate": "node scripts/generate-transcripts.mjs"
-
+    "transcripts:generate": "node scripts/generate-transcripts.mjs",
+    "prepare": "husky"
   },
-
+  "lint-staged": {
+    "*.{ts,tsx}": "eslint --no-warn-ignored"
+  },
   "dependencies": {
     "@google/genai": "^2.4.0",
     "dexie": "^4.4.2",
@@ -42,7 +44,9 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "fake-indexeddb": "^6.2.5",
+    "husky": "^9.1.7",
     "jsdom": "^29.1.1",
+    "lint-staged": "^17.0.7",
     "typescript": "^5",
     "vitest": "^4.1.7"
   },

@@ -27,7 +27,7 @@ export function parseSearchResults(data: any): SearchResult {
 
   try {
     // 1. Извлекаем список рендереров контента
-    let contents: any[] = [];
+    const contents: any[] = [];
     
     // Путь для ytInitialData или InnerTube API
     const sectionList = data.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer ||

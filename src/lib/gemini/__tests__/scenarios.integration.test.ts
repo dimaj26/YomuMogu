@@ -52,7 +52,7 @@ describe('AI Sensei Scenarios Integration Tests', () => {
         { user: 'わかりました。ところで、私が最初に選んだシャツは何色ですか？' } // Вопрос-проверка памяти
       ];
 
-      let history: ChatMessage[] = [];
+      const history: ChatMessage[] = [];
       let currentResponse: any = null;
 
       for (let i = 0; i < dialogue.length; i++) {
@@ -92,7 +92,7 @@ describe('AI Sensei Scenarios Integration Tests', () => {
     it('Scenario 2: Simple Tone & Keigo Exclusion (Level 1)', async () => {
       console.log('--- Запуск Сценария 2: Исключение Кэйго и простота фраз (Уровень 1) ---');
 
-      let history: ChatMessage[] = [];
+      const history: ChatMessage[] = [];
 
       // Ход 1
       let response = await chatService.sendMessage(scenario, targetWords, history, '__START__', 1);
@@ -141,7 +141,7 @@ describe('AI Sensei Scenarios Integration Tests', () => {
     it('Scenario 3: Target Word Nudging (Level 2)', async () => {
       console.log('--- Запуск Сценария 3: Подталкивание к неиспользованным словам (Уровень 2) ---');
 
-      let history: ChatMessage[] = [];
+      const history: ChatMessage[] = [];
 
       // Ход 1: Старт
       let response = await chatService.sendMessage(scenario, targetWords, history, '__START__', 2);
@@ -195,7 +195,7 @@ describe('AI Sensei Scenarios Integration Tests', () => {
     it('Scenario 4: Resolving Ambiguity / Avoiding Loops (Level 2)', async () => {
       console.log('--- Запуск Сценария 4: Устранение зацикливаний при неопределенности (Уровень 2) ---');
 
-      let history: ChatMessage[] = [];
+      const history: ChatMessage[] = [];
 
       // Ход 1: Старт
       let response = await chatService.sendMessage(scenario, targetWords, history, '__START__', 2);

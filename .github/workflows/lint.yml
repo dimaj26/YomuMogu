@@ -1,0 +1,48 @@
+name: Lint
+
+# Линтуем только изменённые TS/TSX файлы, а не весь репозиторий:
+# существующий baseline (any-шум и пр.) не блокирует, но новый код обязан быть чистым.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  eslint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Полная история нужна для diff против базового коммита.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Determine base sha
+        id: base
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "sha=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=${{ github.event.before }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Lint changed files
+        run: |
+          BASE="${{ steps.base.outputs.sha }}"
+          # Если базовый коммит недоступен (первый push в ветку и т.п.) — берём корневой коммит.
+          if [ -z "$BASE" ] || ! git cat-file -e "${BASE}^{commit}" 2>/dev/null; then
+            BASE=$(git rev-list --max-parents=0 HEAD | tail -n1)
+          fi
+          FILES=$(git diff --name-only --diff-filter=ACMR "$BASE" HEAD -- '*.ts' '*.tsx' | tr '\n' ' ')
+          if [ -z "$FILES" ]; then
+            echo "Нет изменённых TS/TSX файлов — линт пропущен."
+            exit 0
+          fi
+          echo "Линтуем изменённые файлы: $FILES"
+          npx eslint --no-warn-ignored $FILES

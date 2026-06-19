@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     // 3. Отсекаем видео, которые уже в истории просмотров (excludeIds)
     const excludeSet = new Set<string>(excludeIds);
-    let filteredCandidates = candidates.filter(c => !excludeSet.has(c.videoId));
+    const filteredCandidates = candidates.filter(c => !excludeSet.has(c.videoId));
 
     // 4. Локальный матчинг по заголовку и описанию для ранжирования релевантности (без LLM)
     const matchedCandidates = [...filteredCandidates].sort((a, b) => {

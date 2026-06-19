@@ -477,7 +477,7 @@ describe('MediaInteractivePlayer Component', () => {
       return Promise.resolve({ ok: true, json: async () => ({}) });
     });
 
-    let mockTime = 1.0;
+    const mockTime = 1.0;
     mockPlayerInstance.getCurrentTime.mockImplementation(() => mockTime);
 
     render(
@@ -542,7 +542,7 @@ describe('MediaInteractivePlayer Component', () => {
       return Promise.resolve({ ok: true, json: async () => ({}) });
     });
 
-    let mockTime = 1.0; // t = 1000 ms -> ровно на старте "天気", прогресс 2/6 = 33.33%
+    const mockTime = 1.0; // t = 1000 ms -> ровно на старте "天気", прогресс 2/6 = 33.33%
     mockPlayerInstance.getCurrentTime.mockImplementation(() => mockTime);
 
     render(

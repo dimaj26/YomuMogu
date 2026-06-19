@@ -9,7 +9,7 @@ import { db } from '@/core/db';
 import { getProfileItem, setProfileItem } from '@/lib/profile';
 
 vi.mock('@/lib/profile', () => {
-  let store: Record<string, string> = {};
+  const store: Record<string, string> = {};
   return {
     getActiveProfileId: () => 'test-profile',
     getProfileItem: vi.fn((key: string) => store[key] || null),
