@@ -33,7 +33,7 @@ export async function withRetry<T>(
 ): Promise<T> {
   const opts = { ...DEFAULT_RETRY_OPTIONS, ...options };
   const models = (options?.modelChain as readonly GeminiModel[]) || options?.models || GEMINI_MODELS;
-  let lastError: any = null;
+  let lastError: unknown = null;
 
   // Пробуем каждую модель
   for (const model of models) {
@@ -41,13 +41,14 @@ export async function withRetry<T>(
     for (let attempt = 0; attempt < opts.maxRetries; attempt++) {
       try {
         return await fn(model);
-      } catch (error: any) {
+      } catch (error) {
         lastError = error;
-        
-        const statusCode = error?.status || error?.statusCode;
+
+        const e = error as { status?: number; statusCode?: number };
+        const statusCode = e?.status ?? e?.statusCode;
         // Сетевые ошибки (undici «fetch failed», ECONNREFUSED и т.п.) тоже подлежат повтору
         const networkError = isNetworkError(error);
-        const isRetryable = opts.retryableStatusCodes.includes(statusCode) || networkError;
+        const isRetryable = (statusCode !== undefined && opts.retryableStatusCodes.includes(statusCode)) || networkError;
 
         if (!isRetryable) {
           // Ошибка не подлежит повтору (400, 401 и т.д.) — бросаем сразу

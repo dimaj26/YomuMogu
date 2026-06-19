@@ -49,8 +49,8 @@ export class QueryExpansionService {
         logger.info(`[Query Expansion] Найден кэш для запроса: "${normalizedQuery}"`);
         return JSON.parse(cached);
       }
-    } catch (err: any) {
-      logger.warn(`[Query Expansion] Ошибка чтения кэша: ${err.message}`);
+    } catch (err) {
+      logger.warn(`[Query Expansion] Ошибка чтения кэша: ${err instanceof Error ? err.message : String(err)}`);
     }
 
     // Деградационный результат по умолчанию при отказе API
@@ -140,13 +140,13 @@ export class QueryExpansionService {
       try {
         const cacheKey = `query_expansion_${Buffer.from(normalizedQuery).toString('base64')}`;
         setProfileItem(cacheKey, JSON.stringify(result));
-      } catch (err: any) {
-        logger.warn(`[Query Expansion] Не удалось сохранить результат в кэш: ${err.message}`);
+      } catch (err) {
+        logger.warn(`[Query Expansion] Не удалось сохранить результат в кэш: ${err instanceof Error ? err.message : String(err)}`);
       }
 
       return result;
-    } catch (error: any) {
-      logger.error(`[Query Expansion] Ошибка вызова Gemini API: ${error.message}. Применен откат к деградации.`);
+    } catch (error) {
+      logger.error(`[Query Expansion] Ошибка вызова Gemini API: ${error instanceof Error ? error.message : String(error)}. Применен откат к деградации.`);
       return fallbackResult;
     }
   }

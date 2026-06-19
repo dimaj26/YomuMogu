@@ -1,4 +1,5 @@
-import { isNodeUnlocked } from './graph';
+import { isNodeUnlocked, type GrammarGraphNode } from './graph';
+import type { GrammarProgress } from '@/core/db';
 
 /**
  * Фиксированный список формульных выражений (лексических единиц),
@@ -24,13 +25,16 @@ export interface MinimalProgress {
   due: number;
 }
 
+// Узел графа грамматики, расширенный полем конструкции (как в grammar_rules.json и тестах).
+type GrammarScopeNode = GrammarGraphNode & { construction: string };
+
 /**
  * Вычисляет разрешенный скоуп грамматики и фокусный элемент для ИИ чата.
  * 
  * Формула: закрытые ноды (mature) + текущие таргетные ноды (unlocked && !mature) + формульный whitelist.
  */
 export function getAllowedScope(
-  nodes: any[],
+  nodes: GrammarScopeNode[],
   progressMap: Record<string, MinimalProgress>
 ) {
   const allowedConstructions: Array<{ id: string; construction: string }> = [];
@@ -42,7 +46,7 @@ export function getAllowedScope(
     const isStarted = progress && progress.status !== 'new';
     
     // g_n5_s1_1 всегда доступна, mature всегда доступна, иначе проверяем unlocked и started статус
-    const isUnlocked = isNodeUnlocked(node.id, nodes, progressMap as any);
+    const isUnlocked = isNodeUnlocked(node.id, nodes, progressMap as unknown as Record<string, GrammarProgress>);
     
     if (isBase || isMature || (isUnlocked && isStarted)) {
       allowedConstructions.push({ id: node.id, construction: node.construction });
@@ -58,7 +62,7 @@ export function getAllowedScope(
       const progress = progressMap[node.id];
       if (!progress) return false;
       const isActive = progress.status !== 'mature' && progress.status !== 'new';
-      return isActive && (node.id === 'g_n5_s1_1' || isNodeUnlocked(node.id, nodes, progressMap as any));
+      return isActive && (node.id === 'g_n5_s1_1' || isNodeUnlocked(node.id, nodes, progressMap as unknown as Record<string, GrammarProgress>));
     })
     .map(node => ({ node, progress: progressMap[node.id] }))
     .sort((a, b) => a.progress.due - b.progress.due);

@@ -235,7 +235,7 @@ export class GeminiClient {
 
       logger.info(`Gemini успешно сгенерировал сессий: ${result.sessions?.length || 0}`);
       return result.sessions || [];
-    } catch (error: any) {
+    } catch (error) {
       logger.error('Ошибка генерации сессий в GeminiClient', error);
       throw error;
     }
@@ -296,7 +296,7 @@ export class GeminiClient {
 
       logger.info(`Этимология для "${word}" успешно сгенерирована`);
       return result;
-    } catch (error: any) {
+    } catch (error) {
       logger.error(`Ошибка генерации этимологии для "${word}"`, error);
       throw error;
     }
@@ -385,7 +385,7 @@ export class GeminiClient {
 
       logger.info(`Проверка грамматики завершена. Результат корректности: ${result.isCorrect}`);
       return result;
-    } catch (error: any) {
+    } catch (error) {
       logger.error(`Ошибка проверки грамматики для ввода "${userInput}"`, error);
       throw error;
     }
@@ -473,7 +473,7 @@ export class GeminiClient {
       });
 
       return result.classifications || [];
-    } catch (error: any) {
+    } catch (error) {
       logger.error('Ошибка классификации слов в GeminiClient', error);
       throw error;
     }

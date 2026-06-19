@@ -29,7 +29,7 @@ export interface ChatResponse {
   usedConstructions?: string[];
   _debug?: {
     systemInstruction: string;
-    contents: any;
+    contents: unknown;
   };
 }
 
@@ -48,7 +48,7 @@ export interface HintResponse {
   hints: HintVariant[];
   _debug?: {
     systemInstruction: string;
-    contents: any;
+    contents: unknown;
   };
 }
 
@@ -237,7 +237,7 @@ export class ChatService {
         };
       }
       return parsed;
-    } catch (error: any) {
+    } catch (error) {
       logger.error('Ошибка при отправке сообщения в чат Gemini', error);
       throw error;
     }
@@ -365,7 +365,7 @@ export class ChatService {
         };
       }
       return parsed;
-    } catch (error: any) {
+    } catch (error) {
       logger.error('Ошибка при генерации подсказок в Gemini', error);
       throw error;
     }
