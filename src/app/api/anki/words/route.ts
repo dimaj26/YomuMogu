@@ -71,10 +71,10 @@ export async function GET(request: NextRequest) {
     logger.info(`Успешно обработано слов: ${words.length}`);
 
     return NextResponse.json({ words });
-  } catch (error: any) {
+  } catch (error) {
     logger.error(`Исключение в API /anki/words для колоды ${deck}`, error);
     return NextResponse.json({ 
-      error: error.message || 'Ошибка при загрузке слов из Anki' 
+      error: (error instanceof Error ? error.message : '') || 'Ошибка при загрузке слов из Anki'
     }, { status: 500 });
   }
 }

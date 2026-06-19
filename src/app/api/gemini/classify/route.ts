@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     // Очищаем и фильтруем слова
     const cleanWords = words
-      .map((w: any) => (typeof w === 'string' ? w.trim() : ''))
+      .map((w: unknown) => (typeof w === 'string' ? w.trim() : ''))
       .filter((w: string) => w.length > 0);
 
     if (cleanWords.length === 0) {
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     const classifications = await geminiClient.classifyWords(cleanWords);
     return NextResponse.json({ classifications });
-  } catch (error: any) {
+  } catch (error) {
     logger.error('[API] Ошибка классификации слов через Gemini', error);
     return geminiErrorResponse(error);
   }

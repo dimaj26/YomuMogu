@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     // 2. Для каждого слова проверяем его в словаре JitenDex и в Anki
     const analyzedWords = [];
 
-    let deckWords: any[] = [];
+    let deckWords: Array<{ id: number; word: string; status: 'new' | 'learning' | 'review' | 'mature'; cardIds?: number[] }> = [];
     let ankiConnected = false;
     try {
       const activeSource = getActiveWordSource();
@@ -173,10 +173,10 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ words: analyzedWords });
-  } catch (error: any) {
+  } catch (error) {
     logger.error('Исключение в API /api/chat/analyze', error);
     return NextResponse.json(
-      { error: error.message || 'Произошла ошибка при анализе диалога' },
+      { error: (error instanceof Error ? error.message : '') || 'Произошла ошибка при анализе диалога' },
       { status: 500 }
     );
   }

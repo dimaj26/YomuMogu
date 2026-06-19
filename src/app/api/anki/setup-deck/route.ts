@@ -113,10 +113,10 @@ export async function POST(request: NextRequest) {
       deckName,
       modelName,
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error('Исключение при автоматической настройке колоды YomuMogu', error);
     return NextResponse.json({
-      error: error.message || 'Не удалось настроить колоду YomuMogu в Anki'
+      error: (error instanceof Error ? error.message : '') || 'Не удалось настроить колоду YomuMogu в Anki'
     }, { status: 500 });
   }
 }

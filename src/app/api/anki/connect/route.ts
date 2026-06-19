@@ -18,11 +18,11 @@ export async function GET() {
         error: 'AnkiConnect не отвечает. Убедитесь, что Anki запущен.' 
       }, { status: 503 });
     }
-  } catch (error: any) {
+  } catch (error) {
     logger.error('Исключение в API /anki/connect', error);
     return NextResponse.json({ 
       connected: false, 
-      error: error.message || 'Ошибка подключения к Anki' 
+      error: (error instanceof Error ? error.message : '') || 'Ошибка подключения к Anki'
     }, { status: 500 });
   }
 }

@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
 
     // Форматируем историю для промпта
     const transcript = Array.isArray(history) && history.length > 0
-      ? history.map((msg: any) => `${msg.role === 'user' ? 'Пользователь' : 'Собеседник'}: ${msg.text}`).join('\n')
+      ? history.map((msg: { role: string; text: string }) => `${msg.role === 'user' ? 'Пользователь' : 'Собеседник'}: ${msg.text}`).join('\n')
       : 'История диалога отсутствует.';
 
     const systemInstruction = `Вы — эксперт по японскому языку и подготовке учебных карточек для Anki.
@@ -130,7 +130,7 @@ ${transcript}
     let fields: Record<string, string> = {};
 
     try {
-      const propertiesSchema: Record<string, any> = {};
+      const propertiesSchema: Record<string, Record<string, unknown>> = {};
       fieldsToGenerate.forEach(field => {
         propertiesSchema[field] = {
           type: 'STRING',
@@ -184,12 +184,12 @@ ${transcript}
 
     logger.info(`${logPrefix}[Step: Success] Слово "${word}" успешно добавлено в Anki, noteId: ${noteId}`);
     return NextResponse.json({ success: true, noteId });
-  } catch (error: any) {
+  } catch (error) {
     const body = await request.clone().json().catch(() => ({}));
     const logPrefix = body.sessionId ? `[Session: ${body.sessionId}] ` : '';
     logger.error(`${logPrefix}[Step: Error] Исключение в API /api/anki/add`, error);
     return NextResponse.json(
-      { error: error.message || 'Произошла ошибка при добавлении карточки в Anki' },
+      { error: (error instanceof Error ? error.message : '') || 'Произошла ошибка при добавлении карточки в Anki' },
       { status: 500 }
     );
   }

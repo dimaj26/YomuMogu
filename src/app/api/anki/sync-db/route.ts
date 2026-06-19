@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       logger.info(`${logPrefix}[Step: ReviewsSync] Синхронизация локальных отзывов с Anki: отправка ${localReviews.length} записей`);
       
       // Получаем уже существующие отзывы в Anki для этих карт, чтобы избежать дублирования
-      const localCardIds: number[] = Array.from(new Set(localReviews.map((r: any) => Number(r.cardId))));
+      const localCardIds: number[] = Array.from(new Set(localReviews.map((r: { cardId: number | string }) => Number(r.cardId))));
       const existingTimestamps = new Set<number>();
       
       // Получаем информацию о картах из Anki для определения правильного reviewType
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
 
 
     // 2. Получаем актуальный список карт из Anki для этой колоды
-    const remoteCardsInfo: any[] = [];
+    const remoteCardsInfo: Awaited<ReturnType<typeof ankiClient.getCardsInfo>> = [];
     logger.info(`${logPrefix}[Step: QueryAnki] Получение актуального списка карт из Anki для колоды "${deckName}"`);
     try {
       const isAllDecks = deckName === '__all__';
@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
     // 3. Выявляем карты с расхождениями для получения их истории отзывов (revlog)
     const cardsToFetchReviews: number[] = [];
     for (const remoteCard of remoteCardsInfo) {
-      const lw = localWords.find((w: any) => w.id === remoteCard.cardId);
+      const lw = localWords.find((w: { id: number; status?: string; interval?: number }) => w.id === remoteCard.cardId);
       
       if (!lw) {
         // Карта есть в Anki, но нет локально — всегда запрашиваем историю.
@@ -202,7 +202,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Запрашиваем историю отзывов (revlog) из Anki для изменившихся карт пакетом (bulk)
-    let remoteReviews: Record<number, any[]> = {};
+    let remoteReviews: Awaited<ReturnType<typeof ankiClient.getReviewsOfCards>> = {};
     if (cardsToFetchReviews.length > 0) {
       logger.info(`${logPrefix}[Step: FetchHistory] Запрос истории повторений из Anki для ${cardsToFetchReviews.length} измененных карт пакетом`);
       try {
@@ -230,12 +230,12 @@ export async function POST(request: NextRequest) {
       remoteCards: parsedWords,
       remoteReviews
     });
-  } catch (error: any) {
+  } catch (error) {
     const body = await request.clone().json().catch(() => ({}));
     const logPrefix = body.sessionId ? `[Session: ${body.sessionId}] ` : '';
     logger.error(`${logPrefix}[Step: Error] Исключение в API /api/anki/sync-db`, error);
     return NextResponse.json(
-      { error: error.message || 'Произошла непредвиденная ошибка при синхронизации' },
+      { error: (error instanceof Error ? error.message : '') || 'Произошла непредвиденная ошибка при синхронизации' },
       { status: 500 }
     );
   }

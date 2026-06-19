@@ -49,10 +49,10 @@ export async function POST(request: NextRequest) {
     const hintResponse = await chatService.generateHints(scenario, targetWords, history, chatLevel);
 
     return NextResponse.json(hintResponse);
-  } catch (error: any) {
+  } catch (error) {
     logger.error('Исключение при обработке запроса в /api/chat/hint', error);
     return NextResponse.json(
-      { error: error.message || 'Произошла ошибка при генерации подсказок' },
+      { error: (error instanceof Error ? error.message : '') || 'Произошла ошибка при генерации подсказок' },
       { status: 500 }
     );
   }

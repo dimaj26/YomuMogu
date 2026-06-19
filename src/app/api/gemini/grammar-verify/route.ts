@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     );
 
     return NextResponse.json(result);
-  } catch (error: any) {
+  } catch (error) {
     logger.error('[API] Ошибка верификации грамматики', error);
     return geminiErrorResponse(error);
   }

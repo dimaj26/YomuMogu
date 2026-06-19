@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     const sessions = await geminiClient.generateSessions(words);
 
     return NextResponse.json({ sessions });
-  } catch (error: any) {
+  } catch (error) {
     logger.error('Исключение при обработке запроса в /api/gemini/sessions', error);
     return geminiErrorResponse(error);
   }

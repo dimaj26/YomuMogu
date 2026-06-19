@@ -85,21 +85,22 @@ export async function POST(request: NextRequest) {
         segments = await getYoutubeTranscriptSegments(videoId);
         segments = segments.map(s => ({ ...s, source: 'scraped' }));
         sourceUsed = 'scraped';
-      } catch (scrapingErr: any) {
-        logger.warn(`[API] Не удалось скрейпить субтитры с YouTube для видео ${videoId} (${scrapingErr.message || scrapingErr}). Пробуем предсгенерированный фолбэк.`);
+      } catch (scrapingErr) {
+        const scrapingErrMsg = scrapingErr instanceof Error ? scrapingErr.message : String(scrapingErr);
+        logger.warn(`[API] Не удалось скрейпить субтитры с YouTube для видео ${videoId} (${scrapingErrMsg}). Пробуем предсгенерированный фолбэк.`);
         
         // 3. Фолбэк на предсгенерированные субтитры из JSON
         const pregenerated = mediaTranscripts[videoId as keyof typeof mediaTranscripts];
         if (pregenerated) {
           logger.info(`[API] [ФОЛБЭК] Использование предсгенерированных субтитров из JSON для видео ${videoId}`);
-          const rawSegs = Array.isArray(pregenerated) ? pregenerated : (pregenerated as any).segments;
+          const rawSegs = Array.isArray(pregenerated) ? pregenerated : (pregenerated as unknown as { segments: SubtitleSegment[] }).segments;
           segments = rawSegs.map((s: SubtitleSegment) => ({ ...s, source: 'pregenerated' }));
           sourceUsed = 'pregenerated';
         } else {
           // Если и скрейпинг, и предсгенерированные субтитры отсутствуют - возвращаем 502
           logger.error(`[API] [ОШИБКА] Субтитры отсутствуют в JSON-медиатеке и не удалось скрейпить с YouTube для видео ${videoId}`);
           return NextResponse.json(
-            { error: `Не удалось загрузить субтитры с YouTube и они отсутствуют в медиатеке: ${scrapingErr.message || scrapingErr}` },
+            { error: `Не удалось загрузить субтитры с YouTube и они отсутствуют в медиатеке: ${scrapingErrMsg}` },
             { status: 502 }
           );
         }
@@ -178,7 +179,7 @@ export async function POST(request: NextRequest) {
         source: sourceUsed || 'upload',
         hasWords
       });
-    } catch (tokenErr: any) {
+    } catch (tokenErr) {
       logger.error('[API] Ошибка подключения к микросервису токенизации', tokenErr);
       if (segments && segments.length > 0) {
         logger.warn('[API] Возврат сырых сегментов из-за недоступности токенизатора');
@@ -197,10 +198,10 @@ export async function POST(request: NextRequest) {
         { status: 503 }
       );
     }
-  } catch (error: any) {
+  } catch (error) {
     logger.error('[API] Исключение во время работы API /api/media/parse', error);
     return NextResponse.json(
-      { error: error.message || 'Внутренняя ошибка сервера при обработке видео' },
+      { error: (error instanceof Error ? error.message : '') || 'Внутренняя ошибка сервера при обработке видео' },
       { status: 500 }
     );
   }

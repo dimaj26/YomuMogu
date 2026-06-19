@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
 
     // Валидируем конструкции, использованные моделью
     if (grammarScope && Array.isArray(grammarScope.allowedConstructions) && chatResponse.usedConstructions) {
-      const allowedIds = grammarScope.allowedConstructions.map((c: any) => c.id);
+      const allowedIds = grammarScope.allowedConstructions.map((c: { id: string }) => c.id);
       const validation = validateUsedConstructions(chatResponse.usedConstructions, allowedIds);
       if (!validation.ok) {
         logger.warn(`[Grammar Scope Check] Нарушение ограничений грамматики ИИ: ${validation.violations.join(', ')}. Разрешенные ID: ${allowedIds.join(', ')}`);
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(chatResponse);
-  } catch (error: any) {
+  } catch (error) {
     logger.error('Исключение при обработке запроса в /api/chat', error);
     return geminiErrorResponse(error);
   }

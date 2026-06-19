@@ -11,10 +11,10 @@ export async function GET() {
     logger.debug('Запрос списка колод в API /anki/decks');
     const decks = await ankiClient.getDeckNames();
     return NextResponse.json({ decks });
-  } catch (error: any) {
+  } catch (error) {
     logger.error('Исключение в API /anki/decks', error);
     return NextResponse.json({ 
-      error: error.message || 'Не удалось загрузить колоды Anki' 
+      error: (error instanceof Error ? error.message : '') || 'Не удалось загрузить колоды Anki'
     }, { status: 500 });
   }
 }

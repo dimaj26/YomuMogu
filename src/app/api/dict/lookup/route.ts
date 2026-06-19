@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
   try {
     const result = await lookupWord(word);
     return NextResponse.json(result);
-  } catch (error: any) {
+  } catch (error) {
     logger.error(`[DictLookup] Ошибка при поиске слова ${word}`, error);
-    return NextResponse.json({ error: error.message || 'Ошибка поиска' }, { status: 500 });
+    return NextResponse.json({ error: (error instanceof Error ? error.message : '') || 'Ошибка поиска' }, { status: 500 });
   }
 }

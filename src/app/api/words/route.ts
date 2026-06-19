@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     }));
 
     return NextResponse.json({ words: mappedWords });
-  } catch (error: any) {
+  } catch (error) {
     logger.error('Ошибка в /api/words', error);
     return NextResponse.json({ error: 'Ошибка сервера' }, { status: 500 });
   }

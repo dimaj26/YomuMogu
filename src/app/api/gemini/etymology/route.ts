@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     const result = await geminiClient.generateEtymology(word.trim());
     return NextResponse.json(result);
-  } catch (error: any) {
+  } catch (error) {
     logger.error('[API] Ошибка генерации этимологии', error);
     return geminiErrorResponse(error);
   }

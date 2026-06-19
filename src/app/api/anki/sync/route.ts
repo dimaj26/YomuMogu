@@ -79,8 +79,8 @@ export async function POST(request: NextRequest) {
       try {
         await ankiClient.answerCards(filteredAnswers);
         logger.info(`Карточки успешно синхронизированы: ${filteredAnswers.map(a => `${a.cardId} (ease: ${a.ease})`).join(', ')}`);
-      } catch (err: any) {
-        const errMsg = err.message || '';
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : '';
         if (errMsg.includes('not at top of queue') || errMsg.includes('reviewer') || errMsg.includes('Invalid input')) {
           logger.warn('Обнаружена ошибка очереди планировщика Anki V3, запускаем резервную симуляцию повторения', err);
           await runFallbackSync(filteredAnswers);
@@ -93,10 +93,10 @@ export async function POST(request: NextRequest) {
     }
     
     return NextResponse.json({ success: true, syncedCount: filteredAnswers.length, skippedCount });
-  } catch (error: any) {
+  } catch (error) {
     logger.error('Исключение в API /api/anki/sync', error);
     return NextResponse.json(
-      { error: error.message || 'Произошла ошибка при синхронизации карточек с Anki' },
+      { error: (error instanceof Error ? error.message : '') || 'Произошла ошибка при синхронизации карточек с Anki' },
       { status: 500 }
     );
   }

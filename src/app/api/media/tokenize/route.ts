@@ -62,10 +62,11 @@ export async function POST(request: NextRequest) {
         lemmas: data.lemmas || [],
         tokens: data.tokens || [],
       });
-    } catch (fetchErr: any) {
+    } catch (fetchErr) {
       clearTimeout(timeoutId);
-      const errCode = fetchErr.cause?.code || 'код недоступен';
-      if (fetchErr.name === 'AbortError') {
+      const fe = fetchErr as { name?: string; cause?: { code?: string } };
+      const errCode = fe.cause?.code || 'код недоступен';
+      if (fe.name === 'AbortError') {
         logger.error(`[API] Превышено время ожидания ответа от микросервиса MeCab (${tokenizerUrl})`);
       } else {
         logger.error(`[API] Ошибка подключения к микросервису токенизации MeCab (${tokenizerUrl}). Код ошибки: ${errCode}. Убедитесь, что запущен run-tokenizer.bat и проверьте logs\\tokenizer.log. Детали:`, fetchErr);
@@ -77,10 +78,10 @@ export async function POST(request: NextRequest) {
         tokens: [],
       });
     }
-  } catch (error: any) {
+  } catch (error) {
     logger.error('[API] Исключение во время токенизации на /api/media/tokenize', error);
     return NextResponse.json(
-      { error: error.message || 'Произошла непредвиденная ошибка на сервере токенизации' },
+      { error: (error instanceof Error ? error.message : '') || 'Произошла непредвиденная ошибка на сервере токенизации' },
       { status: 500 }
     );
   }
@@ -112,10 +113,10 @@ export async function GET(request: NextRequest) {
       success: false,
       tokenizerDown: true,
     });
-  } catch (error: any) {
+  } catch (error) {
     clearTimeout(timeoutId);
-    const errCode = error.cause?.code || 'код недоступен';
-    logger.error(`[API] Ошибка подключения к микросервису токенизации MeCab при проверке здоровья (код: ${errCode}): ${error.message || String(error)}`);
+    const errCode = (error as { cause?: { code?: string } }).cause?.code || 'код недоступен';
+    logger.error(`[API] Ошибка подключения к микросервису токенизации MeCab при проверке здоровья (код: ${errCode}): ${error instanceof Error ? error.message : String(error)}`);
     return NextResponse.json({
       success: false,
       tokenizerDown: true,

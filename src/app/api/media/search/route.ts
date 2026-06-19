@@ -50,8 +50,8 @@ export async function POST(request: NextRequest) {
         jaQueries = expansion.jaQueries;
         theme = expansion.theme;
         logger.info(`[API] Запрос расширен: ${JSON.stringify(jaQueries)}, тема: ${theme}`);
-      } catch (err: any) {
-        logger.warn(`[API] Ошибка расширения запроса Gemini: ${err.message}. Фолбэк на оригинальный запрос.`);
+      } catch (err) {
+        logger.warn(`[API] Ошибка расширения запроса Gemini: ${err instanceof Error ? err.message : String(err)}. Фолбэк на оригинальный запрос.`);
         jaQueries = [query];
         theme = null;
       }
@@ -144,8 +144,8 @@ export async function POST(request: NextRequest) {
             const tokenData = await res.json();
             lemmas = tokenData.lemmas || [];
           }
-        } catch (e: any) {
-          logger.error(`[API] Токенизация MeCab не удалась для видео ${c.videoId}: ${e.message}`);
+        } catch (e) {
+          logger.error(`[API] Токенизация MeCab не удалась для видео ${c.videoId}: ${e instanceof Error ? e.message : String(e)}`);
         }
 
         // Рассчитываем Comprehension Rate (CR)
@@ -178,8 +178,8 @@ export async function POST(request: NextRequest) {
           durationFit,
           score: 0 // Заполняется в rankCandidates
         });
-      } catch (err: any) {
-        logger.warn(`[API] Ошибка обработки кандидата ${c.videoId}: ${err.message || err}`);
+      } catch (err) {
+        logger.warn(`[API] Ошибка обработки кандидата ${c.videoId}: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
 
@@ -221,10 +221,10 @@ export async function POST(request: NextRequest) {
       theme
     });
 
-  } catch (error: any) {
+  } catch (error) {
     logger.error('[API] Исключение во время поиска медиаконтента на /api/media/search', error);
     return NextResponse.json(
-      { error: error.message || 'Произошла непредвиденная ошибка во время поиска на сервере' },
+      { error: (error instanceof Error ? error.message : '') || 'Произошла непредвиденная ошибка во время поиска на сервере' },
       { status: 500 }
     );
   }
