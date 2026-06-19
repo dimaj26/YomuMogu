@@ -3,12 +3,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Terminal, Settings, Search, Database, User, X, RefreshCw, Flame } from 'lucide-react';
 import { db, LocalWord } from '@/core/db';
-import { 
-  getActiveProfileId, 
-  getProfilesList, 
-  setActiveProfileId, 
-  getProfileItem, 
-  setProfileItem 
+import {
+  getActiveProfileId,
+  getProfilesList,
+  setActiveProfileId,
+  getProfileItem,
+  setProfileItem,
+  type ProfileInfo
 } from '@/lib/profile';
 import { LOCAL_DECK_NAME, retagAllWords } from '@/core/localDeckService';
 import styles from './DebugDrawer.module.css';
@@ -32,11 +33,11 @@ export function DebugDrawer() {
   const [selectedWord, setSelectedWord] = useState<LocalWord | null>(null);
 
   // Данные для вкладки промптов
-  const [lastPrompt, setLastPrompt] = useState<any>(null);
+  const [lastPrompt, setLastPrompt] = useState<{ systemInstruction?: string; contents?: unknown } | null>(null);
 
   // Данные для вкладки профиля
   const [profileId, setProfileId] = useState('default');
-  const [profiles, setProfiles] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<ProfileInfo[]>([]);
   const [profileKeys, setProfileKeys] = useState<LocalStorageKeyValue[]>([]);
 
   // Исключаем рендеринг в продакшн сборке (разрешаем в dev и test)

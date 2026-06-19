@@ -169,7 +169,7 @@ export default function ChatPage() {
   // Состояния для интерактивного маскота 🍵
   const [mascotState, setMascotState] = useState<'idle' | 'happy' | 'worried' | 'cheering'>('idle');
   const [mascotBubble, setMascotBubble] = useState<string | null>(null);
-  const mascotTimerRef = useRef<any>(null);
+  const mascotTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const triggerMascotReaction = (state: 'happy' | 'worried' | 'cheering', text: string) => {
     if (mascotTimerRef.current) {
@@ -332,7 +332,7 @@ export default function ChatPage() {
     if (!session) return;
     setIsLoading(true);
     try {
-      let grammarScope: any = undefined;
+      let grammarScope: { allowedConstructions: Array<{ id: string; construction: string }>; focus?: { id: string; construction: string } } | undefined = undefined;
       const profileId = getActiveProfileId();
       if (profileId && process.env.NODE_ENV !== 'test') {
         try {
@@ -427,7 +427,7 @@ export default function ChatPage() {
     setIsLoading(true);
 
     try {
-      let grammarScope: any = undefined;
+      let grammarScope: { allowedConstructions: Array<{ id: string; construction: string }>; focus?: { id: string; construction: string } } | undefined = undefined;
       const profileId = getActiveProfileId();
       if (profileId && process.env.NODE_ENV !== 'test') {
         try {
@@ -893,7 +893,7 @@ export default function ChatPage() {
           const progressMap: Record<string, import('@/core/db').GrammarProgress> = {};
           progressList.forEach((p: import('@/core/db').GrammarProgress) => { progressMap[p.ruleId] = p; });
           const allWords = await import('@/core/db').then(m => m.db.words.where('profileId').equals(profileId).toArray());
-          const profile = buildCompetencyProfile(allWords as any, progressMap, updatedSessions);
+          const profile = buildCompetencyProfile(allWords, progressMap, updatedSessions);
           setCompetencyProfile(profile);
           const advice = getPresetAdvice(profile, state.chatLevel);
           setAdvisorAdvice(advice);
@@ -923,10 +923,10 @@ export default function ChatPage() {
         }
       });
       setSelectedAddWords(adds);
-    } catch (err: any) {
+    } catch (err) {
       setSyncStatus({
         success: false,
-        message: err.message || t('Ошибка связи с сервером', 'サーバー接続エラー')
+        message: (err instanceof Error ? err.message : '') || t('Ошибка связи с сервером', 'サーバー接続エラー')
       });
     } finally {
       setIsAnalyzing(false);
@@ -1005,7 +1005,7 @@ export default function ChatPage() {
         const matchingExample = sessionExamples.find(ex => ex.word === wordObj.word && ex.enabled);
         if (matchingExample) {
           const examples = finalWord.contextExamples || [];
-          if (!examples.some((ex: any) => ex.sentence === matchingExample.sentence)) {
+          if (!examples.some((ex: { sentence: string }) => ex.sentence === matchingExample.sentence)) {
             examples.push({
               sentence: matchingExample.sentence,
               translation: matchingExample.translation,
@@ -1068,12 +1068,12 @@ export default function ChatPage() {
         next.delete(cardId);
         return next;
       });
-    } catch (err: any) {
+    } catch (err) {
       console.error('Ошибка индивидуальной синхронизации карточки:', err);
       setSyncCardStatus(prev => ({ ...prev, [cardId]: 'error' }));
       setIndividualErrors(prev => ({
         ...prev,
-        [`card-${cardId}`]: err.message || t('Ошибка синхронизации', 'Sync error')
+        [`card-${cardId}`]: (err instanceof Error ? err.message : '') || t('Ошибка синхронизации', 'Sync error')
       }));
     }
   };
@@ -1187,12 +1187,12 @@ export default function ChatPage() {
           return w;
         })
       );
-    } catch (err: any) {
+    } catch (err) {
       console.error('Ошибка индивидуального добавления слова:', err);
       setAddWordStatus(prev => ({ ...prev, [wordStr]: 'error' }));
       setIndividualErrors(prev => ({
         ...prev,
-        [`word-${wordStr}`]: err.message || t('Ошибка добавления', 'Add error')
+        [`word-${wordStr}`]: (err instanceof Error ? err.message : '') || t('Ошибка добавления', 'Add error')
       }));
     }
   };
@@ -1287,7 +1287,7 @@ export default function ChatPage() {
               const matchingExample = sessionExamples.find(ex => ex.word === wordObj.word && ex.enabled);
               if (matchingExample) {
                 const examples = finalWord.contextExamples || [];
-                if (!examples.some((ex: any) => ex.sentence === matchingExample.sentence)) {
+                if (!examples.some((ex: { sentence: string }) => ex.sentence === matchingExample.sentence)) {
                   examples.push({
                     sentence: matchingExample.sentence,
                     translation: matchingExample.translation,
@@ -1394,10 +1394,10 @@ export default function ChatPage() {
         success: true,
         message: t('Синхронизация успешно выполнена! Все выбранные слова добавлены или обновлены в Anki.', '同期が完了しました！選択された単語がAnkiに追加/更新されました。')
       });
-    } catch (err: any) {
+    } catch (err) {
       setSyncStatus({
         success: false,
-        message: err.message || t('Не удалось связаться с AnkiConnect. Проверьте, запущено ли приложение Anki и включен ли плагин AnkiConnect.', 'AnkiConnectとの接続に失敗しました。Ankiが起動し、AnkiConnectが有効であることを確認してください。')
+        message: (err instanceof Error ? err.message : '') || t('Не удалось связаться с AnkiConnect. Проверьте, запущено ли приложение Anki и включен ли плагин AnkiConnect.', 'AnkiConnectとの接続に失敗しました。Ankiが起動し、AnkiConnectが有効であることを確認してください。')
       });
     } finally {
       setIsSubmittingSync(false);

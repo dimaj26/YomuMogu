@@ -5,6 +5,16 @@ import { db } from '@/core/db';
 import { importStarterDeck, LOCAL_DECK_NAME } from '@/core/localDeckService';
 import styles from './AssessmentModal.module.css';
 
+// Слово стартовой колоды (src/resources/starter_deck.json)
+interface StarterDeckWord {
+  id: number;
+  word: string;
+  reading: string;
+  translation: string;
+  level: string;
+  category: string;
+}
+
 interface AssessmentModalProps {
   isOpen: boolean;
   profileId: string;
@@ -23,7 +33,7 @@ interface AssessmentModalProps {
 export function AssessmentModal({ isOpen, profileId, onClose, onSaved, onError }: AssessmentModalProps) {
   const [localWordStates, setLocalWordStates] = useState<Record<number, string>>({});
   const [currentLevelTab, setCurrentLevelTab] = useState<'N5' | 'N4' | 'Conversational'>('N5');
-  const [starterDeckData, setStarterDeckData] = useState<any[]>([]);
+  const [starterDeckData, setStarterDeckData] = useState<StarterDeckWord[]>([]);
   const [checkedNewWordIds, setCheckedNewWordIds] = useState<Set<number>>(new Set());
   const [isSaving, setIsSaving] = useState<boolean>(false);
 

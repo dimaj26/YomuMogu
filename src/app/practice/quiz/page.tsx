@@ -10,6 +10,7 @@ import { recordActivity } from '@/lib/balance/balance';
 import { db, addLocalReview } from '@/core/db';
 import { getDailyNewWordsCount, getDailyNewWordsLimit, incrementDailyNewWordsCount, syncExistingLocalWordsWithStarterDeck } from '@/core/localDeckService';
 import { calculateNextFsrsState, createDefaultFsrsState } from '@/core/scheduler';
+import type { FsrsState } from '@/core/types';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { PhonosemanticHint, PhonosemanticData } from '@/components/PhonosemanticHint';
 import phonosemanticsData from '@/resources/phonosemantics.json';
@@ -56,7 +57,7 @@ interface LocalWord {
   translation: string;
   category: string;
   source: 'anki' | 'starter' | 'manual';
-  active: any;
+  active: FsrsState;
   contextExamples?: Array<{ sentence: string; translation?: string; timestamp: number }>;
   mnemonic?: string;
 }
@@ -363,7 +364,7 @@ function QuizComponent() {
         const shuffled = [...loadedWords].sort(() => Math.random() - 0.5);
         setWords(shuffled);
         setStartTime(Date.now());
-      } catch (err: any) {
+      } catch (err) {
         console.error('Ошибка загрузки слов для квиза:', err);
         setError('Не удалось загрузить карточки для повторения.');
       } finally {

@@ -12,6 +12,7 @@ export interface MediaItem {
   platform: 'youtube' | 'podcast';
   lemmas: string[];
   comprehensionRate?: number;
+  trackKind?: string;
   knownCount?: number;
   totalCount?: number;
   dueOverlapCount?: number;
@@ -109,8 +110,8 @@ export function useMediaRecommendation() {
       // Пересчитываем статистику пересечения
       const calculatedFeed = await recalculateCoverage(feed);
       setRecommendations(calculatedFeed);
-    } catch (err: any) {
-      setError(err.message || 'Не удалось загрузить рекомендации медиаконтента');
+    } catch (err) {
+      setError((err instanceof Error ? err.message : '') || 'Не удалось загрузить рекомендации медиаконтента');
     } finally {
       setIsLoading(false);
     }
@@ -164,8 +165,8 @@ export function useMediaRecommendation() {
       // Перезагружаем всю ленту
       await loadFeed();
       return newMediaItem;
-    } catch (err: any) {
-      setError(err.message || 'Ошибка импорта ссылки');
+    } catch (err) {
+      setError((err instanceof Error ? err.message : '') || 'Ошибка импорта ссылки');
       setIsLoading(false);
       return null;
     }

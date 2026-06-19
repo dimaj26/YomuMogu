@@ -12,6 +12,7 @@ import { LearningTrack } from '@/components/LearningTrack';
 import type { MacroLadderProfile } from '@/components/LearningTrack';
 import { buildCompetencyProfile } from '@/lib/competency/profile';
 import { getProfileItem, setProfileItem, removeProfileItem, getActiveProfileId } from '@/lib/profile';
+import type { GeneratedSession } from '@/lib/gemini/client';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { JpUI } from '@/components/JpUI';
 import { PhonosemanticHint, PhonosemanticData } from '@/components/PhonosemanticHint';
@@ -145,7 +146,7 @@ export default function PracticePage() {
   const [selectedDeck, setSelectedDeck] = useState<string>('__all__');
   const [words, setWords] = useState<AnkiWord[]>([]);
   const [localWords, setLocalWords] = useState<LocalWord[]>([]); // Полные LocalWord для lookup статусов
-  const [sessions, setSessions] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<GeneratedSession[]>([]);
   const [inProgressSessions, setInProgressSessions] = useState<Set<string>>(new Set());
   const [completedSessions, setCompletedSessions] = useState<Set<string>>(new Set());
   const [completedSessionsCountToday, setCompletedSessionsCountToday] = useState<number>(0);
@@ -209,7 +210,7 @@ export default function PracticePage() {
   // Новые состояния для поиска видео по запросу (Phase B)
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSearchQuery, setActiveSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<MediaItem[]>([]);
   const [searchContinuation, setSearchContinuation] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -275,7 +276,7 @@ export default function PracticePage() {
       }
 
       // Сохраняем видео в историю просмотренных
-      const newVideoIds = newResults.map((r: any) => r.id);
+      const newVideoIds = newResults.map((r: MediaItem) => r.id);
       let updatedHistory = [...shownVideoIds, ...newVideoIds];
       if (updatedHistory.length > 500) {
         updatedHistory = updatedHistory.slice(updatedHistory.length - 500);
@@ -283,8 +284,8 @@ export default function PracticePage() {
       setShownVideoIds(updatedHistory);
       setProfileItem('shown_video_ids', JSON.stringify(updatedHistory), profileId);
 
-    } catch (err: any) {
-      setSearchError(err.message || 'Ошибка поиска видео');
+    } catch (err) {
+      setSearchError((err instanceof Error ? err.message : '') || 'Ошибка поиска видео');
     } finally {
       setIsSearching(false);
     }
@@ -389,7 +390,7 @@ export default function PracticePage() {
         ? JSON.parse(sessionsRaw)
         : [];
       const computedProfile = buildCompetencyProfile(
-        allProfileWords as any,
+        allProfileWords,
         progressMap,
         competencySessions
       );
@@ -654,7 +655,7 @@ export default function PracticePage() {
     }
   };
 
-  const startSession = (session: any) => {
+  const startSession = (session: GeneratedSession) => {
     setProfileItem('active_session', JSON.stringify(session));
     router.push('/chat');
   };
@@ -896,8 +897,8 @@ export default function PracticePage() {
       } else {
         setImportError(mediaError || 'Не удалось импортировать видео по ссылке. Проверьте правильность URL.');
       }
-    } catch (e: any) {
-      setImportError(e.message || 'Ошибка импорта.');
+    } catch (e) {
+      setImportError((e instanceof Error ? e.message : '') || 'Ошибка импорта.');
     } finally {
       setIsAddingUrl(false);
     }
@@ -1417,7 +1418,7 @@ export default function PracticePage() {
                         <h3 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>
                           Сценарии сегодня
                         </h3>
-                        {sessions.map((session: any) => {
+                        {sessions.map((session: GeneratedSession) => {
                           const isCompleted = completedSessions.has(session.id);
                           const isInProgress = inProgressSessions.has(session.id);
                           return (

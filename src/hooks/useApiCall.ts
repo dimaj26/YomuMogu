@@ -7,7 +7,7 @@ interface UseApiCallOptions<T> {
   retryDelay?: number; // milliseconds
 }
 
-export function useApiCall<T, Args extends any[]>(
+export function useApiCall<T, Args extends unknown[]>(
   apiFunction: (...args: Args) => Promise<T>,
   options: UseApiCallOptions<T> = {}
 ) {
@@ -30,8 +30,8 @@ export function useApiCall<T, Args extends any[]>(
         onSuccess?.(result);
         setLoading(false);
         return result;
-      } catch (err: any) {
-        const errorInstance = err instanceof Error ? err : new Error(err?.message || String(err));
+      } catch (err) {
+        const errorInstance = err instanceof Error ? err : new Error((err as { message?: string })?.message || String(err));
         if (attempt < retryCount) {
           attempt++;
           await new Promise(resolve => setTimeout(resolve, retryDelay));

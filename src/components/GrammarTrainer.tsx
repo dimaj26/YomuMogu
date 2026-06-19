@@ -70,7 +70,7 @@ const Mascot: React.FC<{ state: 'idle' | 'happy' | 'worried' | 'cheering' }> = (
   interface SandboxCard {
     id: string;
     label: string;
-    value: any;
+    value: string | SandboxCardValue;
     tooltipKey: string;
   }
 
@@ -86,7 +86,7 @@ const Mascot: React.FC<{ state: 'idle' | 'happy' | 'worried' | 'cheering' }> = (
     polite?: string | { affirmative?: string; negative?: string };
     plain?: string | { affirmative?: string; negative?: string };
     dropped?: string | { affirmative?: string; negative?: string } | null;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   const resolveCardValue = (
@@ -187,7 +187,7 @@ const Mascot: React.FC<{ state: 'idle' | 'happy' | 'worried' | 'cheering' }> = (
       } else {
         setMascotState('worried');
       }
-    } catch (err: any) {
+    } catch {
       // Сетевой сбой — без сырого текста исключения
       setServiceError({
         message: 'Не удалось связаться с ИИ-сервисом. Проверьте подключение и попробуйте ещё раз.',
