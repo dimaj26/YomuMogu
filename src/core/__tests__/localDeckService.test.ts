@@ -24,6 +24,7 @@ const {
   incrementDailyNewWordsLimitOffset,
   syncDailyNewWordsCountWithDb,
   retagAllWords,
+  addWord,
 } = await import('../localDeckService');
 
 describe('LocalDeckService Unit Tests', () => {
@@ -835,6 +836,51 @@ describe('LocalDeckService Unit Tests', () => {
 
       const word1Again = await db.words.get([profileId, 10001]);
       expect(word1Again?.tags).toEqual(['custom', 'jlpt:n5']);
+    });
+  });
+
+  // B2.1: tap-to-add из медиа — дедуп, омонимы, живой контекст
+  describe('addWord (media tap-to-add)', () => {
+    it('дедуплицирует по паре написание+чтение (идемпотентно)', async () => {
+      const r1 = await addWord(profileId, '猫', 'ねこ', 'кошка');
+      const r2 = await addWord(profileId, '猫', 'ねこ', 'кошка');
+
+      expect(r1.success).toBe(true);
+      expect(r2.success).toBe(true);
+      expect(r2.alreadyExists).toBe(true);
+
+      const all = await db.words.where('profileId').equals(profileId).toArray();
+      const nekos = all.filter(w => w.word === '猫');
+      expect(nekos).toHaveLength(1);
+    });
+
+    it('различает омонимы по чтению (生 なま vs せい)', async () => {
+      await addWord(profileId, '生', 'なま', 'сырой');
+      await addWord(profileId, '生', 'せい', 'жизнь');
+
+      const all = await db.words.where('profileId').equals(profileId).toArray();
+      const seis = all.filter(w => w.word === '生');
+      expect(seis).toHaveLength(2);
+    });
+
+    it('сохраняет переданное предложение в contextExamples', async () => {
+      await addWord(profileId, '映画', 'えいが', 'фильм', LOCAL_DECK_NAME, '昨日映画を見ました。');
+
+      const all = await db.words.where('profileId').equals(profileId).toArray();
+      const eiga = all.find(w => w.word === '映画');
+      expect(eiga?.contextExamples?.[0]?.sentence).toBe('昨日映画を見ました。');
+    });
+
+    it('два быстрых добавления не теряются из-за коллизии id (Date.now заморожен)', async () => {
+      // С замороженным Date.now() оба слова получили бы одинаковый id=[profileId+id]
+      // и второе перезаписало бы первое. Collision-safe id должен сохранить оба.
+      await addWord(profileId, '水', 'みず', 'вода');
+      await addWord(profileId, '火', 'ひ', 'огонь');
+
+      const all = await db.words.where('profileId').equals(profileId).toArray();
+      const both = all.filter(w => w.word === '水' || w.word === '火');
+      expect(both).toHaveLength(2);
+      expect(new Set(all.map(w => w.id)).size).toBe(all.length); // id уникальны
     });
   });
 });

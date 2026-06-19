@@ -535,6 +535,17 @@
   font-weight: 700;
 }
 
+/* Мягкое предупреждение о превышении дневного лимита (не блокирующее) */
+.ankiLimitBox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  color: var(--color-amber, #b7791f);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 /* Анимации */
 @keyframes fadeIn {
   from { opacity: 0; }

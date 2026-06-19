@@ -301,45 +301,80 @@ export async function getLocalDeckStats(profileId: string): Promise<DeckStats> {
 }
 
 /**
- * Добавляет новое слово в локальную колоду.
+ * Добавляет новое слово в локальную колоду (единая точка входа активной кривой, §2.6).
+ *
+ * @param contextSentence Опциональное живое предложение (например, субтитр из видео),
+ *   сохраняется в contextExamples как контекстный пример.
+ *
+ * Дедуп-guard: слово уникально по паре (написание + чтение) в рамках profile+category —
+ * омонимы (生 なま / せい) считаются разными, повторный вызов идемпотентен.
  */
 export async function addWord(
   profileId: string,
   word: string,
   reading: string,
   translation: string,
-  deckName: string = LOCAL_DECK_NAME
-): Promise<{ success: boolean; message: string }> {
+  deckName: string = LOCAL_DECK_NAME,
+  contextSentence?: string
+): Promise<{ success: boolean; message: string; alreadyExists?: boolean }> {
   if (typeof window === 'undefined') {
     return { success: false, message: 'Добавление доступно только в браузере' };
   }
 
-  const wordId = Date.now();
-  
-  let tags: string[] = ["universal"];
-  try {
-    const dictionary = (await import('../resources/situational_dictionary.json')).default as Record<string, string[]>;
-    if (dictionary[word]) {
-      tags = dictionary[word];
-    }
-  } catch (e) {
-    console.error('Ошибка загрузки ситуационного словаря при добавлении слова:', e);
-  }
-  
-  const wordRecord: LocalWord = {
-    profileId,
-    id: wordId,
-    word,
-    reading,
-    translation,
-    category: deckName,
-    source: 'manual',
-    active: createDefaultFsrsState(Date.now()),
-    contextExamples: [],
-    tags
-  };
+  // Готовим контекстный пример из живого предложения, если оно передано
+  const exampleToAdd = contextSentence && contextSentence.trim()
+    ? { sentence: contextSentence.trim(), timestamp: Date.now() }
+    : null;
 
   try {
+    // Дедуп: ищем существующее слово по паре (написание + чтение) в этой колоде
+    const wordsInProfile = await db.words.where('profileId').equals(profileId).toArray();
+    const existing = wordsInProfile.find(
+      w => w.category === deckName && w.word === word && w.reading === reading
+    );
+
+    if (existing) {
+      // Идемпотентно: при наличии нового контекста домержим его, дублей предложений не плодим
+      if (exampleToAdd) {
+        const examples = existing.contextExamples || [];
+        if (!examples.some(ex => ex.sentence === exampleToAdd.sentence)) {
+          examples.push(exampleToAdd);
+          await db.words.update([profileId, existing.id], { contextExamples: examples });
+        }
+      }
+      return { success: true, message: 'Слово уже есть в колоде', alreadyExists: true };
+    }
+
+    let tags: string[] = ["universal"];
+    try {
+      const dictionary = (await import('../resources/situational_dictionary.json')).default as Record<string, string[]>;
+      if (dictionary[word]) {
+        tags = dictionary[word];
+      }
+    } catch (e) {
+      console.error('Ошибка загрузки ситуационного словаря при добавлении слова:', e);
+    }
+
+    // Collision-safe id: Date.now() может совпасть при двух быстрых тапах (общий ключ [profileId+id]
+    // привёл бы к перезаписи) — сдвигаем, пока ключ занят
+    let wordId = Date.now();
+    while (await db.words.get([profileId, wordId])) {
+      wordId += 1;
+    }
+
+    const wordRecord: LocalWord = {
+      profileId,
+      id: wordId,
+      word,
+      reading,
+      translation,
+      category: deckName,
+      source: 'manual',
+      active: createDefaultFsrsState(Date.now()),
+      contextExamples: exampleToAdd ? [exampleToAdd] : [],
+      tags
+    };
+
     await db.words.put(wordRecord);
     return { success: true, message: 'Слово добавлено локально' };
   } catch (err: any) {

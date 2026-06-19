@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Play, Loader2, Sparkles, BookOpen, Plus, Check, AlertCircle, Upload } from 'lucide-react';
 import { getProfileItem, getActiveProfileId } from '@/lib/profile';
+import { addWord, getDailyNewWordsLimit, getDailyNewWordsCount, incrementDailyNewWordsCount, LOCAL_DECK_NAME } from '@/core/localDeckService';
+import { syncLocalDatabaseWithAnki } from '@/core/db';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { parseSubtitlesToSegments, normalizeSegments, type SubtitleSegment } from '@/lib/media/parser';
 import { regroupIntoSentences } from '@/lib/media/sentences';
@@ -106,6 +108,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
   const [isLoadingDict, setIsLoadingDict] = useState<boolean>(false);
   const [ankiStatus, setAnkiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [ankiError, setAnkiError] = useState<string | null>(null);
+  const [limitNotice, setLimitNotice] = useState<string | null>(null);
 
   // Ссылки на плееры
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -419,12 +422,18 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
   }, [tokenizerDown, activeSegmentIndex, segments]);
 
 
+  // Локальный режим: Anki выключен сборкой ИЛИ профиль в режиме локальной колоды.
+  // В этом режиме tap-to-add пишет напрямую в IndexedDB FSRS, минуя Anki/Gemini.
+  const isLocalMode = typeof window !== 'undefined' &&
+    (process.env.NEXT_PUBLIC_ANKI_ENABLED === 'false' || getProfileItem('deck_mode') === 'local');
+
   // Обработка клика по токену слова
   const handleTokenClick = async (token: MeCabToken) => {
     setSelectedToken(token);
     setSelectedWord(token.surface);
     setAnkiStatus('idle');
     setAnkiError(null);
+    setLimitNotice(null);
     setIsLoadingDict(true);
     setDictResult(null);
 
@@ -444,15 +453,15 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
     }
   };
 
-  // Добавление слова в Anki
+  // Добавление слова в активную колоду (tap-to-add из медиа)
   const handleAddToAnki = async () => {
     if (!selectedToken) return;
 
     setAnkiStatus('loading');
     setAnkiError(null);
+    setLimitNotice(null);
 
     const profileId = getActiveProfileId();
-    const deckName = getProfileItem('selected_deck') || 'Japanese';
     const frontField = getProfileItem('front_field') || 'Front';
     const backField = getProfileItem('back_field') || 'Back';
 
@@ -460,12 +469,15 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
     const rawReading = selectedToken.reading || '';
     const reading = katakanaToHiragana(rawReading);
 
+    // Живой контекст: текст активного сегмента субтитров — это главная ценность иммерсии
+    const contextSentence = activeSegmentIndex >= 0 ? segments[activeSegmentIndex]?.text?.trim() : undefined;
+
     let translation = 'Импортировано из видео';
     let definitionHtml = '';
 
     if (dictResult) {
       definitionHtml = dictResult.definition || dictResult.entry || '';
-      
+
       // Попробуем извлечь русский перевод из определения
       // JitenDex обычно имеет структурированные теги. Напишем простой парсер для первого встреченного значения.
       if (dictResult.definition) {
@@ -477,7 +489,27 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
       }
     }
 
+    // Мягкое предупреждение о дневном лимите новых слов — не блокируем (тап = осознанный выбор)
+    const overLimit = getDailyNewWordsCount(profileId) >= getDailyNewWordsLimit(profileId);
+    const noteOverLimit = () => {
+      if (overLimit) setLimitNotice('Сверх дневного лимита новых слов — добавлено по вашему выбору.');
+    };
+
     try {
+      if (isLocalMode) {
+        // Локальный путь: прямо в IndexedDB FSRS, без Anki/Gemini; субтитр сохраняем как контекст
+        const result = await addWord(profileId, word, reading, translation, LOCAL_DECK_NAME, contextSentence);
+        if (!result.success) throw new Error(result.message);
+        if (!result.alreadyExists) {
+          incrementDailyNewWordsCount(profileId, 1);
+          noteOverLimit();
+        }
+        setAnkiStatus('success');
+        return;
+      }
+
+      // Anki-путь: создаём карточку с живым примером из видео, затем втягиваем слово в локальный FSRS
+      const deckName = getProfileItem('selected_deck') || 'Japanese';
       const res = await fetch('/api/anki/add', {
         method: 'POST',
         headers: {
@@ -491,16 +523,21 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
           reading,
           translation,
           definitionHtml,
-          history: [] // История диалога пуста, так как это видеоплеер
+          // Передаём строку субтитра как контекст — роут найдёт в ней пример вместо синтетического
+          history: contextSentence ? [{ role: 'user', text: contextSentence }] : []
         }),
       });
 
-      if (res.ok) {
-        setAnkiStatus('success');
-      } else {
+      if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData.error || 'Не удалось отправить слово в Anki');
       }
+
+      // Паритет с чат-путём: слово сразу входит в локальный FSRS-движок
+      await syncLocalDatabaseWithAnki(profileId, deckName);
+      incrementDailyNewWordsCount(profileId, 1);
+      noteOverLimit();
+      setAnkiStatus('success');
     } catch (err: any) {
       console.error('Ошибка добавления карточки:', err);
       setAnkiStatus('error');
@@ -871,7 +908,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
                   {ankiStatus === 'success' ? (
                     <div className={styles.ankiSuccessBox}>
                       <Check size={16} />
-                      <span>Слово добавлено в Anki!</span>
+                      <span>{isLocalMode ? 'Слово добавлено в колоду!' : 'Слово добавлено в Anki!'}</span>
                     </div>
                   ) : (
                     <button
@@ -887,10 +924,17 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
                       ) : (
                         <>
                           <Plus size={16} style={{ marginRight: 6 }} />
-                          Добавить в Anki
+                          {isLocalMode ? 'Добавить слово' : 'Добавить в Anki'}
                         </>
                       )}
                     </button>
+                  )}
+
+                  {limitNotice && (
+                    <div className={styles.ankiLimitBox}>
+                      <AlertCircle size={14} />
+                      <span>{limitNotice}</span>
+                    </div>
                   )}
 
                   {ankiStatus === 'error' && (

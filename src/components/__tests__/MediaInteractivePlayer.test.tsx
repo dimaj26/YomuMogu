@@ -2,6 +2,7 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { MediaInteractivePlayer } from '../MediaInteractivePlayer';
+import { getProfileItem } from '@/lib/profile';
 
 // Мокаем глобальный fetch
 const mockFetch = vi.fn();
@@ -26,6 +27,7 @@ vi.mock('@/lib/profile', () => ({
     if (key === 'selected_deck') return 'Japanese';
     return null;
   }),
+  setProfileItem: vi.fn(),
   getActiveProfileId: vi.fn().mockReturnValue('default'),
 }));
 
@@ -96,6 +98,12 @@ describe('MediaInteractivePlayer Component', () => {
           json: async () => ({
             success: true
           })
+        });
+      }
+      if (urlStr.includes('/api/anki/sync-db')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ remoteCards: [], remoteReviews: {} })
         });
       }
       return Promise.reject(new Error(`Unhandled fetch: ${urlStr}`));
@@ -181,6 +189,49 @@ describe('MediaInteractivePlayer Component', () => {
     await waitFor(() => {
       expect(screen.getByText('Слово добавлено в Anki!')).toBeInTheDocument();
     });
+  });
+
+  it('B2.1: в локальном режиме добавляет слово напрямую в колоду, без вызова /api/anki/add', async () => {
+    // Переводим профиль в локальный режим
+    const original = (getProfileItem as any).getMockImplementation();
+    (getProfileItem as any).mockImplementation((key: string) => {
+      if (key === 'deck_mode') return 'local';
+      if (key === 'selected_deck') return 'Japanese';
+      return null;
+    });
+
+    try {
+      render(
+        <MediaInteractivePlayer
+          url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          title="NHK Easy News"
+          onClose={vi.fn()}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('word-token')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByTestId('word-token'));
+
+      // В локальном режиме кнопка называется иначе
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Добавить слово/i })).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /Добавить слово/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText('Слово добавлено в колоду!')).toBeInTheDocument();
+      });
+
+      // Локальный путь не должен дёргать серверный Anki-роут
+      const addCalls = mockFetch.mock.calls.filter((c: any[]) => String(c[0]).includes('/api/anki/add'));
+      expect(addCalls).toHaveLength(0);
+    } finally {
+      (getProfileItem as any).mockImplementation(original);
+    }
   });
 
   it('updates segments state when receiving a YOMUMOGU_YT_SUBTITLES message event from browser extension', async () => {

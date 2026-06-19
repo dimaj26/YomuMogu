@@ -2,6 +2,15 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.63.1] - 2026-06-19
+
+### Fixed
+- **Media tap-to-add (immersion → active loop)** (roadmap §2.7 B2.1): tapping a word in the interactive subtitle player was Anki-only and lossy. Now: (1) the active subtitle line is sent as **live context** (`history` to `/api/anki/add`, or directly into `contextExamples` in local mode) so the card example comes from the video instead of a synthetic Gemini sentence; (2) after an Anki add the word is pulled into the local FSRS engine immediately via `syncLocalDatabaseWithAnki` (parity with the chat path); (3) a **local fallback** writes straight to IndexedDB FSRS via `addWord` when `NEXT_PUBLIC_ANKI_ENABLED='false'` or the profile is in `local` deck mode — no Anki/Gemini calls; (4) the daily new-words limit is respected with a soft non-blocking notice (a tap is a deliberate user choice) and `incrementDailyNewWordsCount`.
+- **`addWord` hardening** (`core/localDeckService.ts`): now the single entry point for tap-to-add — dedup guard by (word + reading) pair so homonyms (生 なま / せい) stay distinct and repeat taps are idempotent (`alreadyExists`), collision-safe `id` (the old `Date.now()` could overwrite on two fast taps sharing the `[profileId+id]` key), and an optional `contextSentence` argument stored into `contextExamples`.
+
+### Notes
+- Suite now **527 tests / 77 files** green, `tsc --noEmit` clean. New coverage: `addWord` dedup/homonym/context/id reproducers and a media local-mode tap-to-add test (asserts no `/api/anki/add` call).
+
 ## [1.63.0] - 2026-06-19
 
 ### Changed

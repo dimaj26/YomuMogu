@@ -202,7 +202,7 @@ src/
 |---|---|
 | `core/db.ts` | Dexie.js client-side database definitions, schemas, and FSRS transaction helpers |
 | `core/scheduler.ts` | FSRS mathematical calculation engine over a single `active` curve (§2.6: dual-curve collapsed) |
-| `core/localDeckService.ts` | Offline local starter deck service and local db operations |
+| `core/localDeckService.ts` | Offline local starter deck service and local db operations; `addWord` is the single entry point for tap-to-add (dedup by word+reading, idempotent, collision-safe id, optional `contextSentence` → `contextExamples`) |
 | `core/types.ts` | Central TypeScript interface definitions for db schemas, reviews, and FSRS states |
 | `core/pluginRegistry.ts` | Interfaces for custom learning plugins and active `WordSource` providers |
 | `core/intervals.ts` | Single source of truth registry for all timing and interval systems |
@@ -275,7 +275,7 @@ src/
 | `lib/media/__tests__/feed-language.integration.test.ts` | Integration tests verifying that every video in the recommended feed has a valid Japanese caption track |
 | `lib/media/__tests__/transcript-fidelity.integration.test.ts` | Integration tests verifying that pregenerated transcripts match live scraped YouTube captions with high fidelity |
 | `tests/e2e/media-search-live.spec.ts` | Playwright E2E tests verifying search input, refresh diversity, and player loading |
-| `components/MediaInteractivePlayer.tsx` | Subtitle-synchronized player component: sticky segment matching, quality-gated smooth progress fill karaoke rendering, requestAnimationFrame display clock resynchronization, sentence regrouping pipeline, CC dedup (`cc_load_policy` conditional, extension priority guard, CC toggle button) |
+| `components/MediaInteractivePlayer.tsx` | Subtitle-synchronized player component: sticky segment matching, quality-gated smooth progress fill karaoke rendering, requestAnimationFrame display clock resynchronization, sentence regrouping pipeline, CC dedup (`cc_load_policy` conditional, extension priority guard, CC toggle button); tap-to-add (B2.1) sends the active subtitle line as live context and branches local (`addWord` → IndexedDB FSRS, no Anki/Gemini) vs Anki (`/api/anki/add` + `syncLocalDatabaseWithAnki`), with a soft daily-limit notice |
 | `components/__tests__/MediaInteractivePlayer.test.tsx` | Unit tests for MediaInteractivePlayer component |
 | `hooks/useMediaRecommendation.ts` | Hook calculating Comprehension Rate (CR) and FSRS-due vocabulary matches for videos |
 | `hooks/__tests__/useMediaRecommendation.test.ts` | Unit tests for useMediaRecommendation hook |
@@ -832,7 +832,7 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-522 unit/integration tests across 77 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+527 unit/integration tests across 77 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
 
 ---
 
