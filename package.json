@@ -19,7 +19,11 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{ts,tsx}": "eslint --no-warn-ignored"
+    "*.{ts,tsx}": "eslint --no-warn-ignored",
+    "*.py": [
+      "venv/Scripts/python.exe -m ruff check --fix",
+      "venv/Scripts/python.exe -m ruff format"
+    ]
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -43,6 +47,7 @@
     "@vitejs/plugin-react": "^6.0.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "eslint-plugin-vitest": "^0.5.4",
     "fake-indexeddb": "^6.2.5",
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",

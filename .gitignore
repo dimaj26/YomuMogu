@@ -77,3 +77,7 @@ _nogit*
 
 # RNA-Blueprint scratch plans (local, regenerated per task)
 implementation_plan.md
+
+# Python bytecode
+__pycache__/
+*.pyc

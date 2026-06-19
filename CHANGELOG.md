@@ -2,6 +2,20 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.65.0] - 2026-06-19
+
+### Added
+- **Architectural boundary lint** ([PL-9.5], rule set v2): two machine-enforced invariants that previously lived only as text in [PL-8]. `no-restricted-syntax` blocks direct `localStorage` outside `lib/profile.ts` ([CP-3.4]); `no-restricted-imports` blocks `@google/genai` outside `lib/gemini/**` ([CP-3.3]). Allow-overrides for `profile.ts`, `DebugDrawer` (dev storage inspector), `lib/gemini/**`, and the test zone. `sessionStorage` left out of scope (no registry helper). The two legacy Gemini routes (`api/chat/analyze`, `api/anki/add`) grandfathered via a file-scoped config override (they already use `withRetry`; left untouched). Recon showed near-zero real prod debt — most apparent hits were comments or `sessionStorage`.
+- **Test-quality gate** (`eslint-plugin-vitest`, test files only): `expect-expect`, `no-disabled-tests`, `valid-expect` (`maxArgs: 2`), `no-identical-title` as errors — blocks empty/assertion-less/disabled/duplicate tests. Soft rollout found 0 real violations across 527 tests (4 false positives fixed by calibration).
+- **Python quality via Ruff** (`ruff.toml`): Ruff linter + formatter for the 2 Python files, conservative rules (`F` + `E4/E7/E9`), wired into the pre-commit gate for staged `*.py`. Installed in the local `venv`.
+
+### Changed
+- **`CONTEXT_PROMPT.md` AI conventions** ([CP-3.1]/[CP-3.6]): prefer `unknown` + type guard over `any` at external boundaries; do not auto-delete unused code mid-generation (cleanup is a deliberate step); no hollow or over-mocked tests.
+- **Python files reformatted** by Ruff (`server.py`, `lookup.py`) — whitespace/wrapping only, no logic change (`py_compile` verified).
+
+### Notes
+- Derived from a 6-rule quality proposal audited per-rule (6× PA-1). Only the low-footprint, machine-enforceable subset shipped; the rest became AI conventions or were deferred (Prettier, fix-on-save, "full" any-ban, interval-literal lint, redundant-mock detection — no cheap machine signal). Priority was minimal refactor/footprint and stability: **0 source refactors**, all changes are config/docs plus formatting. Suite 527/77 green, `tsc --noEmit` clean, `next build` OK.
+
 ## [1.64.0] - 2026-06-19
 
 ### Added
