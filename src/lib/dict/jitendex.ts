@@ -35,10 +35,10 @@ export async function lookupWord(word: string): Promise<JitenDexResult> {
       encoding: 'utf8',
     });
     return JSON.parse(stdout) as JitenDexResult;
-  } catch (error: any) {
+  } catch (error) {
     return {
       word,
-      error: error.message || String(error),
+      error: (error instanceof Error ? error.message : '') || String(error),
     };
   }
 }

@@ -2,6 +2,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import vitest from "eslint-plugin-vitest";
+import reactHooks from "eslint-plugin-react-hooks";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -46,6 +47,8 @@ const eslintConfig = defineConfig([
   // (отложенное чтение localStorage и измерение DOM в useEffect, см. CP-3.4):
   // оставляем как предупреждение, чтобы новые случаи были видны, но не ломали гейт.
   {
+    files: ["**/*.{ts,tsx}"],
+    plugins: { "react-hooks": reactHooks },
     rules: {
       "react-hooks/set-state-in-effect": "warn",
     },

@@ -27,7 +27,7 @@ export class AnkiConnectClient {
     this.url = url;
   }
 
-  private async request<T>(action: string, params: Record<string, any> = {}): Promise<T> {
+  private async request<T>(action: string, params: Record<string, unknown> = {}): Promise<T> {
     try {
       logger.debug(`Запрос к AnkiConnect: ${action}`, params);
       const response = await fetch(this.url, {
@@ -53,9 +53,10 @@ export class AnkiConnectClient {
       }
 
       return json.result as T;
-    } catch (error: any) {
+    } catch (error) {
       logger.error(`Сбой запроса к AnkiConnect (${action})`, error);
-      if (error.code === 'ECONNREFUSED' || error.message.includes('fetch failed')) {
+      const e = error as { code?: string; message?: string };
+      if (e.code === 'ECONNREFUSED' || (e.message ?? '').includes('fetch failed')) {
         throw new Error('Anki не запущен или плагин AnkiConnect не активен. Пожалуйста, запустите Anki.');
       }
       throw error;
@@ -131,8 +132,9 @@ export class AnkiConnectClient {
     if (cardIds.length === 0) return true;
     try {
       await this.request<void>('setDueDate', { cards: cardIds, due });
-    } catch (error: any) {
-      if (error.message && error.message.includes("unexpected keyword argument 'due'")) {
+    } catch (error) {
+      const e = error as { message?: string };
+      if (e.message && e.message.includes("unexpected keyword argument 'due'")) {
         logger.info('Повторный запрос setDueDate с параметром days для совместимости с установленной версией AnkiConnect');
         await this.request<void>('setDueDate', { cards: cardIds, days: due });
       } else {

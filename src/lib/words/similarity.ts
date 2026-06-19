@@ -51,7 +51,7 @@ export function pickDiscriminationDistractors(
     
     const isPartnerMature = word.active.status === 'review' || word.active.status === 'mature';
     if (isPartnerMature && shareKanji(current.word, word.word)) {
-      const val = (word as any)[field];
+      const val = (word as unknown as Record<string, unknown>)[field];
       if (typeof val === 'string' && val.trim() !== '') {
         distractors.push(val);
         if (distractors.length >= 2) {

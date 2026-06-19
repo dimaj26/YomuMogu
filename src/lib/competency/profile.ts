@@ -36,7 +36,7 @@ export interface PresetAdvice {
  * Результат ограничивается 1 (clamp to 1).
  */
 export function computeLexCoverage(userWords: LocalWord[], level: JlptLevelId): number {
-  const canonicalList = (jlptLevels.levels as Record<string, any[]>)[level];
+  const canonicalList = (jlptLevels.levels as Record<string, unknown[]>)[level];
   if (!canonicalList || canonicalList.length === 0) {
     return 0;
   }
