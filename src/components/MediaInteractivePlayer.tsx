@@ -21,6 +21,37 @@ interface MeCabToken {
   reading: string | null;
 }
 
+// Минимальные типы YouTube IFrame API: официальных типов у глобала window.YT нет,
+// поэтому описываем только то, что реально используется в этом компоненте.
+interface YTPlayer {
+  getCurrentTime(): number;
+  destroy(): void;
+  seekTo(seconds: number, allowSeekAhead: boolean): void;
+  loadModule(name: string): void;
+  unloadModule(name: string): void;
+}
+interface YTPlayerEvent {
+  data: number;
+  target: YTPlayer;
+}
+interface YTNamespace {
+  Player: new (el: HTMLElement, opts: Record<string, unknown>) => YTPlayer;
+  PlayerState: { PLAYING: number };
+}
+declare global {
+  interface Window {
+    YT?: YTNamespace;
+    onYouTubeIframeAPIReady?: (() => void) | null;
+  }
+}
+
+// Результат поиска по словарю JitenDex (поля, читаемые в UI)
+interface DictResult {
+  definition?: string;
+  entry?: string;
+  error?: string;
+}
+
 interface MediaInteractivePlayerProps {
   url: string;
   title: string;
@@ -108,7 +139,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
   // Словарь и Anki поповер
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [selectedToken, setSelectedToken] = useState<MeCabToken | null>(null);
-  const [dictResult, setDictResult] = useState<any | null>(null);
+  const [dictResult, setDictResult] = useState<DictResult | null>(null);
   const [isLoadingDict, setIsLoadingDict] = useState<boolean>(false);
   const [ankiStatus, setAnkiStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [ankiError, setAnkiError] = useState<string | null>(null);
@@ -116,7 +147,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
 
   // Ссылки на плееры
   const audioRef = useRef<HTMLAudioElement>(null);
-  const ytPlayerRef = useRef<any>(null);
+  const ytPlayerRef = useRef<YTPlayer | null>(null);
   const ytTimerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const ytContainerRef = useRef<HTMLDivElement>(null);
 
@@ -156,9 +187,9 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
       } else {
         throw new Error('Для этого видео отсутствуют дорожки японских субтитров.');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.warn('Ошибка загрузки транскрипта:', err);
-      setError(err.message || 'Ошибка загрузки субтитров. Вы можете загрузить свой файл .srt/.vtt');
+      setError((err instanceof Error ? err.message : '') || 'Ошибка загрузки субтитров. Вы можете загрузить свой файл .srt/.vtt');
     } finally {
       setIsLoading(false);
     }
@@ -187,7 +218,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
         if (Array.isArray(receivedSegments) && receivedSegments.length > 0) {
           // Принимаем субтитры от расширения, если текущие сегменты пусты или не имеют пословных таймингов, а расширение прислало с пословными таймингами
           const currentHasWords = segmentsRef.current.some(s => s.words && s.words.length > 0);
-          const receivedHasWords = receivedSegments.some((s: any) => s.words && s.words.length > 0);
+          const receivedHasWords = receivedSegments.some((s: { words?: unknown[] }) => s.words && s.words.length > 0);
 
           if (hasServerSegmentsRef.current && currentHasWords) {
             console.log('[Player] Игнорируем субтитры расширения: сервер предоставил сегменты с пословными таймингами');
@@ -218,8 +249,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
     // Функция инициализации
     const initPlayer = () => {
       if (ytPlayerRef.current || !ytContainerRef.current) return;
-      // @ts-ignore
-      ytPlayerRef.current = new window.YT.Player(ytContainerRef.current, {
+      ytPlayerRef.current = new window.YT!.Player(ytContainerRef.current, {
         videoId: ytVideoId,
         playerVars: {
           origin: typeof window !== 'undefined' ? window.location.origin : '',
@@ -229,9 +259,8 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
           rel: 0,
         },
         events: {
-          onStateChange: (event: any) => {
-            // @ts-ignore
-            if (event.data === window.YT.PlayerState.PLAYING) {
+          onStateChange: (event: YTPlayerEvent) => {
+            if (event.data === window.YT!.PlayerState.PLAYING) {
               // Колбэк выполняется асинхронно (событие плеера), startYtTimer/stopYtTimer к этому моменту уже объявлены — TDZ не возникает.
               // eslint-disable-next-line react-hooks/immutability
               startYtTimer();
@@ -246,7 +275,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
               }
             }
           },
-          onError: (event: any) => {
+          onError: (event: YTPlayerEvent) => {
             const code = event.data;
             if (code === 101 || code === 150) {
               setError('Владелец видео запретил его воспроизведение во встраиваемых проигрывателях.');
@@ -258,27 +287,22 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
       });
     };
 
-    // @ts-ignore
     if (window.YT && window.YT.Player) {
       initPlayer();
     } else {
       // Загружаем скрипт API YouTube
-      // @ts-ignore
       if (!window.onYouTubeIframeAPIReady) {
         const tag = document.createElement('script');
         tag.src = 'https://www.youtube.com/iframe_api';
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
         
-        // @ts-ignore
         window.onYouTubeIframeAPIReady = () => {
           initPlayer();
         };
       } else {
         // Подменяем callback, если скрипт уже грузится
-        // @ts-ignore
         const oldCallback = window.onYouTubeIframeAPIReady;
-        // @ts-ignore
         window.onYouTubeIframeAPIReady = () => {
           if (oldCallback) oldCallback();
           initPlayer();
@@ -545,10 +569,10 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
       incrementDailyNewWordsCount(profileId, 1);
       noteOverLimit();
       setAnkiStatus('success');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Ошибка добавления карточки:', err);
       setAnkiStatus('error');
-      setAnkiError(err.message || 'Ошибка соединения с AnkiConnect');
+      setAnkiError((err instanceof Error ? err.message : '') || 'Ошибка соединения с AnkiConnect');
     }
   };
 

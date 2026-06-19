@@ -1,4 +1,8 @@
+// Условная загрузка Node-модулей только на сервере: logger изоморфен (клиент+сервер),
+// а статический `import fs/path` затащил бы их в клиентский бандл и сломал сборку.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const fs = typeof window === 'undefined' ? require('fs') : null;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const path = typeof window === 'undefined' ? require('path') : null;
 
 type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
@@ -64,7 +68,7 @@ class Logger {
     return `\x1b[90m[${timestamp}]\x1b[0m ${color}[${level}]\x1b[0m ${message}`;
   }
 
-  debug(message: string, details?: any) {
+  debug(message: string, details?: unknown) {
     const msg = details ? `${message} | Details: ${JSON.stringify(details)}` : message;
     console.log(this.formatConsole('DEBUG', msg));
     this.writeToFile('DEBUG', msg);
@@ -75,13 +79,13 @@ class Logger {
     this.writeToFile('INFO', message);
   }
 
-  warn(message: string, details?: any) {
+  warn(message: string, details?: unknown) {
     const msg = details ? `${message} | Details: ${JSON.stringify(details)}` : message;
     console.warn(this.formatConsole('WARN', msg));
     this.writeToFile('WARN', msg);
   }
 
-  error(message: string, error?: any) {
+  error(message: string, error?: unknown) {
     let errorStack = '';
     let detailsStr = '';
 

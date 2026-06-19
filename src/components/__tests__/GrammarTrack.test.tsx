@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { GrammarTrack } from '../GrammarTrack';
 import { JapanificationProvider } from '../../hooks/useJapanification';
+import grammarRules from '../../resources/grammar_rules.json';
 
 // Мокаем next/navigation
 vi.mock('next/navigation', () => ({
@@ -206,8 +207,7 @@ describe('GrammarTrack Component', () => {
   });
 
   it('после авторинга контента плейсхолдеры отсутствуют', () => {
-    const grammarRules = require('../../resources/grammar_rules.json');
-    const placeholders = grammarRules.filter((r: any) => r.isPlaceholder);
+    const placeholders = grammarRules.filter((r: { isPlaceholder?: boolean }) => r.isPlaceholder);
     expect(placeholders.length).toBe(0);
   });
 
