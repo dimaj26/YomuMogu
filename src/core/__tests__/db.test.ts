@@ -1,17 +1,45 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { 
-  db, 
-  isValidIndexedDbKey, 
-  getLocalWords, 
-  getDueWords, 
-  saveLocalWords, 
-  addLocalReview, 
-  getUnsyncedReviews, 
-  saveLocalUiWord, 
-  resetLocalUiWords, 
-  getLocalUiWords 
+import {
+  db,
+  isValidIndexedDbKey,
+  getLocalWords,
+  getDueWords,
+  saveLocalWords,
+  addLocalReview,
+  getUnsyncedReviews,
+  saveLocalUiWord,
+  resetLocalUiWords,
+  getLocalUiWords,
+  stripPassiveWord
 } from '../db';
 import type { LocalWord, LocalReview, UiWord } from '../db';
+
+// §2.6: dual-curve схлопнут в одну active-кривую. Миграция версии 8 снимает индекс passive.due
+// и стирает поле passive из записей.
+describe('Миграция версии 8: схлопывание dual-curve', () => {
+  it('stripPassiveWord удаляет поле passive, сохраняя active', () => {
+    const word: any = {
+      profileId: 'p',
+      id: 1,
+      word: '猫',
+      passive: { stability: 5, difficulty: 5, interval: 5, due: 1, reps: 1, lapses: 0, status: 'review' },
+      active: { stability: 2, difficulty: 5, interval: 2, due: 2, reps: 1, lapses: 0, status: 'learning' }
+    };
+
+    expect(word.passive).toBeDefined();
+    stripPassiveWord(word);
+
+    expect(word.passive).toBeUndefined();
+    expect(word.active).toBeDefined();
+    expect(word.active.stability).toBe(2);
+  });
+
+  it('схема words не содержит индекс passive.due, но содержит active.due', () => {
+    const indexKeyPaths = db.words.schema.indexes.map(i => i.keyPath);
+    expect(indexKeyPaths).not.toContain('passive.due');
+    expect(indexKeyPaths).toContain('active.due');
+  });
+});
 
 describe('IndexedDB Key Validation & Safety Guards', () => {
   beforeEach(async () => {
@@ -87,15 +115,6 @@ describe('IndexedDB Key Validation & Safety Guards', () => {
           translation: 'кошка',
           category: 'TestDeck',
           source: 'anki',
-          passive: {
-            stability: 0,
-            difficulty: 0,
-            interval: 0,
-            due: Date.now(),
-            reps: 0,
-            lapses: 0,
-            status: 'new'
-          },
           active: {
             stability: 0,
             difficulty: 0,
@@ -114,15 +133,6 @@ describe('IndexedDB Key Validation & Safety Guards', () => {
           translation: 'собака',
           category: 'TestDeck',
           source: 'anki',
-          passive: {
-            stability: 0,
-            difficulty: 0,
-            interval: 0,
-            due: Date.now(),
-            reps: 0,
-            lapses: 0,
-            status: 'new'
-          },
           active: {
             stability: 0,
             difficulty: 0,
@@ -141,15 +151,6 @@ describe('IndexedDB Key Validation & Safety Guards', () => {
           translation: 'вода',
           category: 'TestDeck',
           source: 'anki',
-          passive: {
-            stability: 0,
-            difficulty: 0,
-            interval: 0,
-            due: Date.now(),
-            reps: 0,
-            lapses: 0,
-            status: 'new'
-          },
           active: {
             stability: 0,
             difficulty: 0,

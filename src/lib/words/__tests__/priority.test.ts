@@ -21,15 +21,6 @@ function createMockWord(word: string, tags?: string[], id = 0): LocalWord {
       reps: 1,
       lapses: 0
     },
-    passive: {
-      status: 'new',
-      stability: 1.0,
-      difficulty: 5.0,
-      interval: 1,
-      due: Date.now(),
-      reps: 1,
-      lapses: 0
-    }
   };
 }
 

@@ -117,29 +117,13 @@ export function mapLocalToFsrsCard(word: LocalWord, now?: Date): Card {
 }
 
 /**
- * Конвертирует карту ts-fsrs обратно в поля локального слова для сохранения в БД (legacy)
+ * Конвертирует карту ts-fsrs обратно в поля локального слова для сохранения в БД (§2.6: одна active-кривая)
  */
 export function mapFsrsToLocalWord(word: LocalWord, card: Card): LocalWord {
-  // Для обратной совместимости, если у слова плоская структура
-  if (!(word as any).passive) {
-    const subState = mapFsrsToSubState({} as FsrsState, card);
-    return {
-      ...word,
-      stability: subState.stability,
-      difficulty: subState.difficulty,
-      interval: subState.interval,
-      due: subState.due,
-      lastReview: subState.lastReview,
-      status: subState.status,
-      reps: subState.reps,
-      lapses: subState.lapses
-    } as any;
-  }
-  
-  const passive = mapFsrsToSubState(word.passive, card);
+  const active = mapFsrsToSubState(word.active, card);
   return {
     ...word,
-    passive
+    active
   };
 }
 
@@ -200,64 +184,23 @@ export function calculateNextFsrsState(
     now = nowArg;
   }
 
-  if (type && (word.passive || word.active)) {
-    // Вложенная структура LocalWord
-    if (type === 'active') {
-      const state = word.active || createDefaultFsrsState(now.getTime());
-      const { updatedState, newInterval, lastInterval } = calculateNextFsrsStateForState(state, ease, now);
-      
-      // Вычисляем параметры пассивного состояния на основе обновленного активного (коэффициент 2.5x)
-      const passiveInterval = Math.round(newInterval * 2.5);
-      const passiveStability = updatedState.stability * 2.5;
-      const lastReview = updatedState.lastReview || now.getTime();
-      const alignedPassiveDue = passiveInterval >= 1
-        ? alignToDayBoundary(new Date(lastReview + passiveInterval * 24 * 3600 * 1000))
-        : new Date(lastReview);
-        
-      const passiveState: FsrsState = {
-        stability: passiveStability,
-        difficulty: updatedState.difficulty,
-        interval: passiveInterval,
-        due: alignedPassiveDue.getTime(),
-        lastReview,
-        status: updatedState.status,
-        reps: updatedState.reps,
-        lapses: updatedState.lapses
-      };
+  // type-параметр сохранён в сигнатуре для обратной совместимости вызовов,
+  // но dual-curve схлопнут (§2.6): пассивной кривой больше нет, всегда считаем единственную active-кривую.
+  void type;
 
-      return {
-        updatedWord: {
-          ...word,
-          active: updatedState,
-          passive: passiveState
-        },
-        newInterval,
-        lastInterval
-      };
-    } else {
-      // Пассивный обзор: не запускаем FSRS-математику, просто сдвигаем passive.due на величину passive.interval
-      const state = word.passive || createDefaultFsrsState(now.getTime());
-      const passiveInterval = state.interval || 0;
-      const nextDue = now.getTime() + passiveInterval * 24 * 3600 * 1000;
-      const alignedPassiveDue = passiveInterval >= 1
-        ? alignToDayBoundary(new Date(nextDue))
-        : new Date(nextDue);
-        
-      const passiveState: FsrsState = {
-        ...state,
-        due: alignedPassiveDue.getTime(),
-        lastReview: now.getTime()
-      };
+  if (word.active) {
+    // Вложенная структура LocalWord — продвигаем только активное состояние
+    const state = word.active || createDefaultFsrsState(now.getTime());
+    const { updatedState, newInterval, lastInterval } = calculateNextFsrsStateForState(state, ease, now);
 
-      return {
-        updatedWord: {
-          ...word,
-          passive: passiveState
-        },
-        newInterval: passiveInterval,
-        lastInterval: passiveInterval
-      };
-    }
+    return {
+      updatedWord: {
+        ...word,
+        active: updatedState
+      },
+      newInterval,
+      lastInterval
+    };
   } else {
     // Плоская структура (UiWord, legacy-костыли или тесты)
     const state: FsrsState = {
@@ -289,44 +232,6 @@ export function calculateNextFsrsState(
       lastInterval
     };
   }
-}
-
-/**
- * Выравнивает пассивное состояние на основе активного, если пассивное отстает
- * (т.е. интервал меньше или дата due наступит раньше).
- * Все комментарии в коде пишутся на русском языке.
- */
-export function alignPassiveToActiveState(word: LocalWord): LocalWord {
-  if (!word.passive || !word.active) return word;
-
-  const targetPassiveInterval = Math.round(word.active.interval * 2.5);
-  const passiveIsWorse =
-    word.passive.interval < targetPassiveInterval ||
-    word.passive.due < word.active.due;
-
-  if (passiveIsWorse) {
-    const passiveStability = word.active.stability * 2.5;
-    const lastReview = word.active.lastReview || Date.now();
-    const alignedPassiveDue = targetPassiveInterval >= 1
-      ? alignToDayBoundary(new Date(lastReview + targetPassiveInterval * 24 * 3600 * 1000))
-      : new Date(lastReview);
-
-    return {
-      ...word,
-      passive: {
-        stability: passiveStability,
-        difficulty: word.active.difficulty,
-        interval: targetPassiveInterval,
-        due: alignedPassiveDue.getTime(),
-        status: word.active.status,
-        reps: word.active.reps,
-        lapses: word.active.lapses,
-        lastReview
-      }
-    };
-  }
-
-  return word;
 }
 
 /**

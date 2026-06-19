@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import { calculateNextFsrsState, createDefaultFsrsState, alignPassiveToActiveState } from './scheduler';
+import { calculateNextFsrsState, createDefaultFsrsState } from './scheduler';
 import { GRAMMAR_LEITNER_INTERVALS_DAYS } from './intervals';
 import { getProfileItem } from '../lib/profile';
 import { logger } from '../lib/logger';
@@ -93,6 +93,27 @@ class YomuMoguDatabase extends Dexie {
     this.version(7).stores({
       exposure_log: null,
     });
+
+    // version(8): схлопывание dual-curve (§2.6). Снимаем индекс passive.due и стираем поле passive
+    // из всех записей — остаётся единственная active-кривая.
+    this.version(8).stores({
+      words: '[profileId+id], id, word, category, [profileId+category], active.due, *tags, profileId',
+    }).upgrade(async (tx) => {
+      logger.info('Миграция IndexedDB на версию 8: схлопывание dual-curve, удаление пассивной кривой');
+      await tx.table('words').toCollection().modify((word: any) => {
+        stripPassiveWord(word);
+      });
+    });
+  }
+}
+
+/**
+ * Стирает устаревшее поле passive из записи слова (§2.6: dual-curve схлопнут в одну active-кривую).
+ * Используется миграцией версии 8 и как точечный хелпер.
+ */
+export function stripPassiveWord(word: any): void {
+  if (word && 'passive' in word) {
+    delete word.passive;
   }
 }
 
@@ -143,7 +164,7 @@ export async function getDueWords(profileId: string, category: string, now: numb
   return db.words
     .where('profileId')
     .equals(profileId)
-    .filter(w => w.category === category && (w.passive.due <= now || w.active.due <= now))
+    .filter(w => w.category === category && w.active.due <= now)
     .toArray();
 }
 
@@ -339,7 +360,6 @@ export async function syncLocalDatabaseWithAnki(
               translation: card.translation,
               category: card.deckName || deckName,
               source: 'anki',
-              passive: exists?.passive || createDefaultFsrsState(Date.now()),
               active: exists?.active || createDefaultFsrsState(Date.now()),
               contextExamples: exists?.contextExamples || [],
               mnemonic: exists?.mnemonic,
@@ -357,7 +377,7 @@ export async function syncLocalDatabaseWithAnki(
               }
 
               const resultActive = calculateNextFsrsState(localWord, r.ease, 'active', new Date(r.id));
-              localWord = alignPassiveToActiveState(resultActive.updatedWord);
+              localWord = resultActive.updatedWord;
 
               // Записываем отзыв в локальную историю, если его еще нет
               const reviewExists = await db.reviews
@@ -427,7 +447,6 @@ export async function syncLocalDatabaseWithAnki(
                 translation: card.translation,
                 category: card.deckName || deckName,
                 source: 'anki',
-                passive: { ...approximatedState },
                 active: { ...approximatedState },
                 contextExamples: [],
                 tags

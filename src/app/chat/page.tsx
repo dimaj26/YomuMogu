@@ -9,7 +9,7 @@ import { getProfileItem, setProfileItem, removeProfileItem, getActiveProfileId }
 import { db, addLocalReview, syncLocalDatabaseWithAnki, updateGrammarProgress } from '@/core/db';
 import { sanitizeHtml } from '@/lib/sanitize';
 import Link from 'next/link';
-import { calculateNextFsrsState, createDefaultFsrsState, alignPassiveToActiveState, isGoodContextExample } from '@/core/scheduler';
+import { calculateNextFsrsState, createDefaultFsrsState, isGoodContextExample } from '@/core/scheduler';
 import { incrementDailyNewWordsCount } from '@/core/localDeckService';
 import { applyGradualFurigana } from '@/lib/chat/furigana';
 import { getAllowedScope } from '@/lib/grammar/promptScope';
@@ -93,7 +93,6 @@ interface SavedChatState {
   syncCardGrades?: Record<number, number>;
   showExitConfirm?: boolean;
   fluencyTurns?: FluencyTurn[];
-  passiveTurns?: Array<{ ms: number }>;
   closingDone?: boolean;
   immersionLogged?: boolean;
 }
@@ -157,7 +156,6 @@ export default function ChatPage() {
   const [selectedGrammarGrade, setSelectedGrammarGrade] = useState<'forgot' | 'hard' | 'good'>('good');
   const [wordIntervalMap, setWordIntervalMap] = useState<Record<string, number>>({});
   const [fluencyTurns, setFluencyTurns] = useState<FluencyTurn[]>([]);
-  const [passiveTurns, setPassiveTurns] = useState<Array<{ ms: number }>>([]);
   const [closingDone, setClosingDone] = useState<boolean>(false);
   const [immersionLogged, setImmersionLogged] = useState<boolean>(false);
   const [timeLeftMs, setTimeLeftMs] = useState<number>(0);
@@ -229,7 +227,6 @@ export default function ChatPage() {
           setSelectedAddWords(new Set(savedState.selectedAddWords || []));
           setShowExitConfirm(savedState.showExitConfirm || false);
           setFluencyTurns(savedState.fluencyTurns || []);
-          setPassiveTurns(savedState.passiveTurns || []);
           setClosingDone(savedState.closingDone || false);
           setImmersionLogged(savedState.immersionLogged || false);
           setIsStateLoaded(true);
@@ -288,7 +285,6 @@ export default function ChatPage() {
         syncCardGrades,
         showExitConfirm,
         fluencyTurns,
-        passiveTurns,
         closingDone,
         immersionLogged,
       };
@@ -309,7 +305,6 @@ export default function ChatPage() {
     selectedAddWords,
     syncCardGrades,
     showExitConfirm,
-    passiveTurns,
     closingDone,
     immersionLogged
   ]);
@@ -500,15 +495,9 @@ export default function ChatPage() {
 
         // Сохраняем время хода
         const wasAllCollectedAlready = session.targetWords.length > 0 && session.targetWords.every(w => collectedWords.has(w.word));
-        if (turnDurationMs > 0) {
-          if (session.fluencyMode) {
-            if (!wasAllCollectedAlready) {
-              const limitSec = getTurnLimit(session.fluencyRound!, state.chatLevel);
-              setFluencyTurns(prev => [...prev, { ms: turnDurationMs, limitMs: limitSec * 1000 }]);
-            }
-          } else {
-            setPassiveTurns(prev => [...prev, { ms: turnDurationMs }]);
-          }
+        if (turnDurationMs > 0 && session.fluencyMode && !wasAllCollectedAlready) {
+          const limitSec = getTurnLimit(session.fluencyRound!, state.chatLevel);
+          setFluencyTurns(prev => [...prev, { ms: turnDurationMs, limitMs: limitSec * 1000 }]);
         }
 
         // Начисляем очки
@@ -688,7 +677,6 @@ export default function ChatPage() {
     setMascotState('idle');
     setMascotBubble(null);
     setFluencyTurns([]);
-    setPassiveTurns([]);
     setClosingDone(false);
   };
 
@@ -998,37 +986,32 @@ export default function ChatPage() {
             translation: wordObj.translation,
             category: targetDeckName,
             source: 'anki',
-            passive: createDefaultFsrsState(Date.now()),
             active: createDefaultFsrsState(Date.now()),
             contextExamples: []
           };
         }
 
+        // §2.6: только собранное (употреблённое) слово порождает active-ревью;
+        // несобранное (лишь увиденное) — пассив = иммерсия, не измеряется.
         const isCollected = collectedWords.has(wordObj.word);
-        const type: 'passive' | 'active' = isCollected ? 'active' : 'passive';
+        if (!isCollected) continue;
+
         const isNew = localWord.active.status === 'new';
 
-        const { updatedWord, newInterval, lastInterval } = calculateNextFsrsState(localWord, ease, type);
-        let finalWord = updatedWord;
-
-        // Если это успешное активное повторение, подтягиваем и пассивный стейт
-        if (isCollected && ease > 1) {
-          finalWord = alignPassiveToActiveState(finalWord);
-        }
+        const { updatedWord, newInterval, lastInterval } = calculateNextFsrsState(localWord, ease, 'active');
+        const finalWord = updatedWord;
 
         // Сохраняем пример использования в диалоге
-        if (isCollected) {
-          const matchingExample = sessionExamples.find(ex => ex.word === wordObj.word && ex.enabled);
-          if (matchingExample) {
-            const examples = finalWord.contextExamples || [];
-            if (!examples.some((ex: any) => ex.sentence === matchingExample.sentence)) {
-              examples.push({
-                sentence: matchingExample.sentence,
-                translation: matchingExample.translation,
-                timestamp: Date.now()
-              });
-              finalWord.contextExamples = examples;
-            }
+        const matchingExample = sessionExamples.find(ex => ex.word === wordObj.word && ex.enabled);
+        if (matchingExample) {
+          const examples = finalWord.contextExamples || [];
+          if (!examples.some((ex: any) => ex.sentence === matchingExample.sentence)) {
+            examples.push({
+              sentence: matchingExample.sentence,
+              translation: matchingExample.translation,
+              timestamp: Date.now()
+            });
+            finalWord.contextExamples = examples;
           }
         }
 
@@ -1047,7 +1030,7 @@ export default function ChatPage() {
           duration: 5000, // Разумная длительность для чат-практики (5 сек)
           timestamp: Date.now(),
           synced: 0,
-          reviewType: type
+          reviewType: 'active'
         });
       }
 
@@ -1286,37 +1269,31 @@ export default function ChatPage() {
                   translation: wordObj.translation,
                   category: targetDeckName,
                   source: 'anki',
-                  passive: createDefaultFsrsState(Date.now()),
                   active: createDefaultFsrsState(Date.now()),
                   contextExamples: []
                 };
               }
               
+              // §2.6: только собранное слово порождает active-ревью; несобранное не измеряется.
               const isCollected = collectedWords.has(wordObj.word);
-              const type: 'passive' | 'active' = isCollected ? 'active' : 'passive';
+              if (!isCollected) continue;
+
               const isNew = localWord.active.status === 'new';
 
-              const { updatedWord, newInterval, lastInterval } = calculateNextFsrsState(localWord, ease, type);
-              let finalWord = updatedWord;
-
-              // Если это успешное активное повторение, подтягиваем и пассивный стейт
-              if (isCollected && ease > 1) {
-                finalWord = alignPassiveToActiveState(finalWord);
-              }
+              const { updatedWord, newInterval, lastInterval } = calculateNextFsrsState(localWord, ease, 'active');
+              const finalWord = updatedWord;
 
               // Сохраняем пример использования в диалоге
-              if (isCollected) {
-                const matchingExample = sessionExamples.find(ex => ex.word === wordObj.word && ex.enabled);
-                if (matchingExample) {
-                  const examples = finalWord.contextExamples || [];
-                  if (!examples.some((ex: any) => ex.sentence === matchingExample.sentence)) {
-                    examples.push({
-                      sentence: matchingExample.sentence,
-                      translation: matchingExample.translation,
-                      timestamp: Date.now()
-                    });
-                    finalWord.contextExamples = examples;
-                  }
+              const matchingExample = sessionExamples.find(ex => ex.word === wordObj.word && ex.enabled);
+              if (matchingExample) {
+                const examples = finalWord.contextExamples || [];
+                if (!examples.some((ex: any) => ex.sentence === matchingExample.sentence)) {
+                  examples.push({
+                    sentence: matchingExample.sentence,
+                    translation: matchingExample.translation,
+                    timestamp: Date.now()
+                  });
+                  finalWord.contextExamples = examples;
                 }
               }
 
@@ -1325,7 +1302,7 @@ export default function ChatPage() {
               if (isNew) {
                 incrementDailyNewWordsCount(profileId, 1);
               }
-              
+
               await addLocalReview({
                 profileId,
                 cardId: cid,
@@ -1335,7 +1312,7 @@ export default function ChatPage() {
                 duration: 5000, // Разумная длительность для чат-практики (5 сек)
                 timestamp: Date.now(),
                 synced: 0,
-                reviewType: type
+                reviewType: 'active'
               });
             }
           }
@@ -1627,33 +1604,6 @@ export default function ChatPage() {
                 </div>
               )}
 
-              {/* STATS FOR PASSIVE REPLY TIMING */}
-              {!session.fluencyMode && passiveTurns && passiveTurns.length > 0 && (
-                <div
-                  className={styles.summarySection}
-                  style={{
-                    border: '2.5px solid var(--color-blue)',
-                    backgroundColor: 'rgba(59, 130, 246, 0.04)',
-                    padding: '16px',
-                    borderRadius: '16px',
-                    marginBottom: '24px'
-                  }}
-                >
-                  <h3 className={styles.sectionTitle} style={{ color: 'var(--color-blue)', margin: '0 0 8px 0' }}>
-                    ⏱️ Статистика времени
-                  </h3>
-                  {(() => {
-                    const totalMs = passiveTurns.reduce((acc, t) => acc + t.ms, 0);
-                    const avgSec = (totalMs / (passiveTurns.length * 1000)).toFixed(1);
-                    return (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontWeight: 600 }}>
-                        <div>Среднее время реплики: {avgSec} сек</div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
-
               {/* ADVISOR CARD — совет по уровню сложности */}
               {advisorAdvice && !advisorDismissed && competencyProfile && advisorAdvice.suggestion !== 'stay' && (
                 <div
@@ -1785,7 +1735,7 @@ export default function ChatPage() {
                                     id={`sync-card-${w.cardId}`}
                                   />
                                 ) : (
-                                  <span className={styles.passiveCheck} title={t('Интервал повторения ещё не истёк', '復習の時期ではありません')}>🔒</span>
+                                  <span className={styles.lockedCheck} title={t('Интервал повторения ещё не истёк', '復習の時期ではありません')}>🔒</span>
                                 )}
                                 <label htmlFor={w.cardId ? `sync-card-${w.cardId}` : undefined} className={styles.wordInfoLabel}>
                                   <span className={styles.jpWord}>{w.word}</span>

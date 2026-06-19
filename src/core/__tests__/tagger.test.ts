@@ -15,7 +15,6 @@ describe('Tagger & Routing helpers', () => {
         translation: 'кошка',
         category: 'Japanese',
         source: 'starter',
-        passive: { stability: 0, difficulty: 0, interval: 0, due: 0, reps: 0, lapses: 0, status: 'new' },
         active: { stability: 0, difficulty: 0, interval: 0, due: 0, reps: 0, lapses: 0, status: 'new' }
       };
       expect(shouldRouteToChat(word)).toBe(false);
@@ -30,7 +29,6 @@ describe('Tagger & Routing helpers', () => {
         translation: 'кошка',
         category: 'Japanese',
         source: 'starter',
-        passive: { stability: 10, difficulty: 5, interval: 10, due: 0, reps: 1, lapses: 0, status: 'review' },
         active: { stability: 2.5, difficulty: 5, interval: 2, due: 0, reps: 1, lapses: 0, status: 'review' }
       };
       expect(shouldRouteToChat(word)).toBe(true);
@@ -45,7 +43,6 @@ describe('Tagger & Routing helpers', () => {
         translation: 'кошка',
         category: 'Japanese',
         source: 'starter',
-        passive: { stability: 10, difficulty: 5, interval: 10, due: 0, reps: 1, lapses: 0, status: 'review' },
         active: { stability: 5.0, difficulty: 5, interval: 5, due: 0, reps: 3, lapses: 2, status: 'review' }
       };
       expect(shouldRouteToChat(word)).toBe(true);
@@ -60,7 +57,6 @@ describe('Tagger & Routing helpers', () => {
         translation: 'кошка',
         category: 'Japanese',
         source: 'starter',
-        passive: { stability: 10, difficulty: 5, interval: 10, due: 0, reps: 1, lapses: 0, status: 'review' },
         active: { stability: 4.5, difficulty: 5, interval: 4, due: 0, reps: 2, lapses: 1, status: 'review' }
       };
       expect(shouldRouteToChat(word)).toBe(false);

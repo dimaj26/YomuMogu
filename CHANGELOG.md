@@ -2,6 +2,19 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.63.0] - 2026-06-19
+
+### Changed
+- **Dual-curve FSRS collapsed to a single `active` curve** (roadmap §2.6, authoritative finalization). Code proved the passive curve carried no independent information (it was always `active × 2.5`, and a "passive review" was a dumb `due` shift without memory math). Per §2.6, passive learning is immersion (content comprehensibility + decaying furigana, both already computed off `active`), not a measured `due`-scheduled subsystem. Removed: the `type === 'passive'` branch and `passiveState` generation in `core/scheduler.ts`, the `alignPassiveToActiveState` function and all its call sites (`db.ts`, `chat`, `quiz`), the `passive` field from `LocalWord` ([PL-3]), and the `passive.due` index. "Known" for the media comprehensibility gate ([useMediaRecommendation]) is now computed from `active` only. This drops the design-scale state count from ~30k to ~15k (one curve per word) and simplifies the scheduler, Anki replay, and future budget/anti-avalanche work.
+- **Chat no longer records passive reviews**: a word that was merely *seen* in a sensei reply produces no review; only *collected* (used) words record an `active` review. The reply-timing telemetry (`passiveTurns` + the "Среднее время реплики" summary block) was removed (passive = immersion, not measured). The results-screen lock indicator (interval-not-yet-due) is retained; its CSS class was renamed `passiveCheck → lockedCheck` to drop the misleading "passive" name.
+- **IndexedDB schema → version 8**: drops the `passive.due` index and strips the legacy `passive` field from existing word records during the Dexie upgrade ([PL-3.4]).
+
+### Removed
+- `LocalWord.passive` field; `alignPassiveToActiveState`; `passiveTurns` chat telemetry; the dead "skip passive review" branch in `/api/anki/sync-db`.
+
+### Notes
+- Behavior-preserving for the active scheduling path; full suite green at **522 tests / 77 files**, `tsc --noEmit` clean. New reproducers: `core/__tests__/db.test.ts` (v8 migration: `stripPassiveWord` + absence of `passive.due` index) and `core/__tests__/scheduler.test.ts` (single active curve, no `passive` field emitted).
+
 ## [1.62.12] - 2026-06-18
 
 ### Added

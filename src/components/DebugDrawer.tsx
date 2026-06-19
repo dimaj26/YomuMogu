@@ -89,11 +89,10 @@ export function DebugDrawer() {
         .equals(activePid)
         .toArray();
       
-      const due = loadedWords.filter(w => 
-        w.active && w.passive &&
-        w.active.status !== 'new' && 
-        w.passive.status !== 'new' && 
-        (w.active.due <= nowMs || w.passive.due <= nowMs)
+      const due = loadedWords.filter(w =>
+        w.active &&
+        w.active.status !== 'new' &&
+        w.active.due <= nowMs
       );
       setDueWords(due);
       setAllWords(loadedWords);
@@ -353,29 +352,7 @@ export function DebugDrawer() {
 
                   <div className={styles.curvesContainer}>
                     <div className={styles.curveBlock}>
-                      <h5>Passive FSRS (Чтение)</h5>
-                      <div className={styles.statsGrid}>
-                        <span className={styles.statsLabel}>Stability:</span>
-                        <span className={styles.statsVal}>{selectedWord.passive.stability.toFixed(2)}</span>
-                        
-                        <span className={styles.statsLabel}>Difficulty:</span>
-                        <span className={styles.statsVal}>{selectedWord.passive.difficulty.toFixed(2)}</span>
-                        
-                        <span className={styles.statsLabel}>Interval:</span>
-                        <span className={styles.statsVal}>{selectedWord.passive.interval} дн.</span>
-                        
-                        <span className={styles.statsLabel}>Reps/Lapses:</span>
-                        <span className={styles.statsVal}>{selectedWord.passive.reps} / {selectedWord.passive.lapses}</span>
-
-                        <span className={styles.statsLabel}>Due:</span>
-                        <span className={styles.statsVal} style={{ fontSize: '10px' }}>
-                          {new Date(selectedWord.passive.due).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className={styles.curveBlock}>
-                      <h5>Active FSRS (Письмо)</h5>
+                      <h5>FSRS (§2.6: единственная кривая)</h5>
                       <div className={styles.statsGrid}>
                         <span className={styles.statsLabel}>Stability:</span>
                         <span className={styles.statsVal}>{selectedWord.active.stability.toFixed(2)}</span>

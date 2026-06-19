@@ -266,15 +266,6 @@ describe('PracticePage Component', () => {
       translation: 'кошка',
       category: '__local_starter__',
       source: 'starter',
-      passive: {
-        status: 'mature',
-        stability: 200,
-        difficulty: 5.0,
-        interval: 200,
-        due: now - 10000, // due
-        reps: 1,
-        lapses: 0,
-      },
       active: {
         status: 'mature',
         stability: 200,
@@ -296,15 +287,6 @@ describe('PracticePage Component', () => {
       translation: 'собака',
       category: '__local_starter__',
       source: 'starter',
-      passive: {
-        status: 'mature',
-        stability: 200,
-        difficulty: 5.0,
-        interval: 200,
-        due: now + 500000, // not due
-        reps: 1,
-        lapses: 0,
-      },
       active: {
         status: 'mature',
         stability: 200,
@@ -341,7 +323,6 @@ describe('PracticePage Component', () => {
       translation: 'есть',
       category: '__local_starter__',
       source: 'starter',
-      passive: { status: 'learning', stability: 5, difficulty: 5, interval: 5, due: now - 10000, reps: 2, lapses: 0 },
       active: { status: 'learning', stability: 5, difficulty: 5, interval: 5, due: now - 10000, reps: 2, lapses: 0 },
       contextExamples: []
     });
@@ -353,7 +334,6 @@ describe('PracticePage Component', () => {
       translation: 'пить',
       category: '__local_starter__',
       source: 'starter',
-      passive: { status: 'review', stability: 10, difficulty: 5, interval: 10, due: now - 5000, reps: 3, lapses: 0 },
       active: { status: 'review', stability: 10, difficulty: 5, interval: 10, due: now - 5000, reps: 3, lapses: 0 },
       contextExamples: []
     });
@@ -367,7 +347,6 @@ describe('PracticePage Component', () => {
         translation: `новое${i}`,
         category: '__local_starter__',
         source: 'starter',
-        passive: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
         active: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
         contextExamples: []
       });
@@ -396,7 +375,6 @@ describe('PracticePage Component', () => {
         translation: `Перевод${i}`,
         category: '__local_starter__',
         source: 'starter',
-        passive: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
         active: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
         contextExamples: []
       });
@@ -437,7 +415,6 @@ describe('PracticePage Component', () => {
         translation: `транс${i}`,
         category: '__local_starter__',
         source: 'starter',
-        passive: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
         active: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
         contextExamples: []
       });
@@ -508,7 +485,6 @@ describe('PracticePage Component', () => {
         translation: `t${i}`,
         category: '__local_starter__',
         source: 'starter',
-        passive: { status: 'learning', stability: 1, difficulty: 1, interval: 1, due: now, reps: 1, lapses: 0 },
         active: { status: 'learning', stability: 1, difficulty: 1, interval: 1, due: now, reps: 1, lapses: 0 },
         contextExamples: []
       });
@@ -522,7 +498,6 @@ describe('PracticePage Component', () => {
       translation: 'тест',
       category: '__local_starter__',
       source: 'starter',
-      passive: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
       active: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
       contextExamples: []
     });
@@ -595,7 +570,6 @@ describe('PracticePage Component', () => {
       translation: 'слово',
       category: '__local_starter__',
       source: 'starter',
-      passive: { status: 'learning', stability: 2, difficulty: 5, interval: 2, due: now, reps: 1, lapses: 0 },
       active: { status: 'learning', stability: 2, difficulty: 5, interval: 2, due: now, reps: 1, lapses: 0 },
       contextExamples: []
     });
@@ -710,7 +684,6 @@ describe('PracticePage Component', () => {
         translation: 'кошка',
         category: '__local_starter__',
         source: 'starter',
-        passive: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: Date.now(), reps: 0, lapses: 0 },
         active: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: Date.now(), reps: 0, lapses: 0 },
         contextExamples: []
       });
@@ -854,7 +827,6 @@ describe('PracticePage Component', () => {
       await db.words.put({
         profileId: 'default', id: 901, word: '本', reading: 'ほん', translation: 'книга',
         category: '__local_starter__', source: 'starter',
-        passive: { stability: 5, difficulty: 5, interval: 5, due: Date.now(), reps: 1, lapses: 0, status: 'review' },
         active: { stability: 5, difficulty: 5, interval: 5, due: Date.now(), reps: 1, lapses: 0, status: 'review' },
         contextExamples: []
       });
@@ -886,7 +858,6 @@ describe('PracticePage Component', () => {
       await db.words.put({
         profileId: 'default', id: 902, word: '本', reading: 'ほん', translation: 'книга',
         category: '__local_starter__', source: 'starter',
-        passive: { stability: 5, difficulty: 5, interval: 5, due: Date.now(), reps: 1, lapses: 0, status: 'review' },
         active: { stability: 5, difficulty: 5, interval: 5, due: Date.now(), reps: 1, lapses: 0, status: 'review' },
         contextExamples: []
       });
@@ -912,7 +883,6 @@ describe('PracticePage Component', () => {
       await db.words.put({
         profileId: 'default', id: 903, word: '水', reading: 'みず', translation: 'вода',
         category: '__local_starter__', source: 'starter',
-        passive: { stability: 0, difficulty: 5, interval: 0, due: Date.now(), reps: 0, lapses: 0, status: 'new' },
         active: { stability: 0, difficulty: 5, interval: 0, due: Date.now(), reps: 0, lapses: 0, status: 'new' },
         contextExamples: []
       });

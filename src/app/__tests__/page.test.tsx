@@ -21,7 +21,6 @@ const localWord = (id: number, status: 'new' | 'learning' | 'review' | 'mature',
   translation: 'перевод',
   category: LOCAL_DECK_NAME,
   source: 'starter' as const,
-  passive: { stability: 1, difficulty: 5, interval: 1, due: Date.now() + dueOffsetMs, reps: status === 'new' ? 0 : 1, lapses: 0, status },
   active: { stability: 1, difficulty: 5, interval: 1, due: Date.now() + dueOffsetMs, reps: status === 'new' ? 0 : 1, lapses: 0, status },
   contextExamples: []
 });
@@ -260,7 +259,6 @@ describe('HomePage Component', () => {
         translation: 'один',
         category: 'Japanese',
         source: 'anki',
-        passive: { stability: 1.0, difficulty: 5.0, interval: 1, due: Date.now(), reps: 1, lapses: 0, status: 'learning' },
         active: { stability: 1.0, difficulty: 5.0, interval: 1, due: Date.now(), reps: 1, lapses: 0, status: 'learning' },
         contextExamples: []
       },
@@ -272,7 +270,6 @@ describe('HomePage Component', () => {
         translation: 'два',
         category: 'Japanese',
         source: 'anki',
-        passive: { stability: 25.0, difficulty: 3.0, interval: 25, due: Date.now() + 1000000, reps: 3, lapses: 0, status: 'mature' },
         active: { stability: 25.0, difficulty: 3.0, interval: 25, due: Date.now() + 1000000, reps: 3, lapses: 0, status: 'mature' },
         contextExamples: []
       }

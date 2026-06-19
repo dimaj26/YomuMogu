@@ -72,15 +72,6 @@ describe('DebugDrawer Component', () => {
       translation: 'тест',
       category: LOCAL_DECK_NAME,
       source: 'starter',
-      passive: {
-        stability: 0,
-        difficulty: 0,
-        interval: 0,
-        due: now - 1000,
-        reps: 0,
-        lapses: 0,
-        status: 'new'
-      },
       active: {
         stability: 0,
         difficulty: 0,

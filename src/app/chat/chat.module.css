@@ -734,7 +734,7 @@
   flex-shrink: 0;
 }
 
-.passiveCheck {
+.lockedCheck {
   font-size: 14px;
   color: var(--text-light);
   user-select: none;

@@ -201,7 +201,7 @@ src/
 | File | Role |
 |---|---|
 | `core/db.ts` | Dexie.js client-side database definitions, schemas, and FSRS transaction helpers |
-| `core/scheduler.ts` | Polymorphic FSRS mathematical calculation engine supporting active/passive states |
+| `core/scheduler.ts` | FSRS mathematical calculation engine over a single `active` curve (§2.6: dual-curve collapsed) |
 | `core/localDeckService.ts` | Offline local starter deck service and local db operations |
 | `core/types.ts` | Central TypeScript interface definitions for db schemas, reviews, and FSRS states |
 | `core/pluginRegistry.ts` | Interfaces for custom learning plugins and active `WordSource` providers |
@@ -496,8 +496,7 @@ interface LocalWord {
   translation: string;
   category: string; // replaces deckName
   source: 'anki' | 'starter' | 'manual';
-  passive: FsrsState;
-  active: FsrsState;
+  active: FsrsState; // §2.6: single FSRS curve (dual-curve collapsed)
   contextExamples?: WordContextExample[];
   mnemonic?: string; // User note / AI etymology
   tags?: string[];
@@ -531,7 +530,7 @@ interface LocalReview {
   duration: number; // answer duration in ms
   timestamp: number; // timestamp of review in ms
   synced: number; // 0 = unsynced, 1 = synced
-  reviewType?: 'passive' | 'active';
+  reviewType?: 'active'; // §2.6: passive reviews removed; always 'active' (field kept for Anki sync compat)
 }
 
 // UiWord (lib/db.ts)
@@ -554,10 +553,11 @@ interface UiWord {
 
 ### [PL-3.4] IndexedDB Schema
 
-For local-first operation and off-session scheduling, YomuMogu maintains client-side storage using Dexie.js (upgraded to Schema Version 6):
+For local-first operation and off-session scheduling, YomuMogu maintains client-side storage using Dexie.js (upgraded to Schema Version 8):
 - **`words` Table** (`[profileId+id]` compound key):
   - Stores the local replication of Anki cards including calculated FSRS variables and situational tags.
-  - Indexes: `id`, `word`, `category`, `passive.due`, `active.due`, `*tags`, `profileId`.
+  - Indexes: `id`, `word`, `category`, `active.due`, `*tags`, `profileId`.
+  - Schema v8 (§2.6: dual-curve collapse) removed the `passive.due` index and strips the legacy `passive` field from existing records during upgrade.
 - **`reviews` Table** (`id` auto-increment key):
   - Stores local review logs generated during dialogue practice.
   - Indexes: `[profileId+cardId]`, `cardId`, `timestamp`, `synced`, `profileId`.
@@ -758,8 +758,8 @@ To ensure state parity and permit offline study without losing scheduling progre
 4. **Day Boundary Alignment**: The scheduler's daily boundary alignment function (`alignToDayBoundary`) sets the review date timestamp to `04:00 AM` local time instead of midnight, matching the default new day boundary in Anki Desktop.
 5. **ReviewType Determination**: When inserting reviews into Anki, the sync engine queries `getCardsInfo` for each synced card to determine the correct `reviewType` (0=Learn, 1=Review, 2=Relearn) based on the card's actual Anki state (interval/queue), rather than inferring from `lastInterval`. This prevents falsely tagging mature card reviews as "Learn" steps, which would corrupt FSRS replay stability calculations.
 6. **LastInterval Correction**: If a local review has `lastInterval=0` but the card in Anki has `interval > 0`, the sync engine corrects `lastInterval` to the Anki card's actual interval. This prevents FSRS from treating an established card's review as a first-time learning step.
-7. **Dual-State FSRS**: Vocabulary entities maintain two distinct scheduling trajectories (`passive` and `active`). Passive scheduling handles recognition/reading, while active scheduling handles speech/writing production.
-8. **Anki Integration for Dual-States**: Anki sync processes use the active FSRS state as the primary scheduling data synced with Anki. Remote reviews are replayed to align both passive and active states, and imported translations have HTML cleanings applied.
+7. **Single-Curve FSRS** (§2.6: dual-curve collapsed): Vocabulary entities maintain a single `active` scheduling trajectory. The former passive curve was removed — passive learning is treated as immersion (content comprehensibility + decaying furigana, both computed off `active`), not a measured `due`-scheduled subsystem. Chat only records an `active` review for words the learner actually used (collected); merely-seen words produce no review.
+8. **Anki Integration**: Anki sync processes use the `active` FSRS state as the scheduling data synced with Anki. Remote reviews are replayed onto the single `active` curve, and imported translations have HTML cleanings applied.
 9. **Contextual Sentence Examples**: Sentences correctly produced by the user in dialogue are preserved as contextual examples in IndexedDB under the associated word entity's `contextExamples` field.
 10. **Quiz Manual FSRS Override & Typo Forgiveness**: To decouple scheduling transactions from strict input checks, the Quiz feedback view renders an interactive override bar displaying calculated intervals for rating buttons (Again, Hard, Good, Easy) in real-time. If an answer fails correctness check, the "Простил опечатку" button allows the user to manually flip validation state to correct, updating the default grade to Good, and revealing the FSRS rating override controls for manual assessment.
 11. **nJMdict Import Translation Spacing & Tag Separation**: To prevent text clumping when parsing Anki cards containing multiple block elements, `stripHtml` converts closing tags like `</span>`, `</div>`, `<br>` to a semicolon/space (`; `) before stripping tags. Additionally, `cleanTranslationJunk` runs a `fixConcatenatedTranslation` regex helper inserting spaces after closing parentheses/brackets if followed by a letter to correct run-on translations.
@@ -832,7 +832,7 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 
 ### [PL-9.4] Current Test Count
 
-521 unit/integration tests across 77 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+522 unit/integration tests across 77 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
 
 ---
 

@@ -20,15 +20,6 @@ function createMockWord(word: string, status: 'new' | 'learning' | 'review' | 'm
       reps: 1,
       lapses: 0
     },
-    passive: {
-      status,
-      stability: status === 'mature' ? 30.0 : 1.0,
-      difficulty: 5.0,
-      interval: status === 'mature' ? 30 : 1,
-      due: Date.now(),
-      reps: 1,
-      lapses: 0
-    }
   };
 }
 

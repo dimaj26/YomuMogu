@@ -39,12 +39,11 @@ export function useMediaRecommendation() {
       for (const w of localWords) {
         const wordStr = w.word;
         
-        // Активное знание: зрелая карта или на долгосрочном обзоре (интервал >= 7 дней)
+        // §2.6: «known» считается только от единственной active-кривой — зрелая карта
+        // или долгосрочный обзор (интервал >= 7 дней)
         const isActiveKnown = w.active && (w.active.status === 'mature' || (w.active.status === 'review' && w.active.interval >= 7));
-        // Пассивное знание: извлечение в памяти свежее (due дата в будущем)
-        const isPassiveKnown = w.passive && w.passive.due > now;
 
-        if (isActiveKnown || isPassiveKnown) {
+        if (isActiveKnown) {
           knownWordsSet.add(wordStr);
         }
 

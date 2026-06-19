@@ -37,8 +37,7 @@ export interface LocalWord {
   translation: string;
   category: string; // Заменяет deckName
   source: 'anki' | 'starter' | 'manual';
-  passive: FsrsState;
-  active: FsrsState;
+  active: FsrsState; // §2.6: единственная FSRS-кривая (dual-curve схлопнут)
   contextExamples?: WordContextExample[];
   mnemonic?: string; // Пользовательская мнемоника / ИИ-этимология
   tags?: string[]; // Ситуационные теги разметки

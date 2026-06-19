@@ -138,16 +138,6 @@ export async function importStarterDeck(profileId: string, knownWordIds: Set<num
       translation: item.translation,
       category: LOCAL_DECK_NAME,
       source: 'starter',
-      passive: isKnown ? {
-        stability: MATURE_INTERVAL_DAYS,
-        difficulty: 5.0,
-        interval: MATURE_INTERVAL_DAYS,
-        due: matureDue,
-        reps: 1,
-        lapses: 0,
-        status: 'mature',
-        lastReview: now
-      } : createDefaultFsrsState(now),
       active: isKnown ? {
         stability: MATURE_INTERVAL_DAYS,
         difficulty: 5.0,
@@ -229,23 +219,21 @@ export async function getDailyActivePool(profileId: string, category: string): P
   const now = Date.now();
 
   // Разделяем слова по категориям на основе пассивного/активного состояния
-  const dueWords = allWords.filter(w => 
-    (w.passive.status !== 'new' || w.active.status !== 'new') && 
-    (w.passive.due <= now || w.active.due <= now)
+  const dueWords = allWords.filter(w =>
+    w.active.status !== 'new' &&
+    w.active.due <= now
   );
-  
-  const newWords = allWords.filter(w => 
-    w.passive.status === 'new' && 
+
+  const newWords = allWords.filter(w =>
     w.active.status === 'new'
   ).sort((a, b) => a.id - b.id);
-  
+
   const matureFallbackWords = allWords
-    .filter(w => 
-      (w.passive.status === 'mature' || w.active.status === 'mature') && 
-      w.passive.due > now && 
+    .filter(w =>
+      w.active.status === 'mature' &&
       w.active.due > now
     )
-    .sort((a, b) => Math.min(a.passive.interval, a.active.interval) - Math.min(b.passive.interval, b.active.interval));
+    .sort((a, b) => a.active.interval - b.active.interval);
 
   const pool: LocalWord[] = [...dueWords];
 
@@ -346,7 +334,6 @@ export async function addWord(
     translation,
     category: deckName,
     source: 'manual',
-    passive: createDefaultFsrsState(Date.now()),
     active: createDefaultFsrsState(Date.now()),
     contextExamples: [],
     tags
@@ -545,12 +532,12 @@ export async function getPriorityWordsCount(profileId: string, category: string)
   // Due-слова: не 'new' и просрочены
   const dueCount = allWords.filter(w =>
     w.active.status !== 'new' &&
-    (w.passive.due <= now || w.active.due <= now)
+    w.active.due <= now
   ).length;
 
   // Новые слова в рамках дневного лимита
   const newWords = allWords.filter(w =>
-    w.passive.status === 'new' && w.active.status === 'new'
+    w.active.status === 'new'
   );
   const todayNewCount = getDailyNewWordsCount(profileId);
   const limit = getDailyNewWordsLimit(profileId);

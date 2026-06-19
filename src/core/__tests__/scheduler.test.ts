@@ -5,7 +5,6 @@ import {
   mapFsrsToLocalWord, 
   calculateNextFsrsState,
   createDefaultFsrsState,
-  alignPassiveToActiveState,
   isGoodContextExample,
   canEnterChat
 } from '../scheduler';
@@ -260,7 +259,8 @@ describe('FSRS Scheduling logic', () => {
     }
   });
 
-  it('should calculate active FSRS and derive passive state using 2.5x coefficient, and push passive due date on passive review', () => {
+  // §2.6: dual-curve схлопнут — слово ведёт ЕДИНСТВЕННУЮ active-кривую.
+  it('обновляет только active-кривую и не создаёт поле passive', () => {
     const word: LocalWord = {
       profileId: 'test-user',
       id: 99999,
@@ -269,103 +269,37 @@ describe('FSRS Scheduling logic', () => {
       translation: 'кошка',
       category: 'Japanese',
       source: 'manual',
-      passive: createDefaultFsrsState(new Date('2026-05-01T12:00:00').getTime()),
       active: createDefaultFsrsState(new Date('2026-05-01T12:00:00').getTime())
     };
 
     const date = new Date('2026-05-01T12:00:00');
-    
-    // 1. Делаем пассивное повторение (просто сдвигается due на величину passive.interval)
-    const passiveResult = calculateNextFsrsState(word, 3, 'passive', date);
-    expect(passiveResult.updatedWord.passive.status).toBe('new');
-    expect(passiveResult.updatedWord.passive.reps).toBe(0);
-    expect(passiveResult.updatedWord.passive.due).toBe(date.getTime());
-    
-    // Активное состояние должно остаться нетронутым
-    expect(passiveResult.updatedWord.active.status).toBe('new');
-    expect(passiveResult.updatedWord.active.reps).toBe(0);
+    const result = calculateNextFsrsState(word, 3, 'active', date);
 
-    // 2. Делаем активное повторение
-    const activeResult = calculateNextFsrsState(word, 3, 'active', date);
-    expect(activeResult.updatedWord.active.status).toBe('review');
-    expect(activeResult.updatedWord.active.reps).toBe(1);
-    
-    // Пассивное состояние должно обновиться на основе активного (с 2.5x коэффициентом)
-    expect(activeResult.updatedWord.passive.status).toBe('review');
-    expect(activeResult.updatedWord.passive.reps).toBe(1);
-    expect(activeResult.updatedWord.passive.interval).toBe(Math.round(activeResult.newInterval * 2.5));
-    expect(activeResult.updatedWord.passive.stability).toBe(activeResult.updatedWord.active.stability * 2.5);
+    // active продвинулась
+    expect(result.updatedWord.active.status).toBe('review');
+    expect(result.updatedWord.active.reps).toBe(1);
+
+    // пассивной кривой больше нет — поле passive не должно появляться
+    expect(result.updatedWord.passive).toBeUndefined();
   });
 
-  describe('alignPassiveToActiveState', () => {
-    it('should copy active state to passive state if passive is worse (shorter interval than active * 2.5)', () => {
-      const word: LocalWord = {
-        profileId: 'test-user',
-        id: 111,
-        word: '猫',
-        reading: 'ねこ',
-        translation: 'кошка',
-        category: 'Japanese',
-        source: 'manual',
-        passive: {
-          stability: 2,
-          difficulty: 5.0,
-          interval: 2,
-          due: Date.now() + 2 * 24 * 3600 * 1000,
-          reps: 1,
-          lapses: 0,
-          status: 'review'
-        },
-        active: {
-          stability: 10,
-          difficulty: 4.5,
-          interval: 10,
-          due: Date.now() + 10 * 24 * 3600 * 1000,
-          reps: 3,
-          lapses: 0,
-          status: 'review'
-        }
-      };
+  it('игнорирует устаревший тип "passive" и всё равно считает active-кривую', () => {
+    const word: LocalWord = {
+      profileId: 'test-user',
+      id: 99998,
+      word: '水',
+      reading: 'みず',
+      translation: 'вода',
+      category: 'Japanese',
+      source: 'manual',
+      active: createDefaultFsrsState(new Date('2026-05-01T12:00:00').getTime())
+    };
 
-      const aligned = alignPassiveToActiveState(word);
-      expect(aligned.passive.interval).toBe(25); // 10 * 2.5
-      expect(aligned.passive.stability).toBe(25); // 10 * 2.5
-      expect(aligned.passive.difficulty).toBe(4.5);
-    });
+    const date = new Date('2026-05-01T12:00:00');
+    const result = calculateNextFsrsState(word, 3, 'passive', date);
 
-    it('should not copy active state if passive is better (longer interval and further due date)', () => {
-      const word: LocalWord = {
-        profileId: 'test-user',
-        id: 111,
-        word: '猫',
-        reading: 'ねこ',
-        translation: 'кошка',
-        category: 'Japanese',
-        source: 'manual',
-        passive: {
-          stability: 30,
-          difficulty: 4.0,
-          interval: 30,
-          due: Date.now() + 30 * 24 * 3600 * 1000,
-          reps: 5,
-          lapses: 0,
-          status: 'mature'
-        },
-        active: {
-          stability: 10,
-          difficulty: 4.5,
-          interval: 10,
-          due: Date.now() + 10 * 24 * 3600 * 1000,
-          reps: 3,
-          lapses: 0,
-          status: 'review'
-        }
-      };
-
-      const aligned = alignPassiveToActiveState(word);
-      expect(aligned.passive.interval).toBe(30);
-      expect(aligned.passive.stability).toBe(30);
-    });
+    expect(result.updatedWord.active.reps).toBe(1);
+    expect(result.updatedWord.passive).toBeUndefined();
   });
 
   describe('isGoodContextExample', () => {
@@ -400,7 +334,6 @@ describe('FSRS Scheduling logic', () => {
         translation: `t${i}`,
         category: 'test',
         source: 'starter',
-        passive: { ...defaultState },
         active: { ...defaultState, status: 'learning' }
       }));
       expect(canEnterChat(words4)).toBe(false);
@@ -414,7 +347,6 @@ describe('FSRS Scheduling logic', () => {
         translation: 't4',
         category: 'test',
         source: 'starter',
-        passive: { ...defaultState },
         active: { ...defaultState, status: 'review' }
       }];
       expect(canEnterChat(words5)).toBe(true);
@@ -430,7 +362,6 @@ describe('FSRS Scheduling logic', () => {
           translation: 't4',
           category: 'test',
           source: 'starter',
-          passive: { ...defaultState },
           active: { ...defaultState, status: 'mature' } // mature
         },
         {
@@ -441,7 +372,6 @@ describe('FSRS Scheduling logic', () => {
           translation: 't5',
           category: 'test',
           source: 'starter',
-          passive: { ...defaultState },
           active: { ...defaultState, status: 'new' } // new
         }
       ];

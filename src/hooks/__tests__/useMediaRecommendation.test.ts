@@ -60,7 +60,6 @@ describe('useMediaRecommendation hook', () => {
         translation: 'друг',
         category: 'Japanese',
         source: 'manual',
-        passive: { stability: 0, difficulty: 0, interval: 0, due: Date.now() - 1000, reps: 0, lapses: 0, status: 'new' },
         active: { stability: 10, difficulty: 5.0, interval: 10, due: Date.now() + 50000, reps: 3, lapses: 0, status: 'review' } // Активно-известно (interval >= 7)
       },
       {
@@ -71,7 +70,7 @@ describe('useMediaRecommendation hook', () => {
         translation: 'телефон',
         category: 'Japanese',
         source: 'manual',
-        passive: { stability: 20, difficulty: 5.0, interval: 20, due: Date.now() + 1000000, reps: 1, lapses: 0, status: 'review' }, // Пассивно-известно (due в будущем)
+        // §2.6: было «пассивно-известно» (passive.due в будущем) — теперь passive не считается, слово НЕ известно
         active: { stability: 0, difficulty: 0, interval: 0, due: Date.now() - 1000, reps: 0, lapses: 0, status: 'new' }
       }
     ]);
@@ -84,9 +83,9 @@ describe('useMediaRecommendation hook', () => {
 
     const firstRec = result.current.recommendations.find(r => r.id === 'yt_1');
     expect(firstRec).toBeDefined();
-    // В первом видео 20 лемм. 2 слова известны. 2 / 20 = 10%.
-    expect(firstRec?.knownCount).toBe(2);
-    expect(firstRec?.comprehensionRate).toBe(10);
+    // В первом видео 20 лемм. Известно только активно-известное 友達 (passive не считается). 1 / 20 = 5%.
+    expect(firstRec?.knownCount).toBe(1);
+    expect(firstRec?.comprehensionRate).toBe(5);
   });
 
   it('should calculate FSRS due overlap count correctly', async () => {
@@ -99,7 +98,6 @@ describe('useMediaRecommendation hook', () => {
       translation: 'друг',
       category: 'Japanese',
       source: 'manual',
-      passive: { stability: 0, difficulty: 0, interval: 0, due: Date.now() - 1000, reps: 0, lapses: 0, status: 'new' },
       active: { stability: 2, difficulty: 5.0, interval: 2, due: Date.now() - 1000, reps: 3, lapses: 1, status: 'review' } // Due <= now
     });
 

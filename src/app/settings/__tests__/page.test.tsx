@@ -381,15 +381,6 @@ describe('SettingsPage Component', () => {
       translation: 'кошка',
       category: '__local_starter__',
       source: 'starter',
-      passive: {
-        status: 'mature',
-        stability: 200,
-        difficulty: 5.0,
-        interval: 200,
-        due: Date.now() + 100000,
-        reps: 1,
-        lapses: 0,
-      },
       active: {
         status: 'mature',
         stability: 200,

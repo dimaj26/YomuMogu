@@ -72,12 +72,6 @@ export async function POST(request: NextRequest) {
       const relearnCardIds: number[] = [];
 
       for (const rev of localReviews) {
-        // Пропускаем пассивные отзывы (они хранятся только локально)
-        if (rev.reviewType === 'passive') {
-          logger.info(`${logPrefix}[Step: ReviewsSync] Пассивный отзыв с таймстемпом ${rev.timestamp} для карты ${rev.cardId} пропускается для Anki`);
-          continue;
-        }
-
         // Пропускаем отзывы, которые уже есть в Anki
         if (existingTimestamps.has(rev.timestamp)) {
           logger.info(`${logPrefix}[Step: ReviewsSync] Отзыв с таймстемпом ${rev.timestamp} для карты ${rev.cardId} уже есть в Anki, пропускаем`);

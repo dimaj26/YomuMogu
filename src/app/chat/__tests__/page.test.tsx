@@ -655,7 +655,6 @@ describe('Self-Repair and Scaffolding Hint UI Tests', () => {
       translation: 'кошка',
       category: 'Japanese',
       source: 'anki',
-      passive: { status: 'mature', stability: 30, difficulty: 5, interval: 30, due: Date.now() - 1000, reps: 5, lapses: 0 },
       active: { status: 'mature', stability: 30, difficulty: 5, interval: 30, due: Date.now() - 1000, reps: 5, lapses: 0 },
     });
 
@@ -1331,9 +1330,9 @@ describe('Soft Closing and Passive Timing Tests', () => {
     expect(timerBar).toBeNull();
   });
 
-  it('Summary показывает среднее время реплики, в диалоге индикации времени нет', async () => {
+  it('§2.6: телеметрия времени реплики (passiveTurns) удалена — на экране итогов её нет', async () => {
     setupActiveSession();
-    
+
     const savedState = {
       messages: [
         { id: '1', role: 'model' as const, text: 'Привет' },
@@ -1346,10 +1345,6 @@ describe('Soft Closing and Passive Timing Tests', () => {
       analyzedWords: [],
       selectedSyncCards: [],
       selectedAddWords: [],
-      passiveTurns: [
-        { ms: 12000 },
-        { ms: 8000 }
-      ]
     };
     localStorage.setItem(`yomumogu_profile_default_chat_state_test-session-soft-closing`, JSON.stringify(savedState));
 
@@ -1362,8 +1357,8 @@ describe('Soft Closing and Passive Timing Tests', () => {
 
     await screen.findByText('Итоги практики');
 
-    // Проверяем отображение среднего времени (12 + 8) / 2 = 10 сек
-    expect(screen.getByText(/Среднее время реплики:\s*10\.0\s*сек/)).toBeInTheDocument();
+    // Блок «Среднее время реплики» больше не рендерится (пассив = иммерсия, не измеряется)
+    expect(screen.queryByText(/Среднее время реплики/)).toBeNull();
   });
 
   it('immersion в лог пишется один раз за сессию даже при повторном входе на экран итогов (immersionLogged персистится)', async () => {

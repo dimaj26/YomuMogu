@@ -9,7 +9,7 @@ import { getActiveProfileId, getProfileItem, setProfileItem } from '@/lib/profil
 import { recordActivity } from '@/lib/balance/balance';
 import { db, addLocalReview } from '@/core/db';
 import { getDailyNewWordsCount, getDailyNewWordsLimit, incrementDailyNewWordsCount, syncExistingLocalWordsWithStarterDeck } from '@/core/localDeckService';
-import { calculateNextFsrsState, alignPassiveToActiveState, createDefaultFsrsState } from '@/core/scheduler';
+import { calculateNextFsrsState, createDefaultFsrsState } from '@/core/scheduler';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { PhonosemanticHint, PhonosemanticData } from '@/components/PhonosemanticHint';
 import phonosemanticsData from '@/resources/phonosemantics.json';
@@ -56,7 +56,6 @@ interface LocalWord {
   translation: string;
   category: string;
   source: 'anki' | 'starter' | 'manual';
-  passive: any;
   active: any;
   contextExamples?: Array<{ sentence: string; translation?: string; timestamp: number }>;
   mnemonic?: string;
@@ -177,7 +176,6 @@ function QuizComponent() {
       
       const correct = grade > 1;
       if (correct) {
-        finalWord = alignPassiveToActiveState(finalWord) as LocalWord;
         setCorrectCount(prev => prev + 1);
         setXpGained(prev => prev + 1);
         addPoints(1); // +1 XP за правильный ответ в профиль
@@ -317,7 +315,6 @@ function QuizComponent() {
                 translation: wStr,
                 category: 'Unused Target Word',
                 source: 'manual',
-                passive: createDefaultFsrsState(Date.now()),
                 active: createDefaultFsrsState(Date.now())
               });
             }

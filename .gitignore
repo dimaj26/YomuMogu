@@ -74,3 +74,6 @@ _nogit*
 /venv/
 
 
+
+# RNA-Blueprint scratch plans (local, regenerated per task)
+implementation_plan.md

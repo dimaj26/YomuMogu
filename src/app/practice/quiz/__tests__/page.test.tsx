@@ -75,7 +75,6 @@ describe('QuizPage Component', () => {
       translation: 'кошка',
       category: 'Japanese',
       source: 'anki' as const,
-      passive: { status: 'learning' as const, stability: 2, difficulty: 5, interval: 1, due: Date.now() - 5000, reps: 1, lapses: 0 },
       active: { status: 'learning' as const, stability: 2, difficulty: 5, interval: 1, due: Date.now() - 5000, reps: 1, lapses: 0 },
       contextExamples: [
         { sentence: '私は猫が好きです。', translation: 'Я люблю кошек.', timestamp: Date.now() }
@@ -181,7 +180,6 @@ describe('QuizPage Component', () => {
       translation: 'яблоко',
       category: 'Japanese',
       source: 'anki' as const,
-      passive: { status: 'review' as const, stability: 5, difficulty: 5, interval: 3, due: Date.now() - 5000, reps: 2, lapses: 0 },
       active: { status: 'review' as const, stability: 5, difficulty: 5, interval: 3, due: Date.now() - 5000, reps: 2, lapses: 0 },
     };
     await db.words.put(dueWord);
@@ -225,7 +223,6 @@ describe('QuizPage Component', () => {
       translation: 'кошка',
       category: 'Japanese',
       source: 'anki' as const,
-      passive: { status: 'learning' as const, stability: 2, difficulty: 5, interval: 1, due: Date.now() - 5000, reps: 1, lapses: 0 },
       active: { status: 'learning' as const, stability: 2, difficulty: 5, interval: 1, due: Date.now() - 5000, reps: 1, lapses: 0 },
     };
     await db.words.put(dueWord);
@@ -264,7 +261,6 @@ describe('QuizPage Component', () => {
         translation: `新しい${i}`,
         category: 'Japanese',
         source: 'starter' as const,
-        passive: createDefaultFsrsState(Date.now() - 5000),
         active: createDefaultFsrsState(Date.now() - 5000),
         contextExamples: []
       });
@@ -298,7 +294,6 @@ describe('QuizPage Component', () => {
       translation: 'собака',
       category: 'Japanese',
       source: 'starter' as const,
-      passive: createDefaultFsrsState(Date.now() - 5000),
       active: createDefaultFsrsState(Date.now() - 5000),
       contextExamples: []
     };
@@ -357,7 +352,6 @@ describe('QuizPage Component', () => {
       translation: 'кошка',
       category: 'Japanese',
       source: 'anki' as const,
-      passive: { status: 'review' as const, stability: 3, difficulty: 5, interval: 2, due: Date.now() - 5000, reps: 2, lapses: 0 },
       active: { status: 'review' as const, stability: 3, difficulty: 5, interval: 2, due: Date.now() - 5000, reps: 2, lapses: 0 },
     };
     await db.words.put(dueWord);
@@ -422,7 +416,6 @@ describe('QuizPage Component', () => {
       translation: 'кошка',
       category: 'Japanese',
       source: 'anki' as const,
-      passive: { status: 'learning' as const, stability: 2, difficulty: 5, interval: 1, due: Date.now() - 5000, reps: 1, lapses: 0 },
       active: { status: 'learning' as const, stability: 2, difficulty: 5, interval: 1, due: Date.now() - 5000, reps: 1, lapses: 0 },
     };
     await db.words.put(dueWord);

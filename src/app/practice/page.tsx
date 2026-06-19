@@ -226,12 +226,10 @@ export default function PracticePage() {
 
       // Находим леммы известных пользователю слов
       const localWords = await db.words.where('profileId').equals(profileId).toArray();
-      const now = Date.now();
       const knownWords: string[] = [];
       for (const w of localWords) {
         const isActiveKnown = w.active && (w.active.status === 'mature' || (w.active.status === 'review' && w.active.interval >= 7));
-        const isPassiveKnown = w.passive && w.passive.due > now;
-        if (isActiveKnown || isPassiveKnown) {
+        if (isActiveKnown) {
           knownWords.push(w.word);
         }
       }

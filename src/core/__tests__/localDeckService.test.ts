@@ -88,15 +88,6 @@ describe('LocalDeckService Unit Tests', () => {
       translation: 'вода',
       category: LOCAL_DECK_NAME,
       source: 'starter',
-      passive: {
-        status: 'review',
-        stability: 15,
-        difficulty: 4.5,
-        interval: 15,
-        due: Date.now() + 500000,
-        reps: 4,
-        lapses: 1,
-      },
       active: {
         status: 'review',
         stability: 15,
@@ -143,7 +134,6 @@ describe('LocalDeckService Unit Tests', () => {
         translation: `Перевод${i}`,
         category: LOCAL_DECK_NAME,
         source: 'starter',
-        passive: { ...fsrs },
         active: { ...fsrs },
         contextExamples: []
       });
@@ -168,7 +158,6 @@ describe('LocalDeckService Unit Tests', () => {
         translation: `Перевод${i}`,
         category: LOCAL_DECK_NAME,
         source: 'starter',
-        passive: { ...fsrs },
         active: { ...fsrs },
         contextExamples: []
       });
@@ -240,7 +229,6 @@ describe('LocalDeckService Unit Tests', () => {
         translation: `Перевод${i}`,
         category: LOCAL_DECK_NAME,
         source: 'starter',
-        passive: { ...fsrs },
         active: { ...fsrs },
         contextExamples: []
       });
@@ -265,7 +253,6 @@ describe('LocalDeckService Unit Tests', () => {
         translation: `Перевод${i}`,
         category: LOCAL_DECK_NAME,
         source: 'starter',
-        passive: { ...fsrs },
         active: { ...fsrs },
         contextExamples: []
       });
@@ -324,7 +311,6 @@ describe('LocalDeckService Unit Tests', () => {
         translation: `Перевод${i}`,
         category: LOCAL_DECK_NAME,
         source: 'starter',
-        passive: { ...fsrs },
         active: { ...fsrs },
         contextExamples: []
       });
@@ -347,7 +333,6 @@ describe('LocalDeckService Unit Tests', () => {
         translation: `Перевод${i}`,
         category: LOCAL_DECK_NAME,
         source: 'starter',
-        passive: { ...fsrs },
         active: { ...fsrs },
         contextExamples: []
       });
@@ -391,7 +376,6 @@ describe('LocalDeckService Unit Tests', () => {
         translation: `Перевод${i}`,
         category: LOCAL_DECK_NAME,
         source: 'starter',
-        passive: { ...fsrs },
         active: { ...fsrs },
         contextExamples: []
       });
@@ -432,7 +416,6 @@ describe('LocalDeckService Unit Tests', () => {
         translation: `Перевод${i}`,
         category: LOCAL_DECK_NAME,
         source: 'starter',
-        passive: { ...fsrs },
         active: { ...fsrs },
         contextExamples: []
       });
@@ -463,7 +446,6 @@ describe('LocalDeckService Unit Tests', () => {
         translation: `Перевод${i}`,
         category: LOCAL_DECK_NAME,
         source: 'starter',
-        passive: { ...fsrs },
         active: { ...fsrs },
         contextExamples: []
       });
@@ -550,7 +532,6 @@ describe('LocalDeckService Unit Tests', () => {
         translation: `Trans${w.id}`,
         category: LOCAL_DECK_NAME,
         source: 'starter' as const,
-        passive: { ...fsrs },
         active: { ...fsrs },
         contextExamples: []
       };
@@ -592,7 +573,6 @@ describe('LocalDeckService Unit Tests', () => {
         translation: `Перевод${i}`,
         category: LOCAL_DECK_NAME,
         source: 'starter',
-        passive: { ...fsrs },
         active: { ...fsrs },
         contextExamples: []
       });
@@ -617,7 +597,6 @@ describe('LocalDeckService Unit Tests', () => {
         translation: `Перевод${i}`,
         category: LOCAL_DECK_NAME,
         source: 'starter',
-        passive: { ...fsrs },
         active: { ...fsrs },
         contextExamples: []
       });
@@ -647,7 +626,6 @@ describe('LocalDeckService Unit Tests', () => {
       translation: 'кошка',
       category: LOCAL_DECK_NAME,
       source: 'starter',
-      passive: { status: 'learning', stability: 5, difficulty: 5, interval: 5, due: now - 10000, reps: 2, lapses: 0 },
       active: { status: 'learning', stability: 5, difficulty: 5, interval: 5, due: now - 10000, reps: 2, lapses: 0 },
       contextExamples: []
     });
@@ -661,7 +639,6 @@ describe('LocalDeckService Unit Tests', () => {
       translation: 'собака',
       category: LOCAL_DECK_NAME,
       source: 'starter',
-      passive: { status: 'learning', stability: 5, difficulty: 5, interval: 5, due: now - 10000, reps: 2, lapses: 2 },
       active: { status: 'learning', stability: 5, difficulty: 5, interval: 5, due: now - 10000, reps: 2, lapses: 2 },
       contextExamples: []
     });
@@ -696,7 +673,6 @@ describe('LocalDeckService Unit Tests', () => {
         translation: `Перевод${i}`,
         category: LOCAL_DECK_NAME,
         source: 'starter',
-        passive: { status: 'learning', stability: 5, difficulty: 5, interval: 5, due: now - 10000, reps: 2, lapses: 0 },
         active: { status: 'learning', stability: 5, difficulty: 5, interval: 5, due: now - 10000, reps: 2, lapses: 0 },
         contextExamples: []
       });
@@ -712,7 +688,6 @@ describe('LocalDeckService Unit Tests', () => {
         translation: `Перевод${i}`,
         category: LOCAL_DECK_NAME,
         source: 'starter',
-        passive: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
         active: { status: 'new', stability: 0, difficulty: 0, interval: 0, due: now, reps: 0, lapses: 0 },
         contextExamples: []
       });
@@ -822,7 +797,6 @@ describe('LocalDeckService Unit Tests', () => {
           translation: 'студент',
           category: LOCAL_DECK_NAME,
           source: 'anki',
-          passive: { ...defaultState },
           active: { ...defaultState },
           contextExamples: [],
           tags: ['custom']
@@ -835,7 +809,6 @@ describe('LocalDeckService Unit Tests', () => {
           translation: 'нет',
           category: LOCAL_DECK_NAME,
           source: 'anki',
-          passive: { ...defaultState },
           active: { ...defaultState },
           contextExamples: [],
           tags: []

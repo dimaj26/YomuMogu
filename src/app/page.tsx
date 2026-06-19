@@ -72,7 +72,7 @@ export default function HomePage() {
       .toArray();
     const now = Date.now();
     const due = words.filter(w =>
-      w.active.status !== 'new' && (w.passive.due <= now || w.active.due <= now)
+      w.active.status !== 'new' && w.active.due <= now
     ).length;
 
     setDeckMode(mode);
