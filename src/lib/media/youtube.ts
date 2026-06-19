@@ -51,10 +51,18 @@ function decodeHtmlEntities(str: string): string {
     .replace(/&nbsp;/g, ' ');
 }
 
+// Дорожка субтитров из ответа InnerTube Player API (поля, используемые при выборе ja-дорожки)
+interface CaptionTrack {
+  languageCode?: string;
+  kind?: string;
+  vssId?: string;
+  baseUrl?: string;
+}
+
 /**
  * Вспомогательная функция для получения списка дорожек субтитров и сессионных кук через InnerTube API
  */
-async function getTracksAndCookies(videoId: string): Promise<{ tracks: any[]; cookieString: string }> {
+async function getTracksAndCookies(videoId: string): Promise<{ tracks: CaptionTrack[]; cookieString: string }> {
   checkRateLimit();
   const url = `https://www.youtube.com/watch?v=${videoId}&hl=ja`;
   const headers = {
@@ -125,7 +133,7 @@ async function getTracksAndCookies(videoId: string): Promise<{ tracks: any[]; co
 /**
  * Скачивает и парсит XML транскрипта по списку дорожек с использованием кук
  */
-async function fetchAndParseTranscriptXml(tracks: any[], videoId: string, cookieString: string): Promise<string> {
+async function fetchAndParseTranscriptXml(tracks: CaptionTrack[], videoId: string, cookieString: string): Promise<string> {
   const jaTrack = tracks.find(t => t.languageCode === 'ja' && t.kind !== 'asr') ||
                   tracks.find(t => t.languageCode === 'ja' || t.languageCode?.startsWith('ja') || t.vssId?.includes('.ja'));
                   
@@ -178,7 +186,7 @@ async function fetchAndParseTranscriptXml(tracks: any[], videoId: string, cookie
 /**
  * Скачивает и парсит транскрипт с использованием кук (пытается JSON3 с пословными таймингами, при неудаче фолбэк на XML)
  */
-async function fetchAndParseTranscriptToSegments(tracks: any[], videoId: string, cookieString: string): Promise<SubtitleSegment[]> {
+async function fetchAndParseTranscriptToSegments(tracks: CaptionTrack[], videoId: string, cookieString: string): Promise<SubtitleSegment[]> {
   const jaTrack = tracks.find(t => t.languageCode === 'ja' && t.kind !== 'asr') ||
                   tracks.find(t => t.languageCode === 'ja' || t.languageCode?.startsWith('ja') || t.vssId?.includes('.ja'));
                   
@@ -218,8 +226,8 @@ async function fetchAndParseTranscriptToSegments(tracks: any[], videoId: string,
       }
     }
     logger.warn(`[YouTube Scraper] Ответ JSON3 пустой или невалидный для видео ${videoId}, переключаемся на XML`);
-  } catch (err: any) {
-    logger.warn(`[YouTube Scraper] Ошибка загрузки JSON3 для видео ${videoId}: ${err?.message || err}. Используем XML.`);
+  } catch (err) {
+    logger.warn(`[YouTube Scraper] Ошибка загрузки JSON3 для видео ${videoId}: ${err instanceof Error ? err.message : String(err)}. Используем XML.`);
   }
 
   // 2. Фолбэк на XML-версию
@@ -299,8 +307,8 @@ export async function hasJapaneseCaptions(videoId: string): Promise<boolean> {
     const result = !!jaTrack;
     setCachedAvailability(videoId, result);
     return result;
-  } catch (e: any) {
-    logger.warn(`[YouTube Captions Check] Ошибка проверки субтитров для ${videoId}: ${e.message || e}`);
+  } catch (e) {
+    logger.warn(`[YouTube Captions Check] Ошибка проверки субтитров для ${videoId}: ${e instanceof Error ? e.message : String(e)}`);
     return false;
   }
 }

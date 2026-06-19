@@ -1,12 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import { logger } from '../logger';
+import { SubtitleSegment } from './parser';
 
 const CACHE_FILE_PATH = path.join(process.cwd(), '_nogit_youtube_cache.json');
 
 interface YoutubeCacheData {
   availability: Record<string, boolean>;
-  transcripts: Record<string, any[]>;
+  transcripts: Record<string, SubtitleSegment[]>;
 }
 
 let cacheInMemory: YoutubeCacheData = {
@@ -24,8 +25,8 @@ function loadCache() {
       cacheInMemory = JSON.parse(content);
       logger.info(`[YouTube Cache] Успешно загружен кэш из ${CACHE_FILE_PATH}`);
     }
-  } catch (err: any) {
-    logger.error(`[YouTube Cache] Ошибка при загрузке кэша: ${err.message}`);
+  } catch (err) {
+    logger.error(`[YouTube Cache] Ошибка при загрузке кэша: ${err instanceof Error ? err.message : String(err)}`);
   }
   isLoaded = true;
 }
@@ -33,8 +34,8 @@ function loadCache() {
 function saveCache() {
   try {
     fs.writeFileSync(CACHE_FILE_PATH, JSON.stringify(cacheInMemory, null, 2), 'utf-8');
-  } catch (err: any) {
-    logger.error(`[YouTube Cache] Ошибка при записи кэша: ${err.message}`);
+  } catch (err) {
+    logger.error(`[YouTube Cache] Ошибка при записи кэша: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 
@@ -51,12 +52,12 @@ export function setCachedAvailability(videoId: string, available: boolean) {
   saveCache();
 }
 
-export function getCachedTranscript(videoId: string): any[] | undefined {
+export function getCachedTranscript(videoId: string): SubtitleSegment[] | undefined {
   loadCache();
   return cacheInMemory.transcripts[videoId];
 }
 
-export function setCachedTranscript(videoId: string, segments: any[]) {
+export function setCachedTranscript(videoId: string, segments: SubtitleSegment[]) {
   loadCache();
   cacheInMemory.transcripts[videoId] = segments;
   cacheInMemory.availability[videoId] = true;

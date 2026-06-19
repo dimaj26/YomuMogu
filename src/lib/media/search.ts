@@ -17,6 +17,9 @@ export interface SearchResult {
 /**
  * Парсит объект JSON (из ytInitialData или InnerTube Search API) для извлечения кандидатов и continuation токена.
  */
+// Навигация по недокументированному JSON ответа YouTube InnerTube: строгая типизация
+// этой вложенной структуры непропорциональна и хрупка (формат может меняться без предупреждения).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseSearchResults(data: any): SearchResult {
   const candidates: Candidate[] = [];
   let continuation: string | null = null;
@@ -26,9 +29,6 @@ export function parseSearchResults(data: any): SearchResult {
   }
 
   try {
-    // 1. Извлекаем список рендереров контента
-    const contents: any[] = [];
-    
     // Путь для ytInitialData или InnerTube API
     const sectionList = data.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer ||
                         data.onResponseReceivedCommands?.[0]?.appendContinuationItemsAction?.continuationItems ||
@@ -76,8 +76,8 @@ export function parseSearchResults(data: any): SearchResult {
     if (!continuation && sectionList?.continuations) {
       continuation = sectionList.continuations[0]?.nextContinuationData?.continuation || null;
     }
-  } catch (error: any) {
-    logger.warn(`[YouTube Search] Ошибка при парсинге результатов поиска: ${error.message}`);
+  } catch (error) {
+    logger.warn(`[YouTube Search] Ошибка при парсинге результатов поиска: ${error instanceof Error ? error.message : String(error)}`);
   }
 
   return { candidates, continuation };
@@ -96,7 +96,11 @@ export async function fetchYoutubeSearch(query: string, continuation?: string): 
     'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
   };
 
-  const body: any = {
+  const body: {
+    context: { client: { clientName: string; clientVersion: string; hl: string; gl: string } };
+    continuation?: string;
+    query?: string;
+  } = {
     context: {
       client: {
         clientName: 'WEB',
@@ -128,8 +132,8 @@ export async function fetchYoutubeSearch(query: string, continuation?: string): 
 
     const json = await response.json();
     return parseSearchResults(json);
-  } catch (error: any) {
-    logger.error(`[YouTube Search] Ошибка при запросе к YouTube Search API: ${error.message}`);
+  } catch (error) {
+    logger.error(`[YouTube Search] Ошибка при запросе к YouTube Search API: ${error instanceof Error ? error.message : String(error)}`);
     // Возвращаем пустой результат при ошибке, чтобы не ломать цепочку
     return { candidates: [], continuation: null };
   }
