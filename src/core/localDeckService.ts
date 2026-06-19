@@ -377,8 +377,8 @@ export async function addWord(
 
     await db.words.put(wordRecord);
     return { success: true, message: 'Слово добавлено локально' };
-  } catch (err: any) {
-    return { success: false, message: err.message || 'Ошибка добавления' };
+  } catch (err) {
+    return { success: false, message: (err instanceof Error ? err.message : '') || 'Ошибка добавления' };
   }
 }
 

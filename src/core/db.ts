@@ -9,6 +9,25 @@ import { stripHtml } from '../plugins/anki/filter';
 
 export type { LocalWord, LocalReview, UiWord, GrammarProgress };
 
+// Форма записи слова в старых версиях схемы БД: миграции читают/удаляют плоские
+// legacy-поля, которых нет в текущем LocalWord. Все поля опциональны (нужно для delete).
+interface LegacyWordRecord {
+  stability?: number;
+  difficulty?: number;
+  interval?: number;
+  due?: number;
+  lastReview?: number;
+  reps?: number;
+  lapses?: number;
+  status?: string;
+  deckName?: string;
+  category?: string;
+  source?: string;
+  contextExamples?: unknown[];
+  passive?: unknown;
+  active?: unknown;
+}
+
 
 class YomuMoguDatabase extends Dexie {
   words!: Table<LocalWord>;
@@ -36,7 +55,7 @@ class YomuMoguDatabase extends Dexie {
       ui_words: '[profileId+id], id, status, due, profileId',
     }).upgrade(async (tx) => {
       logger.info('Миграция IndexedDB на версию 3: конвертация плоской структуры FSRS в двойную (passive/active)');
-      await tx.table('words').toCollection().modify((word: any) => {
+      await tx.table('words').toCollection().modify((word: LegacyWordRecord) => {
         const flatFsrs = {
           stability: word.stability ?? 0,
           difficulty: word.difficulty ?? 0,
@@ -100,7 +119,7 @@ class YomuMoguDatabase extends Dexie {
       words: '[profileId+id], id, word, category, [profileId+category], active.due, *tags, profileId',
     }).upgrade(async (tx) => {
       logger.info('Миграция IndexedDB на версию 8: схлопывание dual-curve, удаление пассивной кривой');
-      await tx.table('words').toCollection().modify((word: any) => {
+      await tx.table('words').toCollection().modify((word: LegacyWordRecord) => {
         stripPassiveWord(word);
       });
     });
@@ -111,7 +130,7 @@ class YomuMoguDatabase extends Dexie {
  * Стирает устаревшее поле passive из записи слова (§2.6: dual-curve схлопнут в одну active-кривую).
  * Используется миграцией версии 8 и как точечный хелпер.
  */
-export function stripPassiveWord(word: any): void {
+export function stripPassiveWord(word: { passive?: unknown }): void {
   if (word && 'passive' in word) {
     delete word.passive;
   }
@@ -124,7 +143,7 @@ export const db = new YomuMoguDatabase();
  * Проверяет, является ли значение валидным ключом для IndexedDB.
  * Валидные ключи: string (не пустая), number (не NaN), Date (не с getTime() = NaN), Array.
  */
-export function isValidIndexedDbKey(key: any): boolean {
+export function isValidIndexedDbKey(key: unknown): boolean {
   if (key === null || key === undefined) return false;
   if (typeof key === 'string') return key.length > 0;
   if (typeof key === 'number') return !isNaN(key);
@@ -480,11 +499,11 @@ export async function syncLocalDatabaseWithAnki(
     }
 
     return { success: true, message: 'Синхронизация успешно завершена' };
-  } catch (error: any) {
+  } catch (error) {
     logger.error('Ошибка при синхронизации локальной БД с Anki', error);
     return {
       success: false,
-      message: error.message || 'Ошибка синхронизации'
+      message: (error instanceof Error ? error.message : '') || 'Ошибка синхронизации'
     };
   }
 }

@@ -2,6 +2,19 @@ import { fsrs, Card, State, Rating } from 'ts-fsrs';
 import type { LocalWord, FsrsState } from './types';
 import { QUEST_RESET_HOUR } from './intervals';
 
+// Плоская/legacy-форма слова (старые записи БД до перехода на вложенную active-кривую).
+interface LegacyFlatWord {
+  passive?: FsrsState;
+  stability?: number;
+  difficulty?: number;
+  interval?: number;
+  due?: number;
+  lastReview?: number;
+  reps?: number;
+  lapses?: number;
+  status?: 'new' | 'learning' | 'review' | 'mature';
+}
+
 // Инициализируем стандартный FSRS-планировщик с отключенными краткосрочными шагами обучения
 const scheduler = fsrs({
   enable_short_term: false
@@ -103,15 +116,16 @@ export function mapFsrsToSubState(state: FsrsState, card: Card): FsrsState {
  */
 export function mapLocalToFsrsCard(word: LocalWord, now?: Date): Card {
   // Для обратной совместимости, если у слова плоская структура
-  const flatState = (word as any).passive || {
-    stability: (word as any).stability,
-    difficulty: (word as any).difficulty,
-    interval: (word as any).interval,
-    due: (word as any).due,
-    lastReview: (word as any).lastReview,
-    reps: (word as any).reps,
-    lapses: (word as any).lapses,
-    status: (word as any).status
+  const legacy = word as unknown as LegacyFlatWord;
+  const flatState: FsrsState = legacy.passive || {
+    stability: legacy.stability ?? 0,
+    difficulty: legacy.difficulty ?? 0,
+    interval: legacy.interval ?? 0,
+    due: legacy.due ?? Date.now(),
+    lastReview: legacy.lastReview,
+    reps: legacy.reps ?? 0,
+    lapses: legacy.lapses ?? 0,
+    status: legacy.status ?? 'new'
   };
   return mapFsrsStateToCard(flatState, now);
 }
@@ -164,11 +178,16 @@ export function calculateNextFsrsStateForState(
  * @param typeOrNow Тип повторения ('passive' | 'active') ИЛИ дата повторения (для совместимости)
  * @param nowArg Время повторения (используется, если третьим параметром передан тип)
  */
+// Намеренно полиморфная функция: принимает и вложенный LocalWord, и плоский UiWord/legacy/тестовый
+// объект, а вызывающие читают у результата поля LocalWord. Точная типизация потребовала бы overload'ов
+// и затронула бы горячие пути (chat/quiz/sync) без функциональной выгоды — оставляем any осознанно.
 export function calculateNextFsrsState(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   word: any,
   ease: number,
   typeOrNow?: 'passive' | 'active' | Date,
   nowArg?: Date
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): { updatedWord: any; newInterval: number; lastInterval: number } {
   let type: 'passive' | 'active' | undefined = undefined;
   let now = new Date();
