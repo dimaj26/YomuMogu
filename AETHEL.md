@@ -178,6 +178,15 @@ Read [CONTEXT.md](file:///C:/YomuMogu/CONTEXT.md) (the knowledge index) and foll
 - **Strategic context is strictly-local** (git-ignored, not in clean clones): `_nogit_philosophy.md` (pedagogy/Science-First), `_nogit_roadmap.md` (scaling program P0–P4, DX backlog), `_nogit_research_science_first.md` (evidence base). Read these for any pedagogy/roadmap question.
 - The legacy monoliths `PROJECT_LOGIC.md` and `CONTEXT_PROMPT.md` have been **removed** — their content lives entirely in the `knowledge/` tree (originals remain in git history + the local backup zip).
 
+## Cross-cutting facts (verify on edit)
+The linter checks links and structure, **not semantic agreement** — the same fact can silently drift across topic files (a real example: schema "v5" vs "v8" survived migration in two files). When you edit a topic that states one of these recurring facts, re-check the others against the **single source of truth**:
+| Fact | Single source of truth | Echoed in (keep in sync) |
+|---|---|---|
+| IndexedDB schema version | `src/core/db.ts` (`this.version(N)`) | `knowledge/data-schema.md`, `knowledge/coding-rules.md` |
+| FSRS model = ONE `active` curve (dual-curve collapsed) | `src/core/scheduler.ts` + `knowledge/data-schema.md` | `knowledge/anki-integration.md`, `knowledge/gemini-patterns.md`, `_nogit_philosophy.md` |
+| Current test count | `knowledge/testing.md` [PL-9.4] | `knowledge/lint-and-quality.md` if cited |
+| Gemini model fallback chain | `knowledge/gemini-patterns.md` [PL-5.2] | `knowledge/architecture.md` stack table |
+
 ## File map & git visibility
 | File / dir | Role | Git |
 |---|---|---|

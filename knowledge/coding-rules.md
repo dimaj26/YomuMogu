@@ -46,7 +46,7 @@ You are an expert **TypeScript / Next.js 16** developer. Your specialty is App R
 - Never use raw `localStorage.getItem('yomumogu_...')` — always go through profile helpers.
 - All `localStorage` access must be guarded: `if (typeof window === 'undefined') return null`.
 - SSR hydration: defer localStorage reads to `useEffect` only.
-- Client-side database queries use Dexie.js (`core/db.ts`) upgraded to schema version 5 (indexing `*tags` multiEntry index). Defer all database transactions to client-side lifecycle functions (`useEffect`) or wrap them in a `typeof window !== 'undefined'` check to prevent Next.js SSR hydration errors.
+- Client-side database queries use Dexie.js (`core/db.ts`), current schema **version 8** (the `*tags` multiEntry index was added at v5; the dual-curve collapse landed at v8 — full schema in [data-schema](data-schema.md), ground truth is `core/db.ts`). Defer all database transactions to client-side lifecycle functions (`useEffect`) or wrap them in a `typeof window !== 'undefined'` check to prevent Next.js SSR hydration errors.
 - **Dual FSRS Scheduling**: Scheduler utility calls (`calculateNextFsrsState`) support signature overloading. They must accept either a flat legacy object or a nested structure with the review type specified (`'passive' | 'active'`) to support both global UI translations and deep dialog vocabulary practices.
 - **Japanification Provider Enforcement**: The `useJapanification` hook must strictly be used within a `<JapanificationProvider>`. It is configured to throw an error if the context is undefined, preventing isolated local state synchronization splits. All tests rendering components calling this hook must wrap the subject under test with the provider.
 

@@ -63,7 +63,7 @@ whitelist = []
 #   "error" -> block the commit until a spec file is staged
 #   "off"   -> disable the check
 # Escape hatch for an intentionally spec-irrelevant commit: AETHEL_SKIP_SYNC=1 git commit ...
-enforce = "warn"
+enforce = "error"
 # A commit "touches code" if a staged path matches `watched` and not `ignored`.
 # Globs use fnmatch over the POSIX path; `*` spans directory separators.
 watched = ["*.py", "*.ts", "*.tsx", "*.js", "*.jsx", "*.go", "*.rs", "*.java", "*.sql"]
@@ -72,7 +72,7 @@ spec_files = ["CONTEXT.md", "AETHEL.md", "knowledge/*"]
 # Rule-change ⇒ changelog pairing. When a `rule_files` path is staged, the linter
 # expects `changelog_file` to be staged too, so the release log never lags behind a
 # governance edit. Same enforce levels and AETHEL_SKIP_SYNC escape hatch as above.
-require_changelog = "warn"   # "warn" (default) | "error" (block) | "off"
+require_changelog = "error"  # "warn" (default) | "error" (block) | "off"
 rule_files = ["AETHEL.md"]
 changelog_file = "CHANGELOG.md"
 
@@ -82,7 +82,7 @@ changelog_file = "CHANGELOG.md"
 # installed library's core. The workspace may EXTEND the core (rules below the
 # block, recipes, this file) but must not fork it. On divergence, run `aethel update`.
 #   "warn" (default) | "error" (block) | "off" (disable)
-enforce = "warn"
+enforce = "error"
 # Revision skew: the managed block carries an integer `<!-- AETHEL:CORE-REV N -->` stamp. When the
 # block matches the library STRUCTURALLY but its revision is older (unstamped, or the obsolete
 # semver stamp), the workspace is stale, not forked — the linter says "run `aethel update`" at this

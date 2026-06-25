@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.68.0] - 2026-06-26
+
+### Changed
+- **Aethel workflow guards escalated `warn → error`** (`aethel.toml`): `[sync] enforce` and `[sync] require_changelog` now **block** commits that stage code without a spec file, or stage `AETHEL.md` without `CHANGELOG.md` (escape hatch `AETHEL_SKIP_SYNC=1`). `[consistency] enforce` now **blocks** on managed-core divergence (until `aethel update`). `version_skew_enforce` deliberately left at `warn` (upstream lag, not a workspace defect). Documented in `knowledge/lint-and-quality.md`. This converts the post-migration guards from nominal (advisory) to actually enforcing.
+
 ## [1.67.0] - 2026-06-25
 
 ### Changed
