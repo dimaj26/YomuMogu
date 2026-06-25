@@ -2,6 +2,14 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.67.0] - 2026-06-25
+
+### Changed
+- **Adopted the Aethel AI-orchestration protocol.** `AETHEL.md` is now the master orchestrator/rulebook; `GEMINI.md`/`CLAUDE.md`/`AGENTS.md` are thin local stubs that redirect to it. The legacy `PROJECT_LOGIC.md` and `CONTEXT_PROMPT.md` monoliths were migrated into the `knowledge/` topic tree (atomic files: architecture, module-registry, data-schema, api-contracts, gemini-patterns, anki-integration, progression-and-intervals, constraints, testing, lint-and-quality, coding-rules, features, design-system) indexed by `CONTEXT.md`, then removed. Legacy `[PL-x.y]`/`[CP-x.y]` indices preserved as headings so old references still resolve.
+- **Workflow linters wired in** (`prompt_linter.py` / `aethel lint`): knowledge-index integrity, agent & skill registries, plan/task/walkthrough stage checks, spec-sync drift guard. Merged into `.husky/pre-commit` alongside `lint-staged` (ESLint/Ruff) — disjoint surfaces, no conflict.
+- **Doc-sync protocol replaced**: the `yomumogu-docs-update` skill (`CMD-1..4`) was retired in favour of Aethel Route C (edit `knowledge/*.md` + fix the `CONTEXT.md` link in the same commit). The `proposal-analysis` audit engine was reclassified as an agent and registered.
+- **Git rule: mandatory auto-commit** after every significant change without confirmation; only `git push` requires explicit user approval.
+
 ## [1.66.0] - 2026-06-20
 
 ### Changed

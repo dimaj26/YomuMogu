@@ -1,5 +1,11 @@
+# --- AI-workflow / dev tooling ---
+aethel-cli==1.6.0        # Aethel knowledge/spec linter (prompt_linter.py + pre-commit hook)
+ruff==0.15.18            # Python linter + formatter (tokenizer service, dict helper)
+
+# --- MeCab tokenizer microservice (src/services/tokenizer/server.py) ---
 fugashi==1.5.2
 unidic-lite==1.0.8
 fastapi==0.128.8
 uvicorn==0.49.0
 pydantic==2.12.5
+# src/lib/dict/lookup.py uses only the Python standard library — no deps.
