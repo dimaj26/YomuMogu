@@ -2,6 +2,12 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.71.0] - 2026-06-27
+
+### Added
+- **Adopted graphify as the code knowledge-graph layer.** `graphifyy==0.8.49` pinned in `requirements.txt`; the repo is now indexed by `graphify .` into `graphify-out/graph.json` (~765 nodes / 1834 edges / 41 communities over 226 code files). `.graphifyignore` keeps the corpus code-only so the build runs offline with no LLM key; `graphify-out/` is git-ignored (rebuilt locally). New topic `knowledge/graphify-workflow.md` (linked from `CONTEXT.md`) documents the commands and scope.
+- **`AETHEL.md` graphify-first reading protocol (project rule).** Code comprehension/navigation must start from the graph (`query`/`explain`/`path`/`affected`); files outside the graph (git-ignored `_nogit_*` docs, scratch, secrets, `jitendex/`, and the markdown spec itself) are read directly as before. Skill registered globally for Claude Code (`~/.claude/skills/graphify/`).
+
 ## [1.70.0] - 2026-06-26
 
 ### Changed

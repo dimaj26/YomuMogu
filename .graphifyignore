@@ -1,0 +1,22 @@
+# graphify scope — build a CODE-ONLY graph that needs no LLM API key (offline, deterministic).
+# Markdown docs live in knowledge/ + AETHEL.md/CONTEXT.md and are read directly per the
+# AETHEL graphify-first carve-out ("files not in the graph are read directly"). Images/binaries
+# carry no code structure. Drop these excludes (and set an LLM key) to build a richer
+# semantic graph that also links docs/images. Honoured on top of .gitignore (last-match-wins).
+# doc/text formats graphify would route to semantic (LLM) extraction
+*.md
+*.mdx
+*.qmd
+*.rst
+*.txt
+*.yaml
+*.yml
+*.html
+# images/binaries (no code structure)
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.webp
+*.ico
+*.gif

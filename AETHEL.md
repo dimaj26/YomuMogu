@@ -171,6 +171,12 @@ Migrated from the legacy `GEMINI.md` (preserved verbatim as `_nogit_legacy_gemin
 ## Onboarding (first turn)
 Read [CONTEXT.md](file:///C:/YomuMogu/CONTEXT.md) (the knowledge index) and follow its links into `knowledge/` for the layer you are about to touch. There is no separate onboarding file — the index is the entry point. For pedagogy/roadmap questions, read the strictly-local `_nogit_*` docs named below.
 
+## Codebase reading protocol — graphify-first (project rule, hard override) {#graphify-first}
+The repository is indexed as a queryable knowledge graph by **graphify** (`graphify-out/graph.json`, built with `graphify .` and refreshed with `graphify update .`). See [graphify-workflow](file:///C:/YomuMogu/knowledge/graphify-workflow.md).
+- **Read through the graph FIRST.** To understand structure, locate code, or answer "where / what / how / what-connects-to-what", start with `graphify query "…"`, `graphify explain "X"`, `graphify path "A" "B"`, or `graphify affected "X"`. Open a source file directly only **after** the graph has pointed you at the relevant node(s), or when you are about to **edit** it. Do not blind-`Read`/`grep` your way through indexed code when a graph query answers it.
+- **Carve-out — files NOT in the graph are read directly, as before.** graphify honours `.gitignore`/`.graphifyignore` and always skips `venv/`, `node_modules/`, `.git/`. Therefore everything git-ignored is OUT of the graph and stays direct-read: the strategic `_nogit_*` docs (`philosophy`, `roadmap`, `research`, feedback), `.aethel/` · `.claude/` · `.agents/` scratch, secrets (`.env*`), and binary/dictionary data (`jitendex/`). When unsure whether a path is indexed, check `graphify-out/graph.json` or just query it — a miss means "not in the graph → read it directly".
+- **Keep the graph fresh.** After code changes that add/rename/delete symbols, run `graphify update .` (offline, no LLM) before relying on it again. A stale graph is a process smell. If the graph is absent or a query returns nothing useful, fall back to direct reads, then rebuild.
+
 ## Knowledge ownership & indexing
 - The structured spec lives in the `knowledge/` tree, indexed by [CONTEXT.md](file:///C:/YomuMogu/CONTEXT.md). `[K-xxx]` tags resolve there.
 - Coding conventions live in [knowledge/coding-rules.md](file:///C:/YomuMogu/knowledge/coding-rules.md). The legacy `[CP-x.y]` indices are preserved as headings inside it; legacy `[PL-x.y]` indices are preserved as headings across the architecture/domain topic files.

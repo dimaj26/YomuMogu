@@ -31,6 +31,7 @@ YomuMogu is a Japanese language-learning web app (Next.js 16 / TypeScript / Reac
 - [Agent registry](knowledge/agents.md) — closed list of delegatable sub-agents (Route D).
 - [Skills registry](knowledge/skills.md) — workspace-local Skill-tool capabilities and their status.
 - [Session lifecycle](knowledge/session-lifecycle.md) — Route B session mechanics (start/switch/done/abandon, archival).
+- [Graphify workflow](knowledge/graphify-workflow.md) — code indexed as a queryable graph; the graphify-first reading protocol and its carve-out.
 
 ## Features
 - [Implemented features](knowledge/features.md) — one-line registry of shipped features.
