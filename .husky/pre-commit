@@ -1,19 +1,17 @@
 # 1) Project code quality: ESLint + Ruff on staged files (errors block, warnings don't).
 npx lint-staged
 
-# 2) Aethel AI-workflow + spec verification: knowledge-index integrity, plan/task/
-#    walkthrough stage checks, spec-sync drift guard, agent registry, workspace hygiene.
-#    Runs alongside (not instead of) lint-staged — they cover disjoint surfaces.
-#    Escape hatch for an intentionally spec-irrelevant commit: AETHEL_SKIP_SYNC=1 git commit ...
-echo "=== Aethel workflow + spec verification ==="
+# 2) Spec-sync drift guard (spec-kit workflow): staged source code must ship with
+#    a spec/doc update in the same commit (specs/**, knowledge/**, the constitution,
+#    CONTEXT.md or CHANGELOG.md). Replaces the retired Aethel doc-linter.
+#    Escape hatch for an intentionally doc-irrelevant commit: SKIP_SPEC_SYNC=1 git commit ...
+echo "=== spec-sync drift guard ==="
 if [ -f "./venv/Scripts/python.exe" ]; then
-  ./venv/Scripts/python.exe prompt_linter.py || exit 1
+  ./venv/Scripts/python.exe scripts/spec_sync_guard.py || exit 1
 elif [ -f "./venv/bin/python" ]; then
-  ./venv/bin/python prompt_linter.py || exit 1
-elif command -v aethel >/dev/null 2>&1; then
-  aethel lint . || exit 1
+  ./venv/bin/python scripts/spec_sync_guard.py || exit 1
 else
-  python prompt_linter.py || exit 1
+  python scripts/spec_sync_guard.py || exit 1
 fi
 
 # 3) Graph freshness (non-gating): when spec docs are staged, refresh the graph's
