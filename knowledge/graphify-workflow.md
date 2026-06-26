@@ -33,12 +33,19 @@ Tracked **code and markdown docs ARE indexed** — query the graph for spec ques
 |---|---|
 | Build / rebuild the graph | `graphify .` |
 | Refresh after code edits (offline, no LLM) | `graphify update .` |
+| Apply semantic re-extraction after **doc** edits (LLM) | `graphify . --update` (= `/graphify --update`) |
 | Ask a structural question | `graphify query "how does chat reach the dictionary?"` |
 | Explain a node + neighbors | `graphify explain "scheduler"` |
 | Shortest path between two nodes | `graphify path "calculateNextFsrsState" "db"` |
 | Reverse impact of a change | `graphify affected "intervals"` |
 
 Run via the venv-installed CLI (`venv/Scripts/graphify.exe` on Windows). Keep the graph fresh: rebuild/`update` after adding, renaming, or deleting symbols — a stale graph is a process smell.
+
+## Keeping the graph fresh (hooks + doc-sync)
+
+`graphify hook install` registers `.husky/post-commit` + `post-checkout`, but those call `_rebuild_code` — **code + doc AST structure only, offline**. They do NOT re-run the **semantic** LLM pass for changed docs, and they clear graphify's native `needs_update` flag — so spec edits (`AETHEL.md`, `CONTEXT.md`, `knowledge/**`) would otherwise leave the graph's semantic doc nodes silently stale.
+
+[scripts/graph_doc_sync.py](../scripts/graph_doc_sync.py) (wired into `.husky/pre-commit`, non-gating) closes that gap: on staged spec-`.md` changes it sets the native `needs_update` flag, then launches a **detached** `graphify . --update` (semantic re-extraction). The detached child owns the flag — **cleared on success, kept on failure** — so freshness is automatic but a failed run stays visible to `graphify check-update` / `/graphify`. Bypass with `GRAPHIFY_SKIP_DOC_SYNC=1`. Quality-critical extraction stays on the DeepSeek backend, not local Ollama (AETHEL.md Route A.O).
 
 ## Indexing images too (optional)
 

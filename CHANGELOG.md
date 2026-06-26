@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.73.0] - 2026-06-27
+
+### Added
+- **Pre-commit graph-doc-sync trigger (`scripts/graph_doc_sync.py`).** Closes a verified gap: graphify's `post-commit`/`post-checkout` hooks call `_rebuild_code` (code + doc AST only, offline) and **clear** the native `needs_update` flag, so spec edits (`AETHEL.md`, `CONTEXT.md`, `knowledge/**`) left the graph's **semantic** doc nodes silently stale. The new non-gating pre-commit step detects staged spec-`.md` (A/C/M/D/R, excl. `_nogit_`) and launches a **detached** `graphify . --update` (semantic LLM re-extraction, DeepSeek). Form **C+**: the detached child owns the native `needs_update` flag — set before, **cleared on success, kept on failure** — so freshness is automatic yet a failed run stays visible to `graphify check-update` / `/graphify`. Always `exit 0` (never blocks a commit); bypass via `GRAPHIFY_SKIP_DOC_SYNC=1`. Chosen over auto-only (C) and notify-only (B) via a Route D / PA-1 audit. Tests: parser (M/A/D/R/`_nogit_`/mixed) + visibility (fail→flag persists, success→cleared); ruff-clean. Docs in `knowledge/graphify-workflow.md` + `knowledge/lint-and-quality.md`.
+
 ## [1.72.4] - 2026-06-27
 
 ### Added
