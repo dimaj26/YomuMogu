@@ -87,3 +87,6 @@ __pycache__/
 
 # Per-session Aethel working dir (local scratch)
 .aethel/
+
+# Aethel update backups (timestamped, written by `aethel update`)
+AETHEL.md.bak.*
