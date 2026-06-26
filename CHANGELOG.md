@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.72.3] - 2026-06-27
+
+### Added
+- **`AETHEL.md` Route A.O — Local Delegation sub-route (project rule).** A sub-route of Route A/B execution: self-contained sub-tasks matching the local `qwen2.5-coder:7b-16k` model (≤16k context, mechanically verifiable, off the critical architectural path) MAY be delegated to **local Ollama only — never DeepSeek/cloud**. Never delegate frontier/architectural changes or code needing stable Russian comments; no silent delegation (always state what was offloaded), review output before commit. Backs the claude-code-router local dev-tool setup (CCR gateway on `127.0.0.1:3456`; routing default→DeepSeek, background→Ollama, frontier→Claude per a Route D/APA-1 audit).
+
 ## [1.72.2] - 2026-06-27
 
 ### Fixed

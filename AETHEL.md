@@ -223,6 +223,13 @@ If a request is missing a critical parameter (not for one-liner fixes or Q&A):
 1. Сформулируй гипотезу о месте фичи в экосистеме — роль для пользователя + роль для разработчика (1–2 предложения).
 2. Если гипотеза вскрывает неясность → задай сгруппированные фокусные вопросы (**не более одного раунда**), затем proceed.
 
+## Route A.O — Local Delegation sub-route (Ollama only, project rule) {#delegate-ollama}
+A sub-route of Route A/B **execution** (not a replacement for it): when a self-contained sub-task matches the capabilities of the local `qwen2.5-coder:7b-16k` model, it MAY be delegated to **local Ollama only — never to DeepSeek or any cloud route** (claude-code-router is a local dev tool, configured outside the repo).
+- **Mechanism**: Bash → `curl http://localhost:11434/v1/chat/completions` (model `qwen2.5-coder:7b-16k`) or `ollama run`; take the result, review it, integrate it yourself.
+- **Delegate only when ALL hold**: self-contained and fits ≤16k tokens of context (no large multi-file repo context); mechanically verifiable (lint/test/eyeball) before use; off the critical architectural path; low cost of a plausible-but-wrong answer. Fits: isolated pure functions, regex/patterns, format/data transforms, boilerplate scaffolds, code explanation/summary, simple unit-test skeletons, small mechanical single-file edits.
+- **Never delegate**: frontier/architectural changes; anything where a semantically wrong patch passes ESLint but breaks modularity ([G-fail-fast-error-handling], [G-linter-compliance]); code requiring stable Russian comments/logs/UI committed as-is (7B is unstable on Russian).
+- **Guardrails**: no silent delegation — always state what was sent to Ollama and what came back; review/rewrite the output before any commit. Autonomous DeepSeek/cloud delegation is out of scope.
+
 ## RNA-Blueprint — Ecosystem links (project addendum to §2)
 For features touching >1 system, the plan's Task RNA must add **Ecosystem links** (forward-looking, complementing the backward-looking CC tags): which existing systems the feature consumes / extends / invalidates (`[PL-10]`/[progression-and-intervals] Intervals Registry, `[PL-7.1]` XP write-only invariant, Competency Ladder, single-curve FSRS) and which roadmap feature (`_nogit_roadmap.md` §2) it prepares or blocks. Skipped for small/local changes.
 
