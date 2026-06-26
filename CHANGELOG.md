@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.72.1] - 2026-06-27
+
+### Fixed
+- **Doc sync: removed dangling references to deleted local files.** `AETHEL.md` no longer claims `_nogit_legacy_gemini.md` is preserved (pre-migration prompts live in git history), dropped the `_nogit_legacy_*.md` file-map row, and removed the now-deleted `feedback` doc from the graphify-first carve-out list. Added `.graphifyignore` (tracked) and `graphify-out/` (local) to the file map. Verified: test count in `testing.md` (527/77) and stack versions already current.
+
 ## [1.72.0] - 2026-06-27
 
 ### Changed

@@ -166,7 +166,7 @@ Structured knowledge is plain Markdown, provider-agnostic, with no server depend
 
 # Project-Specific Orchestration (YomuMogu)
 
-Migrated from the legacy `GEMINI.md` (preserved verbatim as `_nogit_legacy_gemini.md`, git-ignored). These extend the core above; on any conflict the core wins. **AETHEL.md is the master orchestrator file — `GEMINI.md` / `CLAUDE.md` / `AGENTS.md` are thin local stubs that redirect here.**
+Migrated from the legacy `GEMINI.md` (the pre-migration prompt files live in git history). These extend the core above; on any conflict the core wins. **AETHEL.md is the master orchestrator file — `GEMINI.md` / `CLAUDE.md` / `AGENTS.md` are thin local stubs that redirect here.**
 
 ## Onboarding (first turn)
 Read [CONTEXT.md](file:///C:/YomuMogu/CONTEXT.md) (the knowledge index) and follow its links into `knowledge/` for the layer you are about to touch. There is no separate onboarding file — the index is the entry point. For pedagogy/roadmap questions, read the strictly-local `_nogit_*` docs named below.
@@ -175,7 +175,7 @@ Read [CONTEXT.md](file:///C:/YomuMogu/CONTEXT.md) (the knowledge index) and foll
 The repository is indexed as a queryable knowledge graph by **graphify** (`graphify-out/graph.json`, built with `graphify .` and refreshed with `graphify update .`). See [graphify-workflow](file:///C:/YomuMogu/knowledge/graphify-workflow.md).
 - **Read through the graph FIRST.** To understand structure, locate code, or answer "where / what / how / what-connects-to-what", start with `graphify query "…"`, `graphify explain "X"`, `graphify path "A" "B"`, or `graphify affected "X"`. Open a source file directly only **after** the graph has pointed you at the relevant node(s), or when you are about to **edit** it. Do not blind-`Read`/`grep` your way through indexed code when a graph query answers it.
 - **Tracked code AND docs are in the graph.** Source files plus the markdown spec (`AETHEL.md`, `CONTEXT.md`, `knowledge/*.md`, `README.md`, `CHANGELOG.md`) are extracted as nodes (docs via semantic LLM extraction), so the graph answers spec questions too — query it before reading those files.
-- **Carve-out — files NOT in the graph are read directly.** graphify honours `.gitignore`/`.graphifyignore` and always skips `venv/`, `node_modules/`, `.git/`. Therefore everything git-ignored is OUT of the graph and stays direct-read: the strategic `_nogit_*` docs (`philosophy`, `roadmap`, `research`, feedback), `.aethel/` · `.claude/` · `.agents/` scratch, secrets (`.env*`), binary/dictionary data (`jitendex/`), plus images (`.graphifyignore`, until a vision backend is used). When unsure whether a path is indexed, check `graphify-out/graph.json` or just query it — a miss means "not in the graph → read it directly".
+- **Carve-out — files NOT in the graph are read directly.** graphify honours `.gitignore`/`.graphifyignore` and always skips `venv/`, `node_modules/`, `.git/`. Therefore everything git-ignored is OUT of the graph and stays direct-read: the strategic `_nogit_*` docs (`philosophy`, `roadmap`, `research`), `.aethel/` · `.claude/` · `.agents/` scratch, secrets (`.env*`), binary/dictionary data (`jitendex/`), plus images (`.graphifyignore`, until a vision backend is used). When unsure whether a path is indexed, check `graphify-out/graph.json` or just query it — a miss means "not in the graph → read it directly".
 - **Keep the graph fresh.** After code changes that add/rename/delete symbols, run `graphify update .` (offline, no LLM) before relying on it again. A stale graph is a process smell. If the graph is absent or a query returns nothing useful, fall back to direct reads, then rebuild.
 
 ## Knowledge ownership & indexing
@@ -203,7 +203,8 @@ The linter checks links and structure, **not semantic agreement** — the same f
 | `README.md`, `CHANGELOG.md` | Public readme & release log | **Tracked** |
 | `GEMINI.md`, `CLAUDE.md`, `AGENTS.md` | Thin stubs → AETHEL.md | Local (git-ignored) |
 | `_nogit_philosophy.md`, `_nogit_roadmap.md`, `_nogit_research_science_first.md` | Strategic context (pedagogy, roadmap, evidence) | Local (git-ignored) |
-| `_nogit_legacy_*.md` | Preserved pre-migration prompt files | Local (git-ignored) |
+| `.graphifyignore` | graphify scope (code-graph) — see [graphify-workflow](file:///C:/YomuMogu/knowledge/graphify-workflow.md) | **Tracked** |
+| `graphify-out/` | Generated code-graph (`graph.json`, report) — rebuilt locally | Local (git-ignored) |
 | `.agents/**`, `.claude/**`, `.aethel/**` | Skills, sub-agent defs, session scratch | Local (git-ignored) |
 
 ## Legacy command aliases (still accepted)
