@@ -57,6 +57,9 @@ next-env.d.ts
 # scratch files
 /scratch/
 
+# graphify generated knowledge-graph artifacts (graph.json/html, GRAPH_REPORT.md)
+/graphify-out/
+
 # Local/Private Orchestration
 /GEMINI.md
 /CLAUDE.md
