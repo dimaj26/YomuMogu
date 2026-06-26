@@ -2,6 +2,7 @@
 aethel-cli==1.7.0        # Aethel knowledge/spec linter (prompt_linter.py + pre-commit hook)
 ruff==0.15.18            # Python linter + formatter (tokenizer service, dict helper)
 graphifyy==0.8.49        # CLI `graphify`: codebase → queryable knowledge graph (graphify-out/); AI-assistant skill. Pulls ~30 tree-sitter deps.
+openai==2.44.0           # OpenAI-compatible client used by graphify's DeepSeek backend for semantic doc extraction.
 
 # --- MeCab tokenizer microservice (src/services/tokenizer/server.py) ---
 fugashi==1.5.2

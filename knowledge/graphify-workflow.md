@@ -9,22 +9,23 @@ The codebase is indexed as a queryable knowledge graph by **graphify** (PyPI `gr
 
 ## What the graph covers
 
-`graphify .` runs tree-sitter AST extraction over the **code** corpus and writes `graphify-out/` (git-ignored, rebuilt locally — never committed):
+`graphify .` runs tree-sitter AST extraction over the **code** corpus and **semantic LLM extraction** over the **docs** (markdown spec, README, CHANGELOG), then writes `graphify-out/` (git-ignored, rebuilt locally — never committed):
 
-- `graph.json` — the queryable graph (current build: ~765 nodes, ~1834 edges, 41 communities over 226 TS/JS/Python files).
+- `graph.json` — the queryable graph (code symbols + doc concepts, linked).
+- `GRAPH_REPORT.md` — named communities + key concepts (from the labeling pass).
 - `manifest.json`, `.graphify_analysis.json` — build metadata.
-- `cache/` — per-file extraction cache (makes rebuilds fast/incremental).
+- `cache/` — per-file extraction cache (makes rebuilds fast/incremental; unchanged files are not re-sent to the LLM).
 
-**Scope is code-only by design.** `.graphifyignore` (committed) excludes doc/text formats (`*.md`, `*.txt`, `*.yml`, `*.html`, …) and images so the build needs **no LLM API key** — it runs fully offline and deterministically. graphify also honours `.gitignore` and always skips `venv/`, `node_modules/`, `.git/`.
+**Backend.** Doc/image semantic extraction needs an LLM. The repo uses the **DeepSeek** backend (`DEEPSEEK_API_KEY` in the environment; the `openai` package is the client). Code-only builds need no key. `graphify update .` re-extracts code offline with no LLM.
 
 ## The carve-out — what is NOT in the graph
 
-Anything excluded above is read **directly**, as before — there is no graph node for it:
-- Markdown spec/docs: `AETHEL.md`, `CONTEXT.md`, `knowledge/*.md`, `README.md`, `CHANGELOG.md` (already well-structured here; the index IS the doc map).
+graphify honours `.gitignore` + `.graphifyignore` and always skips `venv/`, `node_modules/`, `.git/`. Everything excluded is read **directly** — there is no graph node for it:
 - Strategic git-ignored docs: `_nogit_philosophy.md`, `_nogit_roadmap.md`, `_nogit_research_science_first.md`.
 - Scratch/secrets/binaries: `.aethel/`, `.claude/`, `.agents/`, `.env*`, `jitendex/`.
+- Images (`.graphifyignore`): DeepSeek is text-only; switch to a vision backend (claude-cli/gemini) to index them.
 
-When unsure whether a path is indexed, query it — a miss means "not in the graph → read it directly".
+Tracked **code and markdown docs ARE indexed** — query the graph for spec questions too, not just code. When unsure whether a path is indexed, query it — a miss means "not in the graph → read it directly".
 
 ## Commands
 
@@ -39,8 +40,8 @@ When unsure whether a path is indexed, query it — a miss means "not in the gra
 
 Run via the venv-installed CLI (`venv/Scripts/graphify.exe` on Windows). Keep the graph fresh: rebuild/`update` after adding, renaming, or deleting symbols — a stale graph is a process smell.
 
-## Optional: richer semantic graph
+## Indexing images too (optional)
 
-To also index docs/images/PDFs semantically (community names, doc↔code links), drop the `.graphifyignore` excludes and provide an LLM key (`DEEPSEEK_API_KEY` / `GEMINI_API_KEY` / …). The DeepSeek backend additionally needs the `openai` package (`pip install openai`). This costs API calls and is **not** required for code navigation, which the offline graph already serves.
+Images are excluded by `.graphifyignore` because DeepSeek is text-only. To index them (icons, screenshots, diagrams) drop the image lines and switch to a vision backend — `claude-cli` (routes through the local Claude Code CLI, no API key, billed to the plan) or `gemini`. Not required for code/doc navigation.
 
 **See also:** [directory-layout](directory-layout.md) (the `src/` tree the graph indexes), [architecture](architecture.md) (high-level module map).
