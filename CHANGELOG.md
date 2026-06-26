@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.72.4] - 2026-06-27
+
+### Added
+- **`knowledge/local-delegation.md` — operational reference for Route A.O.** Documents the delegation *mechanism* (the AETHEL rule only stated the one-line "how"): CCR routing table (default→DeepSeek / background→Ollama / frontier→Claude), the direct local-Ollama offload (`curl localhost:11434/v1/chat/completions` or `ollama run`, model `qwen2.5-coder:7b-16k`), the 16k-context/Modelfile rationale for RTX 3070 8 GB, fit criteria, and guardrails. Linked from `CONTEXT.md` (Quality & Process).
+
 ## [1.72.3] - 2026-06-27
 
 ### Added

@@ -32,6 +32,7 @@ YomuMogu is a Japanese language-learning web app (Next.js 16 / TypeScript / Reac
 - [Skills registry](knowledge/skills.md) — workspace-local Skill-tool capabilities and their status.
 - [Session lifecycle](knowledge/session-lifecycle.md) — Route B session mechanics (start/switch/done/abandon, archival).
 - [Graphify workflow](knowledge/graphify-workflow.md) — code indexed as a queryable graph; the graphify-first reading protocol and its carve-out.
+- [Local delegation](knowledge/local-delegation.md) — how the agent offloads fitting self-contained sub-tasks to local Ollama (qwen2.5-coder:7b-16k) via claude-code-router; mechanism behind AETHEL Route A.O.
 
 ## Features
 - [Implemented features](knowledge/features.md) — one-line registry of shipped features.
