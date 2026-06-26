@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.72.0] - 2026-06-27
+
+### Changed
+- **Safe dependency refresh (patch/minor only).** Bumped `next` + `eslint-config-next` 16.2.6 → 16.2.9, `react`/`react-dom` 19.2.4 → 19.2.7, `@google/genai` 2.4.0 → 2.10.0 (API unchanged — `models.generateContent` + `responseSchema` pattern verified current via Context7), `dompurify` 3.4.5 → 3.4.11 (sanitizer hardening), `@playwright/test` 1.60 → 1.61.1, `vitest` 4.1.7 → 4.1.9, `dexie` 4.4.2 → 4.4.4, `lucide-react` 1.16.0 → 1.21.0, plus in-range patches (`@types/react`, `@vitejs/plugin-react`, `lint-staged`). Verified: `tsc` clean, 527/527 unit tests pass, ESLint 0 errors. **Deliberately deferred** the major bumps (`typescript` 6, `eslint` 10, `@types/node` 26) — out of scope, need dedicated review.
+
 ## [1.71.0] - 2026-06-27
 
 ### Added
