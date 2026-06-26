@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
         ankiConnected = true;
       }
       logger.info(`Загружено карточек для сопоставления в памяти: ${deckWords.length}`);
-    } catch (err) {
+    } catch {
       logger.warn('Не удалось получить список карточек из активного источника');
     }
 

@@ -64,7 +64,7 @@ export function AssessmentModal({ isOpen, profileId, onClose, onSaved, onError }
           setLocalWordStates(states);
           setCheckedNewWordIds(checkedIds);
         }
-      } catch (err) {
+      } catch {
         onError?.('Не удалось загрузить статус слов для диагностики');
       }
     })();
@@ -129,7 +129,7 @@ export function AssessmentModal({ isOpen, profileId, onClose, onSaved, onError }
     try {
       await importStarterDeck(profileId, checkedNewWordIds);
       await onSaved();
-    } catch (err) {
+    } catch {
       onError?.('Не удалось сохранить результаты диагностики');
     } finally {
       setIsSaving(false);

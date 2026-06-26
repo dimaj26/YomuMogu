@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { verifyCsrf } from '@/lib/csrf';
-import { fetchYoutubeSearch, parseSearchResults, Candidate } from '@/lib/media/search';
+import { fetchYoutubeSearch, Candidate } from '@/lib/media/search';
 import { queryExpansionService } from '@/lib/gemini/queryExpansion';
 import { hasJapaneseCaptions, getYoutubeTranscriptSegments } from '@/lib/media/youtube';
 import { assessSubtitleQuality, computeLevelFit, computeDurationFit, rankCandidates, ScoredCandidate, MediaTier, RANKING_PROFILES } from '@/lib/media/ranking';

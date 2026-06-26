@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Terminal, Settings, Search, Database, User, X, RefreshCw, Flame } from 'lucide-react';
+import { Terminal, Settings, Database, User, X, RefreshCw, Flame } from 'lucide-react';
 import { db, LocalWord } from '@/core/db';
 import {
   getActiveProfileId,
@@ -11,7 +11,7 @@ import {
   setProfileItem,
   type ProfileInfo
 } from '@/lib/profile';
-import { LOCAL_DECK_NAME, retagAllWords } from '@/core/localDeckService';
+import { retagAllWords } from '@/core/localDeckService';
 import styles from './DebugDrawer.module.css';
 import { QUEST_RESET_HOUR } from '@/core/intervals';
 

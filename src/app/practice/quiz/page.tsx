@@ -168,7 +168,7 @@ function QuizComponent() {
       if (newInterval === 0 || newInterval < 1) return '10м';
       if (newInterval < 30) return `${Math.round(newInterval)}д`;
       return `${(newInterval / 30).toFixed(1)}м`;
-    } catch (e) {
+    } catch {
       return '';
     }
   };
@@ -279,7 +279,7 @@ function QuizComponent() {
       } else {
         setDictDefinition('Не удалось загрузить определение');
       }
-    } catch (e) {
+    } catch {
       setDictDefinition('Ошибка словаря');
     } finally {
       setIsLoadingDict(false);

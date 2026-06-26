@@ -87,7 +87,7 @@ export function useQuests() {
     if (saved) {
       try {
         setQuests(JSON.parse(saved));
-      } catch (e) {
+      } catch {
         const defaults = createDefaultQuests();
         setQuests(defaults);
         setProfileItem(storageKey, JSON.stringify(defaults));
@@ -117,7 +117,7 @@ export function useQuests() {
     if (saved) {
       try {
         currentQuests = JSON.parse(saved);
-      } catch (e) {
+      } catch {
         currentQuests = createDefaultQuests();
       }
     } else {

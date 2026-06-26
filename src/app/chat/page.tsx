@@ -8,7 +8,6 @@ import { useQuests } from '@/hooks/useQuests';
 import { getProfileItem, setProfileItem, removeProfileItem, getActiveProfileId } from '@/lib/profile';
 import { db, addLocalReview, syncLocalDatabaseWithAnki, updateGrammarProgress } from '@/core/db';
 import { sanitizeHtml } from '@/lib/sanitize';
-import Link from 'next/link';
 import { calculateNextFsrsState, createDefaultFsrsState, isGoodContextExample } from '@/core/scheduler';
 import { incrementDailyNewWordsCount } from '@/core/localDeckService';
 import { applyGradualFurigana } from '@/lib/chat/furigana';
@@ -233,7 +232,7 @@ export default function ChatPage() {
           return;
         }
       }
-    } catch (e) {
+    } catch {
       // Ошибка парсинга или чтения состояния
     }
 
@@ -289,7 +288,7 @@ export default function ChatPage() {
         immersionLogged,
       };
       setProfileItem(`chat_state_${session.id}`, JSON.stringify(stateToSave));
-    } catch (e) {
+    } catch {
       // Ошибка сохранения состояния чата
     }
   }, [

@@ -1,5 +1,4 @@
 import { logger } from '../logger';
-import { SubtitleSegment } from './parser';
 
 export interface Candidate {
   videoId: string;

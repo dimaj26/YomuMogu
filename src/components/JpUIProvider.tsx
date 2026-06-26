@@ -1,8 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { db, UiWord } from '../core/db';
-import { calculateNextFsrsState, alignToDayBoundary } from '../core/scheduler';
+import { calculateNextFsrsState } from '../core/scheduler';
 import type { LocalWord } from '../core/db';
 import { getActiveProfileId } from '../lib/profile';
 import { useJapanification } from '../hooks/useJapanification';

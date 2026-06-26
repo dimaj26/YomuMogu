@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       const body = await request.json();
       if (body.deckName) deckName = body.deckName;
       if (body.modelName) modelName = body.modelName;
-    } catch (e) {
+    } catch {
       // Игнорируем ошибку парсинга тела запроса, если оно пустое
     }
 

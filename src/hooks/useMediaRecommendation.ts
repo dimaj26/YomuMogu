@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { db, type LocalWord } from '@/core/db';
+import { db } from '@/core/db';
 import { getProfileItem, setProfileItem, getActiveProfileId } from '@/lib/profile';
 import { logger } from '@/lib/logger';
 import defaultFeed from '@/resources/media_feed.json';

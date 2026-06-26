@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.72.2] - 2026-06-27
+
+### Fixed
+- **Cheap ESLint warning cleanup (93 → 58).** Stripped 21 unused `catch (e)` bindings to `catch {` and removed 14 dead imports across 23 files — purely mechanical, no logic change. Left the semantic warnings untouched (`set-state-in-effect` SSR pattern, `exhaustive-deps`, `no-img-element`, intentional state setters). `tsc` clean, 527/527 tests pass, ESLint 0 errors. Count updated in `knowledge/lint-and-quality.md`.
+
 ## [1.72.1] - 2026-06-27
 
 ### Fixed

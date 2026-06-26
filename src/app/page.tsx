@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BookOpen, Settings, User, HelpCircle, X, Check, Award, BarChart2, BookOpen as BookIcon } from 'lucide-react';
+import { BookOpen, Settings, User, HelpCircle, X, Award, BarChart2 } from 'lucide-react';
 import { db } from '@/core/db';
 import { useJapanification } from '@/hooks/useJapanification';
 import { getProfileItem, removeProfileItem, getProfilesList, getActiveProfileId, setActiveProfileId, ProfileInfo } from '@/lib/profile';
@@ -201,7 +201,7 @@ export default function HomePage() {
           }
         }
       }
-    } catch (e) {
+    } catch {
       // Ошибки парсинга локального хранилища
     } finally {
       setHasLoaded(true);

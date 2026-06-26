@@ -14,7 +14,6 @@ import { buildCompetencyProfile } from '@/lib/competency/profile';
 import { getProfileItem, setProfileItem, removeProfileItem, getActiveProfileId } from '@/lib/profile';
 import type { GeneratedSession } from '@/lib/gemini/client';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
-import { JpUI } from '@/components/JpUI';
 import { PhonosemanticHint, PhonosemanticData } from '@/components/PhonosemanticHint';
 import { ScienceTip } from '@/components/ScienceTip';
 import { BalanceWidget } from '@/components/BalanceWidget';
@@ -459,7 +458,7 @@ export default function PracticePage() {
             }
           }
         }
-      } catch (e) {
+      } catch {
         // Ошибка чтения
       }
     });
@@ -644,7 +643,7 @@ export default function PracticePage() {
           retryable: data.retryable ?? true,
         });
       }
-    } catch (err) {
+    } catch {
       // Сетевой сбой (fetch failed) — человеческое сообщение, повтор доступен
       setServiceError({
         message: 'Не удалось связаться с ИИ-сервисом. Проверьте подключение и попробуйте ещё раз.',

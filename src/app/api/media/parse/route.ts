@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { verifyCsrf } from '@/lib/csrf';
 import { extractYoutubeVideoId, getYoutubeTranscriptSegments } from '@/lib/media/youtube';
-import { parseSrtOrVtt, parseSubtitlesToSegments, normalizeSegments, type SubtitleSegment } from '@/lib/media/parser';
+import { parseSubtitlesToSegments, normalizeSegments, type SubtitleSegment } from '@/lib/media/parser';
 import { regroupIntoSentences } from '@/lib/media/sentences';
 import mediaTranscripts from '@/resources/media_transcripts.json';
 

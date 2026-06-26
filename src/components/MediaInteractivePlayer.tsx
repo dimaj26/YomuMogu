@@ -477,7 +477,7 @@ export function MediaInteractivePlayer({ url, title, onClose }: MediaInteractive
       } else {
         setDictResult({ error: 'Не удалось получить словарное определение.' });
       }
-    } catch (err) {
+    } catch {
       setDictResult({ error: 'Ошибка связи со словарем.' });
     } finally {
       setIsLoadingDict(false);

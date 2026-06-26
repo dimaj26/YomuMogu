@@ -20,7 +20,7 @@ export function getTip(id: string): Tip | null {
   try {
     const tip = tipsList.find(t => t.id === id);
     return tip || null;
-  } catch (error) {
+  } catch {
     // В случае непредвиденных ошибок возвращаем null, чтобы не сломать вызывающий код
     return null;
   }

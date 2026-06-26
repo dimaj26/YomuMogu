@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getActiveWordSource } from '@/core/pluginRegistry';
-import { getDueWords, getLocalWords } from '@/core/db';
+import { getLocalWords } from '@/core/db';
 import { logger } from '@/lib/logger';
 import '@/plugins/anki/index'; // Ensure plugins are registered
 

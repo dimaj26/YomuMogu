@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { RefreshCw, CheckCircle, XCircle, BookOpen, Settings as SettingsIcon, AlertCircle, Sparkles, User, Trophy, Zap, BarChart2, Trash2 } from 'lucide-react';
+import { RefreshCw, CheckCircle, XCircle, BookOpen, Settings as SettingsIcon, AlertCircle, User, Trophy, Zap, BarChart2, Trash2 } from 'lucide-react';
 import styles from './settings.module.css';
 import { AnkiWord } from '@/plugins/anki/filter';
 import { useJapanification } from '@/hooks/useJapanification';
@@ -151,7 +151,7 @@ export default function SettingsPage() {
         const data = await res.json();
         setError(data.error || 'Не удалось автоматически настроить колоду YomuMogu');
       }
-    } catch (err) {
+    } catch {
       setError('Ошибка при автоматическом создании стандартной колоды YomuMogu.');
     } finally {
       setIsLoadingDecks(false);
@@ -177,7 +177,7 @@ export default function SettingsPage() {
         setIsConnected(false);
         setError(data.error || 'Не удалось подключиться к AnkiConnect');
       }
-    } catch (err) {
+    } catch {
       setIsConnected(false);
       setError('Anki не обнаружен. Запустите Anki с плагином AnkiConnect — либо используйте Локальный список (включён по умолчанию).');
     } finally {
@@ -203,7 +203,7 @@ export default function SettingsPage() {
         const data = await resDecks.json();
         setError(data.error || 'Ошибка загрузки колод');
       }
-    } catch (err) {
+    } catch {
       setError('Не удалось получить список колод из Anki');
     } finally {
       setIsLoadingDecks(false);
@@ -234,7 +234,7 @@ export default function SettingsPage() {
           cardIds: [w.id]
         }));
         setWords(mapped);
-      } catch (err) {
+      } catch {
         setError('Не удалось загрузить локальные слова');
       } finally {
         setIsLoadingWords(false);
@@ -259,7 +259,7 @@ export default function SettingsPage() {
       } else {
         setError(data.error || 'Ошибка загрузки слов');
       }
-    } catch (err) {
+    } catch {
       setError('Не удалось загрузить слова');
     } finally {
       setIsLoadingWords(false);

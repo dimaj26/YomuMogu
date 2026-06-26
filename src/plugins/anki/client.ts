@@ -74,7 +74,7 @@ export class AnkiConnectClient {
         logger.info('Успешное подключение к AnkiConnect');
       }
       return connected;
-    } catch (err) {
+    } catch {
       logger.warn('Не удалось подключиться к AnkiConnect при проверке связи');
       return false;
     }
