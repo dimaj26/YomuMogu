@@ -5,8 +5,12 @@ YomuMogu is a Japanese language-learning web app (Next.js 16 / TypeScript / Reac
 ---
 
 ## Architecture & Layout
-- [Architecture & stack](knowledge/architecture.md) — identity, stack table, directory tree, and the core user flow.
-- [Module registry](knowledge/module-registry.md) — authoritative per-file role table (update on any file add/remove/rename).
+- [Architecture & stack](knowledge/architecture.md) — identity, stack table, and the core user flow.
+- [Directory layout](knowledge/directory-layout.md) — the full `src/` App Router tree.
+- Module registry (per-file roles, update on any file add/remove/rename) — split by layer:
+  - [core/infra](knowledge/module-registry-core.md) — core/, plugins/anki/, extension/, resources/, services/, scripts/.
+  - [app & UI](knowledge/module-registry-app.md) — app/ pages + api/ routes, components/, hooks/, tests/e2e/.
+  - [lib/](knowledge/module-registry-lib.md) — media, gemini, grammar, jlpt, quiz, chat, words, science, balance, dict.
 - [Data schema](knowledge/data-schema.md) — localStorage namespace, core TypeScript interfaces, IndexedDB schema, YouTube cache.
 
 ## API & Integrations
@@ -17,7 +21,8 @@ YomuMogu is a Japanese language-learning web app (Next.js 16 / TypeScript / Reac
 ## Domain Rules
 - [Progression & intervals](knowledge/progression-and-intervals.md) — decorative XP invariant and the `core/intervals.ts` registry of all timing systems.
 - [Constraints](knowledge/constraints.md) — hard architectural taboos (PL-8).
-- [Coding rules](knowledge/coding-rules.md) — role, conventions (language/stack, Gemini, storage, API, testing, files, components), and response expectations.
+- [Coding rules](knowledge/coding-rules.md) — role, general conventions (language/stack, comments, files, components, scratch, changelog, git), response expectations.
+- [Coding rules — integrations](knowledge/coding-rules-integrations.md) — Gemini, profile/storage, API routes, testing conventions.
 - [Design system](knowledge/design-system.md) — palette, typography, 3D buttons, ruby/furigana styling.
 
 ## Quality & Process

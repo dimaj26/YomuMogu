@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.70.0] - 2026-06-26
+
+### Changed
+- **Split the 3 over-budget knowledge topics** (Aethel `max_topic_tokens=2500`) to shrink per-task context: `module-registry.md` (4840 tok) → `module-registry-core.md` / `-app.md` / `-lib.md` (by layer); `coding-rules.md` (3326) → general rules + `coding-rules-integrations.md` (Gemini/storage/API/testing); `architecture.md` (2760) → identity/stack/flow + `directory-layout.md` (the `src/` tree). `CONTEXT.md` index repointed; all `[PL-]/[CP-]` anchors preserved. `aethel lint` now reports all topics within budget; lossless (no role rows dropped).
+
 ## [1.69.0] - 2026-06-26
 
 ### Changed
