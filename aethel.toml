@@ -24,6 +24,12 @@ dir = "knowledge"           # directory of topic files (and decisions/ ADRs)
 dead_link_enforce = "error" # "error" (default) | "warn" | "off"
 # A knowledge/*.md topic file not reachable from the index (an orphan):
 orphan_enforce = "warn"     # "warn" (default) | "error" | "off"
+# Context-bloat budget: a topic over this many tokens (char/4 estimate) is flagged so the
+# index->topics model keeps paying off (AETHEL.md §7, "~50-200 lines, split if it no longer
+# reads in one sitting"). Pinned at the library default to lock the contract regardless of
+# upstream changes; the tree already complies (largest topic ~2382 tok). Run `aethel size`.
+max_topic_tokens = 2500     # 0 = off
+topic_size_enforce = "warn" # "warn" (default, char/4 too coarse to block) | "error" | "off"
 
 [report]
 # Walkthrough report (walkthrough.md) — the session/task report for Route B work.
