@@ -1,5 +1,5 @@
 # --- AI-workflow / dev tooling ---
-aethel-cli==1.6.0        # Aethel knowledge/spec linter (prompt_linter.py + pre-commit hook)
+aethel-cli==1.7.0        # Aethel knowledge/spec linter (prompt_linter.py + pre-commit hook)
 ruff==0.15.18            # Python linter + formatter (tokenizer service, dict helper)
 
 # --- MeCab tokenizer microservice (src/services/tokenizer/server.py) ---

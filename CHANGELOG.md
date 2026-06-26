@@ -2,6 +2,12 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.69.0] - 2026-06-26
+
+### Changed
+- **Upgraded Aethel `1.6.0 → 1.7.0` (core-rev 8 → 11).** `aethel update` refreshed the managed core block (custom project rules preserved; backup `AETHEL.md.bak.*`) and the pre-commit wrapper. New checks now active: **topic-size validation** (`max_topic_tokens=2500` → `module-registry.md`/`coding-rules.md`/`architecture.md` flagged for splitting), **tag anchor/collision validation**, incremental Route B commits (checklist completeness only at `--stage checklist`), and friendlier agent-registry errors. `aethel doctor` confirms the husky hook is `live` and core `consistent`.
+- **Cleanup**: removed the duplicate `yomumogu-plugin` proposal-analysis skill in favour of the aethel-maintained `aethel-plugin` one (registry + skills doc repointed); deleted the regenerated `AETHEL_ONBOARDING.md`. Added `knowledge/session-lifecycle.md` (session mechanics the condensed core now defers to). `requirements.txt` → `aethel-cli==1.7.0`.
+
 ## [1.68.0] - 2026-06-26
 
 ### Changed

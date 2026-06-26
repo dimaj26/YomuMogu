@@ -25,6 +25,7 @@ YomuMogu is a Japanese language-learning web app (Next.js 16 / TypeScript / Reac
 - [Lint & quality](knowledge/lint-and-quality.md) — ESLint 9, architectural-boundary rules, test-quality gate, Ruff, pre-commit/CI.
 - [Agent registry](knowledge/agents.md) — closed list of delegatable sub-agents (Route D).
 - [Skills registry](knowledge/skills.md) — workspace-local Skill-tool capabilities and their status.
+- [Session lifecycle](knowledge/session-lifecycle.md) — Route B session mechanics (start/switch/done/abandon, archival).
 
 ## Features
 - [Implemented features](knowledge/features.md) — one-line registry of shipped features.

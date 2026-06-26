@@ -17,7 +17,7 @@ This is the **closed source of truth** for delegatable agents (AETHEL.md Route D
 - **Role**: Architectural audit & design-evaluation engine (the Optimality-Scale / Triple-Dialectic logic that `proposal-auditor` runs). Plugin-packaged form of the auditor, usable directly.
 - **When to use**: Route D analysis via `PA-1` (project mode, reference = knowledge tree) or `APA-1` (abstract mode, industry standards). Read-only; structured analysis only.
 - **Behavior**: Optimality Scale 0–6 across Compliance / Value / Footprint, two reference modes, exact Russian verdict patterns.
-- **Definition**: [proposal-analysis SKILL.md](../.agents/plugins/yomumogu-plugin/skills/proposal-analysis/SKILL.md).
+- **Definition**: [proposal-analysis SKILL.md](../.agents/plugins/aethel-plugin/skills/proposal-analysis/SKILL.md).
 
 ## test-runner-and-debugger
 - **Role**: Test Execution & Auto-Debugger.

@@ -25,3 +25,9 @@ Run by `prompt_linter.py` / `aethel lint` via `.husky/pre-commit` (alongside `li
 - **`[consistency] enforce = "error"`** — if AETHEL.md's managed `aethel-core` block diverges from the installed library core, commits are **blocked** until `aethel update` re-syncs.
 - **`[consistency] version_skew_enforce = "warn"`** — left non-blocking on purpose: revision skew means the library moved ahead (upstream lag), not a workspace defect; it nags to run `aethel update` without blocking.
 - Other always-on checks (knowledge-index integrity, agent/skill registry, plan/task/walkthrough stage) already fail the commit on real violations.
+
+### New in Aethel 1.7.0 (core-rev 11)
+- **Topic-size validation**: warns when a `knowledge/*.md` topic exceeds `[knowledge] max_topic_tokens` (default 2500, char/4 estimate) → split it. `aethel size` prints the per-file token report. Currently over budget: `module-registry.md`, `coding-rules.md`, `architecture.md` (split backlog).
+- **Tag anchor / collision validation**: `[G-]/[C-]/[K-]` tags resolve against heading slugs; a heading can pin a short stable slug via `## Heading {#short}`. `aethel tags list` enumerates all slugs + source; an unknown tag gets a "did you mean" hint.
+- **Incremental Route B commits**: checklist completeness is enforced only at `--stage checklist` (finalization), so a completed chunk can be committed while later `task.md` items stay open (see [session-lifecycle](session-lifecycle.md)).
+- **Agent registration**: a skill registers via an inline link **or** a backticked path to its `SKILL.md`; the orphan error now states the required form.
