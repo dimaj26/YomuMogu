@@ -21,7 +21,7 @@ Formerly `CONTEXT_PROMPT.md` [CP-2.2]. One line per feature — implementation d
 - **Session Safeguard**: Corrupted state detection + fallback UI in `/chat`.
 - **Chat Exit Flow**: Orange Завершить button, confirmation modal, routes to Bonus Test on confirm.
 - **Gemini Retry**: `withRetry()` + exponential backoff + model fallback chain (flash→pro→flash-lite).
-- **Logging**: Structured logger (debug/info/warn/error) → `logs/`.
+- **Logging**: Structured logger (debug/info/warn/error) → `logs/app.log`, with size-based rotation (rolls at 5 MB, keeps `app.log.1`..`.3`).
 - **Testing**: Vitest unit (mocked) + integration configs for Anki/Gemini/MeCab; journey golden-path tests (mocked, default suite); Playwright e2e.
 - **Session Audit**: Bonus Test, Gemini vocab extraction, JitenDex lookup, Anki sync (manual FSRS grading, AI note creation with TTS/images).
 - **Bilateral Sync**: IndexedDB (Dexie.js) ↔ Anki via `/api/anki/sync-db`; review deduplication, FSRS approximation, 4AM boundary, dual-state (passive/active).

@@ -7,9 +7,16 @@ const path = typeof window === 'undefined' ? require('path') : null;
 
 type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
 
+// Ротация app.log: при достижении лимита текущий файл сдвигается в app.log.1,
+// .1 → .2 и т.д., самый старый бэкап удаляется. Размер кэшируется в памяти,
+// чтобы не звать statSync на каждую запись.
+const MAX_LOG_BYTES = 5 * 1024 * 1024; // 5 МБ на файл
+const MAX_LOG_BACKUPS = 3; // app.log.1 .. app.log.3 (итого ≤ 20 МБ истории)
+
 class Logger {
   private logDir: string;
   private logFile: string;
+  private currentSize = 0; // байт в текущем app.log (кэш для ротации)
 
   constructor() {
     if (typeof window === 'undefined' && path) {
@@ -29,8 +36,27 @@ class Logger {
       if (!fs.existsSync(this.logDir)) {
         fs.mkdirSync(this.logDir, { recursive: true });
       }
+      // Инициализируем счётчик размером уже накопленного файла (после рестарта).
+      this.currentSize = fs.existsSync(this.logFile) ? fs.statSync(this.logFile).size : 0;
     } catch (err) {
       console.error('Не удалось инициализировать папку логов:', err);
+    }
+  }
+
+  // Сдвигает app.log → app.log.1 → app.log.2 → ..., удаляя самый старый бэкап.
+  private rotate() {
+    if (!fs) return;
+    try {
+      const oldest = `${this.logFile}.${MAX_LOG_BACKUPS}`;
+      if (fs.existsSync(oldest)) fs.unlinkSync(oldest);
+      for (let i = MAX_LOG_BACKUPS - 1; i >= 1; i--) {
+        const src = `${this.logFile}.${i}`;
+        if (fs.existsSync(src)) fs.renameSync(src, `${this.logFile}.${i + 1}`);
+      }
+      if (fs.existsSync(this.logFile)) fs.renameSync(this.logFile, `${this.logFile}.1`);
+      this.currentSize = 0;
+    } catch {
+      // Ротация не должна ронять приложение; при ошибке продолжаем писать в текущий файл.
     }
   }
 
@@ -38,10 +64,16 @@ class Logger {
     if (typeof window !== 'undefined' || !fs) return;
     const timestamp = new Date().toISOString();
     const logLine = `[${timestamp}] [${level}] ${message}${errorStack ? `\nStack Trace:\n${errorStack}` : ''}\n`;
-    
+    const lineBytes = Buffer.byteLength(logLine, 'utf8');
+
     try {
+      // Ротируем ДО записи, если строка переполнит текущий файл (пустой файл не ротируем).
+      if (this.currentSize > 0 && this.currentSize + lineBytes > MAX_LOG_BYTES) {
+        this.rotate();
+      }
       fs.appendFileSync(this.logFile, logLine, 'utf8');
-    } catch (err) {
+      this.currentSize += lineBytes;
+    } catch {
       // Игнорируем ошибки записи, чтобы не уронить приложение из-за логов
     }
   }

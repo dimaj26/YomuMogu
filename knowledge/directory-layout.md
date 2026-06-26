@@ -142,7 +142,7 @@ src/
       server.py           # MeCab FastAPI microservice (port 8000)
       Dockerfile          # Container definition for MeCab service
   lib/
-    logger.ts             # Structured logger (debug/info/warn/error → logs/)
+    logger.ts             # Structured logger (debug/info/warn/error → logs/); size-based rotation (5 MB × 3 backups)
     profile.ts            # localStorage profile helpers + multi-profile management
     csrf.ts               # CSRF protection helpers (same-origin Origin/Referer verification)
     sanitize.ts           # DOMPurify HTML sanitization utility for dangerouslySetInnerHTML
