@@ -230,6 +230,12 @@ A sub-route of Route A/B **execution** (not a replacement for it): when a self-c
 - **Never delegate**: frontier/architectural changes; anything where a semantically wrong patch passes ESLint but breaks modularity ([G-fail-fast-error-handling], [G-linter-compliance]); code requiring stable Russian comments/logs/UI committed as-is (7B is unstable on Russian).
 - **Guardrails**: no silent delegation — always state what was sent to Ollama and what came back; review/rewrite the output before any commit. Autonomous DeepSeek/cloud delegation is out of scope.
 
+## Spec-Kit bridge — optional SDD front-end (project rule) {#spec-kit-bridge}
+GitHub **spec-kit** is installed as an *optional* handler for task requests, **bridged INTO this protocol — Aethel stays master, on conflict the core wins.** Full mapping in [spec-kit-bridge](file:///C:/YomuMogu/knowledge/spec-kit-bridge.md) `[K-spec-kit-bridge]`.
+- **Routing is unchanged.** A request is still categorized A/B/C/D by §1. The `/speckit-*` skills are reached only for Route B-shaped work, and only when the SDD front-end adds value.
+- **Phase→route:** `/speckit-specify`→Route B "what"; `/speckit-clarify`→Route D grill-me (one round); `/speckit-plan`→`implementation_plan.md` (RNA-Blueprint §2); `/speckit-tasks`→`task.md`; `/speckit-analyze`/`-checklist`→`aethel lint`; `/speckit-implement`→Route B chunked execution + GW-1; `/speckit-constitution`→edits AETHEL/knowledge, never a second rulebook.
+- **Aethel artifacts & gates win.** Session `implementation_plan.md`/`task.md`/`walkthrough.md` + Route C (`CONTEXT.md`/`knowledge/`) are authoritative and mandatory; anything under `specs/` is a supporting aid that must not contradict the knowledge index. Linter-green, `[sync]` guard, GW-1 auto-commit, and `graphify update .` apply to spec-kit output too.
+
 ## RNA-Blueprint — Ecosystem links (project addendum to §2)
 For features touching >1 system, the plan's Task RNA must add **Ecosystem links** (forward-looking, complementing the backward-looking CC tags): which existing systems the feature consumes / extends / invalidates (`[PL-10]`/[progression-and-intervals] Intervals Registry, `[PL-7.1]` XP write-only invariant, Competency Ladder, single-curve FSRS) and which roadmap feature (`_nogit_roadmap.md` §2) it prepares or blocks. Skipped for small/local changes.
 

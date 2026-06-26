@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.74.0] - 2026-06-27
+
+### Added
+- **GitHub spec-kit bridged into Aethel as an optional SDD task-request handler.** Installed `specify-cli` (via `uv tool install`) and ran `specify init --here --integration claude --script ps`, scaffolding `.specify/` (PowerShell scripts, templates, manifests, constitution) and 11 `/speckit-*` skills under `.claude/skills` (git-ignored, local-only). Mode = **Bridge**: Aethel stays master orchestrator and on conflict the core wins. New topic `knowledge/spec-kit-bridge.md` maps each spec-kit phase onto an Aethel route (`/speckit-specify`→Route B "what", `-clarify`→Route D grill-me, `-plan`→`implementation_plan.md`, `-tasks`→`task.md`, `-analyze`/`-checklist`→`aethel lint`, `-implement`→chunked Route B + GW-1) and declares Aethel artifacts/gates authoritative (anything under `specs/` is a supporting aid). `.specify/memory/constitution.md` rewritten from template to a thin AETHEL deferral stub (no second rulebook). Route C wiring: `CONTEXT.md` index link, `AETHEL.md` project section, `knowledge/skills.md` registry entry. `aethel lint` green.
+
 ## [1.73.0] - 2026-06-27
 
 ### Added

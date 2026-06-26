@@ -30,6 +30,7 @@ YomuMogu is a Japanese language-learning web app (Next.js 16 / TypeScript / Reac
 - [Lint & quality](knowledge/lint-and-quality.md) — ESLint 9, architectural-boundary rules, test-quality gate, Ruff, pre-commit/CI.
 - [Agent registry](knowledge/agents.md) — closed list of delegatable sub-agents (Route D).
 - [Skills registry](knowledge/skills.md) — workspace-local Skill-tool capabilities and their status.
+- [Spec-Kit bridge](knowledge/spec-kit-bridge.md) — how GitHub spec-kit (`/speckit-*`, `.specify/`, `specs/`) is bridged INTO Aethel as an optional task-request handler; phase→route mapping and artifact authority.
 - [Session lifecycle](knowledge/session-lifecycle.md) — Route B session mechanics (start/switch/done/abandon, archival).
 - [Graphify workflow](knowledge/graphify-workflow.md) — code indexed as a queryable graph; the graphify-first reading protocol and its carve-out.
 - [Local delegation](knowledge/local-delegation.md) — how the agent offloads fitting self-contained sub-tasks to local Ollama (qwen2.5-coder:7b-16k) via claude-code-router; mechanism behind AETHEL Route A.O.
