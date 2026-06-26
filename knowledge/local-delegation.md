@@ -1,17 +1,17 @@
 ---
 name: local-delegation
-description: How the agent offloads a self-contained sub-task to the local Ollama model (qwen2.5-coder:7b-16k) via claude-code-router — the operational mechanism behind AETHEL Route A.O.
+description: How the agent offloads a self-contained sub-task to the local Ollama model (qwen2.5-coder:7b-16k) via claude-code-router — the rule and operational mechanism for local delegation.
 ---
 
 # Local Task Delegation (Ollama)
 
-The behavioral rule lives in [AETHEL.md](../AETHEL.md) under "Route A.O — Local Delegation sub-route" (`[G-delegate-ollama]`); this topic is the **operational reference** for *how* the offload is performed. All of this is a **local dev-tool layer — nothing here is an app runtime dependency**, and the router config lives outside the repo (git-ignored user home), so it is absent from clean clones.
+This topic holds both the rule and the **operational reference** for *how* a fitting self-contained sub-task is offloaded to local Ollama. All of this is a **local dev-tool layer — nothing here is an app runtime dependency**, and the router config lives outside the repo (git-ignored user home), so it is absent from clean clones.
 
 ## Tooling layer — claude-code-router (CCR)
 
 [claude-code-router](https://github.com/musistudio/claude-code-router) (npm `@musistudio/claude-code-router`, CLI `ccr`) is a local proxy that intercepts Claude Code traffic and routes each request to a provider per a routing table. It runs as a gateway on `http://127.0.0.1:3456`; config is at `%APPDATA%\..\.claude-code-router\config.json` (uses `$DEEPSEEK_API_KEY` env interpolation — no plaintext secret).
 
-Routing was set per a Route D / APA-1 audit (`proposal-auditor`):
+Routing was set per a delegated audit (`proposal-auditor`):
 
 | CCR route | Provider/model | Rationale |
 |---|---|---|
@@ -19,7 +19,7 @@ Routing was set per a Route D / APA-1 audit (`proposal-auditor`):
 | `background` | Ollama `qwen2.5:7b-instruct` | local, $0; stable Russian commit msgs |
 | `default` (frontier architecture) | Claude (Opus) | high cost of a plausible-but-wrong patch on strict ESLint boundaries |
 
-`ccr code` launches Claude Code through the gateway; in-session `/model provider,model` switches the active model. **CCR routing is a separate concern from the autonomous offload below** — Route A.O delegation goes *directly* to local Ollama, never through the cloud routes.
+`ccr code` launches Claude Code through the gateway; in-session `/model provider,model` switches the active model. **CCR routing is a separate concern from the autonomous offload below** — local delegation goes *directly* to local Ollama, never through the cloud routes.
 
 ## The delegation mechanism (autonomous offload)
 
@@ -39,12 +39,12 @@ ollama run qwen2.5-coder:7b-16k "<task>"
 
 ## When to delegate
 
-Delegate **only when ALL hold** (full criteria + the never-delegate list are in AETHEL `[G-delegate-ollama]`):
+Delegate **only when ALL hold** (full criteria + the never-delegate list follow):
 - Self-contained and fits ≤16k tokens of context (no large multi-file repo context).
 - Mechanically verifiable by you (lint/test/eyeball) before use.
 - Off the critical architectural path; low cost of a plausible-but-wrong answer.
 
-Fits: isolated pure functions, regex/patterns, format/data transforms, boilerplate scaffolds, code explanation/summary, simple unit-test skeletons, small mechanical single-file edits. **Never** delegate frontier/architectural changes, modularity-sensitive patches (a semantically wrong patch can pass ESLint — `[G-fail-fast-error-handling]`, `[G-linter-compliance]`), or code requiring stable Russian comments/logs/UI committed as-is (7B is unstable on Russian).
+Fits: isolated pure functions, regex/patterns, format/data transforms, boilerplate scaffolds, code explanation/summary, simple unit-test skeletons, small mechanical single-file edits. **Never** delegate frontier/architectural changes, modularity-sensitive patches (a semantically wrong patch can pass ESLint — fail-fast and linter-compliance still matter), or code requiring stable Russian comments/logs/UI committed as-is (7B is unstable on Russian).
 
 ## Guardrails & ops
 

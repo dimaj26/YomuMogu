@@ -2,6 +2,20 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.0.0] - 2026-06-27
+
+### Changed (BREAKING)
+- **Migrated the development workflow from the Aethel protocol to spec-kit (Spec-Driven Development), hybrid mode.** Task requests are now handled by `/speckit-specify → -plan → -tasks → -implement` (feature branch + `specs/NNN-slug/`), governed by `.specify/memory/constitution.md` (rewritten from a stub into a real v1.0.0 constitution carrying the surviving principles: Test-First, fail-fast, layered/facade boundaries, no-placeholders, PowerShell/venv, EN-docs/RU-comments, auto-commit + push-needs-approval, keep-graphify-fresh).
+
+### Removed
+- Aethel governance: `AETHEL.md`, `aethel.toml`, `prompt_linter.py`, `.aethel/` scratch, and the pure-process knowledge topics (`agents.md`, `session-lifecycle.md`, `skills.md`, `spec-kit-bridge.md`). Uninstalled `aethel-cli` from the venv. Per a Route-D audit (idea 0/6, plan 4/6) the migration was taken in **hybrid** form to retain machine enforcement.
+
+### Added
+- **`scripts/spec_sync_guard.py`** — a lightweight pre-commit doc-drift guard replacing the Aethel `[sync]` linter: staged `src/**` code must ship with a spec/doc update (`specs/**`, `knowledge/**`, the constitution, `CONTEXT.md`, or `CHANGELOG.md`) in the same commit; bypass `SKIP_SPEC_SYNC=1`. Wired into `.husky/pre-commit` step 2.
+
+### Kept
+- Code-quality gate (`lint-staged` ESLint+Ruff) and all graphify hooks (`post-commit`/`post-checkout` rebuild + pre-commit `graph_doc_sync.py`) are untouched. The `knowledge/` architecture/domain tree is retained as reference, scrubbed of Aethel governance terminology and dead links.
+
 ## [1.74.0] - 2026-06-27
 
 ### Added

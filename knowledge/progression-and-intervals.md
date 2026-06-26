@@ -5,7 +5,7 @@ description: Decorative XP/level invariant and the single-source-of-truth regist
 
 # Progression (XP) & Interval Systems Registry
 
-Formerly `PROJECT_LOGIC.md` [PL-7] and [PL-10]. Changing any interval constant requires an architectural audit (Route D analysis / Route B plan).
+Formerly `PROJECT_LOGIC.md` [PL-7] and [PL-10]. Changing any interval constant requires an architectural audit first.
 
 ## [PL-7] Progression & Immersion Decoration
 
@@ -24,7 +24,7 @@ To encourage user engagement, YomuMogu displays decorative progression levels an
 
 ## [PL-10] Interval Systems Registry
 
-Все временные ограничения, шаги планирования и интервалы сгруппированы в едином изолированном файле `src/core/intervals.ts`. Любые изменения значений должны производиться исключительно после проведения архитектурного аудита (Route B).
+Все временные ограничения, шаги планирования и интервалы сгруппированы в едином изолированном файле `src/core/intervals.ts`. Любые изменения значений должны производиться исключительно после проведения архитектурного аудита.
 
 | Система | Описание / Назначение | Константы в `src/core/intervals.ts` | Владелец | Потребители |
 |---|---|---|---|---|

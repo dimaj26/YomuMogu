@@ -19,16 +19,8 @@ Formerly `PROJECT_LOGIC.md` [PL-9.5]. The machine-enforced architectural boundar
 - **Test-quality gate** (`eslint-plugin-vitest`, test files only): `expect-expect`, `no-disabled-tests`, `valid-expect` (`maxArgs: 2`, allows vitest's `expect(value, message)`), `no-identical-title` — all `error`. Blocks empty/assertion-less/disabled/duplicate-title tests.
 - **Python quality** (`ruff.toml`): Ruff linter + formatter for `src/services/tokenizer/server.py` and `src/lib/dict/lookup.py`. Conservative rule set (`F` + `E4/E7/E9`), `target-version py311`, `line-length 100`. Installed in the local `venv`.
 
-## Aethel workflow guards (spec/process layer)
-Run by `prompt_linter.py` / `aethel lint` via `.husky/pre-commit` (alongside `lint-staged`; disjoint surfaces). Enforce levels live in `aethel.toml` and are **escalated to blocking** as of CHANGELOG 1.68.0:
-- **`[sync] enforce = "error"`** — a commit that stages code (`*.ts/.tsx/.py/.js/.jsx/.go/.rs/.java/.sql`, minus `*test*`/`*spec*`/`*.md`) but no spec file (`CONTEXT.md`, `AETHEL.md`, `knowledge/*`) is **blocked** (Route C drift). Escape hatch for a genuinely spec-irrelevant commit: `AETHEL_SKIP_SYNC=1 git commit ...`.
-- **`[sync] require_changelog = "error"`** — staging `AETHEL.md` (a `rule_files` entry) without staging `CHANGELOG.md` is **blocked** (same `AETHEL_SKIP_SYNC` hatch).
-- **`[consistency] enforce = "error"`** — if AETHEL.md's managed `aethel-core` block diverges from the installed library core, commits are **blocked** until `aethel update` re-syncs.
-- **`[consistency] version_skew_enforce = "warn"`** — left non-blocking on purpose: revision skew means the library moved ahead (upstream lag), not a workspace defect; it nags to run `aethel update` without blocking.
-- Other always-on checks (knowledge-index integrity, agent/skill registry, plan/task/walkthrough stage) already fail the commit on real violations.
-
-### New in Aethel 1.7.0 (core-rev 11)
-- **Topic-size validation**: warns when a `knowledge/*.md` topic exceeds `[knowledge] max_topic_tokens` (default 2500, char/4 estimate) → split it. `aethel size` prints the per-file token report. Currently over budget: `module-registry.md`, `coding-rules.md`, `architecture.md` (split backlog).
-- **Tag anchor / collision validation**: `[G-]/[C-]/[K-]` tags resolve against heading slugs; a heading can pin a short stable slug via `## Heading {#short}`. `aethel tags list` enumerates all slugs + source; an unknown tag gets a "did you mean" hint.
-- **Incremental Route B commits**: checklist completeness is enforced only at `--stage checklist` (finalization), so a completed chunk can be committed while later `task.md` items stay open (see [session-lifecycle](session-lifecycle.md)).
-- **Agent registration**: a skill registers via an inline link **or** a backticked path to its `SKILL.md`; the orphan error now states the required form.
+## Spec-sync drift guard (process layer)
+A lightweight, self-contained pre-commit guard, [scripts/spec_sync_guard.py](../scripts/spec_sync_guard.py), runs via `.husky/pre-commit` alongside `lint-staged` (disjoint surfaces). It replaces the retired Aethel doc-linter and preserves the one machine-enforced discipline worth keeping — code and its documentation move together:
+- A commit that stages source code (`src/**` `*.ts/.tsx/.js/.jsx/.mjs/.cjs/.py`) but **no** spec/doc file is **blocked**. The same commit must also stage a spec/doc artifact: `specs/**`, `knowledge/**`, `.specify/memory/constitution.md`, `CONTEXT.md`, or `CHANGELOG.md`.
+- Escape hatch for a genuinely doc-irrelevant commit: `SKIP_SPEC_SYNC=1 git commit ...`.
+- The spec-kit workflow's other gates are not commit-time: the review gates inside the `/speckit-*` skills and the [constitution](../.specify/memory/constitution.md) govern spec/plan/task quality.

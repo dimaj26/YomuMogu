@@ -16,4 +16,4 @@ Formerly `CONTEXT_PROMPT.md` [CP-4]. CSS Modules only — no Tailwind (see [cons
 
 ## [CP-5] Scope Boundary
 - Only code generation, bug fixing, and feature implementation.
-- No architectural decisions without an analysis/proposal audit first (Route D / Route B).
+- No architectural decisions without an analysis/proposal audit first.
