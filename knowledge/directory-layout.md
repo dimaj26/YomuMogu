@@ -31,6 +31,8 @@ src/
     chat/                 # /chat page — AI conversation interface
       page.tsx
       chat.module.css
+      __tests__/page.test.tsx
+    favicon.ico           # Favicon
     error.tsx             # Global Next.js error boundary page
     api/
       anki/               # Anki proxy routes (server → AnkiConnect)
@@ -81,12 +83,19 @@ src/
       useQuests.test.ts   # Unit tests for useQuests hook
       useApiCall.test.ts  # Unit tests for useApiCall hook
       useMediaRecommendation.test.ts # Unit tests for useMediaRecommendation hook
+  __tests__/                # Root-level tests
+    extension-convert.test.ts
+    next.config.test.ts
+    journeys/
+      local-onboarding.journey.test.ts
   core/
     db.ts                 # Decoupled IndexedDB database
+    intervals.ts          # Registry of all timing systems (XP, hydration, cooldown)
     localDeckService.ts   # Local word management
     scheduler.ts          # FSRS math scheduling
     pluginRegistry.ts     # WordSource and Plugin interfaces
     types.ts              # Core types
+    __tests__/
   plugins/
     anki/                 # Anki integration plugin
       client.ts
@@ -97,28 +106,40 @@ src/
         client.test.ts
         filter.test.ts
         sync.integration.test.ts
-  extension/              # Browser extension files for YouTube subtitles
-    manifest.json
-    background.js
-    content.js
+    extension/              # Browser extension files for YouTube subtitles
+      manifest.json
+      background.js
+      content.js
+      convert.js            # Subtitle format conversion utilities
   components/
+    AssessmentModal.tsx   # Full-screen onboarding diagnostic assessment grid modal
+    AssessmentModal.module.css
+    BalanceWidget.tsx     # Structure-vs-immersion balance dashboard widget
+    BalanceWidget.module.css
+    DebugDrawer.tsx       # Client component implementing the sliding debug drawer HUD
+    DebugDrawer.module.css # Styles for the DebugDrawer
+    ErrorBoundary.tsx     # React error boundary with fallback UI
+    ErrorFallback.tsx     # Fallback UI shown by ErrorBoundary
+    ErrorFallback.module.css
+    GrammarTrack.tsx      # Duolingo winding SVG path client component for grammar rules
+    GrammarTrack.module.css # Styles for the GrammarTrack component
+    GrammarTrainer.tsx    # Interactive overlays displaying theory and AI feedback for grammar rules
+    GrammarTrainer.module.css # Styles for the GrammarTrainer component
     JpUIProvider.tsx      # UI FSRS word state provider
     JpUI.tsx              # Granular Smart Japanification wrapper
     JpUI.module.css       # JpUI CSS module (tooltips, pulse animation)
     LanguageSwitcher.tsx  # Compact global Language Switcher dropdown component
     LanguageSwitcher.module.css # Styles for LanguageSwitcher dropdown
-    PhonosemanticHint.tsx # Accordion component displaying phonosemantic keys and relatives
-    PhonosemanticHint.module.css # Styles for PhonosemanticHint accordion
-    DebugDrawer.tsx       # Client component implementing the sliding debug drawer HUD
-    DebugDrawer.module.css # Styles for the DebugDrawer
     LearningTrack.tsx     # N5→N1 macro competency ladder — SVG winding track showing JLPT-level coverage progress rings
     LearningTrack.module.css # Styles for the LearningTrack component
-    GrammarTrack.tsx      # Duolingo winding SVG path client component for grammar rules
-    GrammarTrack.module.css # Styles for the GrammarTrack component
-    GrammarTrainer.tsx    # Interactive overlays displaying theory and AI feedback for grammar rules
-    GrammarTrainer.module.css # Styles for the GrammarTrainer component
     MediaInteractivePlayer.tsx # Interactive subtitle player component supporting YouTube/Audio media
     MediaInteractivePlayer.module.css # CSS module for MediaInteractivePlayer
+    PhonosemanticHint.tsx # Accordion component displaying phonosemantic keys and relatives
+    PhonosemanticHint.module.css # Styles for PhonosemanticHint accordion
+    ScienceTip.tsx        # Pedagogy research citation card component
+    ScienceTip.module.css
+    ServiceUnavailable.tsx # Reusable unavailable-service UI with conditional Retry button
+    ServiceUnavailable.module.css
     __tests__/
       ErrorBoundary.test.tsx
       ErrorFallback.test.tsx
@@ -146,6 +167,39 @@ src/
     profile.ts            # localStorage profile helpers + multi-profile management
     csrf.ts               # CSRF protection helpers (same-origin Origin/Referer verification)
     sanitize.ts           # DOMPurify HTML sanitization utility for dangerouslySetInnerHTML
+    chat/
+      fluency.ts          # Pure logic and calculations for fluency mode
+      furigana.ts         # FSRS interval-based faded furigana logic
+      __tests__/
+        fluency.test.ts   # Unit tests for fluency module
+        furigana.test.ts  # Unit tests for gradual furigana processor
+    dict/
+      jitendex.ts         # Offline JitenDex dictionary query client
+      lookup.py           # Python dictionary lookup helper script
+      __tests__/
+    gemini/
+      client.ts           # Gemini API client (withRetry, structured output, language taboos)
+      chat.ts             # Chat-oriented Gemini interaction patterns
+      errors.ts           # Classified error types (config/transient/unavailable)
+      prompts.ts          # Prompt templates and system instructions
+      queryExpansion.ts   # Query expansion for Gemini context enhancement
+      retry.ts            # Exponential backoff + model fallback chain
+      __tests__/
+        chat.test.ts, chat.integration.test.ts
+        client.test.ts, client.integration.test.ts
+        errors.test.ts
+        prompts.test.ts
+        queryExpansion.test.ts
+        retry.test.ts
+        scenarios.integration.test.ts
+    quiz/
+      compare.ts          # Answer comparison (cloze/translation, typo forgiveness)
+      romaji.ts           # Romaji normalization utilities
+      __tests__/
+    words/
+      priority.ts         # Word priority scoring for session generation
+      similarity.ts       # Word similarity and deduplication utilities
+      __tests__/
     chat/
       fluency.ts          # Pure logic and calculations for fluency mode
       furigana.ts         # FSRS interval-based faded furigana logic

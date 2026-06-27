@@ -18,7 +18,7 @@ YomuMogu is a Japanese language-learning web app: Anki + Gemini AI conversation 
 | **UI** | React 19 client components, Vanilla CSS Modules |
 | **AI** | Google Gemini API (`@google/genai`), models: `gemini-2.5-flash` → `gemini-2.5-pro` → `gemini-2.5-flash-lite` |
 | **Anki** | AnkiConnect HTTP API (local, port 8765) |
-| **Storage** | localStorage (client profile data), `process.env` (secrets), `logs/` (file logs) |
+| **Storage** | localStorage (profile/preferences), IndexedDB/Dexie.js (deck, reviews, FSRS), `process.env` (secrets), `logs/` (file logs) |
 | **Testing** | Vitest + @testing-library/react (unit) / `vitest.integration.config.ts` (real API) |
 | **Dev Server** | `npm run dev` → http://localhost:3000 |
 | **OS** | Windows / PowerShell |

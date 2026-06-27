@@ -1,0 +1,8 @@
+{
+  "skills": [
+    ".claude/skills"
+  ],
+  "plugin": [
+    ".opencode/plugins/graphify.js"
+  ]
+}
