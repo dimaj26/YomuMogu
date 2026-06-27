@@ -6,18 +6,7 @@ on version, browser, and isolation flags.
 
 ## Contract A — Claude Code (`/.mcp.json`, new file)
 
-```json
-{
-  "mcpServers": {
-    "playwright": {
-      "command": "npx",
-      "args": ["-y", "@playwright/mcp@0.0.76", "--isolated", "--browser", "chromium"]
-    }
-  }
-}
-```
-
-Windows fallback (only if the host cannot spawn `npx`, see research R7):
+Committed form (Windows, `cmd /c` wrapper — see research R7; this is what shipped):
 
 ```json
 {
@@ -25,6 +14,19 @@ Windows fallback (only if the host cannot spawn `npx`, see research R7):
     "playwright": {
       "command": "cmd",
       "args": ["/c", "npx", "-y", "@playwright/mcp@0.0.76", "--isolated", "--browser", "chromium"]
+    }
+  }
+}
+```
+
+Non-Windows equivalent (use plain `npx`):
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@0.0.76", "--isolated", "--browser", "chromium"]
     }
   }
 }
@@ -41,12 +43,14 @@ The existing file keeps its `skills` and `plugin` keys; add the `mcp` key:
   "mcp": {
     "playwright": {
       "type": "local",
-      "command": ["npx", "-y", "@playwright/mcp@0.0.76", "--isolated", "--browser", "chromium"],
+      "command": ["cmd", "/c", "npx", "-y", "@playwright/mcp@0.0.76", "--isolated", "--browser", "chromium"],
       "enabled": true
     }
   }
 }
 ```
+
+> On non-Windows hosts, drop the `"cmd", "/c"` prefix and start the array with `"npx"`.
 
 ## Capability contract (what the server exposes to agents)
 

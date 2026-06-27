@@ -4,5 +4,21 @@
   ],
   "plugin": [
     ".opencode/plugins/graphify.js"
-  ]
+  ],
+  "mcp": {
+    "playwright": {
+      "type": "local",
+      "command": [
+        "cmd",
+        "/c",
+        "npx",
+        "-y",
+        "@playwright/mcp@0.0.76",
+        "--isolated",
+        "--browser",
+        "chromium"
+      ],
+      "enabled": true
+    }
+  }
 }

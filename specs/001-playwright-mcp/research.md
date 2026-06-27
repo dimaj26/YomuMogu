@@ -88,13 +88,13 @@ All Technical Context unknowns are resolved below.
 
 ## R7 — Windows / PowerShell gotcha (FR-002)
 
-- **Decision**: Start with plain `"npx"` as the command. If Claude Code on
-  Windows fails to spawn `npx` (a known historical issue where the host cannot
-  resolve the `npx` shim), fall back to `"command": "cmd", "args": ["/c", "npx", ...]`.
-- **Rationale**: `npx` resolves on this machine (`C:\Program Files\nodejs\npx`),
-  and current Claude Code generally spawns it fine; the `cmd /c` wrapper is the
-  documented escape hatch if spawning fails. This is a verification step in
-  quickstart, not a guess baked into the committed config.
+- **Decision (final)**: Ship the `cmd /c npx` form in both committed configs on
+  Windows. Plain `npx` is the non-Windows equivalent.
+- **Rationale**: MCP hosts on Windows frequently cannot spawn the bare `npx`
+  shim, while `cmd /c npx` is harmless when plain `npx` would have worked — so
+  the wrapper is the safe default for this Windows-only project (FR-002) rather
+  than a fallback to discover at runtime. Validated end-to-end in T005 (Claude
+  Code drove the dev app successfully with this form).
 - **Alternatives considered**: hardcoding absolute `npx.cmd` path — rejected:
   not portable across contributors' machines.
 

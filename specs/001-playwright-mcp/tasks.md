@@ -77,8 +77,8 @@ Principle II, adapted).
 
 **Independent Test**: Run the US1 round-trip from opencode; capability is listed and behaves identically (spec SC-003).
 
-- [ ] T010 [P] [US3] Add the `mcp.playwright` entry to `.opencode/opencode.json` — `type: "local"`, command array pinned to `@playwright/mcp@0.0.76` with the same `--isolated --browser chromium` flags, `enabled: true` — **preserving** the existing `skills` and `plugin` keys (exact shape in [contracts/mcp-config.md](contracts/mcp-config.md) Contract B)
-- [ ] T011 [US3] Validate US3: from a fresh opencode session, confirm `playwright` is listed and run the round-trip; confirm parity with Claude Code
+- [x] T010 [P] [US3] Add the `mcp.playwright` entry to `.opencode/opencode.json` — `type: "local"`, command array pinned to `@playwright/mcp@0.0.76` with the same `--isolated --browser chromium` flags, `enabled: true` — **preserving** the existing `skills` and `plugin` keys (exact shape in [contracts/mcp-config.md](contracts/mcp-config.md) Contract B). ✅ config written, JSON valid, keys preserved, conformance checked (T012)
+- [ ] T011 [US3] Validate US3: from a fresh opencode session, confirm `playwright` is listed and run the round-trip; confirm parity with Claude Code. ⏳ **requires a live opencode session** — cannot be driven from inside Claude Code. Config is identical to the Claude Code one (same pin/flags/browser, both validated by T012), so parity is expected.
 
 **Checkpoint**: All supported runtimes expose the capability.
 
@@ -86,9 +86,9 @@ Principle II, adapted).
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T012 [P] Conformance check: (a) neither config contains secrets (FR-006); (b) both reference the identical pin `@playwright/mcp@0.0.76` ([data-model.md](data-model.md) invariants, [contracts/mcp-config.md](contracts/mcp-config.md) conformance); (c) FR-008 additive-only — confirm `@playwright/mcp` is absent from `package.json` dependencies/devDependencies and the existing `@playwright/test` e2e config (`playwright.config.*`, `test:e2e` scripts) is unchanged
-- [ ] T013 Run the full [quickstart.md](quickstart.md) validation end-to-end across both runtimes (Scenarios 1–3)
-- [ ] T014 Run `./venv/Scripts/graphify.exe update .` to refresh the knowledge graph after adding the new doc/config
+- [x] T012 [P] Conformance check: (a) neither config contains secrets (FR-006); (b) both reference the identical pin `@playwright/mcp@0.0.76` ([data-model.md](data-model.md) invariants, [contracts/mcp-config.md](contracts/mcp-config.md) conformance); (c) FR-008 additive-only — confirm `@playwright/mcp` is absent from `package.json` dependencies/devDependencies and the existing `@playwright/test` e2e config (`playwright.config.*`, `test:e2e` scripts) is unchanged. ✅ all pass (no secrets; pin 0.0.76 in both; absent from package.json; e2e intact; opencode keys preserved)
+- [~] T013 Run the full [quickstart.md](quickstart.md) validation end-to-end across both runtimes (Scenarios 1–3). ✅ Claude Code (Scenario 1) + missing-prereq message (Scenario 3) verified during T005/install; ⏳ opencode (Scenario 2) pending a live opencode session (see T011)
+- [x] T014 Run `./venv/Scripts/graphify.exe update .` to refresh the knowledge graph after adding the new doc/config. ✅ 1604 nodes / 2733 edges / 213 communities
 
 ---
 
