@@ -139,9 +139,11 @@ runtime and confirm the capability is present in each.
 
 ## Assumptions
 
-- **Target runtimes**: both Claude Code and opencode are in scope, matching the
-  project's cross-agent stance (`AGENTS.md` is the universal entry point). If
-  only one runtime is desired, narrow this in `/speckit-clarify`.
+- **Target runtimes**: both Claude Code and opencode are in scope (confirmed by
+  the user on 2026-06-27), matching the project's cross-agent stance
+  (`AGENTS.md` is the universal entry point). The integration must be wired into
+  both runtime configs (`.mcp.json` for Claude Code, `.opencode/opencode.json`
+  for opencode).
 - **Purpose**: the capability is for agent-driven browser automation and
   verification of the local dev app; it complements — does not replace — the
   existing Playwright e2e/Vitest suites.
