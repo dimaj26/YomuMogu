@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-27
 
-**Status**: Draft
+**Status**: Implemented (2026-06-27)
 
 **Input**: User description: "подключи в проект https://github.com/microsoft/playwright-mcp"
 

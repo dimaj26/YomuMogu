@@ -16,11 +16,13 @@ link. No application code or shipped runtime dependency is added.
 ## Technical Context
 
 **Language/Version**: No application code. Config is JSON. The MCP server runs on
-Node.js ≥ 18 via `npx` (machine has Node v24.14.1).
+Node.js ≥ 18 via `npx`, launched as `cmd /c npx` on Windows (machine has Node
+v24.14.1).
 
-**Primary Dependencies**: `@playwright/mcp` **pinned to `0.0.76`** (run via `npx`,
-**not** added to `package.json` dependencies). Requires Playwright browser
-binaries (Chromium by default).
+**Primary Dependencies**: `@playwright/mcp` **pinned to `0.0.76`** (run via
+`cmd /c npx`, **not** added to `package.json` dependencies). Requires the MCP
+server's own `chrome-for-testing` browser build (install:
+`npx @playwright/mcp@0.0.76 install-browser chrome-for-testing`).
 
 **Storage**: N/A. Config files only. Browser profile runs isolated by default
 (`--isolated`); no persistent user-data dir committed.
