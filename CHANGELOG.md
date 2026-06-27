@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.4.0] - 2026-06-27
+
+### Added
+- **Persona cognitive walkthrough (`specs/004-persona-cognitive-walkthrough/`).** Drove the live app in a real browser (Playwright MCP) from three seeded learner personas — P1 absolute beginner (organic, no Anki), P2 returning beginner (light seed + organic chat/quiz/media use), P3 advanced master (~4000 JLPT N3–N1 words seeded across FSRS states) — each in an isolated profile, evaluating clarity / next-step / missing-function / convenience and the **learning-logic** on every screen. Services used for real where available (Gemini up → real chat + session generation; MeCab/Anki down → recorded as blocked, not mocked). Deliverables: `personas.md`, three dated persona reports, and a **consolidated problem/solution analysis** (16 findings, cross-persona matrix, distinct learning-logic section, prioritized do-next list). Analysis-only — no application source changed. Headline result: the core learning loop (words → AI themes → chat target-tracking → deck-aware media) is strong and coherent; the gaps are at the edges — progress/identity mirror (header shows 0 vs real deck), memory map limited to 500 words, no review session-sizing/level-scaling, and session generation that stalls at scale. Reuses the feature-002 procedure and feature-001 MCP.
+
 ## [2.3.0] - 2026-06-27
 
 ### Fixed
