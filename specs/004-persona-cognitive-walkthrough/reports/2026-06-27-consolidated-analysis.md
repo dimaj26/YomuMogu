@@ -101,9 +101,26 @@ this analysis:
   **P2** · sources: P3-F (themes), P2 (level selector N5 active / N4–N1 locked).
   *Problem*: scenario levels N4–N1 stay locked even for a 4000-word N3–N1 learner;
   vocabulary scale never unlocks higher-level practice.
-  *Proposed solution*: make level availability reflect demonstrated competency
-  (vocabulary + grammar coverage per level), or expose an explicit "why locked / how
-  to unlock" so advanced learners aren't stuck at N5 scenarios.
+  *Confirmed root cause (read-only diagnosis, 2026-06-28)*: shares a root with C-07
+  — `src/lib/competency/profile.ts` `buildCompetencyProfile` is a v1 stub
+  (`const level: JlptLevelId = 'N5'` at :115, comment "Версия 1: уровень жёстко
+  зафиксирован как 'N5'") and only computes lex/grammar coverage **for N5** (:116–117).
+  The level never advances and N3–N2–N1 coverage is never evaluated, so the selector
+  stays N5-only. Compounded by **missing content**: only 15 grammar rules exist
+  (N5+N4), so `computeGrammarCoverage` returns 0 for N3–N1 (`levelRules.length===0`,
+  :65–68) — grammar-based promotion above N4 is impossible without authoring N3–N1
+  grammar.
+  *Proposed solution*: implement real level derivation in `buildCompetencyProfile`
+  (promote N5→N1 by per-level lexCoverage thresholds — lex is computable from
+  `jlpt_levels.json` + `jlpt:nX` tags — and grammarCoverage where rules exist), then
+  drive the selector from it; author N3–N1 grammar content to fully unlock the top
+  levels, or gate top levels on lex-only until grammar exists. **Needs a product
+  decision** (thresholds; lex-only vs lex+grammar) — not auto-implemented.
+
+- **C-07 root cause (read-only diagnosis, 2026-06-28)**: confirmed the balance
+  widget's "(N5)" is **not** a widget hardcode but the competency engine returning a
+  hardcoded `level: 'N5'` (`profile.ts:115`, v1 stub). Same fix as C-08's level
+  derivation resolves both.
 
 - **C-09 — False "all reviewed, great job" on day one** · learning-logic/copy ·
   **P2** · sources: P1-B (`/practice`).
