@@ -86,7 +86,7 @@ Principle II, adapted).
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T012 [P] Conformance check: neither config contains secrets (FR-006) and both reference the identical pin `@playwright/mcp@0.0.76` ([data-model.md](data-model.md) invariants, [contracts/mcp-config.md](contracts/mcp-config.md) conformance)
+- [ ] T012 [P] Conformance check: (a) neither config contains secrets (FR-006); (b) both reference the identical pin `@playwright/mcp@0.0.76` ([data-model.md](data-model.md) invariants, [contracts/mcp-config.md](contracts/mcp-config.md) conformance); (c) FR-008 additive-only — confirm `@playwright/mcp` is absent from `package.json` dependencies/devDependencies and the existing `@playwright/test` e2e config (`playwright.config.*`, `test:e2e` scripts) is unchanged
 - [ ] T013 Run the full [quickstart.md](quickstart.md) validation end-to-end across both runtimes (Scenarios 1–3)
 - [ ] T014 Run `./venv/Scripts/graphify.exe update .` to refresh the knowledge graph after adding the new doc/config
 
