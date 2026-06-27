@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.0.1] - 2026-06-27
+
+### Added
+- **`knowledge/spec-kit-reference.md`** and **`knowledge/graphify-reference.md`** — working reference docs distilled from the spec-kit and graphify GitHub sources. spec-kit ref: the `specify` CLI, all 11 `/speckit-*` skills, end-to-end workflow scenarios, `.specify/`+`specs/` layout, template resolution, and project gotchas. graphify ref: the full command surface (`query`/`path`/`explain`/`affected`/`update`/exports), the AST-vs-semantic build pipeline (god nodes, communities, audit trail), outputs, and integrity guarantees. Both linked from `CONTEXT.md`.
+
 ## [2.0.0] - 2026-06-27
 
 ### Changed (BREAKING)

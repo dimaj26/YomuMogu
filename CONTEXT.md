@@ -6,6 +6,7 @@ YomuMogu is a Japanese language-learning web app (Next.js 16 / TypeScript / Reac
 
 ## Workflow
 Task requests are handled via **spec-kit** Spec-Driven Development: `/speckit-specify` → (`/speckit-clarify`) → `/speckit-plan` → `/speckit-tasks` → (`/speckit-analyze`) → `/speckit-implement`. The binding rulebook is the [constitution](.specify/memory/constitution.md); the cross-agent entry is [AGENTS.md](AGENTS.md). This index and the `knowledge/` tree are the architecture reference.
+- [spec-kit reference](knowledge/spec-kit-reference.md) — the `specify` CLI, the `/speckit-*` skills, workflow scenarios, `.specify/`+`specs/` layout, gotchas.
 
 ## Architecture & Layout
 - [Architecture & stack](knowledge/architecture.md) — identity, stack table, and the core user flow.
@@ -32,6 +33,7 @@ Task requests are handled via **spec-kit** Spec-Driven Development: `/speckit-sp
 - [Testing](knowledge/testing.md) — Vitest/Playwright configs, commands, categories, counts.
 - [Lint & quality](knowledge/lint-and-quality.md) — ESLint 9, architectural-boundary rules, test-quality gate, Ruff, pre-commit/CI.
 - [Graphify workflow](knowledge/graphify-workflow.md) — code indexed as a queryable graph; the graphify-first reading protocol and its carve-out.
+- [Graphify reference](knowledge/graphify-reference.md) — command surface (query/path/explain/affected/update/exports), build-pipeline logic, outputs, integrity guarantees, scenarios.
 - [Local delegation](knowledge/local-delegation.md) — how the agent offloads fitting self-contained sub-tasks to local Ollama (qwen2.5-coder:7b-16k) via claude-code-router.
 
 ## Features
