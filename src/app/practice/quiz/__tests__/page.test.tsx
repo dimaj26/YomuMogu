@@ -453,3 +453,57 @@ describe('QuizPage Component', () => {
     expect(reviews[0].ease).toBe(2); // Hard
   });
 });
+
+describe('QuizPage review ordering — highest-need first (006 / C-03)', () => {
+  beforeEach(async () => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    localStorage.clear();
+    mockPush.mockReset();
+    mockSearchParamsGet.mockReset().mockReturnValue(null); // режим review (по умолчанию)
+    await db.words.clear();
+    await db.reviews.clear();
+  });
+
+  const due = (id: number, translation: string, lapses: number, stability: number, dueOffsetMs: number) => ({
+    profileId: 'default', id, word: `w${id}`, reading: `r${id}`, translation,
+    category: 'Japanese', source: 'anki' as const,
+    active: { status: 'review' as const, stability, difficulty: 5, interval: 5, due: Date.now() - dueOffsetMs, reps: 4, lapses },
+    contextExamples: [],
+  });
+
+  it('первой показывает карточку с наибольшим числом ошибок (lapses)', async () => {
+    await db.words.bulkPut([
+      due(1, 'перевод-А-много-ошибок', 5, 5, 5000),
+      due(2, 'перевод-Б-слабая', 0, 1, 5000),
+      due(3, 'перевод-В-сильная', 0, 9, 5000),
+    ] as any);
+
+    render(
+      <JapanificationProvider>
+        <QuizPage />
+      </JapanificationProvider>
+    );
+
+    // Самая «нуждающаяся» карточка (5 lapses) — первой
+    expect(await screen.findByText(/перевод-А-много-ошибок/)).toBeInTheDocument();
+    expect(screen.queryByText(/перевод-Б-слабая/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/перевод-В-сильная/)).not.toBeInTheDocument();
+  });
+
+  it('при равных ошибках первой идёт карточка со слабее памятью (ниже stability)', async () => {
+    await db.words.bulkPut([
+      due(11, 'перевод-сильная', 0, 9, 5000),
+      due(12, 'перевод-слабая', 0, 1, 5000),
+    ] as any);
+
+    render(
+      <JapanificationProvider>
+        <QuizPage />
+      </JapanificationProvider>
+    );
+
+    expect(await screen.findByText(/перевод-слабая/)).toBeInTheDocument();
+    expect(screen.queryByText(/перевод-сильная/)).not.toBeInTheDocument();
+  });
+});

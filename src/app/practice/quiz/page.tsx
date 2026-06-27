@@ -297,6 +297,7 @@ function QuizComponent() {
         await syncExistingLocalWordsWithStarterDeck(activeProfile);
 
         let loadedWords: LocalWord[] = [];
+        let isReviewMode = false;
 
         if (wordsParam) {
           // Режим Ad-hoc: тестируем конкретные слова из чата
@@ -353,6 +354,7 @@ function QuizComponent() {
             .toArray();
 
           loadedWords = matches as unknown as LocalWord[];
+          isReviewMode = true;
         }
 
         if (loadedWords.length === 0) {
@@ -360,9 +362,17 @@ function QuizComponent() {
           return;
         }
 
-        // Перемешиваем слова
-        const shuffled = [...loadedWords].sort(() => Math.random() - 0.5);
-        setWords(shuffled);
+        // Режим повторения: показываем самые «нуждающиеся» карточки первыми
+        // (больше ошибок -> слабее память -> дольше просрочено). Детерминированно.
+        // Остальные режимы сохраняют прежний случайный порядок.
+        const ordered = isReviewMode
+          ? [...loadedWords].sort((a, b) =>
+              (b.active.lapses - a.active.lapses) ||
+              (a.active.stability - b.active.stability) ||
+              (a.active.due - b.active.due)
+            )
+          : [...loadedWords].sort(() => Math.random() - 0.5);
+        setWords(ordered);
         setStartTime(Date.now());
       } catch (err) {
         console.error('Ошибка загрузки слов для квиза:', err);

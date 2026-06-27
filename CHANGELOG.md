@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.6.0] - 2026-06-28
+
+### Fixed
+- **Prioritized review ordering (`specs/006-review-ordering/`, partial fix for 004 finding C-03).** The FSRS interval-review quiz presented due cards in a **random** order (`sort(() => Math.random() - 0.5)`), so a learner with a large backlog might never reach the cards that need it most. The review (default) mode now orders the due queue **deterministically by need** — more lapses first, then weaker memory (lower stability), then more overdue (earlier `due`) — so every session (even an interrupted one) spends effort on the most fragile cards first. Scope is surgical: only review-mode ordering changes; the new-word and unused-target modes, FSRS scheduling/grading, and the practice screen are untouched, and the full due set is still presented (**no session cap** — that, plus a user-facing session-size selector, is deferred because a silent cap would contradict the practice «Начать повторение [N]» count and needs a product decision). Covered by `src/app/practice/quiz/__tests__/page.test.tsx` (most-lapsed-first; weaker-memory-first on equal lapses). Still deferred from 004: C-07 (competency-engine level), C-08 (JLPT level unlocking + missing N3–N1 grammar).
+
 ## [2.5.0] - 2026-06-28
 
 ### Fixed
