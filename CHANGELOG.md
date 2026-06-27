@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.8.0] - 2026-06-28
+
+### Fixed
+- **State-aware mascot greeting (`specs/008-state-aware-mascot/`, fixes 004 finding C-10).** The home mascot bubble told a level-0 learner «…Перейди в раздел практики и выбери тему!» — but there is no "Практика" nav entry and the line ignored the dashboard's adaptive state, misdirecting first-run users away from the diagnostic the CTA actually offers. `getMascotBubbleHtml` now takes `dashState` and its level-0 greeting mirrors it: first-run → diagnostic, newbie → warm-up, returning → reviews/continue, all-done → neutral done, generic fallback otherwise — so mascot and primary CTA always agree. The resume-session bubble, the `customBubbleText` path, and the Japanese greetings (level ≥1) are unchanged; no nav entry added, no CTA/FSRS change. Covered by `src/app/__tests__/home-grid.test.tsx` (first-run → points to diagnostic, no «раздел практики»). Still deferred from 004: C-03 cap/selector, C-07/C-08 competency level + N3–N1 grammar, C-12 MeCab fallback, C-14 landing, C-15 debug HUD.
+
 ## [2.7.0] - 2026-06-28
 
 ### Fixed

@@ -235,7 +235,7 @@ export default function HomePage() {
 
 
   // Возвращает текст облачка речи в зависимости от уровня японизации и статуса сессии
-  const getMascotBubbleHtml = (): { __html: string } => {
+  const getMascotBubbleHtml = (state: DashState): { __html: string } => {
     if (customBubbleText) {
       return { __html: customBubbleText };
     }
@@ -254,8 +254,21 @@ export default function HomePage() {
 
     // Обычное приветствие
     switch (level) {
-      case 0:
-        return { __html: "Привет! Давай попрактикуемся сегодня? Перейди в раздел практики и выбери тему!" };
+      case 0: {
+        // Маскот подсказывает тот же следующий шаг, что и адаптивная кнопка (dashState).
+        switch (state) {
+          case 'first-run':
+            return { __html: "Привет! Начни с диагностики — я подберу слова под тебя." };
+          case 'newbie':
+            return { __html: "Готов? Нажми «Начать разминку» — разомнёмся!" };
+          case 'returning':
+            return { __html: "С возвращением! Тебя ждут повторения — продолжим?" };
+          case 'all-done':
+            return { __html: "Отлично! На сегодня всё повторено. Можно отдохнуть 🍵" };
+          default:
+            return { __html: "Привет! Готов сегодня попрактиковаться?" };
+        }
+      }
       case 1:
       case 2:
         return { __html: "こんにちは！<ruby>今日<rt>きょう</rt></ruby>も<ruby>練習<rt>れんしゅう</rt></ruby>しましょう！" };
@@ -351,7 +364,7 @@ export default function HomePage() {
             🍵
           </div>
           <div className={styles.speechBubble}>
-            <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(getMascotBubbleHtml().__html) }} />
+            <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(getMascotBubbleHtml(dashState).__html) }} />
           </div>
         </div>
 

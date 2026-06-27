@@ -107,3 +107,20 @@ describe('Home Kumiko grid scales to the real deck (005 / C-02)', () => {
     }, { timeout: 20000 });
   }, 30000);
 });
+
+describe('Home mascot greeting is state-aware (008 / C-10)', () => {
+  beforeEach(async () => {
+    vi.restoreAllMocks();
+    localStorage.clear();
+    await db.words.clear();
+  });
+
+  it('первый запуск: маскот зовёт на диагностику, без несуществующего «раздела практики»', async () => {
+    renderHome(); // свежий профиль -> dashState first-run, level 0
+
+    // Уникальная фраза first-run-бабла маскота
+    expect(await screen.findByText(/я подберу слова под тебя/)).toBeInTheDocument();
+    // Старая дезориентирующая отсылка к несуществующему разделу исчезла
+    expect(screen.queryByText(/раздел практики/)).not.toBeInTheDocument();
+  });
+});
