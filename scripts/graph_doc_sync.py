@@ -1,17 +1,25 @@
 #!/usr/bin/env python3
-"""Pre-commit триггер свежести семантического слоя графа (C+).
+"""Триггер свежести семантического слоя графа, разнесённый по двум хукам.
 
 graphify-хуки (`post-commit`/`post-checkout`) пересобирают код + AST-структуру
 доков оффлайн, но НЕ перезапускают семантический LLM-проход по изменённым докам
 и при этом затирают родной флаг `needs_update`. Поэтому после коммита со спекой
 семантические узлы графа молча устаревают.
 
-Этот скрипт закрывает дыру (форма C+): при staged-изменениях спека-`.md` он
-помечает семантический слой грязным через родной флаг graphify `needs_update`
-(видимо для `graphify check-update` / `/graphify`), затем в ОТДЕЛЁННОМ процессе
-запускает `graphify . --update`. Дочерний процесс владеет флагом: снимает его при
-успехе и оставляет при падении — свежесть автоматическая, но упавший прогон
-остаётся видимым. Коммит никогда не блокируется (всегда exit 0).
+Семантический проход платный (LLM-backend), а spec-sync guard заставляет почти
+каждый код-коммит тащить правку доки — поэтому запуск `--update` на КАЖДОМ коммите
+выливался в стоимость почти на каждый коммит. Чтобы платить один раз за push,
+работа разнесена на два режима:
+
+* pre-commit (`--mark-only`, он же режим по умолчанию): при staged-изменениях
+  спека-`.md` лишь выставляет родной флаг `needs_update` — дёшево, оффлайн, без
+  API. Флаг работает аккумулятором грязноты между коммитами и виден через
+  `graphify check-update` / `/graphify`.
+* pre-push (`--push`): если флаг выставлен — в ОТДЕЛЁННОМ процессе запускает
+  `graphify . --update`. Per-file кэш graphify переэмбедит только реально
+  изменённые доки, так что весь doc-churn со всех коммитов схлопывается в один
+  оплачиваемый проход. Дочерний процесс владеет флагом: снимает при успехе,
+  оставляет при падении. Ни коммит, ни push никогда не блокируются (всегда exit 0).
 """
 
 from __future__ import annotations
@@ -127,6 +135,49 @@ def launch_detached(py: str) -> None:
         subprocess.Popen(cmd, start_new_session=True, **kw)
 
 
+def _run_push(dry: bool) -> int:
+    """pre-push: оплатить семантический проход один раз, если флаг накопил грязноту."""
+    if not _flag_path().exists():
+        if dry:
+            print("[graph-doc-sync] push: граф свеж (needs_update снят) — пропуск")
+        return 0
+    if dry:
+        print("[graph-doc-sync] push: needs_update выставлен -> фоновый семантический --update")
+        return 0
+    py = resolve_python()
+    if not py:
+        # fail-soft, но видимо: флаг оставлен, причина не заглушена (G-fail-fast)
+        sys.stderr.write(
+            "[graph-doc-sync] python+graphify не найден; needs_update оставлен, "
+            "запусти graphify . --update вручную перед расшариванием графа\n"
+        )
+        return 0
+    print(
+        "[graph-doc-sync] push: накопленные правки доков -> фоновая семантическая "
+        "доэкстракция (needs_update снимется при успехе)"
+    )
+    launch_detached(py)
+    return 0
+
+
+def _run_mark(dry: bool) -> int:
+    """pre-commit: только пометить семантический слой грязным; --update отложен до push."""
+    docs = staged_doc_changes()
+    if not docs:
+        if dry:
+            print("[graph-doc-sync] нет изменений спеки")
+        return 0
+    if dry:
+        print(f"[graph-doc-sync] пометит грязно -> {len(docs)} spec-файл(ов): {', '.join(docs)}")
+        return 0
+    _set_flag()
+    print(
+        f"[graph-doc-sync] {len(docs)} spec-файл(ов) изменено -> needs_update выставлен "
+        "(семантический --update отложен до pre-push)"
+    )
+    return 0
+
+
 def main(argv: list[str]) -> int:
     # Дочерний режим: синхронно отработать --update (его уже запустили detached).
     if "--run-update" in argv:
@@ -137,34 +188,11 @@ def main(argv: list[str]) -> int:
     if in_rebase_or_merge():
         return 0
 
-    docs = staged_doc_changes()
     dry = "--dry-run" in argv
-
-    if not docs:
-        if dry:
-            print("[graph-doc-sync] нет изменений спеки")
-        return 0
-
-    if dry:
-        print(f"[graph-doc-sync] сработает -> {len(docs)} spec-файл(ов): {', '.join(docs)}")
-        return 0
-
-    py = resolve_python()
-    if not py:
-        # fail-soft, но видимо: помечаем грязно и не глушим причину (G-fail-fast)
-        _set_flag()
-        sys.stderr.write(
-            "[graph-doc-sync] python+graphify не найден; needs_update выставлен, "
-            "запусти /graphify --update вручную\n"
-        )
-        return 0
-
-    print(
-        f"[graph-doc-sync] {len(docs)} spec-файл(ов) изменено -> фоновая семантическая "
-        "доэкстракция (needs_update выставлен; снимется при успехе)"
-    )
-    launch_detached(py)
-    return 0
+    # --push = pre-push (оплачиваемый батч); по умолчанию / --mark-only = pre-commit.
+    if "--push" in argv:
+        return _run_push(dry)
+    return _run_mark(dry)
 
 
 if __name__ == "__main__":

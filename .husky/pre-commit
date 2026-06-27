@@ -14,11 +14,12 @@ else
   python scripts/spec_sync_guard.py || exit 1
 fi
 
-# 3) Graph freshness (non-gating): when spec docs are staged, refresh the graph's
-#    semantic doc layer in the background (graphify code-only hooks skip it).
-#    Always exits 0 — never blocks a commit. See knowledge/graphify-workflow.md.
+# 3) Graph freshness (non-gating): when spec docs are staged, just MARK the
+#    semantic doc layer dirty (needs_update flag) — cheap, offline, no API cost.
+#    The paid `graphify . --update` is batched to pre-push so we pay once per push
+#    instead of (almost) every commit. Always exits 0. See knowledge/graphify-workflow.md.
 if [ -f "./venv/Scripts/python.exe" ]; then
-  ./venv/Scripts/python.exe scripts/graph_doc_sync.py || true
+  ./venv/Scripts/python.exe scripts/graph_doc_sync.py --mark-only || true
 elif [ -f "./venv/bin/python" ]; then
-  ./venv/bin/python scripts/graph_doc_sync.py || true
+  ./venv/bin/python scripts/graph_doc_sync.py --mark-only || true
 fi

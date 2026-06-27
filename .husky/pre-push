@@ -1,0 +1,16 @@
+#!/bin/sh
+# Graph freshness (non-gating): pay the semantic doc-layer LLM pass ONCE per push.
+#
+# pre-commit only sets the needs_update flag (cheap, offline). Here we batch: if
+# the flag accumulated any doc churn since the last successful update, launch the
+# paid `graphify . --update` in the background. graphify's per-file cache re-embeds
+# only the actually-changed docs, so many commits collapse into one paid pass.
+# Always exits 0 — never blocks a push. See knowledge/graphify-workflow.md.
+echo "=== graph doc-freshness (pre-push batch) ==="
+if [ -f "./venv/Scripts/python.exe" ]; then
+  ./venv/Scripts/python.exe scripts/graph_doc_sync.py --push || true
+elif [ -f "./venv/bin/python" ]; then
+  ./venv/bin/python scripts/graph_doc_sync.py --push || true
+else
+  python scripts/graph_doc_sync.py --push || true
+fi

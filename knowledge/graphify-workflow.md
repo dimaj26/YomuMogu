@@ -45,7 +45,12 @@ Run via the venv-installed CLI (`venv/Scripts/graphify.exe` on Windows). Keep th
 
 `graphify hook install` registers `.husky/post-commit` + `post-checkout`, but those call `_rebuild_code` — **code + doc AST structure only, offline**. They do NOT re-run the **semantic** LLM pass for changed docs, and they clear graphify's native `needs_update` flag — so spec edits (`CONTEXT.md`, `knowledge/**`, `.specify/memory/constitution.md`) would otherwise leave the graph's semantic doc nodes silently stale.
 
-[scripts/graph_doc_sync.py](../scripts/graph_doc_sync.py) (wired into `.husky/pre-commit`, non-gating) closes that gap: on staged spec-`.md` changes it sets the native `needs_update` flag, then launches a **detached** `graphify . --update` (semantic re-extraction). The detached child owns the flag — **cleared on success, kept on failure** — so freshness is automatic but a failed run stays visible to `graphify check-update` / `/graphify`. Bypass with `GRAPHIFY_SKIP_DOC_SYNC=1`. Quality-critical extraction stays on the DeepSeek backend, not local Ollama (see [local-delegation](local-delegation.md)).
+[scripts/graph_doc_sync.py](../scripts/graph_doc_sync.py) (non-gating) closes that gap, split across two hooks so the **paid** semantic pass runs once per push rather than (almost) every commit — the spec-sync guard forces a doc edit into nearly every code commit, so a per-commit `--update` meant paying on nearly every commit:
+
+- **`.husky/pre-commit` → `--mark-only`:** on staged spec-`.md` changes, only sets the native `needs_update` flag. Cheap, offline, **no API cost**. The flag accumulates dirtiness across commits and stays visible to `graphify check-update` / `/graphify`.
+- **`.husky/pre-push` → `--push`:** if the flag is set, launches a **detached** `graphify . --update` (semantic re-extraction). graphify's per-file cache re-embeds only the docs that actually changed, so all the doc churn since the last successful update collapses into **one paid pass**. The detached child owns the flag — **cleared on success, kept on failure** — so freshness is automatic but a failed run stays visible.
+
+Bypass either with `GRAPHIFY_SKIP_DOC_SYNC=1`. Need a fresh graph locally before pushing (e.g. to query it)? Run `graphify . --update` manually. Quality-critical extraction stays on the DeepSeek backend, not local Ollama (see [local-delegation](local-delegation.md)).
 
 ## Indexing images too (optional)
 
