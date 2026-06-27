@@ -32,6 +32,7 @@ Do not commit placeholders, dry-run mocks, or unhandled `TODO`s to the main bran
 
 ## Development Workflow & Quality Gates
 
+- **Pre-commit pipeline (husky)**: the staged-commit hook runs three steps in order — (1) `npx lint-staged` (ESLint + Ruff, errors block); (2) the doc-drift gate below; (3) `scripts/graph_doc_sync.py`, a non-gating refresh of the graph's semantic doc layer that always exits 0 (see `knowledge/graphify-workflow.md`).
 - **Doc-drift gate (machine-enforced)**: `scripts/spec_sync_guard.py` (pre-commit) blocks a commit that stages source code without a spec/doc update in the same commit (`specs/**`, `knowledge/**`, this constitution, `CONTEXT.md`, or `CHANGELOG.md`). Bypass a genuinely doc-irrelevant commit with `SKIP_SPEC_SYNC=1`.
 - **Keep knowledge in sync**: when code changes a schema, API surface, module layout, or domain rule, update the matching `knowledge/*.md` topic (and its `CONTEXT.md` link) in the same commit. Record notable decisions as ADRs under `knowledge/decisions/NNNN-*.md`; append human-readable changes to `CHANGELOG.md`.
 - **Git**: imperative commit subjects with a type prefix (`feat:`/`fix:`/`docs:`/`refactor:`/`chore:`/`test:`). Auto-commit after each completed, coherent milestone — do not ask for commit approval. **`git push` requires explicit user approval and is never automatic.**
@@ -40,4 +41,4 @@ Do not commit placeholders, dry-run mocks, or unhandled `TODO`s to the main bran
 
 This constitution supersedes ad-hoc practice. Amendments are made via `/speckit-constitution` (or a direct edit) and must bump the version and update any dependent templates under `.specify/templates/`. Complexity must be justified against these principles in `plan.md`.
 
-**Version**: 1.0.0 | **Ratified**: 2026-06-27 | **Last Amended**: 2026-06-27
+**Version**: 1.1.0 | **Ratified**: 2026-06-27 | **Last Amended**: 2026-06-27
