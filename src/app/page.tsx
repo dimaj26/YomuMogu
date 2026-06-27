@@ -48,6 +48,7 @@ export default function HomePage() {
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [customBubbleText, setCustomBubbleText] = useState<string | null>(null);
   const [heatmapCells, setHeatmapCells] = useState<Array<{ status: string; isDue: boolean; avgStability: number }>>([]);
+  const [deckWordCount, setDeckWordCount] = useState<number>(0);
 
   // Сигналы состояния локальной колоды для адаптивного CTA (читаются из localDeckService)
   const [deckMode, setDeckMode] = useState<string>('local');
@@ -95,9 +96,11 @@ export default function HomePage() {
       .equals(activeProfileId)
       .toArray()
       .then((words) => {
+        // Динамический размер корзины: 50 ячеек покрывают ВСЮ колоду, а не только первые 500.
+        const bucket = Math.max(1, Math.ceil(words.length / 50));
         const cells = Array.from({ length: 50 }, (_, cellIndex) => {
-          const startIdx = cellIndex * 10;
-          const group = words.slice(startIdx, startIdx + 10);
+          const startIdx = cellIndex * bucket;
+          const group = words.slice(startIdx, startIdx + bucket);
           
           if (group.length === 0) {
             return { status: 'new', isDue: false, avgStability: 0 };
@@ -151,6 +154,7 @@ export default function HomePage() {
           };
         });
         setHeatmapCells(cells);
+        setDeckWordCount(words.length);
       })
       .catch((err) => {
         console.error('Ошибка загрузки слов для тепловой карты', err);
@@ -470,7 +474,7 @@ export default function HomePage() {
         </div>
 
         {/* MEMORY DECAY HEATMAP */}
-        <MemoryDecayHeatmap cells={heatmapCells} isLocalInit={isLocalInit} />
+        <MemoryDecayHeatmap cells={heatmapCells} isLocalInit={isLocalInit} totalWords={deckWordCount} />
 
         {/* SECONDARY CONTROL GRID */}
         <div className={styles.secondaryGrid}>
@@ -722,7 +726,7 @@ export default function HomePage() {
   );
 }
 
-function MemoryDecayHeatmap({ cells, isLocalInit }: { cells: Array<{ status: string; isDue: boolean; avgStability: number }>; isLocalInit: boolean }) {
+function MemoryDecayHeatmap({ cells, isLocalInit, totalWords }: { cells: Array<{ status: string; isDue: boolean; avgStability: number }>; isLocalInit: boolean; totalWords: number }) {
   const { t } = useJapanification();
 
   if (cells.length === 0) return null;
@@ -736,8 +740,8 @@ function MemoryDecayHeatmap({ cells, isLocalInit }: { cells: Array<{ status: str
       <p className={styles.heatmapDescription}>
         {isLocalInit
           ? t(
-              "50 ячеек отображают состояние 500 слов вашей стартовой колоды. Цвета отражают уровень стабильности памяти. Пульсация означает остывание памяти и необходимость повторения.",
-              "50の格子がスターターデッキの500語の状態を表します。色は記憶の安定性を示し、点滅は復習が必要なシグナルです。",
+              `50 ячеек отображают состояние ${totalWords} слов вашей стартовой колоды. Цвета отражают уровень стабильности памяти. Пульсация означает остывание памяти и необходимость повторения.`,
+              `50の格子がスターターデッキの${totalWords}語の状態を表します。色は記憶の安定性を示し、点滅は復習が必要なシグナルです。`,
               2
             )
           : t(

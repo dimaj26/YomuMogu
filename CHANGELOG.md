@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.5.0] - 2026-06-28
+
+### Fixed
+- **Memory map scales to the real deck (`specs/005-memory-map-scale/`, fixes 004 finding C-02).** The home "Очаги памяти (Сетка Кумико)" heatmap was hardcoded to the first 500 words (50 cells × a fixed 10-word window) with a caption that always said "500 слов". A learner with a larger deck (e.g. an advanced user with thousands of words) saw only the first ~12.5% of their vocabulary and a wrong count. The heatmap now bins the **entire** deck across its 50 cells via a dynamic bucket (`Math.max(1, Math.ceil(total/50))`) so no words are dropped, and the caption shows the **actual** word count. The 50-cell visual, FSRS/scheduling, per-cell aggregation, and the feature-003 uninitialized caption are unchanged. Covered by `src/app/__tests__/home-grid.test.tsx` (large >500 incl. a no-drop check, exactly-500 regression, small <500, uninitialized). Deferred (larger/architectural): 004 C-03 review session-sizing, C-07 competency-engine level (balance widget N5), C-08 JLPT level unlocking + missing N3–N1 grammar.
+
 ## [2.4.0] - 2026-06-27
 
 ### Added
