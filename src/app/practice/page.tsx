@@ -1284,8 +1284,10 @@ export default function PracticePage() {
                     <p style={{ margin: '8px 0', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
                       {dueActiveWordsCount > 0 ? (
                         t(`У вас есть ${dueActiveWordsCount} слов(а), готовых к повторению по расписанию.`, `復習の予定になっている単語が${dueActiveWordsCount}個あります。`)
-                      ) : (
+                      ) : words.some(w => w.status === 'review' || w.status === 'learning') ? (
                         t('Все активные слова повторены! Отличная работа.', 'すべての単語の復習が完了しています！')
+                      ) : (
+                        t('Повторений пока нет — начните с разминки слева, и слова появятся здесь по расписанию.', 'まだ復習はありません。左のウォームアップから始めましょう。単語は予定に従ってここに表示されます。')
                       )}
                     </p>
                   </div>

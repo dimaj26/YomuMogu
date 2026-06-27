@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.7.0] - 2026-06-28
+
+### Fixed
+- **Honest review feedback on day one (`specs/007-honest-review-feedback/`, fixes 004 finding C-09).** The `/practice` "Активное повторение слов" card congratulated «Все активные слова повторены! Отличная работа.» whenever no cards were due — including for a brand-new learner who had never reviewed anything (a freshly initialized all-`new` deck), which is false praise that erodes trust. The no-due message is now three-way: cards due → existing count; no due **but** ≥1 word in review/learning → genuine congratulations (preserved); no due **and** no active words yet → a neutral «Повторений пока нет — начните с разминки слева…» pointing to the warm-up. Signal derived from the already-loaded `words` (status review/learning); no new data, no schema, no FSRS/button/count change. Covered by `src/app/practice/__tests__/page.test.tsx` (all-new → neutral; active-not-due → praise; due → count). Still deferred from 004: C-03 session-size cap/selector, C-07/C-08 competency level + N3–N1 grammar (root cause documented in the 004 analysis).
+
 ## [2.6.0] - 2026-06-28
 
 ### Fixed

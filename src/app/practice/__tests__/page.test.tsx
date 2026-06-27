@@ -935,3 +935,46 @@ describe('Warm-up unavailable hint for fresh profile (F-03)', () => {
     });
   });
 });
+
+describe('Active-review message honesty (007 / C-09)', () => {
+  beforeEach(async () => {
+    vi.restoreAllMocks();
+    localStorage.clear();
+    await db.words.clear();
+    await db.reviews.clear();
+  });
+
+  const localWord = (id: number, status: string, dueOffsetMs: number) => ({
+    profileId: 'default', id, word: `語${id}`, reading: 'ご', translation: `пер${id}`,
+    category: '__local_starter__', source: 'starter' as const,
+    active: { status, stability: status === 'new' ? 0 : 5, difficulty: 5, interval: status === 'new' ? 0 : 5, due: Date.now() + dueOffsetMs, reps: status === 'new' ? 0 : 3, lapses: 0 },
+    contextExamples: [],
+  });
+
+  it('свежая колода (все слова new) — нейтральное сообщение, без ложной похвалы', async () => {
+    await db.words.bulkPut([localWord(1, 'new', 0), localWord(2, 'new', 0), localWord(3, 'new', 0)] as any);
+    render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+
+    expect(await screen.findByText(/Повторений пока нет/)).toBeInTheDocument();
+    expect(screen.queryByText(/Все активные слова повторены/)).not.toBeInTheDocument();
+  });
+
+  it('есть активные слова, но не due сейчас — сохраняется заслуженная похвала', async () => {
+    await db.words.bulkPut([
+      localWord(10, 'review', 7 * 24 * 3600 * 1000), // due в будущем
+      localWord(11, 'new', 0),
+    ] as any);
+    render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+
+    expect(await screen.findByText(/Все активные слова повторены! Отличная работа\./)).toBeInTheDocument();
+    expect(screen.queryByText(/Повторений пока нет/)).not.toBeInTheDocument();
+  });
+
+  it('есть due-слова — показывается счётчик к повторению', async () => {
+    await db.words.bulkPut([localWord(20, 'review', -3 * 3600 * 1000)] as any); // due в прошлом
+    render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+
+    expect(await screen.findByText(/готовых к повторению по расписанию/)).toBeInTheDocument();
+    expect(screen.queryByText(/Повторений пока нет/)).not.toBeInTheDocument();
+  });
+});
