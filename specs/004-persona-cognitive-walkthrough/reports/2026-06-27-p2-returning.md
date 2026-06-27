@@ -151,6 +151,23 @@ was down), so the one feature I poked from yesterday was the one that didn't ful
 work. Practice also throws a lot of equally-loud buttons at me — I'd like the app to
 just tell me ‘do this next’."
 
+## 5b. CORRECTION — full-state re-run (2026-06-28)
+
+The first run seeded only the deck (not XP/sessions), so the header read 0 and
+made P2-A look like a bug. A re-run seeded the **complete** stage state, including
+`japanification` (points 32, totalWordsUsed 11, sessionsCompleted 1, chatLevel 1)
+and partially-done daily quests.
+
+- **P2-A (progress header contradicts deck) is RETRACTED**: with progress seeded,
+  the home header correctly shows **«Уровень погружения 1», 11 слов использовано, 1
+  сессий завершено**, alongside «15 к повторению» — coherent, no contradiction. The
+  earlier all-zeros header was an artifact of incomplete seeding, not an app defect.
+  Screenshot: [p2-09-home-fullstate.png](screenshots/p2-09-home-fullstate.png).
+- All other P2 findings stand (P2-B choice overload, P2-C theme-gen progress copy,
+  P2-D media MeCab block, P2-E "сегодня" counting, P2-F Debug HUD, P2-G console).
+  The strong core-loop coherence (deck → themes → chat target-tracking → deck-aware
+  media) also stands and is the headline positive.
+
 ## 6. Limitations / snapshot note
 
 - Hybrid state: deck/review state was **seeded**; XP/session/quest counters were

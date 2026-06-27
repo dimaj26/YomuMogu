@@ -12,6 +12,26 @@
 - Personas: [personas.md](../personas.md). Services this run: Gemini **up**,
   MeCab `:8000` **down**, AnkiConnect **down**.
 
+## 1b. Correction notice (full-state re-run, 2026-06-28)
+
+The first walkthrough seeded only decks (not XP/sessions/grammar), which made
+progress headers read 0 and triggered a false "purge" reading. A second run seeded
+**complete, persistent** stage state for P2 and P3 and re-verified. Net changes to
+this analysis:
+
+- **C-01 (progress/identity disconnect) — RETRACTED.** With `japanification` seeded,
+  the header correctly shows real progress (P2: Level 1 / 11 used / 1 session; P3:
+  Level 6 / 3180 used / 142 sessions / 900 due). It was an artifact of incomplete
+  test seeding, not an app defect.
+- **C-13 (local-deck purge) — RETRACTED.** The sync (`syncExistingLocalWordsWithStarterDeck`)
+  only updates (`bulkPut`), never deletes; 4000 words persisted across reloads.
+- **C-04 (session generation) — SOFTENED.** It completes (~tens of seconds) and only
+  intermittently stalled; the real issue is *slowness + no cap/timeout* at scale,
+  not "never completes". Downgraded P1→P2.
+- **C-15 (Debug HUD shows 0)** and all learning-logic findings below — **CONFIRMED**
+  with proper full state (esp. C-02 map-capped-at-500 and C-08 levels-locked-despite-
+  mature-grammar). Priorities in §5 updated accordingly.
+
 ## 2. Cross-persona problem matrix
 
 | Problem (short) | P1 | P2 | P3 | Category |
@@ -203,28 +223,33 @@ explicit path, level-scaling) is the gap.**
 
 ## 5. Prioritized "do next" list
 
+*(Updated after the full-state re-run: C-01/C-13 retracted, C-04 softened.)*
+
 **P1 — high (fix first):**
-1. **C-01** Progress/identity mirror — make the header reflect real deck/FSRS state.
-2. **C-04** Session-generation performance + timeout/fallback (unblocks chat at scale).
-3. **C-03** Review session sizing / filtering (makes the app usable beyond ~50 due).
+1. **C-02** Scale the memory map to the real deck / per-level breakdown — a master
+   currently sees only 500 of their 4000 words; the home grid hardcodes "500".
+2. **C-03** Review session sizing / filtering / lapsed-first — make 900 due usable.
+3. **C-08** Level availability tied to demonstrated competency (and add N3–N1 grammar
+   content) — a maxed-grammar 4000-word learner is still locked to N5 scenarios.
 
 **P2 — medium:**
-4. **C-02** Scale the memory map to the real deck / per-level breakdown.
+4. **C-04** Session-generation slowness at scale — cap/sample classify + timeout/fallback.
 5. **C-05** Make the unlock path explicit + chat preview (keep the gate).
-6. **C-06** Single "recommended next" + progressive dashboard.
-7. **C-08** Level availability tied to competency (or explain the lock).
-8. **C-07** Bind balance widget to the real level.
-9. **C-09** Honest day-one review feedback.
-10. **C-10** Practice nav entry / state-aware mascot.
-11. **C-12** Tokenizer fallback/health for media.
-12. **C-13** Non-destructive local-deck reconciliation.
+6. **C-06** Single "recommended next" + progressive dashboard (beginner) / power density (master).
+7. **C-07** Bind balance widget to the real level (stuck at N5 even for a master).
+8. **C-09** Honest day-one review feedback ("nothing due yet" vs "great job").
+9. **C-10** Practice nav entry / state-aware mascot.
+10. **C-12** Tokenizer fallback/health for media (interactive subtitles need MeCab).
+11. **C-15** Fix Debug HUD profile binding (dev-only, but consistently wrong).
 
 **P3 — low/polish:**
-13. **C-11** Beginner express path in diagnostic.
-14. **C-14** Landing "how it works" preview.
-15. **C-15** Fix Debug HUD profile binding (dev-only).
-16. **C-16** CSS-preload warning (verify in prod first; = 002 F-05).
+12. **C-11** Beginner express path in diagnostic.
+13. **C-14** Landing "how it works" preview.
+14. **C-16** CSS-preload warning (verify in prod first; = 002 F-05).
+
+**Retracted after re-run:** C-01 (progress header — works with real state),
+C-13 (no deck purge — sync never deletes).
 
 > Implementing these is out of scope for feature 004 (analysis only). Recommended
-> next step: triage P1 items into a fix feature (as 002→003 did for the earlier
-> findings), starting with C-01 and C-04.
+> next step: triage the P1 trio (C-02, C-03, C-08 — all "the app doesn't scale to an
+> advanced learner") into a fix feature, as 002→003 did for the earlier findings.
