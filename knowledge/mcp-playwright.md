@@ -18,18 +18,23 @@ use it to verify UI changes against the actual rendered app instead of guessing.
 
 1. **Node.js ≥ 18** (`node --version`). The server runs via `npx`; nothing is
    added to `package.json`.
-2. **Chromium browser binary.** Playwright manages this; the repo already uses
-   `@playwright/test`, so it is usually present. If a run reports a missing
-   browser, install it once:
+2. **Browser binary for the MCP server.** `@playwright/mcp` needs its **own**
+   browser build (`chrome-for-testing`), which is a *different* revision from the
+   one bundled with the repo's `@playwright/test`. Install it once:
    ```powershell
-   npx playwright install chromium
+   npx @playwright/mcp@0.0.76 install-browser chrome-for-testing
    ```
+   > Note: `npx playwright install chromium` (the `@playwright/test` browser) is
+   > **not** sufficient — the MCP server pins its own Chromium revision. If it is
+   > missing, the server prints the exact install command above, so the failure
+   > is self-explanatory.
 
 ## How it's wired
 
 Pinned to **`@playwright/mcp@0.0.76`** (not `@latest`) for reproducibility, run
 with `--isolated` (in-memory profile, nothing persisted) and
-`--browser chromium` (matches the Playwright-managed Chromium build).
+`--browser chromium` (which the server resolves to its own `chrome-for-testing`
+build — see Prerequisites for the one-time install).
 
 ### Claude Code (active)
 
@@ -78,7 +83,10 @@ round-trip should complete using only the `playwright` server. Full scenarios:
 
 ## Troubleshooting
 
-- **Browser binaries missing** → `npx playwright install chromium` (see above).
+- **Browser binaries missing** → the server prints
+  `Run npx @playwright/mcp install-browser chrome-for-testing`; run exactly that
+  (pinned: `npx @playwright/mcp@0.0.76 install-browser chrome-for-testing`). The
+  download is large (~150 MB); allow a few minutes.
 - **Server fails to start** → run the server manually to see the error:
   `npx -y "@playwright/mcp@0.0.76" --help`. Confirm Node ≥ 18 and network access
   to npm for the first fetch.

@@ -26,7 +26,7 @@ Principle II, adapted).
 
 **Purpose**: Confirm the toolchain can run the pinned server before wiring it in.
 
-- [x] T001 Verify Node ≥ 18 (`node --version`) and ensure the Chromium binary is present; if missing, run `npx playwright install chromium` (per [research.md](research.md) R5, [quickstart.md](quickstart.md) prerequisites)
+- [x] T001 Verify Node ≥ 18 (`node --version`) and ensure the MCP server's browser build is present; if missing, run `npx @playwright/mcp@0.0.76 install-browser chrome-for-testing` (per [research.md](research.md) R5, [quickstart.md](quickstart.md) prerequisites)
 - [x] T002 Smoke-check the pinned server launches: `npx -y "@playwright/mcp@0.0.76" --help` prints usage without error (per [quickstart.md](quickstart.md) smoke check)
 
 ---
@@ -50,7 +50,7 @@ Principle II, adapted).
 **Independent Test**: Start the dev app, ask the agent to open a route, read on-page text, and screenshot — round-trip completes using only the registered capability (spec SC-001).
 
 - [x] T004 [US1] Create root `.mcp.json` registering the `playwright` server pinned to `@playwright/mcp@0.0.76` with `--isolated --browser chromium`, using the launch form from T003 (exact shape in [contracts/mcp-config.md](contracts/mcp-config.md) Contract A)
-- [ ] T005 [US1] Validate US1: from a fresh Claude Code session, confirm `playwright` is listed, then run [quickstart.md](quickstart.md) Scenario 1 (open dev app → read text → click/fill → screenshot)
+- [x] T005 [US1] Validate US1: from a fresh Claude Code session, confirm `playwright` is listed, then run [quickstart.md](quickstart.md) Scenario 1 (open dev app → read text → click/fill → screenshot) — ✅ verified 2026-06-27: navigate to localhost:3000 → snapshot read DOM (title "YomuMogu — Разговорная практика японского с ИИ") → screenshot
 
 **Checkpoint**: Browser capability works in Claude Code — MVP functional.
 

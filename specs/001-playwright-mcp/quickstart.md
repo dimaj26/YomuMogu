@@ -6,9 +6,10 @@ PowerShell (project standard). Configs are in [contracts/mcp-config.md](contract
 ## Prerequisites
 
 1. Node.js ≥ 18 (verify: `node --version`).
-2. Playwright browser binary present. If missing, install once:
+2. The MCP server's browser build present (`chrome-for-testing` — a different
+   revision from `@playwright/test`'s). If missing, install once:
    ```powershell
-   npx playwright install chromium
+   npx @playwright/mcp@0.0.76 install-browser chrome-for-testing
    ```
 3. The YomuMogu dev app running:
    ```powershell

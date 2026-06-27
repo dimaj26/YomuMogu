@@ -64,13 +64,19 @@ All Technical Context unknowns are resolved below.
 
 ## R5 — Browser binaries
 
-- **Decision**: Use Chromium; document `npx playwright install chromium` as the
-  one-time prerequisite in the knowledge topic and quickstart.
-- **Rationale**: `@playwright/mcp` needs a Playwright browser binary present.
-  The project already depends on `@playwright/test`, so binaries may already be
-  installed; if not, the install command is a single documented step (spec
-  edge case: "browser binaries missing" → actionable message).
-- **Alternatives considered**: bundling a browser — rejected: heavy, OS-specific.
+- **Decision**: Use Chromium via `--browser chromium`; the one-time prerequisite
+  is **`npx @playwright/mcp@0.0.76 install-browser chrome-for-testing`**,
+  documented in the knowledge topic and quickstart.
+- **Rationale**: Verified empirically during implementation (T005): `@playwright/mcp`
+  resolves `--browser chromium` to its **own** `chrome-for-testing` build, which
+  is a *different revision* from the `@playwright/test` browser already in the
+  repo (it pulled `chromium-1226`, the repo had `chromium-1223`). So
+  `npx playwright install chromium` is **not** sufficient. When the browser is
+  missing the server prints the exact install command, satisfying spec SC-004
+  (actionable message).
+- **Alternatives considered**: reuse the existing `@playwright/test` chromium via
+  `--executable-path` — rejected: fragile, non-portable across machines.
+  Bundling a browser — rejected: heavy, OS-specific.
 
 ## R6 — Isolation & safety
 
