@@ -1258,6 +1258,17 @@ export default function PracticePage() {
                       ➕ Добавить +10
                     </button>
                   </div>
+
+                  {/* Подсказка для свежего профиля: разминка недоступна, пока не пройдена диагностика */}
+                  {!isLocalInitialized && (
+                    <p data-testid="warmup-init-hint" style={{ margin: '12px 0 0', fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                      {t('Список ещё не инициализирован — ', 'リストはまだ初期化されていません — ')}
+                      <Link href="/settings" style={{ color: 'var(--color-blue)', fontWeight: 700, textDecoration: 'underline' }}>
+                        {t('пройдите диагностику', '診断を受けてください')}
+                      </Link>
+                      {t(', чтобы открыть разминку.', '。ウォームアップが解放されます。')}
+                    </p>
+                  )}
                 </div>
               )}
 

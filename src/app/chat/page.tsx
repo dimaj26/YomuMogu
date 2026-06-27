@@ -1458,8 +1458,8 @@ export default function ChatPage() {
           <p style={{ fontWeight: 700, fontSize: 18, color: 'var(--text-secondary)' }}>
             {t('Сессия не выбрана', 'セッションが選ばれていません')}
           </p>
-          <button onClick={() => router.push('/settings')} className="btn-3d btn-green" style={{ marginTop: 16 }}>
-            {t('Перейти в настройки', '設定へ')}
+          <button onClick={() => router.push('/practice')} className="btn-3d btn-green" style={{ marginTop: 16 }}>
+            {t('Перейти к практике', '練習へ')}
           </button>
         </div>
       </div>

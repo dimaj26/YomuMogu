@@ -28,10 +28,27 @@ The full `src/` directory tree lives in [directory-layout](directory-layout.md).
 
 ## [CP-2.1] Core User Flow
 
-1. User opens `/settings`, connects to local Anki via AnkiConnect, selects a deck and imports words.
-2. Gemini AI generates 3 conversation scenarios ("sessions") based on the imported words.
-3. User selects a session → redirected to `/chat`.
-4. In `/chat`, user practices Japanese in dialogue with Gemini AI character.
+The default is **local-first**: a fresh profile uses the built-in 500-word starter
+deck — no Anki required. The AnkiConnect check is lazy and never blocks a no-Anki
+user; Anki is an **opt-in** word source (see the branch below).
+
+**Primary flow (local-first, default):**
+
+1. On `/` (or `/settings`) the user runs **«Пройти диагностику»** — the
+   `AssessmentModal` knowledge diagnostic, which **seeds/initializes the local
+   500-word deck** in IndexedDB. This is the onboarding gate: until it runs,
+   practice warm-up, quiz, and chat have nothing to operate on.
+2. On `/practice`, the user does a warm-up and FSRS active-recall quiz
+   (`/practice/quiz`) over the seeded words.
+3. From the practice/scenario flow, Gemini generates conversation scenarios
+   ("sessions"); selecting one sets the active session and opens `/chat`.
+4. In `/chat`, the user practices Japanese in dialogue with the Gemini AI
+   character.
 5. Gemini tracks grammar, detected target words, and awards XP.
 
-A fresh profile starts on the built-in 500-word local starter deck — no Anki required; the AnkiConnect check is lazy and never blocks a no-Anki user. Anki is an opt-in word source. Local-first state lives in IndexedDB (Dexie.js); secrets in `.env.local`; structured logs in `logs/`.
+**Opt-in branch (Anki source):** instead of (or alongside) the local deck, the
+user opens `/settings`, connects to local Anki via AnkiConnect, selects a deck and
+imports words; from there the flow rejoins at session generation (step 3) → `/chat`.
+
+Local-first state lives in IndexedDB (Dexie.js); secrets in `.env.local`;
+structured logs in `logs/`.

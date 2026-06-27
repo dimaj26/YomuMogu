@@ -1423,4 +1423,28 @@ describe('Soft Closing and Passive Timing Tests', () => {
   });
 });
 
+describe('Empty-session CTA (F-02)', () => {
+  beforeEach(() => {
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+    localStorage.clear();
+    mockPush.mockReset();
+  });
+
+  it('без активной сессии CTA ведёт на /practice, а не в настройки', async () => {
+    // Нет active_session в localStorage -> рендерится пустое состояние
+    render(<JapanificationProvider><ChatPage /></JapanificationProvider>);
+
+    const cta = await screen.findByRole('button', { name: 'Перейти к практике' });
+    expect(cta).toBeInTheDocument();
+    // Старая формулировка «Перейти в настройки» отсутствует
+    expect(screen.queryByRole('button', { name: 'Перейти в настройки' })).not.toBeInTheDocument();
+
+    fireEvent.click(cta);
+    expect(mockPush).toHaveBeenCalledWith('/practice');
+    expect(mockPush).not.toHaveBeenCalledWith('/settings');
+  });
+});
+
 

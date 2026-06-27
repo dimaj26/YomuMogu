@@ -895,3 +895,43 @@ describe('PracticePage Component', () => {
     });
   });
 });
+
+describe('Warm-up unavailable hint for fresh profile (F-03)', () => {
+  beforeEach(async () => {
+    vi.restoreAllMocks();
+    localStorage.clear();
+    await db.words.clear();
+    await db.reviews.clear();
+  });
+
+  it('показывает подсказку про диагностику, когда локальный список не инициализирован', async () => {
+    // Дефолт: режим local, без посеянной колоды -> !isLocalInitialized
+    render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+
+    const hint = await screen.findByTestId('warmup-init-hint');
+    expect(hint).toBeInTheDocument();
+    expect(hint).toHaveTextContent('пройдите диагностику');
+    // Внутри подсказки есть ссылка в настройки (где живёт диагностика)
+    const link = hint.querySelector('a');
+    expect(link).not.toBeNull();
+    expect(link?.getAttribute('href')).toBe('/settings');
+  });
+
+  it('скрывает подсказку, когда локальная колода инициализирована', async () => {
+    // Сеем одно слово стартовой колоды -> isLocalDeckInitialized = true
+    await db.words.put({
+      profileId: 'default', id: 9001, word: '水', reading: 'みず', translation: 'вода',
+      category: '__local_starter__', source: 'starter',
+      active: { stability: 0, difficulty: 5, interval: 0, due: Date.now(), reps: 0, lapses: 0, status: 'new' },
+      contextExamples: []
+    });
+
+    render(<JapanificationProvider><PracticePage /></JapanificationProvider>);
+
+    // Дожидаемся загрузки страницы
+    expect(await screen.findByRole('heading', { name: 'Практика диалога', level: 1 })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByTestId('warmup-init-hint')).not.toBeInTheDocument();
+    });
+  });
+});

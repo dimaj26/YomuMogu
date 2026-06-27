@@ -470,7 +470,7 @@ export default function HomePage() {
         </div>
 
         {/* MEMORY DECAY HEATMAP */}
-        <MemoryDecayHeatmap cells={heatmapCells} />
+        <MemoryDecayHeatmap cells={heatmapCells} isLocalInit={isLocalInit} />
 
         {/* SECONDARY CONTROL GRID */}
         <div className={styles.secondaryGrid}>
@@ -722,7 +722,7 @@ export default function HomePage() {
   );
 }
 
-function MemoryDecayHeatmap({ cells }: { cells: Array<{ status: string; isDue: boolean; avgStability: number }> }) {
+function MemoryDecayHeatmap({ cells, isLocalInit }: { cells: Array<{ status: string; isDue: boolean; avgStability: number }>; isLocalInit: boolean }) {
   const { t } = useJapanification();
 
   if (cells.length === 0) return null;
@@ -734,11 +734,17 @@ function MemoryDecayHeatmap({ cells }: { cells: Array<{ status: string; isDue: b
         <span>{t("Очаги памяти (Сетка Кумико)", "記憶の格子（組子格子）", 2)}</span>
       </h3>
       <p className={styles.heatmapDescription}>
-        {t(
-          "50 ячеек отображают состояние 500 слов вашей стартовой колоды. Цвета отражают уровень стабильности памяти. Пульсация означает остывание памяти и необходимость повторения.",
-          "50の格子がスターターデッキの500語の状態を表します。色は記憶の安定性を示し、点滅は復習が必要なシグナルです。",
-          2
-        )}
+        {isLocalInit
+          ? t(
+              "50 ячеек отображают состояние 500 слов вашей стартовой колоды. Цвета отражают уровень стабильности памяти. Пульсация означает остывание памяти и необходимость повторения.",
+              "50の格子がスターターデッキの500語の状態を表します。色は記憶の安定性を示し、点滅は復習が必要なシグナルです。",
+              2
+            )
+          : t(
+              "Колода ещё не инициализирована. Пройдите диагностику в настройках, чтобы засеять 500 слов стартовой колоды — и сетка оживёт.",
+              "デッキはまだ初期化されていません。設定で診断を受けてスターターデッキの500語を準備すると、格子が動き出します。",
+              2
+            )}
       </p>
       <div className={styles.heatmapSvgContainer}>
         <svg 

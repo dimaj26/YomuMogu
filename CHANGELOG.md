@@ -2,6 +2,16 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.3.0] - 2026-06-27
+
+### Fixed
+- **Onboarding flow clarity (`specs/003-onboarding-flow-clarity/`).** Resolved the four actionable findings from the 002 cognitive walkthrough (F-05 left as benign dev-build noise), under the proposal-audit constraint that the diagnostics-as-gate funnel is intentional and must not be broken (no auto-seed, no new fresh-profile nav into quiz/chat — only copy/CTA/doc/conditional-text changes):
+  - **F-02**: the empty `/chat` state (no active session) now routes its CTA to `/practice` (where sessions are actually started) instead of `/settings`, relabelled «Перейти к практике».
+  - **F-03**: the disabled «Начать разминку» button on `/practice` now shows a short explanatory line for a fresh profile (`!isLocalInitialized`) linking to the diagnostic, mirroring the existing `hasStudyContext` progressive-disclosure pattern; the gate itself is unchanged.
+  - **F-04**: the home Kumiko-grid description is now conditional on `isLocalInit` — before initialization it no longer claims "500 слов" and instead points to the diagnostic, ending the cross-screen contradiction with `/practice` and `/settings`.
+  - **F-01**: rewrote `knowledge/architecture.md` [CP-2.1] Core User Flow as local-first (home/settings → diagnostic → seeded deck → practice → session → chat), with Anki as a labelled opt-in branch; removed the numbered-list-vs-prose contradiction.
+  - Each UI change ships with accompanying Vitest/RTL tests (chat/practice co-located suites + new `src/app/__tests__/home-grid.test.tsx`); full suite green (532 tests).
+
 ## [2.2.0] - 2026-06-27
 
 ### Added
