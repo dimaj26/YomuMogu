@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.1.0] - 2026-06-27
+
+### Added
+- **Playwright MCP integration (`specs/001-playwright-mcp/`).** Registered the upstream `@playwright/mcp` server (pinned `@0.0.76`, run via `npx`, `--isolated --browser chromium`) so coding agents can drive a real browser against the running dev app — navigate, click, fill, read DOM, screenshot — with no per-session setup. Dev-tooling only: adds no runtime dependency to the app and does not replace the `@playwright/test` e2e suite. This MVP wires **Claude Code** via a committed project-scoped `.mcp.json` and documents the integration in **`knowledge/mcp-playwright.md`** (linked from `CONTEXT.md`): prerequisites, per-runtime wiring, Windows `cmd /c npx` note, and troubleshooting. opencode wiring is the remaining step (spec US3).
+
 ## [2.0.1] - 2026-06-27
 
 ### Added

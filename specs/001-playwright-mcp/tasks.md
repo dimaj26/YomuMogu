@@ -26,8 +26,8 @@ Principle II, adapted).
 
 **Purpose**: Confirm the toolchain can run the pinned server before wiring it in.
 
-- [ ] T001 Verify Node ≥ 18 (`node --version`) and ensure the Chromium binary is present; if missing, run `npx playwright install chromium` (per [research.md](research.md) R5, [quickstart.md](quickstart.md) prerequisites)
-- [ ] T002 Smoke-check the pinned server launches: `npx -y "@playwright/mcp@0.0.76" --help` prints usage without error (per [quickstart.md](quickstart.md) smoke check)
+- [x] T001 Verify Node ≥ 18 (`node --version`) and ensure the Chromium binary is present; if missing, run `npx playwright install chromium` (per [research.md](research.md) R5, [quickstart.md](quickstart.md) prerequisites)
+- [x] T002 Smoke-check the pinned server launches: `npx -y "@playwright/mcp@0.0.76" --help` prints usage without error (per [quickstart.md](quickstart.md) smoke check)
 
 ---
 
@@ -37,7 +37,7 @@ Principle II, adapted).
 
 **⚠️ CRITICAL**: Both user-story configs use the launch form chosen here.
 
-- [ ] T003 Determine the working Windows launch form for the MCP host: try plain `npx`; if the host cannot spawn it, fall back to `cmd /c npx`. Record the chosen form to reuse in both configs (per [research.md](research.md) R7)
+- [x] T003 Determine the working Windows launch form for the MCP host: try plain `npx`; if the host cannot spawn it, fall back to `cmd /c npx`. Record the chosen form to reuse in both configs (per [research.md](research.md) R7)
 
 **Checkpoint**: Launch form known — runtime configs can now be written.
 
@@ -49,7 +49,7 @@ Principle II, adapted).
 
 **Independent Test**: Start the dev app, ask the agent to open a route, read on-page text, and screenshot — round-trip completes using only the registered capability (spec SC-001).
 
-- [ ] T004 [US1] Create root `.mcp.json` registering the `playwright` server pinned to `@playwright/mcp@0.0.76` with `--isolated --browser chromium`, using the launch form from T003 (exact shape in [contracts/mcp-config.md](contracts/mcp-config.md) Contract A)
+- [x] T004 [US1] Create root `.mcp.json` registering the `playwright` server pinned to `@playwright/mcp@0.0.76` with `--isolated --browser chromium`, using the launch form from T003 (exact shape in [contracts/mcp-config.md](contracts/mcp-config.md) Contract A)
 - [ ] T005 [US1] Validate US1: from a fresh Claude Code session, confirm `playwright` is listed, then run [quickstart.md](quickstart.md) Scenario 1 (open dev app → read text → click/fill → screenshot)
 
 **Checkpoint**: Browser capability works in Claude Code — MVP functional.
@@ -62,10 +62,10 @@ Principle II, adapted).
 
 **Independent Test**: A contributor follows the docs on a clean Windows checkout and reaches a working capability in under 10 minutes (spec SC-002).
 
-- [ ] T006 [P] [US2] Create `knowledge/mcp-playwright.md`: purpose, prerequisites (Node, `npx playwright install chromium`), enable steps for both runtimes, Windows `cmd /c npx` fallback, and the four edge cases (missing binaries, offline, port conflict, server-fails-to-start) from [spec.md](spec.md)
-- [ ] T007 [US2] Add a link to `knowledge/mcp-playwright.md` in `CONTEXT.md` (satisfies FR-005 / doc-drift gate)
-- [ ] T008 [P] [US2] Add a `CHANGELOG.md` entry describing the Playwright MCP integration
-- [ ] T009 [US2] Validate US2: confirm the knowledge topic is reachable from `CONTEXT.md` and the enable steps match the committed configs
+- [x] T006 [P] [US2] Create `knowledge/mcp-playwright.md`: purpose, prerequisites (Node, `npx playwright install chromium`), enable steps for both runtimes, Windows `cmd /c npx` fallback, and the four edge cases (missing binaries, offline, port conflict, server-fails-to-start) from [spec.md](spec.md)
+- [x] T007 [US2] Add a link to `knowledge/mcp-playwright.md` in `CONTEXT.md` (satisfies FR-005 / doc-drift gate)
+- [x] T008 [P] [US2] Add a `CHANGELOG.md` entry describing the Playwright MCP integration
+- [x] T009 [US2] Validate US2: confirm the knowledge topic is reachable from `CONTEXT.md` and the enable steps match the committed configs
 
 **Checkpoint**: Integration is discoverable and reproducible.
 

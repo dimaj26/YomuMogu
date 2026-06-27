@@ -35,6 +35,7 @@ Task requests are handled via **spec-kit** Spec-Driven Development: `/speckit-sp
 - [Graphify workflow](knowledge/graphify-workflow.md) — code indexed as a queryable graph; the graphify-first reading protocol and its carve-out.
 - [Graphify reference](knowledge/graphify-reference.md) — command surface (query/path/explain/affected/update/exports), build-pipeline logic, outputs, integrity guarantees, scenarios.
 - [Local delegation](knowledge/local-delegation.md) — how the agent offloads fitting self-contained sub-tasks to local Ollama (qwen2.5-coder:7b-16k) via claude-code-router.
+- [Playwright MCP](knowledge/mcp-playwright.md) — browser-automation MCP server (`@playwright/mcp`) letting agents drive a real browser against the dev app; prerequisites, per-runtime wiring (Claude Code/opencode), Windows notes, troubleshooting.
 
 ## Features
 - [Implemented features](knowledge/features.md) — one-line registry of shipped features.
