@@ -10,7 +10,7 @@ Location: root `.mcp.json` → `mcpServers.playwright`
 | Field | Type | Value / Rule |
 |-------|------|--------------|
 | `command` | string | `"cmd"` (Windows committed form, see research R7; `"npx"` on non-Windows) |
-| `args` | string[] | `["/c", "npx", "-y", "@playwright/mcp@0.0.76", "--isolated", "--browser", "chromium"]` |
+| `args` | string[] | `["/c", "npx", "-y", "@playwright/mcp@0.0.76", "--isolated", "--headless", "--browser", "chromium"]` |
 
 Validation rules:
 - Version MUST be pinned (no `@latest`) — FR-007.
@@ -23,7 +23,7 @@ Location: `.opencode/opencode.json` → `mcp.playwright`
 | Field | Type | Value / Rule |
 |-------|------|--------------|
 | `type` | string | `"local"` |
-| `command` | string[] | `["cmd", "/c", "npx", "-y", "@playwright/mcp@0.0.76", "--isolated", "--browser", "chromium"]` (drop `cmd /c` on non-Windows) |
+| `command` | string[] | `["cmd", "/c", "npx", "-y", "@playwright/mcp@0.0.76", "--isolated", "--headless", "--browser", "chromium"]` (drop `cmd /c` on non-Windows) |
 | `enabled` | boolean | `true` |
 
 Validation rules:

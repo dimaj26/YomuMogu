@@ -43,6 +43,7 @@ Task requests are handled via **spec-kit** Spec-Driven Development: `/speckit-sp
 ## Decisions (ADRs)
 - [ADR 0001 — record architecture decisions](knowledge/decisions/0001-record-architecture-decisions.md) — why we keep ADRs.
 - [ADR 0002 — adopt spec-kit](knowledge/decisions/0002-adopt-spec-kit.md) — migration from Aethel to spec-kit SDD.
+- [ADR 0003 — Playwright MCP integration](knowledge/decisions/0003-playwright-mcp-integration.md) — upstream `@playwright/mcp` in both runtimes; npx pin, `cmd /c` on Windows, headless/isolated, chrome-for-testing prereq.
 
 ## Strategic context (strictly-local, git-ignored — not present in clean clones)
 - [Learning philosophy](_nogit_philosophy.md) — dual-curve→single-curve FSRS rationale, context mining, fluency-first, grammar DAG, Science-First framework.

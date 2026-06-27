@@ -52,9 +52,10 @@ MCP setup** (spec SC-001). Maps to spec User Story 1.
 1. Temporarily simulate a missing browser (e.g., on a machine without binaries).
 2. Trigger a browser action.
 
-**Expected**: the failure is actionable — it points the user to
-`npx playwright install chromium` — rather than failing silently (spec edge
-case + SC-004). Documented in `knowledge/mcp-playwright.md`.
+**Expected**: the failure is actionable — the server prints
+`Run npx @playwright/mcp install-browser chrome-for-testing` — rather than
+failing silently (spec edge case + SC-004). Documented in
+`knowledge/mcp-playwright.md`.
 
 ## Done when
 

@@ -30,7 +30,7 @@ All Technical Context unknowns are resolved below.
     "mcpServers": {
       "playwright": {
         "command": "npx",
-        "args": ["-y", "@playwright/mcp@0.0.76", "--isolated", "--browser", "chromium"]
+        "args": ["-y", "@playwright/mcp@0.0.76", "--isolated", "--headless", "--browser", "chromium"]
       }
     }
   }
@@ -49,7 +49,7 @@ All Technical Context unknowns are resolved below.
     "mcp": {
       "playwright": {
         "type": "local",
-        "command": ["npx", "-y", "@playwright/mcp@0.0.76", "--isolated", "--browser", "chromium"],
+        "command": ["npx", "-y", "@playwright/mcp@0.0.76", "--isolated", "--headless", "--browser", "chromium"],
         "enabled": true
       }
     }
@@ -78,13 +78,17 @@ All Technical Context unknowns are resolved below.
   `--executable-path` — rejected: fragile, non-portable across machines.
   Bundling a browser — rejected: heavy, OS-specific.
 
-## R6 — Isolation & safety
+## R6 — Isolation, headless & safety
 
-- **Decision**: Run with `--isolated` (in-memory profile) by default; no
-  `--user-data-dir` committed; no secrets/credentials in either config (FR-006).
-- **Rationale**: Avoids persisting cookies/sessions into the repo or a shared
-  profile; keeps each run clean. Headed by default is fine for local dev; a
-  `--headless` note is documented for CI-like use.
+- **Decision**: Run with `--isolated` (in-memory profile) and `--headless` by
+  default; no `--user-data-dir` committed; no secrets/credentials in either
+  config (FR-006).
+- **Rationale**: `--isolated` avoids persisting cookies/sessions into the repo or
+  a shared profile. `--headless` is the right default for *agent-driven* use — no
+  window pops up on the operator's desktop during a round-trip — and was added in
+  post-MVP polish; the knowledge topic documents dropping it to watch the browser.
+- **Alternatives considered**: headed by default — rejected: surprises the
+  operator with windows and is unnecessary for programmatic navigation.
 
 ## R7 — Windows / PowerShell gotcha (FR-002)
 

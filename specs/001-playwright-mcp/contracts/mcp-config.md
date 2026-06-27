@@ -13,7 +13,7 @@ Committed form (Windows, `cmd /c` wrapper — see research R7; this is what ship
   "mcpServers": {
     "playwright": {
       "command": "cmd",
-      "args": ["/c", "npx", "-y", "@playwright/mcp@0.0.76", "--isolated", "--browser", "chromium"]
+      "args": ["/c", "npx", "-y", "@playwright/mcp@0.0.76", "--isolated", "--headless", "--browser", "chromium"]
     }
   }
 }
@@ -26,7 +26,7 @@ Non-Windows equivalent (use plain `npx`):
   "mcpServers": {
     "playwright": {
       "command": "npx",
-      "args": ["-y", "@playwright/mcp@0.0.76", "--isolated", "--browser", "chromium"]
+      "args": ["-y", "@playwright/mcp@0.0.76", "--isolated", "--headless", "--browser", "chromium"]
     }
   }
 }
@@ -43,7 +43,7 @@ The existing file keeps its `skills` and `plugin` keys; add the `mcp` key:
   "mcp": {
     "playwright": {
       "type": "local",
-      "command": ["cmd", "/c", "npx", "-y", "@playwright/mcp@0.0.76", "--isolated", "--browser", "chromium"],
+      "command": ["cmd", "/c", "npx", "-y", "@playwright/mcp@0.0.76", "--isolated", "--headless", "--browser", "chromium"],
       "enabled": true
     }
   }

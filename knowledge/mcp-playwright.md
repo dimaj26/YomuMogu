@@ -32,9 +32,10 @@ use it to verify UI changes against the actual rendered app instead of guessing.
 ## How it's wired
 
 Pinned to **`@playwright/mcp@0.0.76`** (not `@latest`) for reproducibility, run
-with `--isolated` (in-memory profile, nothing persisted) and
-`--browser chromium` (which the server resolves to its own `chrome-for-testing`
-build — see Prerequisites for the one-time install).
+with `--isolated` (in-memory profile, nothing persisted), `--headless` (no
+visible window — best for agent-driven runs; drop it if you want to watch the
+browser), and `--browser chromium` (which the server resolves to its own
+`chrome-for-testing` build — see Prerequisites for the one-time install).
 
 ### Claude Code (active)
 
@@ -46,7 +47,7 @@ contributor gets it automatically on opening the repo in Claude Code:
   "mcpServers": {
     "playwright": {
       "command": "cmd",
-      "args": ["/c", "npx", "-y", "@playwright/mcp@0.0.76", "--isolated", "--browser", "chromium"]
+      "args": ["/c", "npx", "-y", "@playwright/mcp@0.0.76", "--isolated", "--headless", "--browser", "chromium"]
     }
   }
 }
@@ -67,7 +68,7 @@ and `type: "local"`):
   "mcp": {
     "playwright": {
       "type": "local",
-      "command": ["cmd", "/c", "npx", "-y", "@playwright/mcp@0.0.76", "--isolated", "--browser", "chromium"],
+      "command": ["cmd", "/c", "npx", "-y", "@playwright/mcp@0.0.76", "--isolated", "--headless", "--browser", "chromium"],
       "enabled": true
     }
   }

@@ -49,7 +49,7 @@ Principle II, adapted).
 
 **Independent Test**: Start the dev app, ask the agent to open a route, read on-page text, and screenshot — round-trip completes using only the registered capability (spec SC-001).
 
-- [x] T004 [US1] Create root `.mcp.json` registering the `playwright` server pinned to `@playwright/mcp@0.0.76` with `--isolated --browser chromium`, using the launch form from T003 (exact shape in [contracts/mcp-config.md](contracts/mcp-config.md) Contract A)
+- [x] T004 [US1] Create root `.mcp.json` registering the `playwright` server pinned to `@playwright/mcp@0.0.76` with `--isolated --headless --browser chromium`, using the launch form from T003 (exact shape in [contracts/mcp-config.md](contracts/mcp-config.md) Contract A)
 - [x] T005 [US1] Validate US1: from a fresh Claude Code session, confirm `playwright` is listed, then run [quickstart.md](quickstart.md) Scenario 1 (open dev app → read text → click/fill → screenshot) — ✅ verified 2026-06-27: navigate to localhost:3000 → snapshot read DOM (title "YomuMogu — Разговорная практика японского с ИИ") → screenshot
 
 **Checkpoint**: Browser capability works in Claude Code — MVP functional.
@@ -62,7 +62,7 @@ Principle II, adapted).
 
 **Independent Test**: A contributor follows the docs on a clean Windows checkout and reaches a working capability in under 10 minutes (spec SC-002).
 
-- [x] T006 [P] [US2] Create `knowledge/mcp-playwright.md`: purpose, prerequisites (Node, `npx playwright install chromium`), enable steps for both runtimes, Windows `cmd /c npx` fallback, and the four edge cases (missing binaries, offline, port conflict, server-fails-to-start) from [spec.md](spec.md)
+- [x] T006 [P] [US2] Create `knowledge/mcp-playwright.md`: purpose, prerequisites (Node, `npx @playwright/mcp@0.0.76 install-browser chrome-for-testing`), enable steps for both runtimes, Windows `cmd /c npx` form, and the four edge cases (missing binaries, offline, port conflict, server-fails-to-start) from [spec.md](spec.md)
 - [x] T007 [US2] Add a link to `knowledge/mcp-playwright.md` in `CONTEXT.md` (satisfies FR-005 / doc-drift gate)
 - [x] T008 [P] [US2] Add a `CHANGELOG.md` entry describing the Playwright MCP integration
 - [x] T009 [US2] Validate US2: confirm the knowledge topic is reachable from `CONTEXT.md` and the enable steps match the committed configs
@@ -77,7 +77,7 @@ Principle II, adapted).
 
 **Independent Test**: Run the US1 round-trip from opencode; capability is listed and behaves identically (spec SC-003).
 
-- [x] T010 [P] [US3] Add the `mcp.playwright` entry to `.opencode/opencode.json` — `type: "local"`, command array pinned to `@playwright/mcp@0.0.76` with the same `--isolated --browser chromium` flags, `enabled: true` — **preserving** the existing `skills` and `plugin` keys (exact shape in [contracts/mcp-config.md](contracts/mcp-config.md) Contract B). ✅ config written, JSON valid, keys preserved, conformance checked (T012)
+- [x] T010 [P] [US3] Add the `mcp.playwright` entry to `.opencode/opencode.json` — `type: "local"`, command array pinned to `@playwright/mcp@0.0.76` with the same `--isolated --headless --browser chromium` flags, `enabled: true` — **preserving** the existing `skills` and `plugin` keys (exact shape in [contracts/mcp-config.md](contracts/mcp-config.md) Contract B). ✅ config written, JSON valid, keys preserved, conformance checked (T012)
 - [x] T011 [US3] Validate US3: from a fresh opencode session, confirm `playwright` is listed and run the round-trip; confirm parity with Claude Code. ✅ confirmed in a live opencode session (2026-06-27); config is identical to the Claude Code one (same pin/flags/browser).
 
 **Checkpoint**: All supported runtimes expose the capability.
