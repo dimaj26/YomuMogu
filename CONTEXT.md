@@ -36,6 +36,7 @@ Task requests are handled via **spec-kit** Spec-Driven Development: `/speckit-sp
 - [Graphify reference](knowledge/graphify-reference.md) — command surface (query/path/explain/affected/update/exports), build-pipeline logic, outputs, integrity guarantees, scenarios.
 - [Local delegation](knowledge/local-delegation.md) — how the agent offloads fitting self-contained sub-tasks to local Ollama (qwen2.5-coder:7b-16k) via claude-code-router.
 - [Playwright MCP](knowledge/mcp-playwright.md) — browser-automation MCP server (`@playwright/mcp`) letting agents drive a real browser against the dev app; prerequisites, per-runtime wiring (Claude Code/opencode), Windows notes, troubleshooting.
+- [Cognitive walkthrough](knowledge/cognitive-walkthrough.md) — repeatable browser-driven analysis procedure (built on Playwright MCP): traverse the live app's core routes, capture structure/console/network/screenshot per screen, build a cognitive map, and cross-check it against `knowledge/` to surface doc-drift and UX gaps; emits a dated report under `specs/002-browser-cognitive-analysis/reports/`.
 
 ## Features
 - [Implemented features](knowledge/features.md) — one-line registry of shipped features.

@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.2.0] - 2026-06-27
+
+### Added
+- **Browser-driven cognitive analysis (`specs/002-browser-cognitive-analysis/`).** Defined a repeatable **cognitive-walkthrough** procedure (`knowledge/cognitive-walkthrough.md`, linked from `CONTEXT.md`) that dogfoods the feature-001 Playwright MCP: an agent drives the live dev app headlessly across its core routes (`/`, `/practice`, `/practice/quiz`, `/chat`, `/settings`), records per-screen structure, navigation outcome, console + network health signals, and a screenshot, assembles a "cognitive map", and cross-checks observed behavior against the `knowledge/` docs to surface drift/broken-flow/UX findings. Output is a dated, append-only report under the feature's `reports/` folder (contract in `contracts/report-contract.md`). Dev-tooling/analysis only — no application source or runtime-dependency changes. First run **2026-06-27** produced 5 findings (Anki-centric core-flow doc-drift, `/chat` empty-state CTA mismatch, fresh-profile reachability gaps for `/quiz` & `/chat`, Kumiko-grid vs uninitialized-deck signal, and an app-wide CSS-preload console warning).
+
 ## [2.1.0] - 2026-06-27
 
 ### Added
