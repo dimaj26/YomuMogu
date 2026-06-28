@@ -45,4 +45,27 @@ describe('AssessmentModal', () => {
       .count();
     expect(count).toBeGreaterThan(0);
   });
+
+  it('«Я начинаю с нуля»: засевает колоду со всеми словами new и вызывает onSaved (C-11)', async () => {
+    const onSaved = vi.fn();
+    render(
+      <AssessmentModal isOpen profileId="default" onClose={vi.fn()} onSaved={onSaved} />
+    );
+
+    const freshBtn = await screen.findByRole('button', { name: 'Я начинаю с нуля' });
+    await waitFor(() => expect(freshBtn).not.toBeDisabled(), { timeout: 8000 });
+
+    fireEvent.click(freshBtn);
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalled(), { timeout: 8000 });
+
+    const localWords = await db.words
+      .where('profileId')
+      .equals('default')
+      .filter(w => w.category === LOCAL_DECK_NAME)
+      .toArray();
+    expect(localWords.length).toBeGreaterThan(0);
+    // Экспресс-старт «с нуля» -> ни одно слово не отмечено как известное
+    expect(localWords.every(w => w.active.status === 'new')).toBe(true);
+  });
 });

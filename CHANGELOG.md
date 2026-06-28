@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.9.0] - 2026-06-28
+
+### Added
+- **Beginner express-start in the diagnostic (`specs/009-beginner-express-start/`, fixes 004 finding C-11).** The knowledge diagnostic asks the learner to mark words they already know; for an absolute beginner who knows none, the correct action (save with nothing checked) was non-obvious. Added an explicit «Я начинаю с нуля» button that seeds the local starter deck with an empty known-set (all words `new`) and proceeds via the same `onSaved` — behaviorally identical to «Сохранить и начать» with nothing checked, guarded the same way (disabled until the deck loads). Purely additive: «Сохранить и начать», «Отмена», «Закрыть» unchanged; no FSRS/schema/other-screen change. Covered by `src/components/__tests__/AssessmentModal.test.tsx` (express → deck seeded all-new + onSaved). Still deferred from 004: C-03 cap/selector, C-07/C-08 competency level + N3–N1 grammar, C-12 MeCab fallback, C-14 landing, C-15 debug HUD.
+
 ## [2.8.0] - 2026-06-28
 
 ### Fixed

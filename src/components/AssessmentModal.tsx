@@ -136,6 +136,20 @@ export function AssessmentModal({ isOpen, profileId, onClose, onSaved, onError }
     }
   };
 
+  // Экспресс-путь для абсолютного новичка: засеять колоду, ничего не отмечая как известное
+  // (все слова — new). Поведение идентично «Сохранить и начать» без выбранных слов.
+  const handleStartFresh = async () => {
+    setIsSaving(true);
+    try {
+      await importStarterDeck(profileId, new Set<number>());
+      await onSaved();
+    } catch {
+      onError?.('Не удалось сохранить результаты диагностики');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -261,6 +275,15 @@ export function AssessmentModal({ isOpen, profileId, onClose, onSaved, onError }
             style={{ padding: '8px 16px', fontSize: '14px' }}
           >
             Отмена
+          </button>
+          <button
+            type="button"
+            onClick={handleStartFresh}
+            disabled={starterDeckData.length === 0 || isSaving}
+            className="btn-3d"
+            style={{ padding: '8px 16px', fontSize: '14px' }}
+          >
+            Я начинаю с нуля
           </button>
           <button
             type="button"
