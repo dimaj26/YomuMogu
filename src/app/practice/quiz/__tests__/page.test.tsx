@@ -507,3 +507,61 @@ describe('QuizPage review ordering — highest-need first (006 / C-03)', () => {
     expect(screen.queryByText(/перевод-сильная/)).not.toBeInTheDocument();
   });
 });
+
+describe('QuizPage review session-size cap (010 / C-03 cap)', () => {
+  beforeEach(async () => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    localStorage.clear();
+    mockPush.mockReset();
+    mockSearchParamsGet.mockReset().mockReturnValue(null);
+    await db.words.clear();
+    await db.reviews.clear();
+  });
+
+  const due = (id: number, translation: string, lapses: number, stability: number) => ({
+    profileId: 'default', id, word: `w${id}`, reading: `r${id}`, translation,
+    category: 'Japanese', source: 'anki' as const,
+    active: { status: 'review' as const, stability, difficulty: 5, interval: 5, due: Date.now() - 5000, reps: 4, lapses },
+    contextExamples: [],
+  });
+
+  it('limit=2 ограничивает сессию до 2 самых «нуждающихся» карточек', async () => {
+    await db.words.bulkPut([
+      due(1, 'А-много-ошибок', 5, 5),
+      due(2, 'Б-слабая', 0, 1),
+      due(3, 'В-сильная', 0, 9),
+    ] as any);
+    // mode=review (null), limit=2
+    mockSearchParamsGet.mockImplementation((k: string) => (k === 'limit' ? '2' : null));
+
+    render(<JapanificationProvider><QuizPage /></JapanificationProvider>);
+
+    // Прогресс-индикатор показывает всего 2 карточки
+    expect(await screen.findByText(/1\s*\/\s*2/)).toBeInTheDocument();
+    // Первой — самая нуждающаяся (5 ошибок), сильная карточка отрезана капом
+    expect(screen.getByText(/А-много-ошибок/)).toBeInTheDocument();
+    expect(screen.queryByText(/В-сильная/)).not.toBeInTheDocument();
+  });
+
+  it('без limit загружается весь due-набор (поведение «Все»)', async () => {
+    await db.words.bulkPut([
+      due(11, 'один', 0, 5),
+      due(12, 'два', 0, 5),
+      due(13, 'три', 0, 5),
+    ] as any);
+    // mode=review, без limit (всё возвращает null)
+    render(<JapanificationProvider><QuizPage /></JapanificationProvider>);
+
+    expect(await screen.findByText(/1\s*\/\s*3/)).toBeInTheDocument();
+  });
+
+  it('due меньше лимита: показываются все доступные (без падения)', async () => {
+    await db.words.bulkPut([due(21, 'единственное', 2, 3)] as any);
+    mockSearchParamsGet.mockImplementation((k: string) => (k === 'limit' ? '20' : null));
+
+    render(<JapanificationProvider><QuizPage /></JapanificationProvider>);
+
+    expect(await screen.findByText(/1\s*\/\s*1/)).toBeInTheDocument();
+  });
+});

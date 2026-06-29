@@ -155,6 +155,8 @@ export default function PracticePage() {
   const [dailyNewWordsCount, setDailyNewWordsCount] = useState<number>(0);
   const [dailyNewWordsLimit, setDailyNewWordsLimit] = useState<number>(10);
   const [dueActiveWordsCount, setDueActiveWordsCount] = useState<number>(0);
+  // Размер сессии повторения, выбираемый пользователем (010 / C-03). 'all' = без капа.
+  const [reviewLimit, setReviewLimit] = useState<number | 'all'>(20);
   const [newWordsCount, setNewWordsCount] = useState<number>(0);
   const [priorityWordsCount, setPriorityWordsCount] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
@@ -1292,9 +1294,31 @@ export default function PracticePage() {
                     </p>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+                  {/* Размер сессии повторения (010 / C-03) — пользователь сам выбирает, сколько повторить */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '20px', fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                    <span>{t('Размер сессии:', 'セッションの長さ:')}</span>
+                    {([20, 50, 'all'] as const).map((opt) => (
+                      <button
+                        key={String(opt)}
+                        type="button"
+                        onClick={() => setReviewLimit(opt)}
+                        className="btn-3d"
+                        style={{
+                          padding: '4px 10px',
+                          fontSize: '13px',
+                          fontWeight: 700,
+                          opacity: reviewLimit === opt ? 1 : 0.55,
+                          borderColor: reviewLimit === opt ? 'var(--color-orange)' : undefined,
+                        }}
+                      >
+                        {opt === 'all' ? t('Все', 'すべて') : opt}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
                     <button
-                      onClick={() => router.push('/practice/quiz?mode=review')}
+                      onClick={() => router.push('/practice/quiz?mode=review' + (reviewLimit !== 'all' ? `&limit=${reviewLimit}` : ''))}
                       disabled={dueActiveWordsCount === 0}
                       className={`btn-3d ${dueActiveWordsCount > 0 ? 'btn-orange' : ''}`}
                       style={{ flex: 1, padding: '10px 20px', fontSize: '14px' }}

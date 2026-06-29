@@ -365,13 +365,21 @@ function QuizComponent() {
         // Режим повторения: показываем самые «нуждающиеся» карточки первыми
         // (больше ошибок -> слабее память -> дольше просрочено). Детерминированно.
         // Остальные режимы сохраняют прежний случайный порядок.
-        const ordered = isReviewMode
+        let ordered = isReviewMode
           ? [...loadedWords].sort((a, b) =>
               (b.active.lapses - a.active.lapses) ||
               (a.active.stability - b.active.stability) ||
               (a.active.due - b.active.due)
             )
           : [...loadedWords].sort(() => Math.random() - 0.5);
+        // Режим повторения: ограничиваем сессию выбранным размером (limit), применяя
+        // кап ПОСЛЕ сортировки — берём самые «нуждающиеся». «Все» = без limit.
+        if (isReviewMode) {
+          const limit = parseInt(searchParams.get('limit') || '', 10);
+          if (Number.isFinite(limit) && limit > 0) {
+            ordered = ordered.slice(0, limit);
+          }
+        }
         setWords(ordered);
         setStartTime(Date.now());
       } catch (err) {

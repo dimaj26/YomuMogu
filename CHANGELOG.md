@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.10.0] - 2026-06-28
+
+### Added
+- **Review session-size selector (`specs/010-review-session-size/`, completes 004 finding C-03; reorder shipped in 006).** The FSRS interval review loaded the entire due backlog into one session, so an advanced learner faced «Начать повторение [N]» dumping all N (e.g. 900) cards at once. Added a small session-size selector (**20 / 50 / Все**, default 20) next to the review button; the choice passes to the quiz as a `limit` param and caps the due queue **after** the feature-006 weakest/most-overdue-first ordering, so a capped session always covers the highest-need cards. «Все» = no cap (today's behavior). Because the learner explicitly picks the size, the practice «[N]» count stays the true full due total — no mismatch. Scope: review-mode + practice review entry only; new-word/unused-target modes, FSRS grading, and the [N] count unchanged; below-size backlogs show all due (no padding). Covered by `src/app/practice/quiz/__tests__/page.test.tsx` (limit=N → N highest-need cards; no-limit → full set; below-size → all). Sizes/default adjustable. Still deferred from 004: C-07/C-08 competency level + N3–N1 grammar, C-12 MeCab fallback, C-14 landing.
+
 ## [2.9.0] - 2026-06-28
 
 ### Added
