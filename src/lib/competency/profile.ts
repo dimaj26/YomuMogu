@@ -6,7 +6,9 @@ import {
   COMPETENCY_MIN_TURNS,
   ADVICE_UP_GRAMMAR_COVERAGE,
   ADVICE_UP_CORRECTION_RATE,
-  ADVICE_DOWN_CORRECTION_RATE
+  ADVICE_DOWN_CORRECTION_RATE,
+  LADDER_COMPLETE_LEX_COVERAGE,
+  LADDER_COMPLETE_GRAMMAR_COVERAGE
 } from '../../core/intervals';
 
 export type JlptLevelId = 'N5' | 'N4' | 'N3' | 'N2' | 'N1';
@@ -123,6 +125,55 @@ export function buildCompetencyProfile(
     grammarCoverage,
     recentCorrectionRate
   };
+}
+
+/** Покрытие одного уровня: лексика + грамматика (0..1). */
+export interface LevelCoverage {
+  lexCoverage: number;
+  grammarCoverage: number;
+}
+
+const ALL_JLPT_LEVELS: JlptLevelId[] = ['N5', 'N4', 'N3', 'N2', 'N1'];
+
+/**
+ * Считает лексическое и грамматическое покрытие для ВСЕХ пяти уровней JLPT (N5–N1),
+ * переиспользуя существующие per-level хелперы. Версия 1 движка считала только N5 —
+ * из-за чего N4–N1 навсегда оставались «заблокированными» (004 C-07/C-08).
+ */
+export function computeAllLevelCoverages(
+  userWords: LocalWord[],
+  progressMap: Record<string, { status: string }>
+): Partial<Record<JlptLevelId, LevelCoverage>> {
+  const result: Partial<Record<JlptLevelId, LevelCoverage>> = {};
+  for (const level of ALL_JLPT_LEVELS) {
+    result[level] = {
+      lexCoverage: computeLexCoverage(userWords, level),
+      grammarCoverage: computeGrammarCoverage(progressMap, level)
+    };
+  }
+  return result;
+}
+
+/**
+ * Выводит реальный рабочий уровень из покрытий по тому же правилу, что использует
+ * LearningTrack.isLevelCompleted: уровень завершён ⟺ lex ≥ LADDER_COMPLETE_LEX_COVERAGE
+ * И grammar ≥ LADDER_COMPLETE_GRAMMAR_COVERAGE. Активный уровень — первый незавершённый
+ * в порядке N5→N1. Если завершены все — 'N1'; если данных нет — 'N5'.
+ */
+export function deriveActiveLevel(
+  coverages: Partial<Record<JlptLevelId, LevelCoverage>>
+): JlptLevelId {
+  for (const level of ALL_JLPT_LEVELS) {
+    const c = coverages[level];
+    const completed =
+      !!c &&
+      c.lexCoverage >= LADDER_COMPLETE_LEX_COVERAGE &&
+      c.grammarCoverage >= LADDER_COMPLETE_GRAMMAR_COVERAGE;
+    if (!completed) {
+      return level;
+    }
+  }
+  return 'N1';
 }
 
 /**

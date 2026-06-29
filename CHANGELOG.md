@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.12.0] - 2026-06-29
+
+### Fixed
+- **Competency level reflects real per-level coverage (`specs/012-competency-per-level/`, fixes 004 findings C-07 + C-08).** `buildCompetencyProfile` was a v1 stub that hardcoded `level = 'N5'` and computed lex/grammar coverage for N5 only, so the practice balance widget showed «Баланс обучения (N5)» forever (C-07) and the LearningTrack path showed N4–N1 as permanently locked (C-08) — even for an advanced learner. Root cause: the leveling rule already existed (LearningTrack unlocks a level when `lexCoverage ≥ 0.8` AND `grammarCoverage ≥ 1.0`, the `LADDER_COMPLETE_*` constants in `core/intervals.ts`), the engine just never computed coverage for N4–N1. Added two pure helpers to `src/lib/competency/profile.ts` — `computeAllLevelCoverages(words, progressMap)` (lex+grammar for all five JLPT levels, reusing the existing per-level helpers) and `deriveActiveLevel(coverages)` (first level not completed by the existing rule; all complete → 'N1'; none/empty → 'N5') — and wired both into `src/app/practice/page.tsx` so `macroLadderProfile` carries real coverages for N5–N1 and the derived active level. The balance widget now shows the learner's true working level, and N5→N4 unlock as grammar+vocab complete, while N3–N1 honestly show as in-progress at the grammar-content wall (no N3–N1 grammar rules → coverage 0 → never falsely "completed", never falsely «N5»/locked). No new thresholds; `buildCompetencyProfile`, FSRS, chat grammar-scoping, and all UI strings unchanged. Test-First (`src/lib/competency/__tests__/profile.test.ts`): per-level coverage for all five levels; active = first non-completed (N5+N4 complete → 'N3'); N5-only / empty → 'N5' regression. **Supersedes** the C-07/C-08 brief's "needs a decision" — the policy was already encoded in the LADDER constants. Still deferred from 004: C-12 MeCab fallback (infra) and authoring N3–N1 grammar curriculum (content).
+
 ## [2.11.0] - 2026-06-28
 
 ### Added

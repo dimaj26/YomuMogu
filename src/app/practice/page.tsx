@@ -10,7 +10,7 @@ import { useMediaRecommendation, type MediaItem } from '@/hooks/useMediaRecommen
 import { MediaInteractivePlayer } from '@/components/MediaInteractivePlayer';
 import { LearningTrack } from '@/components/LearningTrack';
 import type { MacroLadderProfile } from '@/components/LearningTrack';
-import { buildCompetencyProfile } from '@/lib/competency/profile';
+import { computeAllLevelCoverages, deriveActiveLevel } from '@/lib/competency/profile';
 import { getProfileItem, setProfileItem, removeProfileItem, getActiveProfileId } from '@/lib/profile';
 import type { GeneratedSession } from '@/lib/gemini/client';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
@@ -384,25 +384,13 @@ export default function PracticePage() {
       });
       setGrammarProgress(progressMap);
 
-      // Вычисляем профиль компетентности для макро-лестницы N5→N1
+      // Вычисляем покрытие по ВСЕМ уровням N5→N1 и выводим реальный рабочий уровень
+      // (а не зашитый 'N5' из v1-заглушки) — 004 C-07/C-08.
       const allProfileWords = await db.words.where('profileId').equals(profileId).toArray();
-      const sessionsRaw = getProfileItem('competency_sessions');
-      const competencySessions: import('@/lib/competency/profile').SessionStat[] = sessionsRaw
-        ? JSON.parse(sessionsRaw)
-        : [];
-      const computedProfile = buildCompetencyProfile(
-        allProfileWords,
-        progressMap,
-        competencySessions
-      );
+      const coverages = computeAllLevelCoverages(allProfileWords, progressMap);
       setMacroLadderProfile({
-        activeLevelId: computedProfile.level,
-        coverages: {
-          [computedProfile.level]: {
-            lexCoverage: computedProfile.lexCoverage,
-            grammarCoverage: computedProfile.grammarCoverage
-          }
-        }
+        activeLevelId: deriveActiveLevel(coverages),
+        coverages
       });
 
       // Загружаем историю показанных видео для поиска

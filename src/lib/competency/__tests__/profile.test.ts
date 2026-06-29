@@ -4,7 +4,9 @@ import {
   computeGrammarCoverage,
   computeRecentCorrectionRate,
   buildCompetencyProfile,
-  getPresetAdvice
+  getPresetAdvice,
+  computeAllLevelCoverages,
+  deriveActiveLevel
 } from '../profile';
 import type { LocalWord } from '../../../core/types';
 
@@ -176,6 +178,49 @@ describe('Competency Profile Engine', () => {
       };
       const advice = getPresetAdvice(profile, 3);
       expect(advice.reason).toMatch(/[А-Яа-я]/); // contains Cyrillic letters
+    });
+  });
+
+  describe('computeAllLevelCoverages (012 / C-07,C-08)', () => {
+    it('возвращает покрытие для всех пяти уровней (N5–N1)', () => {
+      const words: Partial<LocalWord>[] = [
+        { tags: ['jlpt:n5'], active: { status: 'review', stability: 1, difficulty: 5, interval: 1, due: 0, reps: 1, lapses: 0 } },
+        { tags: ['jlpt:n5'], active: { status: 'mature', stability: 25, difficulty: 5, interval: 25, due: 0, reps: 5, lapses: 0 } },
+        { tags: ['jlpt:n3'], active: { status: 'review', stability: 5, difficulty: 5, interval: 5, due: 0, reps: 3, lapses: 0 } },
+      ];
+      const progress = { 'g_n5_s1_1': { status: 'mature' } };
+
+      const cov = computeAllLevelCoverages(words as LocalWord[], progress as any);
+      expect(Object.keys(cov).sort()).toEqual(['N1', 'N2', 'N3', 'N4', 'N5']);
+      // N5: 2 review/mature слова из 710; одно зрелое грамм-правило из 10
+      expect(cov.N5!.lexCoverage).toBeCloseTo(2 / 710, 6);
+      expect(cov.N5!.grammarCoverage).toBeCloseTo(0.1, 4);
+      // N3: 1 слово из 2078; грамматики N3 нет -> 0
+      expect(cov.N3!.lexCoverage).toBeCloseTo(1 / 2078, 6);
+      expect(cov.N3!.grammarCoverage).toBe(0);
+      expect(cov.N1!.lexCoverage).toBe(0);
+    });
+  });
+
+  describe('deriveActiveLevel (012 / C-07,C-08)', () => {
+    it('N5 и N4 завершены -> активный уровень N3', () => {
+      const coverages = {
+        N5: { lexCoverage: 0.9, grammarCoverage: 1.0 },
+        N4: { lexCoverage: 0.85, grammarCoverage: 1.0 },
+        N3: { lexCoverage: 0.3, grammarCoverage: 0 },
+        N2: { lexCoverage: 0.1, grammarCoverage: 0 },
+        N1: { lexCoverage: 0, grammarCoverage: 0 },
+      };
+      expect(deriveActiveLevel(coverages)).toBe('N3');
+    });
+
+    it('только N5 (или пусто) -> активный уровень N5 (регрессия)', () => {
+      expect(deriveActiveLevel({ N5: { lexCoverage: 0.5, grammarCoverage: 0.4 } })).toBe('N5');
+      expect(deriveActiveLevel({})).toBe('N5');
+    });
+
+    it('N5 завершён, но N5-грамматика < 1.0 -> остаётся N5 (правило lex И grammar)', () => {
+      expect(deriveActiveLevel({ N5: { lexCoverage: 0.95, grammarCoverage: 0.9 } })).toBe('N5');
     });
   });
 });
