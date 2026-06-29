@@ -124,3 +124,29 @@ describe('Home mascot greeting is state-aware (008 / C-10)', () => {
     expect(screen.queryByText(/раздел практики/)).not.toBeInTheDocument();
   });
 });
+
+describe('Home first-run "how it works" overview (011 / C-14)', () => {
+  beforeEach(async () => {
+    vi.restoreAllMocks();
+    localStorage.clear();
+    await db.words.clear();
+  });
+
+  it('первый запуск: показан 3-шаговый обзор «Как это работает»', async () => {
+    renderHome(); // свежий профиль -> first-run
+
+    expect(await screen.findByText(/Как это работает/)).toBeInTheDocument();
+    expect(screen.getByText(/подберём ваши слова/)).toBeInTheDocument();
+    expect(screen.getByText(/интервальные повторения/)).toBeInTheDocument();
+    expect(screen.getByText(/живом диалоге/)).toBeInTheDocument();
+  });
+
+  it('после инициализации колоды обзор «Как это работает» отсутствует', async () => {
+    await seedWords(1); // колода инициализирована -> не first-run
+    renderHome();
+
+    // дожидаемся загрузки (адаптивный заголовок не first-run)
+    await screen.findByText(/состояние\s+1\s+слов вашей стартовой колоды/);
+    expect(screen.queryByText(/Как это работает/)).not.toBeInTheDocument();
+  });
+});

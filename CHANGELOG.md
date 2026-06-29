@@ -2,6 +2,11 @@
 
 All notable changes to the YomuMogu project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.11.0] - 2026-06-28
+
+### Added
+- **First-run "how it works" overview (`specs/011-first-run-how-it-works/`, fixes 004 finding C-14).** The first-run landing showed only a marketing H1 + one-line intro before «Пройти диагностику», so a newcomer committed to the diagnostic blind. Added a compact, factual «Как это работает» 3-step overview — (1) короткая диагностика → подберём ваши слова; (2) разминка и интервальные повторения (FSRS); (3) практика слов в живом диалоге с ИИ-тьютором — shown ONLY in the first-run state (`dashState === 'first-run'`), between the intro and the CTA. Static/additive: no new navigation, logic, FSRS, or other-screen change; absent in every non-first-run state. Covered by `src/app/__tests__/home-grid.test.tsx` (present on fresh first-run; absent once the deck is initialized). Wording adjustable. Still deferred from 004: C-07/C-08 competency level + N3–N1 grammar (root-caused in the analysis), C-12 MeCab fallback.
+
 ## [2.10.0] - 2026-06-28
 
 ### Added

@@ -416,6 +416,18 @@ export default function HomePage() {
                 2
               )}
             </p>
+
+            {/* Как это работает — краткий обзор пути для новичка (011 / C-14), только в first-run */}
+            <div style={{ maxWidth: '600px', marginBottom: '32px' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '12px' }}>
+                {t('Как это работает', '使い方', 2)}
+              </h3>
+              <ol style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                <li>{t('Короткая диагностика — подберём ваши слова.', '簡単な診断であなたの単語を選びます。', 2)}</li>
+                <li>{t('Разминка и интервальные повторения (FSRS).', 'ウォームアップと間隔反復（FSRS）。', 2)}</li>
+                <li>{t('Практика слов в живом диалоге с ИИ-тьютором.', 'AI先生との対話で単語を実践。', 2)}</li>
+              </ol>
+            </div>
           </>
         ) : (
           <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '24px', lineHeight: '1.2' }}>
