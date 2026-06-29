@@ -117,7 +117,9 @@ describe('HomePage Component', () => {
     render(<JapanificationProvider><HomePage /></JapanificationProvider>);
 
     await waitFor(() => {
-      expect(screen.getByText(/На сегодня всё/)).toBeInTheDocument();
+      // Нейтральное «всё сделано» появляется и в баббле маскота, и в теле страницы —
+      // достаточно, чтобы хотя бы одно вхождение присутствовало (без давления).
+      expect(screen.getAllByText(/На сегодня всё/).length).toBeGreaterThan(0);
     });
   });
 
@@ -209,31 +211,37 @@ describe('HomePage Component', () => {
     });
 
     vi.useFakeTimers();
+    try {
+      const mascot = screen.getByText('🍵');
+      expect(mascot).toBeInTheDocument();
 
-    const mascot = screen.getByText('🍵');
-    expect(mascot).toBeInTheDocument();
+      // Click the mascot
+      fireEvent.click(mascot);
 
-    // Click the mascot
-    fireEvent.click(mascot);
+      // Mascot container should have the animated class
+      expect(mascot.className).toContain('mascotAnimated');
 
-    // Mascot container should have the animated class
-    expect(mascot.className).toContain('mascotAnimated');
+      // The speech bubble should now contain one of the motivational phrases
+      const bubble = document.querySelector('[class*="speechBubble"]');
+      expect(bubble).toBeInTheDocument();
+      const containsPhrase = MASCOT_PHRASES.some(phrase => bubble?.textContent?.includes(phrase.ru));
+      expect(containsPhrase).toBe(true);
 
-    // The speech bubble should now contain one of the motivational phrases
-    const bubble = document.querySelector('[class*="speechBubble"]');
-    expect(bubble).toBeInTheDocument();
-    const containsPhrase = MASCOT_PHRASES.some(phrase => bubble?.textContent?.includes(phrase.ru));
-    expect(containsPhrase).toBe(true);
+      // After 4 seconds, the speech bubble should revert back to the greeting
+      act(() => {
+        vi.advanceTimersByTime(4000);
+      });
 
-    // After 4 seconds, the speech bubble should revert back to original greeting
-    act(() => {
-      vi.advanceTimersByTime(4000);
-    });
-    
-    // Bubble should go back to standard greeting
-    expect(screen.getByText('Привет! Давай попрактикуемся сегодня? Перейди в раздел практики и выбери тему!')).toBeInTheDocument();
-    
-    vi.useRealTimers();
+      // Bubble goes back to the state-aware first-run greeting (feature 008):
+      // fresh local profile → dashState 'first-run' → points to the diagnostic.
+      expect(
+        screen.getByText('Привет! Начни с диагностики — я подберу слова под тебя.')
+      ).toBeInTheDocument();
+    } finally {
+      // Always restore real timers even if an assertion above throws, so the
+      // next test's beforeEach (await db.words.clear()) doesn't hang on fake timers.
+      vi.useRealTimers();
+    }
   });
 
   it('checks MASCOT_PHRASES for Cyrillic characters in Japanese text fields', () => {
