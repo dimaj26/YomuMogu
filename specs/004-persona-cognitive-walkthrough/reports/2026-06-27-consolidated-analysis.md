@@ -28,9 +28,11 @@ this analysis:
 - **C-04 (session generation) — SOFTENED.** It completes (~tens of seconds) and only
   intermittently stalled; the real issue is *slowness + no cap/timeout* at scale,
   not "never completes". Downgraded P1→P2.
-- **C-15 (Debug HUD shows 0)** and all learning-logic findings below — **CONFIRMED**
-  with proper full state (esp. C-02 map-capped-at-500 and C-08 levels-locked-despite-
-  mature-grammar). Priorities in §5 updated accordingly.
+- **Learning-logic findings below — CONFIRMED** with proper full state (esp. C-02
+  map-capped-at-500 and C-08 levels-locked-despite-mature-grammar). Priorities in §5
+  updated accordingly. (**C-15 was later re-investigated and is LIKELY RETRACTED** —
+  the DebugDrawer is profile-aware; the observed "0" was a raw-IDB-seeding artifact.
+  See the C-15 entry below.)
 
 ## 2. Cross-persona problem matrix
 
@@ -164,12 +166,19 @@ this analysis:
   *Proposed solution*: scope reconciliation to add/refresh only; never delete
   user-owned local words; separate "starter canonical" from "user-local" entries.
 
-- **C-15 — Debug HUD always shows 0 / "не найдены"** · bug (dev-only) · **P3** ·
+- **C-15 — Debug HUD showed 0 / "не найдены"** · bug (dev-only) · **P3** ·
   sources: P2-F, P3 (all).
-  *Problem*: the dev Debug HUD's "Слова на повторении" and FSRS inspector show 0 /
-  not-found even when the active profile has many words.
-  *Proposed solution*: bind the HUD to the active profile's live data (dev-only, low
-  priority).
+  *Problem (observed)*: the dev Debug HUD's "Слова на повторении" and FSRS inspector
+  showed 0 / not-found even when the active profile had many words.
+  *Re-investigation (read-only, 2026-06-28) — LIKELY RETRACTED*: `src/components/DebugDrawer.tsx`
+  is in fact profile-aware — `loadData` queries `db.words`/`db.reviews` by
+  `getActiveProfileId()` (lines 53, 67–99) and renders those results. The same-Dexie
+  home/practice pages *did* show the seeded data, so the observed "0" was almost
+  certainly an **artifact of the 004 walkthrough's out-of-band raw-IndexedDB seeding
+  + the drawer's load-on-open timing**, not an app defect. No code fix is warranted
+  without an in-app reproduction (i.e. data created through the app's own
+  diagnostic/warm-up flows, not injected via raw IDB). If a genuine repro appears,
+  the fix is a refresh trigger so the HUD re-loads on profile/data change.
 
 ### Navigation / UX
 
@@ -257,7 +266,8 @@ explicit path, level-scaling) is the gap.**
 8. **C-09** Honest day-one review feedback ("nothing due yet" vs "great job").
 9. **C-10** Practice nav entry / state-aware mascot.
 10. **C-12** Tokenizer fallback/health for media (interactive subtitles need MeCab).
-11. **C-15** Fix Debug HUD profile binding (dev-only, but consistently wrong).
+11. **C-15** — likely retracted (DebugDrawer is profile-aware; observed "0" was a
+    raw-IDB-seeding artifact). No action without an in-app repro.
 
 **P3 — low/polish:**
 12. **C-11** Beginner express path in diagnostic.
