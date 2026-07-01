@@ -1,6 +1,6 @@
 # Feature 014: home-grid test stability (013 follow-up)
 
-**Status**: Planned | **Branch**: `014-home-grid-test-stability` | **Source**: flaky test surfaced during 013 verification (2026-07-02)
+**Status**: Implemented | **Branch**: `014-home-grid-test-stability` | **Source**: flaky test surfaced during 013 verification (2026-07-02)
 
 ## Problem
 

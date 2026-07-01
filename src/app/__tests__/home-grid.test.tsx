@@ -1,16 +1,54 @@
 import React from 'react';
-import fakeIndexedDB, { IDBKeyRange } from 'fake-indexeddb';
-
-// Инициализируем полифилл IndexedDB до загрузки Dexie
-globalThis.indexedDB = fakeIndexedDB;
-globalThis.IDBKeyRange = IDBKeyRange;
-
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import HomePage from '../page';
 import { JapanificationProvider } from '@/hooks/useJapanification';
 import { JpUIProvider } from '@/components/JpUIProvider';
-import { db } from '@/core/db';
+
+// In-memory замена таблиц words/ui_words: HomePage + провайдеры (JpUIProvider)
+// читают их через fake-indexeddb на монтирование (isLocalDeckInitialized,
+// getPriorityWordsCount, тепловая карта, ui_words-прогресс) — это ~1500
+// structured-clone на 500-словный сценарий и делает тест уязвимым к таймауту
+// под параллельной нагрузкой vitest (014). Мок покрывает ровно тот Dexie-чейн,
+// который реально используется этими путями: where(field).equals(value) ->
+// {toArray, count, delete, filter(pred) -> {toArray, count}}.
+// vi.hoisted нужен, т.к. vi.mock хойстится над обычными объявлениями.
+const { mockWordsTable, mockUiWordsTable } = vi.hoisted(() => {
+  function createMockTable() {
+    let store: any[] = [];
+
+    function makeChain(rows: any[]) {
+      return {
+        toArray: async () => rows,
+        count: async () => rows.length,
+        delete: async () => {
+          store = store.filter(r => !rows.includes(r));
+        },
+        filter: (pred: (row: any) => boolean) => {
+          const filtered = rows.filter(pred);
+          return { toArray: async () => filtered, count: async () => filtered.length };
+        },
+      };
+    }
+
+    return {
+      bulkPut: async (rows: any[]) => { store.push(...rows); },
+      put: async (row: any) => { store.push(row); },
+      clear: async () => { store = []; },
+      where: (field: string) => ({
+        equals: (value: unknown) => makeChain(store.filter(r => r[field] === value)),
+      }),
+    };
+  }
+
+  return { mockWordsTable: createMockTable(), mockUiWordsTable: createMockTable() };
+});
+
+vi.mock('@/core/db', () => ({
+  db: { words: mockWordsTable, ui_words: mockUiWordsTable },
+}));
+
+const db = { words: mockWordsTable };
 
 const renderHome = () =>
   render(
@@ -84,14 +122,14 @@ describe('Home Kumiko grid scales to the real deck (005 / C-02)', () => {
   it('колода ровно 500 слов — описание показывает 500 (регрессия)', async () => {
     await seedWords(500);
     renderHome();
-    expect(await screen.findByText(/состояние\s+500\s+слов вашей стартовой колоды/, undefined, { timeout: 25000 })).toBeInTheDocument();
-  }, 30000);
+    expect(await screen.findByText(/состояние\s+500\s+слов вашей стартовой колоды/, undefined, { timeout: 5000 })).toBeInTheDocument();
+  }, 5000);
 
   it('колода <500 слов — описание показывает реальный счёт', async () => {
     await seedWords(25);
     renderHome();
-    expect(await screen.findByText(/состояние\s+25\s+слов вашей стартовой колоды/, undefined, { timeout: 12000 })).toBeInTheDocument();
-  }, 15000);
+    expect(await screen.findByText(/состояние\s+25\s+слов вашей стартовой колоды/, undefined, { timeout: 5000 })).toBeInTheDocument();
+  }, 5000);
 
   it('колода >500 слов — счёт реальный и поздние слова НЕ теряются на карте', async () => {
     // 550 слов: первые 500 — new, последние 50 — mature.
@@ -99,13 +137,13 @@ describe('Home Kumiko grid scales to the real deck (005 / C-02)', () => {
     await seedWords(550, (i) => (i >= 500 ? 'mature' : 'new'));
     renderHome();
 
-    expect(await screen.findByText(/состояние\s+550\s+слов вашей стартовой колоды/, undefined, { timeout: 25000 })).toBeInTheDocument();
+    expect(await screen.findByText(/состояние\s+550\s+слов вашей стартовой колоды/, undefined, { timeout: 5000 })).toBeInTheDocument();
     // Поздние mature-слова отражены хотя бы в одной ячейке -> карта покрывает всю колоду.
     await waitFor(() => {
       const titles = Array.from(document.querySelectorAll('title')).map(t => t.textContent || '');
       expect(titles.some(tt => /Усвоенные/.test(tt))).toBe(true);
-    }, { timeout: 20000 });
-  }, 30000);
+    }, { timeout: 5000 });
+  }, 5000);
 });
 
 describe('Home mascot greeting is state-aware (008 / C-10)', () => {
