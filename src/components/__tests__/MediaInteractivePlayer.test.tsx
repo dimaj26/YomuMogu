@@ -185,10 +185,13 @@ describe('MediaInteractivePlayer Component', () => {
     const addBtn = screen.getByRole('button', { name: /Добавить в Anki/i });
     fireEvent.click(addBtn);
 
-    // Ждем подтверждения добавления
+    // Подтверждение показывается только ПОСЛЕ handleAddToAnki -> fetch(/api/anki/add)
+    // -> await syncLocalDatabaseWithAnki (второй fetch /api/anki/sync-db + чтения БД).
+    // Дефолтный таймаут waitFor (1000мс) изредка не покрывает эту цепочку под
+    // параллельной нагрузкой vitest — даём fail-fast запас 5с (015).
     await waitFor(() => {
       expect(screen.getByText('Слово добавлено в Anki!')).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
   });
 
   it('B2.1: в локальном режиме добавляет слово напрямую в колоду, без вызова /api/anki/add', async () => {

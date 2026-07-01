@@ -1,15 +1,47 @@
 import React from 'react';
-import fakeIndexedDB, { IDBKeyRange } from 'fake-indexeddb';
-
-// Инициализируем полифилл IndexedDB до загрузки Dexie
-globalThis.indexedDB = fakeIndexedDB;
-globalThis.IDBKeyRange = IDBKeyRange;
-
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import SettingsPage from '../page';
 import { JapanificationProvider } from '@/hooks/useJapanification';
-import { db } from '@/core/db';
+
+// In-memory замена таблиц words/reviews: F5 сохраняет диагностику через
+// importStarterDeck (bulkPut ~500 слов) в fake-indexeddb — под параллельной
+// нагрузкой vitest это разбухает за таймаут (015, та же природа, что чинили в
+// home-grid/014). Мок покрывает ровно тот Dexie-чейн, что реально используется
+// этими путями: where(field).equals(value) -> {toArray, count, filter(pred) ->
+// {toArray, count}} плюс put/bulkPut/clear.
+// vi.hoisted нужен, т.к. vi.mock хойстится над обычными объявлениями.
+const { mockDb } = vi.hoisted(() => {
+  function createTable() {
+    let store: any[] = [];
+
+    function makeChain(rows: any[]) {
+      return {
+        toArray: async () => rows,
+        count: async () => rows.length,
+        filter: (pred: (row: any) => boolean) => {
+          const f = rows.filter(pred);
+          return { toArray: async () => f, count: async () => f.length };
+        },
+      };
+    }
+
+    return {
+      bulkPut: async (rows: any[]) => { store.push(...rows); },
+      put: async (row: any) => { store.push(row); },
+      clear: async () => { store = []; },
+      where: (field: string) => ({
+        equals: (value: unknown) => makeChain(store.filter(r => r[field] === value)),
+      }),
+    };
+  }
+
+  return { mockDb: { words: createTable(), reviews: createTable() } };
+});
+
+vi.mock('@/core/db', () => ({ db: mockDb }));
+
+const db = mockDb;
 
 
 // Мокаем lucide-react, так как некоторые иконки могут некорректно рендериться в jsdom
@@ -90,7 +122,7 @@ describe('SettingsPage Component', () => {
 
     // После сохранения пользователь должен попасть в обучение
     // (importStarterDeck пишет 500 слов в fake-indexeddb — даём запас по времени)
-    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/practice'), { timeout: 8000 });
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/practice'), { timeout: 5000 });
   });
 
   it('renders title and loading state initially', async () => {

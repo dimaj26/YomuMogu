@@ -1,15 +1,44 @@
 import React from 'react';
-import fakeIndexedDB, { IDBKeyRange } from 'fake-indexeddb';
-
-// Полифилл IndexedDB до загрузки Dexie
-globalThis.indexedDB = fakeIndexedDB;
-globalThis.IDBKeyRange = IDBKeyRange;
-
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AssessmentModal } from '../AssessmentModal';
-import { db } from '@/core/db';
 import { LOCAL_DECK_NAME } from '@/core/localDeckService';
+
+// In-memory замена таблицы words: сохранение колоды идёт через importStarterDeck
+// (bulkPut ~500 слов) в fake-indexeddb — под параллельной нагрузкой vitest это
+// разбухает за таймаут (015, та же природа, что чинили в home-grid/014).
+// Мок покрывает ровно тот Dexie-чейн, что реально используется этими путями:
+// where(field).equals(value) -> {toArray, count, filter(pred) -> {toArray, count}}.
+// vi.hoisted нужен, т.к. vi.mock хойстится над обычными объявлениями.
+const { mockWordsTable } = vi.hoisted(() => {
+  let store: any[] = [];
+
+  function makeChain(rows: any[]) {
+    return {
+      toArray: async () => rows,
+      count: async () => rows.length,
+      filter: (pred: (row: any) => boolean) => {
+        const f = rows.filter(pred);
+        return { toArray: async () => f, count: async () => f.length };
+      },
+    };
+  }
+
+  return {
+    mockWordsTable: {
+      bulkPut: async (rows: any[]) => { store.push(...rows); },
+      put: async (row: any) => { store.push(row); },
+      clear: async () => { store = []; },
+      where: (field: string) => ({
+        equals: (value: unknown) => makeChain(store.filter(r => r[field] === value)),
+      }),
+    },
+  };
+});
+
+vi.mock('@/core/db', () => ({ db: { words: mockWordsTable } }));
+
+const db = { words: mockWordsTable };
 
 describe('AssessmentModal', () => {
   beforeEach(async () => {
@@ -31,11 +60,11 @@ describe('AssessmentModal', () => {
 
     const saveBtn = await screen.findByRole('button', { name: 'Сохранить и начать' });
     // Кнопка активна после ленивой загрузки стартовой колоды
-    await waitFor(() => expect(saveBtn).not.toBeDisabled(), { timeout: 8000 });
+    await waitFor(() => expect(saveBtn).not.toBeDisabled(), { timeout: 5000 });
 
     fireEvent.click(saveBtn);
 
-    await waitFor(() => expect(onSaved).toHaveBeenCalled(), { timeout: 8000 });
+    await waitFor(() => expect(onSaved).toHaveBeenCalled(), { timeout: 5000 });
 
     // Слова локальной колоды появились в IndexedDB
     const count = await db.words
@@ -53,11 +82,11 @@ describe('AssessmentModal', () => {
     );
 
     const freshBtn = await screen.findByRole('button', { name: 'Я начинаю с нуля' });
-    await waitFor(() => expect(freshBtn).not.toBeDisabled(), { timeout: 8000 });
+    await waitFor(() => expect(freshBtn).not.toBeDisabled(), { timeout: 5000 });
 
     fireEvent.click(freshBtn);
 
-    await waitFor(() => expect(onSaved).toHaveBeenCalled(), { timeout: 8000 });
+    await waitFor(() => expect(onSaved).toHaveBeenCalled(), { timeout: 5000 });
 
     const localWords = await db.words
       .where('profileId')
