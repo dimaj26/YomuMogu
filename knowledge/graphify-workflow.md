@@ -49,11 +49,12 @@ Run via the venv-installed CLI (`venv/Scripts/graphify.exe` on Windows). Keep th
 
 - **`.husky/pre-commit` → `--mark-only`:** on staged spec-`.md` changes, only sets the native `needs_update` flag. Cheap, offline, **no API cost**. The flag accumulates dirtiness across commits and stays visible to `graphify check-update` / `/graphify`.
 - **`.husky/pre-push` → `--push`:** if the flag is set, launches a **detached** `graphify . --update` (semantic re-extraction). graphify's per-file cache re-embeds only the docs that actually changed, so all the doc churn since the last successful update collapses into **one paid pass**. The detached child owns the flag — **cleared on success, kept on failure** — so freshness is automatic but a failed run stays visible.
+  - If the `claude` CLI is on `$PATH`, this pass runs with `--backend claude-cli` — billed to the Claude Code Pro/Max subscription, not `ANTHROPIC_API_KEY` — using `GRAPHIFY_CLAUDE_CLI_MODEL` (default `haiku`; Opus/Sonnet is overkill for structured extraction). Without `claude` on `$PATH` it falls back to auto-detect by API key (DeepSeek, per below).
 
-Bypass either with `GRAPHIFY_SKIP_DOC_SYNC=1`. Need a fresh graph locally before pushing (e.g. to query it)? Run `graphify . --update` manually. Quality-critical extraction stays on the DeepSeek backend, not local Ollama (see [local-delegation](local-delegation.md)).
+Bypass either with `GRAPHIFY_SKIP_DOC_SYNC=1`. Need a fresh graph locally before pushing (e.g. to query it)? Run `graphify . --update` manually. Manual/ad-hoc runs (no `--backend` flag) still auto-detect the DeepSeek backend, not local Ollama (see [local-delegation](local-delegation.md)).
 
 ## Indexing images too (optional)
 
-Images are excluded by `.graphifyignore` because DeepSeek is text-only. To index them (icons, screenshots, diagrams) drop the image lines and switch to a vision backend — `claude-cli` (routes through the local Claude Code CLI, no API key, billed to the plan) or `gemini`. Not required for code/doc navigation.
+Images are excluded by `.graphifyignore` because DeepSeek is text-only. To index them (icons, screenshots, diagrams) drop the image lines and switch to a vision backend — `claude-cli` (already used for the pre-push doc pass when available, see above) or `gemini`. Not required for code/doc navigation.
 
 **See also:** [directory-layout](directory-layout.md) (the `src/` tree the graph indexes), [architecture](architecture.md) (high-level module map).

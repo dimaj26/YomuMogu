@@ -1,6 +1,6 @@
 ---
 name: testing
-description: Test infrastructure — Vitest/Playwright configs, commands, categories, and current test count.
+description: Test infrastructure — Vitest/Playwright configs, commands, and categories.
 ---
 
 # Testing Infrastructure
@@ -37,5 +37,5 @@ npm run test:e2e                 # Playwright end-to-end tests (requires running
 | Integration (MeCab) | `app/api/media/parse/__tests__/parse.integration.test.ts` | Real local MeCab microservice |
 | Journey (golden path) | `__tests__/journeys/*.journey.test.ts` | Mock Gemini singletons, `fake-indexeddb`; deterministic cross-system stitch, runs in default suite |
 
-## [PL-9.4] Current Test Count
-527 unit/integration tests across 77 test files. All passing. Playwright E2E tests fully aligned with sequential execution and offline spec.
+## [PL-9.4] Suite Status
+`npm run test` must stay green before every commit. Playwright E2E tests run sequentially against an offline spec. Run `npm run test` for the current pass/fail count — it drifts too fast to keep a static number here.

@@ -1,6 +1,6 @@
 # Feature 013: AI-workflow hardening (audit remediation)
 
-**Status**: Planned | **Branch**: `013-ai-workflow-hardening` | **Source**: 2026-07-02 workflow audit (Fable session)
+**Status**: Implemented | **Branch**: `013-ai-workflow-hardening` | **Source**: 2026-07-02 workflow audit (Fable session)
 
 ## Problem
 

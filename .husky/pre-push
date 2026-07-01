@@ -14,3 +14,10 @@ elif [ -f "./venv/bin/python" ]; then
 else
   python scripts/graph_doc_sync.py --push || true
 fi
+
+# Prune dated graphify-out/ snapshot dirs (YYYY-MM-DD/) older than 14 days.
+# Gitignored, but nothing else prunes them — left alone they grow forever.
+# Non-gating: always exits 0.
+if [ -d graphify-out ]; then
+  find graphify-out -maxdepth 1 -type d -name '20*-*-*' -mtime +14 -exec rm -rf {} + || true
+fi

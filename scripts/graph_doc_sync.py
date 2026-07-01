@@ -20,6 +20,11 @@ graphify-хуки (`post-commit`/`post-checkout`) пересобирают ко�
   изменённые доки, так что весь doc-churn со всех коммитов схлопывается в один
   оплачиваемый проход. Дочерний процесс владеет флагом: снимает при успехе,
   оставляет при падении. Ни коммит, ни push никогда не блокируются (всегда exit 0).
+
+Если `claude` CLI найден на PATH, проход идёт через backend `claude-cli`
+(billing с подписки Claude Code Pro/Max, не с ANTHROPIC_API_KEY) с моделью
+`GRAPHIFY_CLAUDE_CLI_MODEL` (по умолчанию `haiku` — Opus для структурного JSON
+избыточен). Без `claude` на PATH — прежний автодетект backend по API-ключам.
 """
 
 from __future__ import annotations
@@ -100,6 +105,15 @@ def _set_flag() -> None:
     flag.write_text("1", encoding="utf-8")
 
 
+def _resolve_claude_cli() -> str | None:
+    """Найти `claude` CLI на PATH (Windows предпочитает .cmd — см. graphify/llm.py)."""
+    import shutil
+
+    if os.name == "nt":
+        return shutil.which("claude.cmd") or shutil.which("claude")
+    return shutil.which("claude")
+
+
 def _run_update_child() -> int:
     """Дочерний (detached) режим: пометить грязно → `--update` → снять флаг при успехе."""
     _set_flag()
@@ -107,7 +121,19 @@ def _run_update_child() -> int:
     if test_cmd:
         rc = subprocess.run(test_cmd, shell=True).returncode
     else:
-        rc = subprocess.run([sys.executable, "-m", "graphify", ".", "--update"]).returncode
+        cmd = [sys.executable, "-m", "graphify", ".", "--update"]
+        env = os.environ.copy()
+        if _resolve_claude_cli():
+            # Подписка вместо API-ключа — иначе автодетект уйдёт на DeepSeek/Gemini
+            # по ключам из окружения CCR-роутера.
+            cmd += ["--backend", "claude-cli"]
+            env.setdefault("GRAPHIFY_CLAUDE_CLI_MODEL", "haiku")
+        else:
+            sys.stderr.write(
+                "[graph-doc-sync] claude CLI не найден на PATH — backend claude-cli "
+                "пропущен, используется автодетект по API-ключам\n"
+            )
+        rc = subprocess.run(cmd, env=env).returncode
     if rc == 0:
         flag = _flag_path()
         if flag.exists():

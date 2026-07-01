@@ -43,7 +43,7 @@ def is_code(path: str) -> bool:
 
 
 def is_doc(path: str) -> bool:
-    return path.startswith(DOC_PREFIXES) or path in DOC_FILES or path.endswith(".md")
+    return path.startswith(DOC_PREFIXES) or path in DOC_FILES
 
 
 def main() -> int:

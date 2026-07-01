@@ -11,7 +11,7 @@ detail lives as reference in `knowledge/` (index: `../../CONTEXT.md`).
 Task requests are handled through spec-kit: `/speckit-specify` → (`/speckit-clarify`) → `/speckit-plan` → `/speckit-tasks` → (`/speckit-analyze`) → `/speckit-implement`. Each feature gets a branch and a `specs/NNN-slug/` directory (`spec.md`, `plan.md`, `tasks.md`). No production code is written before its spec and plan exist and have passed their review gate. Trivial one-line fixes may skip the full cycle but still follow every other principle.
 
 ### II. Test-First (NON-NEGOTIABLE)
-For a reported bug, first write a failing test that reproduces it, confirm it fails, then fix. For new behavior, tests accompany the implementation. Vitest (unit/integration) and Playwright (e2e) are the suites; the test count is tracked in `knowledge/testing.md`.
+For a reported bug, first write a failing test that reproduces it, confirm it fails, then fix. For new behavior, tests accompany the implementation. Vitest (unit/integration) and Playwright (e2e) are the suites; the suites must stay green (see `knowledge/testing.md`).
 
 ### III. Fail-Fast Error Handling
 Never swallow exceptions silently. Log with tracebacks and propagate where appropriate. No empty `catch` blocks, no broad catches that hide failures.
@@ -41,4 +41,4 @@ Do not commit placeholders, dry-run mocks, or unhandled `TODO`s to the main bran
 
 This constitution supersedes ad-hoc practice. Amendments are made via `/speckit-constitution` (or a direct edit) and must bump the version and update any dependent templates under `.specify/templates/`. Complexity must be justified against these principles in `plan.md`.
 
-**Version**: 1.1.0 | **Ratified**: 2026-06-27 | **Last Amended**: 2026-06-27
+**Version**: 1.1.1 | **Ratified**: 2026-06-27 | **Last Amended**: 2026-07-02
