@@ -3,8 +3,58 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import QuizPage from '../page';
 import { JapanificationProvider } from '@/hooks/useJapanification';
-import { db } from '@/core/db';
 import { createDefaultFsrsState } from '@/core/scheduler';
+
+// In-memory замена таблиц words/reviews: QuizPage грузит due-слова через
+// syncExistingLocalWordsWithStarterDeck (полный скан + сверка с starter_deck.json)
+// плюс собственные where().filter() запросы на каждое монтирование — через
+// fake-indexeddb это разбухает под параллельной нагрузкой vitest (015/016, та
+// же природа, что чинили в home-grid/014). Мок покрывает ровно тот Dexie-чейн,
+// что реально используют page.tsx + localDeckService: where(field).equals(value)
+// -> {toArray, filter(pred) -> {toArray, first}} плюс put/bulkPut/update/clear
+// для words и add/toArray/clear для reviews.
+// vi.hoisted нужен, т.к. vi.mock хойстится над обычными объявлениями.
+const { mockDb } = vi.hoisted(() => {
+  function createTable() {
+    let store: any[] = [];
+
+    function makeChain(rows: any[]) {
+      return {
+        toArray: async () => rows,
+        first: async () => rows[0],
+        count: async () => rows.length,
+        filter: (pred: (row: any) => boolean) => {
+          const f = rows.filter(pred);
+          return { toArray: async () => f, first: async () => f[0], count: async () => f.length };
+        },
+      };
+    }
+
+    return {
+      bulkPut: async (rows: any[]) => { store.push(...rows); },
+      put: async (row: any) => { store.push(row); },
+      add: async (row: any) => { store.push(row); return row.id; },
+      update: async (key: unknown, changes: Record<string, unknown>) => {
+        const idx = store.findIndex(r => r.id === key);
+        if (idx >= 0) Object.assign(store[idx], changes);
+      },
+      clear: async () => { store = []; },
+      toArray: async () => store,
+      where: (field: string) => ({
+        equals: (value: unknown) => makeChain(store.filter(r => r[field] === value)),
+      }),
+    };
+  }
+
+  return { mockDb: { words: createTable(), reviews: createTable() } };
+});
+
+vi.mock('@/core/db', () => ({
+  db: mockDb,
+  addLocalReview: async (review: any) => { await mockDb.reviews.add(review); },
+}));
+
+const db = mockDb;
 
 // Mock Lucide icons
 vi.mock('lucide-react', () => ({
