@@ -8,6 +8,10 @@
 # churn run-to-run. Pinning it makes graphify-out reproducible.
 export PYTHONHASHSEED=0
 
+# Паритет с post-commit (017): позволяет заглушить фоновый rebuild на время
+# бенчмарков/тест-циклов, чтобы graphify не конкурировал за CPU с vitest.
+[ "${GRAPHIFY_SKIP_HOOK:-0}" = "1" ] && exit 0
+
 PREV_HEAD=$1
 NEW_HEAD=$2
 BRANCH_SWITCH=$3
