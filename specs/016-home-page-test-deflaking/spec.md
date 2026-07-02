@@ -1,6 +1,6 @@
 # Feature 016: HomePage page.test.tsx de-flaking (015 follow-up, final)
 
-**Status**: Planned | **Branch**: `016-home-page-test-deflaking` | **Source**: 5th flaky file surfaced by 015's verification loop (2026-07-02)
+**Status**: Implemented | **Branch**: `016-home-page-test-deflaking` | **Source**: 5th flaky file surfaced by 015's verification loop (2026-07-02)
 
 ## Problem
 
@@ -37,8 +37,24 @@ timeout changes expected.
 - Product code — untouched.
 - The other four files — already fixed in 014/015.
 
-## Success criteria
+## Result
 
-- `page.test.tsx` green in isolation (11/11).
-- 20 consecutive full-suite runs: 0 failures in this file (per 015's precedent, a single genuinely-unreproducible residual is acceptable **only if** documented honestly, never papered over by blind timeout padding).
+Ported the `home-grid.test.tsx` mock verbatim (words + ui_words). File has
+10 tests (spec's "11" was a miscount), green on first try, no missing mock
+surface. Timeouts confirmed fine as-is (5/5 isolated re-runs green) — none
+added. **20/20 full-suite runs: zero failures in `page.test.tsx`.**
+
+Two other files newly flaked during the 20-run loop — **out of scope here**:
+`src/core/__tests__/localDeckService.test.ts` (4/20, never seen flaky before)
+and `src/app/practice/quiz/__tests__/page.test.tsx` (3/20, worse than 015's
+1/40 residual for the same file). Both could be genuine per-file issues or
+could reflect cumulative background load from this session's many
+consecutive test loops and git-hook-triggered graphify rebuilds — not
+distinguished, so not diagnosed here. Flagged separately; do not act on
+either without a clean-environment re-measurement first.
+
+## Success criteria (met)
+
+- `page.test.tsx` green in isolation (10/10).
+- 20 consecutive full-suite runs: **0 failures** in this file.
 - Lint clean; no product code changed.

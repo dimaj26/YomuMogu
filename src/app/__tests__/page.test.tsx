@@ -1,16 +1,54 @@
 import React from 'react';
-import fakeIndexedDB, { IDBKeyRange } from 'fake-indexeddb';
-
-// Инициализируем полифилл IndexedDB до загрузки Dexie
-globalThis.indexedDB = fakeIndexedDB;
-globalThis.IDBKeyRange = IDBKeyRange;
-
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import HomePage, { MASCOT_PHRASES } from '../page';
 import { JapanificationProvider } from '@/hooks/useJapanification';
-import { db } from '@/core/db';
 import { LOCAL_DECK_NAME } from '@/core/localDeckService';
+
+// In-memory замена таблиц words/ui_words: HomePage + провайдеры (JpUIProvider)
+// читают их через fake-indexeddb на монтирование (isLocalDeckInitialized,
+// getPriorityWordsCount, тепловая карта, ui_words-прогресс) — под параллельной
+// нагрузкой vitest это разбухает за таймаут (016, порт мока из home-grid/014).
+// Мок покрывает ровно тот Dexie-чейн, который реально используется этими
+// путями: where(field).equals(value) -> {toArray, count, delete, filter(pred)
+// -> {toArray, count}}. vi.hoisted нужен, т.к. vi.mock хойстится над обычными
+// объявлениями.
+const { mockWordsTable, mockUiWordsTable } = vi.hoisted(() => {
+  function createMockTable() {
+    let store: any[] = [];
+
+    function makeChain(rows: any[]) {
+      return {
+        toArray: async () => rows,
+        count: async () => rows.length,
+        delete: async () => {
+          store = store.filter(r => !rows.includes(r));
+        },
+        filter: (pred: (row: any) => boolean) => {
+          const filtered = rows.filter(pred);
+          return { toArray: async () => filtered, count: async () => filtered.length };
+        },
+      };
+    }
+
+    return {
+      bulkPut: async (rows: any[]) => { store.push(...rows); },
+      put: async (row: any) => { store.push(row); },
+      clear: async () => { store = []; },
+      where: (field: string) => ({
+        equals: (value: unknown) => makeChain(store.filter(r => r[field] === value)),
+      }),
+    };
+  }
+
+  return { mockWordsTable: createMockTable(), mockUiWordsTable: createMockTable() };
+});
+
+vi.mock('@/core/db', () => ({
+  db: { words: mockWordsTable, ui_words: mockUiWordsTable },
+}));
+
+const db = { words: mockWordsTable };
 
 // Хелпер: слово локальной стартовой колоды с заданными статусами/сроками
 const localWord = (id: number, status: 'new' | 'learning' | 'review' | 'mature', dueOffsetMs: number) => ({
